@@ -1,42 +1,58 @@
-import { dayNumber } from './calendar.js';
+import { dayNumber, seasonOf } from './calendar.js';
 import { streamSeed } from './rng.js';
 import { computeStability, addDispatch } from './realm.js';
 
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
+  const day = dayNumber(k.start);
   const settlements = {};
   for (const s of world.geography.settlements) {
     const d = world.settlementData[s.id];
     if (!d) throw new Error(`No starting data for settlement ${s.id}`);
-    settlements[s.id] = {
-      population: { ...d.population },
-      faith: { ...d.faith },
-      prosperity: d.prosperity,
-      unrest: d.unrest,
-      production: d.production,
-      garrison: d.garrison,
-      holder: d.holder,
-    };
+    settlements[s.id] = newSettlement(world, d, seasonOf(day));
   }
   const state = {
     version: STATE_VERSION,
     kingdom: k.id,
     seed: seed >>> 0,
-    day: dayNumber(k.start),
+    day,
     rng: { game: streamSeed(seed, 1), ambient: streamSeed(seed, 2) },
     treasury: k.treasury,
-    granary: k.granary,
     authority: k.authority,
     stability: 0,
+    unpaid: false,
     settlements,
+    ledger: { construction: 0, history: [] },
+    flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],
   };
   state.stability = computeStability(state);
   if (k.opening) addDispatch(state, k.opening);
   return state;
+}
+
+export function newSettlement(world, d, season) {
+  const s = {
+    population: { ...d.population },
+    faith: { ...d.faith },
+    prosperity: d.prosperity,
+    unrest: d.unrest,
+    production: d.production,
+    garrison: d.garrison,
+    holder: d.holder,
+    stock: { food: 0, timber: 0, stone: 0, iron: 0 },
+    hunger: 0,
+    buildings: [],
+    construction: null,
+  };
+  const f = world.economy.food;
+  const need = totalPopulation(s) * f.perPersonDay * (season === 'winter' ? f.winterFactor : 1);
+  s.stock.food = Math.max(f.storageMin * 0.5, need * f.startDays);
+  if (s.stock[d.production] !== undefined && d.production !== 'food') s.stock[d.production] = world.economy.goods.startStock;
+  return s;
 }
 
 export function totalPopulation(s) {

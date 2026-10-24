@@ -1,7 +1,8 @@
-// Placeholder realm dynamics for M1. They exist so the top bar meters move and
-// the long-run tests have something to guard; M2 replaces the numbers with the
-// real economy.
-import { dateOf, MONTHS } from './calendar.js';
+// The realm's day: the economy turns, moods drift, and on the first of each
+// month the ledger and the census are drawn up.
+import { dateOf } from './calendar.js';
+import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed } from './economy.js';
+import { monthlyPopulation } from './population.js';
 
 const CHRONICLE_LIMIT = 200;
 
@@ -28,49 +29,32 @@ function popOf(s) {
 
 export function stepRealmDay(state, world, rng) {
   const date = dateOf(state.day);
-  const hungry = state.granary <= 0;
+  stepEconomyDay(state, world);
+  const m = world.economy.mood;
   for (const [id, s] of Object.entries(state.settlements)) {
     const start = world.settlementData[id];
-    // Unrest and prosperity wander but are pulled back to where they started,
-    // with winter and empty granaries pushing unrest up.
-    let pull = start.unrest;
-    if (date.season === 'winter') pull += 4;
-    if (hungry) pull += 15;
-    s.unrest = clamp(s.unrest + (pull - s.unrest) * 0.02 + (rng.next() - 0.5) * 0.8, 0, 100);
-    s.prosperity = clamp(s.prosperity + (start.prosperity - s.prosperity) * 0.02 + (rng.next() - 0.5) * 0.6, 0, 100);
+    const fx = buildingEffects(world, s);
+    const need = foodNeed(world, s, date.season);
+    const wellFed = need > 0 && s.stock.food / need >= m.wellFedDays;
+    // Each settlement has a mood it settles towards: where it started, moved
+    // by hunger, winter, unpaid soldiers and what the crown has built there.
+    let unrestTarget = start.unrest + fx.unrest + s.hunger * m.hungerUnrest;
+    if (date.season === 'winter') unrestTarget += m.winterUnrest;
+    if (state.unpaid && s.garrison > 0) unrestTarget += world.economy.debt.unpaidUnrest;
+    unrestTarget -= Math.max(0, s.prosperity - 50) * m.prosperityCalm;
+    let prosperityTarget = start.prosperity + fx.prosperity - s.hunger * m.hungerProsperity;
+    if (wellFed) prosperityTarget += m.wellFedProsperity;
+    prosperityTarget -= Math.max(0, s.unrest - 50) * m.unrestBlight;
+
+    s.unrest = clamp(s.unrest + (clamp(unrestTarget, 0, 100) - s.unrest) * m.drift + (rng.next() - 0.5) * 0.8, 0, 100);
+    s.prosperity = clamp(s.prosperity + (clamp(prosperityTarget, 0, 100) - s.prosperity) * m.drift + (rng.next() - 0.5) * 0.6, 0, 100);
   }
   state.stability = computeStability(state);
 
-  if (date.day === 1) monthlyLedger(state, rng, date);
-}
-
-function monthlyLedger(state, rng, date) {
-  let people = 0;
-  let income = 0;
-  let upkeep = 0;
-  for (const s of Object.values(state.settlements)) {
-    const pop = popOf(s);
-    people += pop;
-    income += pop * (s.prosperity / 100) * 0.02;
-    upkeep += s.garrison * 0.1;
+  if (date.day === 1) {
+    monthlyLedger(state, world);
+    monthlyPopulation(state, world, rng);
   }
-  income = Math.round(income);
-  upkeep = Math.round(upkeep);
-  state.treasury = Math.max(0, state.treasury + income - upkeep);
-
-  // The month that just ended decides food: harvest months fill the granary,
-  // winter months eat into it harder.
-  const ended = date.month === 1 ? 12 : date.month - 1;
-  const eaten = Math.round((people / 50) * (ended === 12 || ended <= 2 ? 1.3 : 1));
-  let reaped = 0;
-  if (ended >= 8 && ended <= 10) reaped = Math.round((people / 50) * 4.4 * (0.8 + rng.next() * 0.4));
-  state.granary = clamp(state.granary + reaped - eaten, 0, 30000);
-
-  const name = MONTHS[ended - 1].name;
-  let text = `The ledger for ${name}: ${income} crowns in taxes, ${upkeep} spent on garrisons.`;
-  if (reaped) text += ` The harvest brought in ${reaped} measures of grain.`;
-  if (state.granary <= 0) text += ' The granaries stand empty and the people go hungry.';
-  addDispatch(state, text);
 }
 
 export function addDispatch(state, text) {

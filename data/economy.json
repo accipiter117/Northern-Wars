@@ -1,0 +1,119 @@
+{
+  "note": "Every economic number lives here. Food is counted in measures: one measure feeds a hundred people for a day. Money is in crowns.",
+  "food": {
+    "perPersonDay": 0.01,
+    "winterFactor": 1.25,
+    "monthWeights": [
+      0.1,
+      0.1,
+      0.3,
+      0.55,
+      0.75,
+      0.9,
+      1.0,
+      1.9,
+      2.5,
+      1.6,
+      0.35,
+      0.1
+    ],
+    "farmBase": {
+      "village": 20,
+      "town": 24,
+      "city": 36,
+      "castle": 6,
+      "temple": 4
+    },
+    "farmingFocus": {
+      "food": 1.3,
+      "other": 0.7
+    },
+    "terrainYield": {
+      "open": 1,
+      "marsh": 0.7,
+      "forest": 0.8,
+      "hills": 0.85,
+      "mountains": 0.6
+    },
+    "storageDays": 200,
+    "storageMin": 3000,
+    "startDays": 150,
+    "reserveLow": 45,
+    "reserveHigh": 75,
+    "shipShare": 0.04,
+    "shipLoss": 0.05
+  },
+  "goods": {
+    "base": {
+      "timber": 1,
+      "stone": 0.7,
+      "iron": 0.4
+    },
+    "typeScale": {
+      "village": 1,
+      "town": 1.6,
+      "city": 2.2,
+      "castle": 0.8,
+      "temple": 0.5
+    },
+    "terrainBonus": {
+      "timber": "forest",
+      "stone": "hills",
+      "iron": "mountains"
+    },
+    "terrainBonusFactor": 1.4,
+    "storageCap": 150,
+    "startStock": 50,
+    "prices": {
+      "timber": 0.5,
+      "stone": 0.6,
+      "iron": 1.2
+    }
+  },
+  "prosperityYield": {
+    "min": 0.6,
+    "perPoint": 0.008
+  },
+  "taxes": {
+    "perPersonMonth": 0.009
+  },
+  "trade": {
+    "perPersonMonth": {
+      "city": 0.006,
+      "town": 0.004,
+      "village": 0,
+      "castle": 0,
+      "temple": 0
+    },
+    "coinFocus": 1.5
+  },
+  "upkeep": {
+    "garrisonPerSoldierMonth": 0.1,
+    "courtMonth": 420
+  },
+  "population": {
+    "growthPerMonth": 0.0012,
+    "hungerDeathsPerMonth": 0.04,
+    "emigrationAboveUnrest": 70,
+    "emigrationPerMonth": 0.004
+  },
+  "mood": {
+    "drift": 0.02,
+    "winterUnrest": 4,
+    "hungerUnrest": 30,
+    "hungerProsperity": 25,
+    "wellFedProsperity": 4,
+    "wellFedDays": 60,
+    "prosperityCalm": 0.2,
+    "unrestBlight": 0.3
+  },
+  "debt": {
+    "creditLimit": 8000,
+    "interestPerMonth": 0.02,
+    "authorityPerThousand": 0.25,
+    "authorityRecovery": 0.5,
+    "unpaidUnrest": 12,
+    "desertionPerMonth": 0.03,
+    "lender": "the dwarven banking houses"
+  }
+}

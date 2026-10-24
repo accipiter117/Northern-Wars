@@ -1,8 +1,12 @@
 // The world is the static, read-only part of a game: geography, starting data
 // and the derived road and river networks. It is built once from JSON and
 // never saved; the state only refers to it by ids.
+import { distanceToPolygon } from './geometry.js';
 
-export function buildWorld({ kingdom, geography, settlements, ambient }) {
+// How far a settlement's fields and woodlots reach, in map units.
+const WORKED_RADIUS = 40;
+
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings }) {
   const byId = {};
   for (const s of geography.settlements) byId[s.id] = s;
 
@@ -20,8 +24,25 @@ export function buildWorld({ kingdom, geography, settlements, ambient }) {
     rivers[name] = { name, points: pts, length: polylineLength(pts) };
   }
 
+  // Each settlement works the ground around it; the nearest terrain zone in
+  // reach decides its farming and goods yields.
+  const terrainOf = {};
+  for (const s of geography.settlements) {
+    let best = { kind: 'open', d: WORKED_RADIUS };
+    for (const [kind, zones] of Object.entries(geography.terrain)) {
+      for (const z of zones) {
+        const d = distanceToPolygon(s.x, s.y, z.shape);
+        if (d < best.d || (d === 0 && best.d === 0)) best = { kind, d };
+      }
+    }
+    terrainOf[s.id] = best.kind;
+  }
+
   return {
     kingdom,
+    economy,
+    buildings: buildings.buildings,
+    terrainOf,
     geography,
     settlementData: settlements.settlements,
     ambient,

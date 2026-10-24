@@ -4,10 +4,12 @@ import { buildWorld } from './world.js';
 // so the same code builds the world in both places.
 export async function loadWorld(readJson, kingdomId = 'temeria') {
   const kingdom = await readJson(`data/kingdoms/${kingdomId}.json`);
-  const [geography, settlements, ambient] = await Promise.all([
+  const [geography, settlements, ambient, economy, buildings] = await Promise.all([
     readJson(kingdom.geography),
     readJson(kingdom.settlements),
     readJson('data/ambient.json'),
+    readJson('data/economy.json'),
+    readJson('data/buildings.json'),
   ]);
-  return buildWorld({ kingdom, geography, settlements, ambient });
+  return buildWorld({ kingdom, geography, settlements, ambient, economy, buildings });
 }

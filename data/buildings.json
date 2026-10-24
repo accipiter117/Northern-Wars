@@ -1,0 +1,15 @@
+{
+  "note": "What the crown can raise in a settlement. Costs are crowns plus materials drawn from the realm's stockpiles. Effects stack once per building.",
+  "buildings": {
+    "fields":   { "name": "Drained fields", "types": ["village", "town"], "cost": { "coin": 250, "timber": 30 }, "days": 45, "upkeep": 2, "effects": { "foodYield": 0.3 }, "blurb": "Ditches and new ploughland. More grain at harvest." },
+    "mill":     { "name": "Watermill", "types": ["village", "town", "city"], "cost": { "coin": 350, "timber": 40, "stone": 20 }, "days": 60, "upkeep": 4, "effects": { "foodYield": 0.15, "prosperity": 3 }, "blurb": "Grinds the harvest faster and wastes less." },
+    "granary":  { "name": "Granary", "types": ["village", "town", "city", "castle"], "cost": { "coin": 300, "timber": 30, "stone": 30 }, "days": 40, "upkeep": 3, "effects": { "storage": 1 }, "blurb": "Doubles the food this place can store through winter." },
+    "lumber":   { "name": "Lumber camp", "types": ["village", "town", "castle"], "needs": "timber", "cost": { "coin": 200, "iron": 10 }, "days": 30, "upkeep": 2, "effects": { "goodsYield": 1 }, "blurb": "Axes and sawpits. Doubles timber." },
+    "quarry":   { "name": "Quarry", "types": ["village", "town", "castle"], "needs": "stone", "cost": { "coin": 250, "timber": 20, "iron": 10 }, "days": 40, "upkeep": 3, "effects": { "goodsYield": 1 }, "blurb": "Opens the hillside. Doubles stone." },
+    "mine":     { "name": "Iron mine", "types": ["village", "town", "castle"], "needs": "iron", "cost": { "coin": 400, "timber": 40 }, "days": 60, "upkeep": 4, "effects": { "goodsYield": 1 }, "blurb": "Shafts and smelters. Doubles iron." },
+    "market":   { "name": "Market hall", "types": ["town", "city"], "cost": { "coin": 600, "timber": 40, "stone": 40 }, "days": 60, "upkeep": 5, "effects": { "trade": 0.4, "prosperity": 5 }, "blurb": "Draws merchants and their tolls." },
+    "workshop": { "name": "Guild workshops", "types": ["town", "city"], "cost": { "coin": 500, "timber": 50, "iron": 20 }, "days": 50, "upkeep": 5, "effects": { "trade": 0.25, "prosperity": 3 }, "blurb": "Smiths, coopers and weavers working for coin." },
+    "walls":    { "name": "Stone walls", "types": ["town", "city", "castle"], "cost": { "coin": 900, "stone": 120 }, "days": 90, "upkeep": 6, "effects": { "unrest": -5 }, "blurb": "People sleep easier behind stone." },
+    "shrine":   { "name": "Shrine", "types": ["village", "town"], "cost": { "coin": 200, "stone": 20 }, "days": 30, "upkeep": 1, "effects": { "unrest": -4 }, "blurb": "A place to pray, and to be heard." }
+  }
+}

@@ -16,13 +16,14 @@ function assertFinite(value, path) {
 
 function checkInvariants(s, label) {
   assertFinite(s, label);
-  assert.ok(s.treasury >= 0, `${label} treasury ${s.treasury}`);
-  assert.ok(s.granary >= 0, `${label} granary ${s.granary}`);
+  assert.ok(s.treasury >= -world.economy.debt.creditLimit * 2, `${label} treasury ${s.treasury}`);
   for (const m of ['authority', 'stability']) assert.ok(s[m] >= 0 && s[m] <= 100, `${label} ${m} ${s[m]}`);
   for (const [id, st] of Object.entries(s.settlements)) {
     for (const m of ['prosperity', 'unrest']) assert.ok(st[m] >= 0 && st[m] <= 100, `${label} ${id}.${m}`);
     for (const [p, n] of Object.entries(st.population)) assert.ok(n >= 0, `${label} ${id} ${p} ${n}`);
     assert.ok(st.garrison >= 0);
+    for (const [g, n] of Object.entries(st.stock)) assert.ok(n >= -1e-9, `${label} ${id} ${g} stock ${n}`);
+    assert.ok(st.hunger >= 0 && st.hunger <= 1, `${label} ${id} hunger ${st.hunger}`);
   }
 }
 
@@ -37,6 +38,10 @@ for (const seed of SEEDS) {
       checkInvariants(a, `seed ${seed} year ${y + 1}`);
     }
     assert.equal(JSON.stringify(a), JSON.stringify(b));
+    // An untended realm should neither starve nor boom over ten years.
+    const pop = (x) => Object.values(x.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
+    const ratio = pop(a) / pop(createState(world, seed));
+    assert.ok(ratio > 0.9 && ratio < 1.2, `population ratio ${ratio}`);
     assert.equal(a.day - createState(world, seed).day, 10 * YEAR_DAYS);
   });
 }
