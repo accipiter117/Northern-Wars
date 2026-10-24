@@ -224,7 +224,7 @@ registerPlaceholder('marker', 'riot', (ctx, x, y, size) => {
 // One soldier: a spearman in the crown's blue. `unpaid` greys him out.
 registerPlaceholder('military', 'soldier', (ctx, x, y, size, opts = {}) => {
   const r = size / 2;
-  const coat = opts.unpaid ? '#6a6a6a' : '#23365e';
+  const coat = opts.unpaid ? '#6a6a6a' : opts.coat ?? '#23365e';
   ctx.beginPath();
   ctx.moveTo(x + r * 0.45, y + r * 0.9);
   ctx.lineTo(x + r * 0.45, y - r * 1.1);
@@ -276,13 +276,22 @@ registerPlaceholder('military', 'banner', (ctx, x, y, size, opts = {}) => {
   }
   ctx.lineTo(x, y - r * 0.2);
   ctx.closePath();
-  ctx.fillStyle = opts.unpaid ? '#7d776c' : '#23365e';
+  const [field, charge] = opts.colours ?? ['#23365e', '#efe6cf'];
+  ctx.fillStyle = opts.unpaid ? '#7d776c' : field;
   ctx.fill();
   outline(ctx, 0.7);
   if (!opts.unpaid) {
     ctx.beginPath();
     ctx.arc(x + r * 0.45, y - r * 0.6, r * 0.16, 0, Math.PI * 2);
-    ctx.fillStyle = '#efe6cf';
+    ctx.fillStyle = charge;
     ctx.fill();
+  }
+  if (opts.rebel) {
+    ctx.beginPath();
+    ctx.moveTo(x + r * 0.05, y - r * 0.95);
+    ctx.lineTo(x + r * 0.85, y - r * 0.25);
+    ctx.strokeStyle = '#d0281e';
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
 });

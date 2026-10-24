@@ -7,8 +7,8 @@
 | M3 Laws and edicts | Law system, Authority, group reactions, effects over time | Done |
 | M3.5 Neighbours | The immediate neighbouring kingdoms brought to life in a small way, for variety and a sense of the wider world | Done |
 | M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Done |
-| M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Next |
-| M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Planned |
+| M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Done |
+| M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Next |
 | M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Planned |
 
 ## M1 acceptance criteria
@@ -19,6 +19,16 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M5 acceptance criteria
+- Five invented great houses (data/houses.json) with lords, seats, holdings, traits and banner colours; their lands pay the crown half their taxes and keep their own soldiers.
+- Loyalty drifts with the nobles' mood, Authority, favour, grievance, a council seat and the laws a house's traits care about; disloyal houses unsettle their lands.
+- Demands (data/demands.json) for land, exemptions, office, marriage, revenge and coin pause the game and default to refusal.
+- Crown actions: honours, summon to court, levies, fines, grants of land, stripping a title.
+- Rebellion below loyalty 15, resolved by weighing the crown's soldiers against the rebels'.
+- Deposition after six months of collapsed Authority amid disorder or rebellion, with a chronicle of the reign and a regency or a new reign.
+- House banners on the map, slashed red in rebellion; a Great Houses screen and house cards.
+- Version 5 saves load with the houses in their lands.
 
 ## M4 acceptance criteria
 - Each settlement's faith mix drifts monthly towards a target set by the crown's patronage, laws and the Eternal Fire's pull on cities.

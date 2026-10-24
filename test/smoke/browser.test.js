@@ -38,15 +38,27 @@ for (const vp of VIEWPORTS) {
     const startDay = await page.evaluate(() => window.northernWars.state.day);
 
     // Let traffic build up at full speed, then pause for steady screenshots.
-    // With this seed an envoy from Cintra arrives on 1 April: the game pauses
-    // and asks for an answer.
+    // With this seed, decisions arrive on 1 April (an envoy from Cintra and
+    // a demand from a great house): the game pauses for each in turn.
     await page.click('[data-speed="4"]');
     await page.waitForSelector('.envoy-from', { timeout: 20000 });
-    assert.equal(await page.evaluate(() => window.northernWars.speed), 0, 'an envoy pauses the game');
-    assert.match(await page.textContent('#sheet-body'), /An envoy from Cintra[\s\S]*border dispute/i);
+    assert.equal(await page.evaluate(() => window.northernWars.speed), 0, 'a decision pauses the game');
     await page.screenshot({ path: join(OUT, `${vp.name}-envoy.png`) });
-    await page.click('[data-choice="1"]');
-    assert.equal(await page.evaluate(() => window.northernWars.state.envoys.length), 0);
+    const seen = [];
+    for (let i = 0; i < 6; i++) {
+      const pending = await page.evaluate(() => {
+        const st = window.northernWars.state;
+        return st.envoys.length + st.petitions.length + st.demands.length;
+      });
+      if (!pending) break;
+      if (!(await page.isVisible('.envoy-from'))) {
+        await page.click('[data-speed="1"]');
+        await page.waitForSelector('.envoy-from', { timeout: 5000 });
+      }
+      seen.push(await page.textContent('.envoy-from'));
+      await page.click('[data-choice="1"]');
+    }
+    assert.ok(seen.some((t) => /An envoy from Cintra/.test(t)), `decisions seen: ${seen}`);
     await page.click('[data-speed="4"]');
     await page.waitForFunction((d) => window.northernWars.state.day >= d + 40, startDay, { timeout: 20000 });
     await page.click('[data-speed="0"]');
@@ -225,6 +237,57 @@ test('faith screen, petitions and riot markers', async () => {
   await page.touchscreen.tap(c.x, c.y);
   await page.waitForSelector('#sheet:not([hidden])');
   assert.match(await page.textContent('#sheet-body'), /Maribor[\s\S]*Tension between peoples[\s\S]*Riots or raiders/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+// The great houses: their screen and cards, honours and a grant of land, a
+// rebel banner on the map, and a deposition when the crisis runs its course.
+test('great houses, rebellion and deposition', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  const s = step(createState(world, 1262), 20, world);
+  s.envoys = [];
+  s.petitions = [];
+  s.demands = [];
+  s.houses.ostrowicz.rebel = { since: s.day, months: 1 };
+  s.houses.ostrowicz.loyalty = 5;
+  s.authority = 2;
+  s.crisisMonths = 5;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('dialog', (d) => d.accept());
+  await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await page.goto(`${base}?paused`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+
+  await page.click('#menu-button');
+  await page.click('[data-action="nobles"]');
+  assert.match(await page.textContent('#sheet-body'), /The great houses[\s\S]*regency[\s\S]*House Ostrowicz[\s\S]*In rebellion/);
+  await page.screenshot({ path: join(OUT, 'nobles.png') });
+
+  await page.click('[data-house="brodowin"]');
+  assert.match(await page.textContent('#sheet-body'), /Wenzel Brodowin[\s\S]*Loyalist[\s\S]*Dorndal \(seat\)/);
+  const t = await page.evaluate(() => window.northernWars.state.treasury);
+  await page.click('[data-house-action="honours"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.treasury), t - 300);
+  await page.click('[data-house-pick="grant"]');
+  await page.click('[data-grant="white_orchard"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.settlements.white_orchard.holder), 'brodowin');
+  await page.screenshot({ path: join(OUT, 'house.png') });
+  await page.click('#sheet-close');
+
+  // Let the crisis run: within a month or so the houses depose the crown.
+  await page.click('[data-speed="4"]');
+  await page.waitForSelector('[data-regency]', { timeout: 20000 });
+  assert.match(await page.textContent('#sheet-body'), /The crown is deposed[\s\S]*Reign 1/);
+  await page.screenshot({ path: join(OUT, 'deposed.png') });
+  await page.click('[data-regency]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.reign.number), 2);
   assert.deepEqual(errors, []);
   await context.close();
 });

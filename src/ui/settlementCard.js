@@ -14,7 +14,9 @@ export function settlementCardHtml(world, state, id, data) {
   const s = state.settlements[id];
   const pop = totalPopulation(s);
   const capital = id === world.kingdom.capital;
-  const holder = s.holder === 'crown' ? 'Crown demesne' : escapeHtml(s.holder);
+  const holder = s.holder === 'crown' || !world.houses.houses[s.holder]
+    ? 'Crown demesne'
+    : `<button type="button" class="chip" data-house="${s.holder}">${escapeHtml(world.houses.houses[s.holder].name)}</button>`;
   const sub = `${capital ? `${TYPE_NAMES[geo.type]}, seat of the crown of ${escapeHtml(world.kingdom.name)}` : TYPE_NAMES[geo.type]}, in ${TERRAIN_NAMES[world.terrainOf[id]]}`;
 
   return `

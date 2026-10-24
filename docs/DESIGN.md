@@ -82,6 +82,15 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 - Houses make demands (land, offices, exemptions, marriages, revenge) through events.
 - Crown actions: grant land or honours, summon to court, demand levies, impose a fine, strip a title (costs Authority, risks rebellion).
 
+#### As built in M5
+- Houses (invented): Dravnik (Mayena; proud, warlike), Wolbrecht (Houtborg; devout, cautious), Ostrowicz (Petrelsteyn; old blood, schemer), Gelbrand (Red Fort; greedy, pious), Brodowin (Dorndal; loyalist). Each holds its seat and two villages.
+- Held lands: the crown takes 50% of their taxes and trade (0% while exempt or in rebellion) and pays none of their soldiers.
+- Loyalty target = starting loyalty + 0.5 x (nobles' opinion - 50) + 0.2 x (Authority - 50) + favour - grievance + 10 with a council seat + trait cares. Drifts 1% a day; favour decays 10% and grievance 5% a month.
+- Lands of a house add 0.1 unrest per point of loyalty below 50, and +20 in rebellion. Average house loyalty above 50 adds to Authority each month.
+- Rebellion: below 15 loyalty, 30% a month; houses below 30 may join. After three months the crown's committed soldiers (half its own garrisons, halved again if unpaid) are weighed against the rebels' soldiers plus a fifth of their people. Win at 1.5x: the rebels forfeit all but their seats, Authority +10. Otherwise after six months the crown cedes land and 15 Authority.
+- Deposition: Authority below 15 together with Stability below 75 or a rebellion; six such months (a good month only eases the count) bring a regency (Authority 40, grievances halved) and a chronicle of the reign.
+- Stability now averages unrest by people and by settlement equally.
+
 ### Military holdings
 - Garrisons per settlement and castles, funded monthly.
 - Patrol routes along roads reduce banditry and raise road safety (visible as patrol units).

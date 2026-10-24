@@ -12,4 +12,5 @@ export { relationTarget, foreignTrade, tradeFactor, canSetStance, envoyText } fr
 export { ledgerNet } from './economy.js';
 export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
 export { petitionText } from './petitions.js';
+export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, demandText } from './houses.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects } from './economy.js';

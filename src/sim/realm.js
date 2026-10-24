@@ -7,6 +7,7 @@ import { lawEffects, stepOpinionDay, opinionUnrest } from './laws.js';
 import { stepNeighboursDay, monthlyEnvoy } from './neighbours.js';
 import { stepCultureDay, monthlyCulture, tensionUnrest } from './culture.js';
 import { stepPetitionsDay, monthlyPetition } from './petitions.js';
+import { stepHousesDay, monthlyHouses, holderUnrest } from './houses.js';
 
 const CHRONICLE_LIMIT = 200;
 
@@ -14,17 +15,22 @@ export function clamp(v, lo, hi) {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-// Stability is public order, so it follows unrest weighted by how many people
-// live under it.
+// Stability is public order. Half of it follows unrest weighted by how many
+// people live under it, half by settlement, so a sullen countryside counts
+// even when the cities are content.
 export function computeStability(state) {
   let people = 0;
   let weighted = 0;
-  for (const s of Object.values(state.settlements)) {
+  let sum = 0;
+  const all = Object.values(state.settlements);
+  for (const s of all) {
     const pop = popOf(s);
     people += pop;
     weighted += pop * s.unrest;
+    sum += s.unrest;
   }
-  return people > 0 ? clamp(100 - weighted / people, 0, 100) : 0;
+  if (!people) return 0;
+  return clamp(100 - (weighted / people + sum / all.length) / 2, 0, 100);
 }
 
 function popOf(s) {
@@ -38,6 +44,7 @@ export function stepRealmDay(state, world, rng) {
   stepNeighboursDay(state, world);
   stepCultureDay(state, world);
   stepPetitionsDay(state, world);
+  stepHousesDay(state, world);
   const law = lawEffects(state, world);
   const m = world.economy.mood;
   for (const [id, s] of Object.entries(state.settlements)) {
@@ -48,7 +55,7 @@ export function stepRealmDay(state, world, rng) {
     // Each settlement has a mood it settles towards: where it started, moved
     // by hunger, winter, unpaid soldiers and what the crown has built there.
     const type = world.byId[id].type;
-    let unrestTarget = start.unrest + fx.unrest + s.hunger * m.hungerUnrest + law.unrest[type] + opinionUnrest(state, world, id, s) + tensionUnrest(world, s);
+    let unrestTarget = start.unrest + fx.unrest + s.hunger * m.hungerUnrest + law.unrest[type] + opinionUnrest(state, world, id, s) + tensionUnrest(world, s) + holderUnrest(state, world, s);
     if (date.season === 'winter') unrestTarget += m.winterUnrest;
     if (state.unpaid && s.garrison > 0) unrestTarget += world.economy.debt.unpaidUnrest;
     unrestTarget -= Math.max(0, s.prosperity - 50) * m.prosperityCalm;
@@ -67,6 +74,7 @@ export function stepRealmDay(state, world, rng) {
     monthlyEnvoy(state, world, rng);
     monthlyCulture(state, world, rng);
     monthlyPetition(state, world, rng);
+    monthlyHouses(state, world, rng);
   }
 }
 

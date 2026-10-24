@@ -4,8 +4,9 @@ import { computeStability, addDispatch } from './realm.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
+import { defaultHouses, applyHoldings, newReign } from './houses.js';
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -36,10 +37,17 @@ export function createState(world, seed = 1) {
     sympathy: 20,
     petitions: [],
     nextPetitionId: 1,
+    houses: defaultHouses(world),
+    demands: [],
+    nextDemandId: 1,
+    crisisMonths: 0,
+    depositions: [],
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],
   };
+  applyHoldings(state, world);
+  state.reign = newReign(state, day);
   for (const id of Object.keys(settlements)) settlements[id].tension = tensionTarget(state, world, id);
   state.stability = computeStability(state);
   if (k.opening) addDispatch(state, k.opening);

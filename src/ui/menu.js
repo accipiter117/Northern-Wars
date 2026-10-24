@@ -28,6 +28,7 @@ export function realmMenuHtml(world, state, hasSave) {
     </dl>
     <div class="menu-list">
       <button type="button" data-action="laws">Laws and edicts<small>Decree, and see how the realm feels about it</small></button>
+      <button type="button" data-action="nobles">The great houses<small>Loyalty, lands, demands and the crown's hand</small></button>
       <button type="button" data-action="faith">Faith and peoples<small>Faiths, tensions, the Scoia'tael and petitions</small></button>
       <button type="button" data-action="neighbours">Neighbouring realms<small>Relations, trade and envoys</small></button>
       <button type="button" data-action="ledger">Ledger<small>Where the crowns come from and where they go</small></button>
@@ -39,7 +40,7 @@ export function realmMenuHtml(world, state, hasSave) {
       <button type="button" data-action="new" class="danger">Start a new reign</button>
     </div>
     <h3>Coming in later milestones</h3>
-    <p class="sub">Nobles, Military.</p>
+    <p class="sub">Military.</p>
   `;
 }
 

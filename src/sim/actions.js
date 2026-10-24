@@ -5,6 +5,7 @@ import { addDispatch } from './realm.js';
 import { canDecree, decree } from './laws.js';
 import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
 import { resolvePetition } from './petitions.js';
+import { canHouseAction, houseAction, resolveDemand } from './houses.js';
 
 const MATERIALS = ['timber', 'stone', 'iron'];
 
@@ -57,6 +58,18 @@ export function applyAction(state, world, action) {
   if (action.type === 'petition') {
     const next = structuredClone(state);
     if (!resolvePetition(next, world, action.id, action.choice)) return { state, error: 'That petition has been settled.' };
+    return { state: next };
+  }
+  if (action.type === 'house') {
+    const check = canHouseAction(state, world, action.house, action.kind, action.settlement);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    houseAction(next, world, action.house, action.kind, action.settlement);
+    return { state: next };
+  }
+  if (action.type === 'demand') {
+    const next = structuredClone(state);
+    if (!resolveDemand(next, world, action.id, action.choice)) return { state, error: 'That demand has been settled.' };
     return { state: next };
   }
   return { state, error: `Unknown action ${action.type}.` };

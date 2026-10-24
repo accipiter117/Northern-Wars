@@ -9,6 +9,7 @@ import { addDispatch } from './realm.js';
 import { number } from './text.js';
 import { lawEffects } from './laws.js';
 import { foreignTrade, stanceCost } from './neighbours.js';
+import { crownShare } from './houses.js';
 
 const GOODS = ['timber', 'stone', 'iron'];
 
@@ -136,6 +137,7 @@ function advanceConstruction(state, world) {
     if (s.construction.daysLeft <= 0) {
       const b = s.construction.building;
       s.buildings.push(b);
+      if (state.reign) state.reign.built += 1;
       s.construction = null;
       addDispatch(state, `The ${world.buildings[b].name.toLowerCase()} at ${world.byId[id].name} is finished.`);
     }
@@ -165,9 +167,11 @@ export function monthlyLedger(state, world) {
     const pop = totalPopulation(s);
     const mult = prosperityMult(world, s);
     const fx = buildingEffects(world, s);
-    income.taxes += pop * e.taxes.perPersonMonth * mult * Math.max(0, 1 + law.tax);
+    // Lords keep part of what their lands yield, and pay their own soldiers.
+    const share = crownShare(state, world, s);
+    income.taxes += pop * e.taxes.perPersonMonth * mult * Math.max(0, 1 + law.tax) * share;
     const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
-    income.trade += pop * e.trade.perPersonMonth[world.byId[id].type] * focus * mult * (1 + fx.trade) * tradeMult;
+    income.trade += pop * e.trade.perPersonMonth[world.byId[id].type] * focus * mult * (1 + fx.trade) * tradeMult * share;
     for (const g of GOODS) {
       const over = s.stock[g] - e.goods.storageCap;
       if (over > 0) {
@@ -175,7 +179,7 @@ export function monthlyLedger(state, world) {
         s.stock[g] = e.goods.storageCap;
       }
     }
-    expenses.garrisons += s.garrison * e.upkeep.garrisonPerSoldierMonth * (1 + law.garrisonUpkeep);
+    if (s.holder === 'crown') expenses.garrisons += s.garrison * e.upkeep.garrisonPerSoldierMonth * (1 + law.garrisonUpkeep);
     for (const b of s.buildings) expenses.upkeep += world.buildings[b].upkeep;
   }
   if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth;

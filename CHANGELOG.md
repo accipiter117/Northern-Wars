@@ -1,5 +1,15 @@
 # Changelog
 
+## M5 Nobility
+- Five great houses with lords, seats, lands, traits and colours. Their lands pay the crown half their taxes, keep their own soldiers and fly their banners on the map.
+- Loyalty, favour, grievance and ambition for each house, with demands that pause the game: land, tax exemptions, a council seat, a royal match, a feud, coin.
+- The crown's hand: bestow honours, summon to court, demand levies, impose a fine, grant land, strip a title.
+- Rebellion when a house is pushed too far, decided by the strength of the crown's soldiers; rebel banners are slashed red.
+- Deposition when Authority collapses amid disorder or rebellion, with a chronicle of the reign and the choice of a regency or a new reign.
+- Decisions that arrive together now open one after another.
+- Stability now gives the countryside an equal say with the cities.
+- Save version 6.
+
 ## M4 Faith, culture and peoples
 - Faith shifts over the years with the crown's patronage and laws; the Eternal Fire slowly gains in the cities.
 - Tension between humans and non-humans in every settlement, shown on the settlement card where non-humans live.

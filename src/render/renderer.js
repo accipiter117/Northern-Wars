@@ -78,12 +78,19 @@ export function createRenderer(canvas, world, cam) {
     if (state === infraState) return;
     infraState = state;
     const key = Object.entries(state.settlements)
-      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}`)
+      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}`)
       .join('|') + (state.unpaid ? '!' : '');
     if (key !== infraKey) {
       infraKey = key;
       dirty = true;
     }
+  }
+
+  // A lord's lands fly his colours; a rebel's banner is slashed in red.
+  function bannerFor(s) {
+    const house = world.houses?.houses[s.holder];
+    if (!house) return {};
+    return { colours: house.colours, rebel: !!infraState.houses?.[s.holder]?.rebel };
   }
 
   function drawInfrastructure(c, st, s, unpaid) {
@@ -101,14 +108,17 @@ export function createRenderer(canvas, world, cam) {
       getSprite('building', b, 'scaffold').draw(c, p.x + Math.cos(rad) * dist, p.y + Math.sin(rad) * dist, bsize);
     });
     const n = figures(s.garrison);
-    if (n) {
+    const banner = bannerFor(s);
+    // The crown pays only its own soldiers, so only they go grey when pay stops.
+    const grey = unpaid && s.holder === 'crown';
+    if (n || banner.colours) {
       const size = 9 * k;
       const step = size * 0.6;
       const x0 = p.x - iconR - 4 * k;
       for (let i = 0; i < n; i++) {
-        getSprite('military', 'soldier').draw(c, x0 - i * step, p.y + 3 * k, size, { unpaid });
+        getSprite('military', 'soldier').draw(c, x0 - i * step, p.y + 3 * k, size, { unpaid: grey, coat: banner.colours?.[0] });
       }
-      getSprite('military', 'banner').draw(c, x0 - n * step - 2 * k, p.y, 14 * k, { unpaid });
+      getSprite('military', 'banner').draw(c, x0 - n * step - 2 * k, p.y, 14 * k, { unpaid: grey, ...banner });
     }
   }
 

@@ -20,9 +20,10 @@ test('every neighbour on the map has a realm, a known gateway and sound envoy da
 });
 
 test('a friendly stance warms a realm over time and costs gifts each month', () => {
+  const base = run(createState(world, 1), 365);
   let s = act(createState(world, 1), { type: 'stance', realm: 'kaedwen', stance: 'friendly' }).state;
   s = run(s, 365);
-  assert.ok(s.neighbours.kaedwen.relation > 15, `${s.neighbours.kaedwen.relation}`);
+  assert.ok(s.neighbours.kaedwen.relation > base.neighbours.kaedwen.relation + 10, `${s.neighbours.kaedwen.relation}`);
   assert.equal(s.ledger.history.at(-1).expenses.gifts, 30);
 });
 

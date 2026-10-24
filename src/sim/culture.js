@@ -81,6 +81,7 @@ export function monthlyCulture(state, world, rng) {
       s.unrest = clamp(s.unrest + c.riot.unrest, 0, 100);
       s.prosperity = clamp(s.prosperity - c.riot.prosperity, 0, 100);
       s.troubled = c.riot.troubledDays;
+      if (state.reign) state.reign.riots += 1;
       addDispatch(state, `Riot in ${name}. Stones thrown, shutters broken, a dwarf's shop set alight. The watch restored order by nightfall.`);
     }
   }
@@ -109,6 +110,7 @@ function pogrom(state, world, rng, id, s, name) {
   s.tension = clamp(s.tension + p.tensionAfter, 0, 100);
   s.unrest = clamp(s.unrest + world.culture.riot.unrest, 0, 100);
   s.troubled = world.culture.riot.troubledDays * 2;
+  if (state.reign) state.reign.pogroms += 1;
   addDispatch(state, `Pogrom in ${name}. A mob went through the non-human quarter with torches and cudgels. ${lost} dwarves, elves and halflings are dead or fled. Mahakam and Brokilon will hear of it.`);
 }
 
