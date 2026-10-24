@@ -16,7 +16,7 @@ test('every law has a valid default and every option names known groups and effe
     for (const opt of Object.values(law.options)) {
       for (const g of Object.keys(opt.opinion)) assert.ok(groups.includes(g), `${id}: ${g}`);
       for (const k of Object.keys(opt.effects)) assert.ok(known.includes(k), `${id}: ${k}`);
-      assert.doesNotMatch(opt.blurb + opt.name, /—/);
+      assert.doesNotMatch(opt.blurb + opt.name, /\u2014/);
     }
   }
 });

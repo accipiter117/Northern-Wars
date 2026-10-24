@@ -55,6 +55,14 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 - Faith: tolerance, Eternal Fire patronage, Melitele patronage.
 - Guild charters, road corvee labour, grain price controls, monster bounties (witcher contracts), registration of mages, noble tax privileges.
 
+#### As built in M3
+- Fourteen laws: taxation, noble tax privileges, guild charters, grain prices, road corvee, conscription, public order, the royal court, monster bounties, registration of mages, faith of the crown, non-human rights, the Old Ways, poor relief.
+- Nine groups: nobles, burghers, peasants, the three faiths and the three non-human peoples. Opinion 0 to 100, starting at 50. Peasants move village unrest, burghers town unrest and trade, nobles castle unrest and Authority; faiths and peoples move unrest by their share of each settlement.
+- A decree's opinion shock is 40% of the eventual shift, felt at once; the rest arrives as opinion drifts (2% of the gap a day).
+- Authority: +1 a month, plus or minus noble mood and the court, minus debt. Laws cost 5 to 20.
+- Garrisons no longer only shrink: they drift towards the size the conscription law calls for. Soldiers have no use beyond upkeep and order until M6.
+- `node tools/lawbalance.mjs` compares every option with the customary laws.
+
 ### Faith, culture and peoples
 - Faiths: the Eternal Fire (zealous, urban, hostile to non-humans and magic), Melitele (healing, charity, women and the poor), the Old Ways (rural, druidic, Velen).
 - Each settlement has a faith mix that shifts over time with patronage, laws, preachers and events.

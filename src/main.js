@@ -7,6 +7,7 @@ import { createTopbar } from './ui/topbar.js';
 import { createSheet } from './ui/sheet.js';
 import { settlementCardHtml } from './ui/settlementCard.js';
 import { realmMenuHtml, chronicleHtml, ledgerHtml } from './ui/menu.js';
+import { lawsHtml } from './ui/laws.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -98,6 +99,27 @@ async function boot() {
     body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
   }
 
+  let openLaw = null;
+  function openLaws() {
+    const body = sheet.open('laws', lawsHtml(world, state, openLaw));
+    body.onclick = (e) => {
+      const head = e.target.closest('[data-law]');
+      const pick = e.target.closest('[data-decree]');
+      if (head) {
+        openLaw = openLaw === head.dataset.law ? null : head.dataset.law;
+        sheet.patch('laws', lawsHtml(world, state, openLaw));
+      } else if (pick && !pick.disabled) {
+        const [law, option] = pick.dataset.decree.split(':');
+        const name = world.laws.laws[law].options[option].name;
+        // Decrees cost Authority and cannot be undone for a month, so ask once.
+        if (confirm(`Decree: ${name}?`)) {
+          order({ type: 'law', law, option });
+          sheet.patch('laws', lawsHtml(world, state, openLaw));
+        }
+      } else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
+  }
+
   function openLedger() {
     const body = sheet.open('ledger', ledgerHtml(world, state));
     body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
@@ -112,6 +134,7 @@ async function boot() {
     if (!action) return;
     if (action === 'chronicle') openChronicle();
     else if (action === 'ledger') openLedger();
+    else if (action === 'laws') openLaws();
     else if (action === 'back') openMenu();
     else if (action === 'save') save(false);
     else if (action === 'load') {
@@ -228,6 +251,7 @@ async function boot() {
     if (cur?.startsWith('settlement:')) sheet.patch(cur, settlementCardHtml(world, state, cur.slice(11), lookups));
     else if (cur === 'chronicle') sheet.patch(cur, chronicleHtml(state));
     else if (cur === 'ledger') sheet.patch(cur, ledgerHtml(world, state));
+    else if (cur === 'laws') sheet.patch(cur, lawsHtml(world, state, openLaw));
   }
 
   topbar.update(state);

@@ -27,6 +27,7 @@ export function realmMenuHtml(world, state, hasSave) {
       <div><dt>Iron</dt><dd>${number(stock.iron)}</dd></div>
     </dl>
     <div class="menu-list">
+      <button type="button" data-action="laws">Laws and edicts<small>Decree, and see how the realm feels about it</small></button>
       <button type="button" data-action="ledger">Ledger<small>Where the crowns come from and where they go</small></button>
       <button type="button" data-action="chronicle">Chronicle<small>Dispatches from across the realm</small></button>
       <button type="button" data-action="save">Save now<small>Also saved at the start of every month</small></button>
@@ -36,7 +37,7 @@ export function realmMenuHtml(world, state, hasSave) {
       <button type="button" data-action="new" class="danger">Start a new reign</button>
     </div>
     <h3>Coming in later milestones</h3>
-    <p class="sub">Laws, Faith and Peoples, Nobles, Military.</p>
+    <p class="sub">Faith and Peoples, Nobles, Military.</p>
   `;
 }
 
@@ -49,10 +50,10 @@ export function ledgerHtml(world, state) {
   const i = last.income;
   const e = last.expenses;
   const totalIn = i.taxes + i.trade + i.sales;
-  const totalOut = e.garrisons + e.upkeep + e.court + e.interest;
+  const totalOut = e.garrisons + e.upkeep + e.court + (e.edicts ?? 0) + e.interest;
   const row = (label, v) => `<div><dt>${label}</dt><dd>${signed(v)}</dd></div>`;
   const history = state.ledger.history.slice().reverse().map((h) => {
-    const net = h.income.taxes + h.income.trade + h.income.sales - h.expenses.garrisons - h.expenses.upkeep - h.expenses.court - h.expenses.interest;
+    const net = h.income.taxes + h.income.trade + h.income.sales - h.expenses.garrisons - h.expenses.upkeep - h.expenses.court - (h.expenses.edicts ?? 0) - h.expenses.interest;
     return `<tr><td>${MONTHS[h.month - 1].name.slice(0, 3)} ${h.year}</td><td>${signed(net)}</td><td>${number(h.expenses.construction)}</td><td>${signed(h.treasury)}</td></tr>`;
   }).join('');
   return `
@@ -61,8 +62,8 @@ export function ledgerHtml(world, state) {
     <h3>${MONTHS[last.month - 1].name} ${last.year}: income</h3>
     <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Total', totalIn)}</dl>
     <h3>Expenses</h3>
-    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
-    <p class="sub">Building works paid for this month: ${number(e.construction)} crowns.</p>
+    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Edicts', e.edicts ?? 0)}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
+    <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on building works, ${number(e.decrees ?? 0)} on decrees.</p>
     <h3>The past year</h3>
     <table class="history"><thead><tr><th>Month</th><th>Net</th><th>Works</th><th>Treasury</th></tr></thead><tbody>${history}</tbody></table>
   `;

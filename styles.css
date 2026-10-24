@@ -183,3 +183,15 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .history th { text-align: right; color: var(--muted); font-weight: 400; padding: 4px; }
 .history td { text-align: right; padding: 4px; border-bottom: 1px dotted var(--line); }
 .history th:first-child, .history td:first-child { text-align: left; }
+
+/* Laws (M3) */
+.law { border: 1px solid var(--line); border-radius: 8px; margin: 6px 0; background: rgba(0, 0, 0, 0.12); }
+.law.open { border-color: var(--gold); }
+.law-head { width: 100%; text-align: left; border: none; background: none; padding: 8px 12px; display: grid; gap: 2px; }
+.law-now { font-size: 14px; color: var(--muted); }
+.taking { color: var(--gold); font-style: italic; margin-left: 6px; }
+.law-options { display: grid; gap: 6px; padding: 0 8px 8px; }
+.law-option.current { padding: 8px 12px; display: grid; gap: 2px; border: 1px dashed var(--line); border-radius: 8px; }
+.gauge.mood span { background: #7f9f6a; }
+.up { color: #9fc48a; }
+.down { color: #e0745e; }
