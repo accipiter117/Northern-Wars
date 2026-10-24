@@ -10,7 +10,7 @@ A mobile-first browser kingdom simulator set in the Witcher world. Player is the
 - Node 20+ for tests only: node:test for simulation tests, Playwright for browser smoke tests.
 
 ## Architecture
-- src/sim/: pure simulation. No DOM, no window, no timers. step(state, days, rng) returns the new state. Must run headless in Node.
+- src/sim/: pure simulation. No DOM, no window, no timers. step(state, days, world) returns the new state; the RNG streams live in state.rng so saves resume exactly. Must run headless in Node.
 - src/render/: canvas map, terrain, settlements, ambient units, camera (pan, pinch zoom, tap).
 - src/ui/: DOM panels, top bar, menus, dispatch feed.
 - src/main.js: wires sim, render and UI; owns the game loop and speed controls.

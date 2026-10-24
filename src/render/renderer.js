@@ -149,23 +149,24 @@ export function createRenderer(canvas, world, cam) {
     }
   }
 
-  // Units first (they sit on top), then settlements. Generous radii keep
-  // small targets comfortable for a thumb.
+  // Nearest thing under the finger wins, with settlements favoured: carts
+  // crowd the roads into towns, and a tap on a town means the town.
   function pick(sx, sy, state, frac) {
     let best = null;
     for (const u of state.ambient.units) {
       const w = unitPosition(world, u, u.pos + u.speed * frac);
       const p = toScreen(cam, w.x, w.y);
       const d = Math.hypot(p.x - sx, p.y - 4 - sy);
-      if (d < 20 && (!best || d < best.d)) best = { d, unit: u.id };
+      if (d < 20 && (!best || d < best.d)) best = { d, hit: { unit: u.id } };
     }
-    if (best) return { unit: best.unit };
     for (const st of world.geography.settlements) {
       const p = toScreen(cam, st.x, st.y);
       const d = Math.hypot(p.x - sx, p.y - sy);
-      if (d < Math.max(22, iconSize(st.type) / 2 + 8) && (!best || d < best.d)) best = { d, settlement: st.id };
+      const reach = Math.max(22, iconSize(st.type) / 2 + 8);
+      const score = d * 0.5;
+      if (d < reach && (!best || score < best.d)) best = { d: score, hit: { settlement: st.id } };
     }
-    return best ? { settlement: best.settlement } : null;
+    return best?.hit ?? null;
   }
 
   function unitScreen(state, id, frac) {

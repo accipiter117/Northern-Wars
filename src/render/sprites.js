@@ -154,6 +154,22 @@ registerPlaceholder('unit', 'caravan', (ctx, x, y, size, opts = {}) => {
   wheel(ctx, x + r * 0.45, y + r * 0.35, r * 0.2);
 });
 
+registerPlaceholder('unit', 'grain', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.fillStyle = '#d9b45a';
+  for (const dx of [-0.4, 0.05, 0.45]) {
+    ctx.beginPath();
+    ctx.ellipse(x + dx * r, y - r * 0.25, r * 0.28, r * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    stroke(ctx, 0.8);
+  }
+  ctx.fillStyle = '#7b5530';
+  ctx.fillRect(x - r * 0.8, y + r * 0.05, r * 1.6, r * 0.3);
+  ctx.strokeRect(x - r * 0.8, y + r * 0.05, r * 1.6, r * 0.3);
+  wheel(ctx, x - r * 0.5, y + r * 0.45, r * 0.2);
+  wheel(ctx, x + r * 0.5, y + r * 0.45, r * 0.2);
+});
+
 registerPlaceholder('unit', 'patrol', (ctx, x, y, size) => {
   const r = size / 2;
   // A kite shield in deep blue, the crown's colour.

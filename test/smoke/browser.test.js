@@ -47,14 +47,25 @@ for (const vp of VIEWPORTS) {
     assert.match(await page.textContent('#season'), /Spring|Summer/);
     const units = await page.evaluate(() => window.northernWars.state.ambient.units.map((u) => u.kind));
     assert.ok(units.includes('caravan') && units.includes('patrol') && units.includes('barge'), `traffic: ${units}`);
+    assert.match(await page.textContent('#m-granary'), /^[\d,]+$/);
     await page.screenshot({ path: join(OUT, `${vp.name}-map.png`) });
 
     // Tap Vizima: its card opens.
     const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
     await page.touchscreen.tap(viz.x, viz.y);
     await page.waitForSelector('#sheet:not([hidden])');
-    assert.match(await page.textContent('#sheet-body'), /Vizima[\s\S]*Population[\s\S]*Crown demesne/);
+    assert.match(await page.textContent('#sheet-body'), /Vizima[\s\S]*Population[\s\S]*Crown demesne[\s\S]*Stores[\s\S]*Raise a building/);
     await page.screenshot({ path: join(OUT, `${vp.name}-card.png`) });
+
+    // Order a market hall in Vizima: coin leaves the treasury, works begin.
+    const treasury = await page.evaluate(() => window.northernWars.state.treasury);
+    await page.click('[data-build="market"]');
+    await page.waitForFunction(() => window.northernWars.state.settlements.vizima.construction, null, { timeout: 5000 });
+    assert.match(await page.textContent('[data-part="works"]'), /Raising: Market hall/);
+    assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - 600);
+    assert.equal(await page.evaluate(() => window.northernWars.state.settlements.vizima.construction.building), 'market');
+    await page.locator('[data-part="works"]').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(OUT, `${vp.name}-building.png`) });
     await page.click('#sheet-close');
     assert.equal(await page.isHidden('#sheet'), true);
 
@@ -82,6 +93,10 @@ for (const vp of VIEWPORTS) {
     await page.click('#menu-button');
     await page.click('[data-action="save"]');
     assert.ok(await page.evaluate(() => localStorage.getItem('northern-wars.save')?.includes('northern-wars-save')));
+    await page.click('[data-action="ledger"]');
+    assert.match(await page.textContent('#sheet-body'), /Taxes[\s\S]*Garrisons[\s\S]*The past year/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-ledger.png`) });
+    await page.click('[data-action="back"]');
     await page.click('[data-action="chronicle"]');
     assert.match(await page.textContent('#sheet-body'), /Spring comes late/);
     await page.screenshot({ path: join(OUT, `${vp.name}-chronicle.png`) });
