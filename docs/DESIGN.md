@@ -69,6 +69,13 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 - Each settlement has a faith mix that shifts over time with patronage, laws, preachers and events.
 - Tension between humans and non-humans per settlement, raised by Eternal Fire influence, hard times and certain laws; lowered by charters and prosperity. High tension produces riots and pogroms, which feed Scoia'tael sympathy among elves.
 
+#### As built in M4
+- Faith drifts 3% a month towards a target: the settlement's founding mix, x1.5 for the crown's patron faith and x0.85 for its rivals, x1.25 for the Fire in cities, x0.5 for the Old Ways while suppressed, x1.1 for the Fire while magic is banished.
+- Tension target = 15 + 0.4 per percent of Fire worshippers + 30 x hunger + 0.3 per point of prosperity below 50, plus laws (charter -10, expulsion +25, Fire patronage +8, martial law -5). It adds up to 15% of itself to unrest, scaled by the non-human share (full at one in eight).
+- Riots above tension 50, pogroms above 72. Under the customary laws a ten-year reign sees none; Fire patronage with expulsion sees about four riots a year.
+- Scoia'tael sympathy: 20 + 1.2 per point the elves' opinion falls below 50, plus 15 per pogrom. Above 60, ambushes near forests and Brokilon.
+- Petitions (data/petitions.json) reuse the envoy card: a preacher, a hospice, a grove, a walled quarter, elf youths, a pilgrim escort, a dwarven forge.
+
 ### Nobility and vassal lords
 - Five great houses with original names (invented, Slavic and Germanic flavour, not canon characters), each holding a seat and several settlements.
 - Each house: loyalty, power (levies and wealth), ambition, and one or two traits.

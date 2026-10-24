@@ -84,7 +84,13 @@ for (const vp of VIEWPORTS) {
       const nw = window.northernWars;
       for (const u of nw.state.ambient.units) {
         const p = nw.unitScreenOf(u.id);
-        if (p && p.x > 30 && p.x < innerWidth - 30 && p.y > 160 && p.y < innerHeight - 30) return p;
+        if (!p) continue;
+        // Towns win taps close to them, so pick a unit out on the open road.
+        const clear = nw.world.geography.settlements.every((st) => {
+          const q = nw.screenOf(st.id);
+          return Math.hypot(q.x - p.x, q.y - p.y) > 50;
+        });
+        if (clear && p.x > 30 && p.x < innerWidth - 30 && p.y > 160 && p.y < innerHeight - 30) return p;
       }
       return null;
     });
@@ -174,6 +180,51 @@ test('buildings and garrisons show beside their settlements', async () => {
   await page.touchscreen.tap(z.x - 34, z.y + 2);
   await page.waitForSelector('#sheet:not([hidden])');
   assert.match(await page.textContent('#sheet-body'), /Vizima[\s\S]*unpaid[\s\S]*Raising: Shrine/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+// Faith and peoples: a riot-struck town is marked on the map, the Faith
+// screen lists the tensest places and waiting petitions, and a petition can
+// be answered from there.
+test('faith screen, petitions and riot markers', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  const s = step(createState(world, 1262), 20, world);
+  s.envoys = [];
+  s.settlements.maribor.tension = 70;
+  s.settlements.maribor.troubled = 40;
+  s.sympathy = 55;
+  s.petitions = [{ id: 1, petition: 'fire_preacher', place: 'vizima', day: s.day }];
+  s.nextPetitionId = 2;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await page.goto(`${base}?paused`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  await page.screenshot({ path: join(OUT, 'riot-marker.png') });
+
+  await page.click('#menu-button');
+  await page.click('[data-action="faith"]');
+  const text = await page.textContent('#sheet-body');
+  assert.match(text, /Petitions waiting[\s\S]*preacher[\s\S]*Faith across the realm[\s\S]*Scoia'tael[\s\S]*Maribor \(riot-struck\)/);
+  await page.screenshot({ path: join(OUT, 'faith.png') });
+
+  await page.click('[data-petition="1"]');
+  assert.match(await page.textContent('#sheet-body'), /A petition from Vizima/);
+  await page.screenshot({ path: join(OUT, 'petition.png') });
+  await page.click('[data-choice="1"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.petitions.length), 0);
+
+  // The riot-struck town's card says so.
+  const c = await page.evaluate(() => window.northernWars.screenOf('maribor'));
+  await page.touchscreen.tap(c.x, c.y);
+  await page.waitForSelector('#sheet:not([hidden])');
+  assert.match(await page.textContent('#sheet-body'), /Maribor[\s\S]*Tension between peoples[\s\S]*Riots or raiders/);
   assert.deepEqual(errors, []);
   await context.close();
 });

@@ -6,6 +6,7 @@ import { seasonOf } from './calendar.js';
 import { dist, nearby, roadPath, polylineLength } from './world.js';
 import { totalPopulation } from './state.js';
 import { foreignTrade } from './neighbours.js';
+import { realmFaith } from './culture.js';
 
 export function stepAmbientDay(state, world, rng) {
   const cfg = world.ambient;
@@ -46,6 +47,15 @@ const RATE = {
   foreign(state, k, world) {
     return Math.min(1.5, foreignTrade(state, world).total / k.tradeBaseline);
   },
+  pilgrim(state, k) {
+    return Math.min(1.5, realmFaith(state).melitele / k.faithBaseline);
+  },
+  // Refugees only walk when somewhere is in trouble or starving.
+  refugee(state) {
+    let troubled = 0;
+    for (const s of Object.values(state.settlements)) if (s.troubled > 0 || s.hunger > 0.2) troubled++;
+    return Math.min(1, troubled / 3);
+  },
   grain(state, k) {
     const flowing = Object.values(state.flows.in).reduce((a, b) => a + b, 0);
     return Math.min(1, flowing / k.flowBaseline);
@@ -53,6 +63,34 @@ const RATE = {
 };
 
 const SPAWNERS = {
+  // Pilgrims set out for the Temple of Melitele from wherever her faithful are.
+  pilgrim(state, world, rng) {
+    const shrine = world.ambient.kinds.pilgrim.shrine;
+    if (!world.byId[shrine]) return null;
+    const ids = world.geography.settlements.map((s) => s.id).filter((id) => id !== shrine);
+    const from = weightedPick(rng, ids, (id) => totalPopulation(state.settlements[id]) * state.settlements[id].faith.melitele);
+    const route = roadPath(world, from, shrine);
+    return route && route.length > 1 ? { route } : null;
+  },
+
+  // People flee a troubled or starving place for the nearest town or city
+  // that is neither.
+  refugee(state, world, rng) {
+    const bad = (id) => state.settlements[id].troubled > 0 || state.settlements[id].hunger > 0.2;
+    const sources = world.geography.settlements.map((s) => s.id).filter(bad);
+    if (!sources.length) return null;
+    const from = rng.pick(sources);
+    let best = null;
+    for (const st of world.geography.settlements) {
+      if ((st.type !== 'town' && st.type !== 'city') || bad(st.id) || st.id === from) continue;
+      const route = roadPath(world, from, st.id);
+      if (!route) continue;
+      const d = polylineLength(route.map((id) => world.byId[id]));
+      if (!best || d < best.d) best = { d, route };
+    }
+    return best ? { route: best.route } : null;
+  },
+
   // Merchants from abroad cross the border, pass their gateway town and
   // carry on to a Temerian market. Realms they would not trade with send none.
   foreign(state, world, rng) {
@@ -189,6 +227,9 @@ export function describeUnit(world, u) {
     return `${kind} from ${world.geography.neighbours[u.entry].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
   }
   const from = world.byId[u.route[0]].name;
+  if (u.kind === 'refugee') {
+    return `${kind} fleeing ${from}, making for ${world.byId[u.route[u.route.length - 1]].name}`;
+  }
   if (u.kind === 'patrol') {
     const turn = world.byId[u.route[Math.floor(u.route.length / 2)]].name;
     return `${kind} out of ${from}, riding to ${turn} and back`;

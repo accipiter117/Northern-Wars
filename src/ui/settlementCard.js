@@ -1,10 +1,9 @@
-import { totalPopulation, foodNeed, foodYield, goodsYield, foodCapacity, canBuild, seasonOf, dateOf } from '../sim/index.js';
+import { totalPopulation, foodNeed, foodYield, goodsYield, foodCapacity, canBuild, seasonOf, dateOf, tensionWeight } from '../sim/index.js';
+import { mixHtml as mix, gaugeHtml, FAITH_COLOURS, PEOPLE_COLOURS, TENSION_WORDS } from './faith.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 
 const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Castle', temple: 'Temple' };
 const TERRAIN_NAMES = { open: 'open farmland', marsh: 'marshland', forest: 'woodland', hills: 'hill country', mountains: 'the mountain foothills' };
-const PEOPLE_COLOURS = { human: '#c9b48a', dwarf: '#9a6a3a', elf: '#6f9a5a', halfling: '#d28c4a' };
-const FAITH_COLOURS = { eternal_fire: '#c0582c', melitele: '#d9c27a', old_ways: '#5f7d4c' };
 const PROSPERITY_WORDS = ['Destitute', 'Poor', 'Getting by', 'Comfortable', 'Thriving'];
 const UNREST_WORDS = ['Quiet', 'Grumbling', 'Restless', 'Angry', 'On the brink'];
 
@@ -30,8 +29,10 @@ export function settlementCardHtml(world, state, id, data) {
         <div><dt>Produces</dt><dd>${escapeHtml(data.goods[s.production]?.name ?? s.production)}</dd></div>
         <div><dt>Garrison</dt><dd>${s.garrison ? `${number(s.garrison)}${state.unpaid ? ' <small>unpaid</small>' : ''}` : 'None'}</dd></div>
       </dl>
-      ${gauge('Prosperity', s.prosperity, describeLevel(s.prosperity, PROSPERITY_WORDS), false)}
-      ${gauge('Unrest', s.unrest, describeLevel(s.unrest, UNREST_WORDS), true)}
+      ${gaugeHtml('Prosperity', s.prosperity, describeLevel(s.prosperity, PROSPERITY_WORDS), false)}
+      ${gaugeHtml('Unrest', s.unrest, describeLevel(s.unrest, UNREST_WORDS), true)}
+      ${tensionWeight(world, s) > 0 ? gaugeHtml('Tension between peoples', s.tension, describeLevel(s.tension, TENSION_WORDS), true) : ''}
+      ${s.troubled > 0 ? '<p class="warn">Riots or raiders have struck here lately. Some folk are leaving.</p>' : ''}
     </div>
     <div data-part="stores">${storesHtml(world, state, id)}</div>
     <div data-part="works">${worksHtml(world, s)}</div>
@@ -104,18 +105,3 @@ function buildHtml(world, state, id) {
 }
 
 const cap1 = (w) => w[0].toUpperCase() + w.slice(1);
-
-function gauge(label, value, word, bad) {
-  return `<div class="gauge-row">
-    <div class="lbl"><span>${label}</span><span>${word}</span></div>
-    <div class="gauge${bad ? ' bad' : ''}"><span style="width:${Math.round(value)}%"></span></div>
-  </div>`;
-}
-
-function mix(values, names, colours, fmt, total, nameKey = 'name') {
-  const entries = Object.entries(values).filter(([, v]) => v > 0);
-  const bar = entries.map(([k, v]) => `<span style="width:${(v / total) * 100}%;background:${colours[k]}"></span>`).join('');
-  const legend = entries.map(([k, v]) =>
-    `<li><i style="background:${colours[k]}"></i>${escapeHtml(names[k]?.[nameKey] ?? k)}<b>${fmt(v)}</b></li>`).join('');
-  return `<div class="mix">${bar}</div><ul class="legend">${legend}</ul>`;
-}

@@ -78,7 +78,7 @@ export function createRenderer(canvas, world, cam) {
     if (state === infraState) return;
     infraState = state;
     const key = Object.entries(state.settlements)
-      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}`)
+      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}`)
       .join('|') + (state.unpaid ? '!' : '');
     if (key !== infraKey) {
       infraKey = key;
@@ -130,6 +130,11 @@ export function createRenderer(canvas, world, cam) {
       }
       getSprite('settlement', st.id, st.type).draw(cctx, p.x, p.y, iconSize(st.type), { capital: st.id === world.kingdom.capital });
       if (infraState && shown(st)) drawInfrastructure(cctx, st, infraState.settlements[st.id], infraState.unpaid);
+      // Trouble shows at every zoom: it is news the crown should not miss.
+      if (infraState?.settlements[st.id].troubled > 0) {
+        const r = iconSize(st.type) / 2;
+        getSprite('marker', 'riot').draw(cctx, p.x + r * 0.7, p.y - r - 6, 20);
+      }
     }
     drawSettlementLabels(cctx, selectedId);
   }

@@ -11,7 +11,7 @@ const decreeNow = (s, law, option) => { s.laws[law] = { option, previous: s.laws
 test('petition data is sound', () => {
   for (const [id, p] of Object.entries(world.petitions.petitions)) {
     assert.equal(p.choices.filter((c) => c.default).length, 1, `${id} needs one default`);
-    assert.doesNotMatch(p.title + p.text + p.choices.map((c) => c.label).join(''), /—/);
+    assert.doesNotMatch(p.title + p.text + p.choices.map((c) => c.label).join(''), /\u2014/);
   }
 });
 

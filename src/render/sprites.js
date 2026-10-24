@@ -188,6 +188,62 @@ registerPlaceholder('unit', 'foreign', (ctx, x, y, size, opts = {}) => {
 });
 
 // A mounted patrol: horse, rider in the crown's blue, lance with a pennant.
+// Pilgrims: two robed walkers with staffs.
+registerPlaceholder('unit', 'pilgrim', (ctx, x, y, size) => {
+  const r = size / 2;
+  for (const [dx, robe] of [[-0.35, '#e9e2cf'], [0.3, '#d9cfb3']]) {
+    const cx = x + dx * r;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.25, y + r * 0.8);
+    ctx.lineTo(cx - r * 0.12, y - r * 0.3);
+    ctx.lineTo(cx + r * 0.12, y - r * 0.3);
+    ctx.lineTo(cx + r * 0.25, y + r * 0.8);
+    ctx.closePath();
+    ctx.fillStyle = robe;
+    ctx.fill();
+    stroke(ctx, 0.7);
+    ctx.beginPath();
+    ctx.arc(cx, y - r * 0.5, r * 0.17, 0, Math.PI * 2);
+    ctx.fillStyle = '#c9a77a';
+    ctx.fill();
+    stroke(ctx, 0.5);
+    ctx.beginPath();
+    ctx.moveTo(cx + r * 0.3, y + r * 0.8);
+    ctx.lineTo(cx + r * 0.3, y - r * 0.8);
+    stroke(ctx, 0.8);
+  }
+});
+
+// Refugees: a family on foot behind a laden handcart, in drab colours.
+registerPlaceholder('unit', 'refugee', (ctx, x, y, size, opts = {}) => {
+  const r = size / 2;
+  const f = opts.facing ?? 1;
+  ctx.fillStyle = '#7d776c';
+  ctx.fillRect(x + f * r * 0.05 - r * 0.35, y, r * 0.7, r * 0.35);
+  ctx.strokeRect(x + f * r * 0.05 - r * 0.35, y, r * 0.7, r * 0.35);
+  ctx.beginPath();
+  ctx.arc(x + f * r * 0.05, y - r * 0.1, r * 0.3, Math.PI, 0);
+  ctx.fillStyle = '#9a8f7d';
+  ctx.fill();
+  stroke(ctx, 0.6);
+  wheel(ctx, x + f * r * 0.05, y + r * 0.5, r * 0.18);
+  // Walkers trail behind the cart.
+  for (const back of [0.65, 0.95]) {
+    const cx = x - f * r * back;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.15, y + r * 0.8);
+    ctx.lineTo(cx - r * 0.08, y - r * 0.2);
+    ctx.lineTo(cx + r * 0.08, y - r * 0.2);
+    ctx.lineTo(cx + r * 0.15, y + r * 0.8);
+    ctx.closePath();
+    ctx.fillStyle = '#5f5a52';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, y - r * 0.4, r * 0.14, 0, Math.PI * 2);
+    ctx.fill();
+  }
+});
+
 registerPlaceholder('unit', 'patrol', (ctx, x, y, size, opts = {}) => {
   const r = size / 2;
   const f = opts.facing ?? 1;

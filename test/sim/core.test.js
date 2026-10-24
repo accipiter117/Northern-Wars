@@ -57,12 +57,13 @@ test('step does not mutate its input and advances the calendar', () => {
 test('ambient traffic spawns every kind on roads and rivers', () => {
   let s = createState(world, 5);
   s.settlements.vizima.stock.food = 0; // Starts grain moving, so carts appear.
+  s.settlements.anchor.troubled = 200; // A riot-struck village sends out refugees.
   const seen = new Set();
   for (let i = 0; i < 120; i++) {
     s = step(s, 1, world);
     for (const u of s.ambient.units) seen.add(u.kind);
   }
-  assert.deepEqual([...seen].sort(), ['barge', 'caravan', 'foreign', 'grain', 'patrol']);
+  assert.deepEqual([...seen].sort(), ['barge', 'caravan', 'foreign', 'grain', 'patrol', 'pilgrim', 'refugee']);
   for (const u of s.ambient.units) {
     if (u.river) assert.ok(['Pontar', 'Ismena'].includes(u.river));
     if (u.entry) assert.ok(world.neighbours.realms[u.entry].trade > 0);
