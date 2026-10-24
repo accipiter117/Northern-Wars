@@ -1,4 +1,5 @@
 import { STATE_VERSION, newSettlement } from './state.js';
+import { defaultLaws, defaultOpinion } from './laws.js';
 import { seasonOf } from './calendar.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
@@ -24,6 +25,14 @@ const MIGRATIONS = {
     state.ledger = { construction: 0, history: [] };
     state.flows = { out: {}, in: {} };
     state.version = 2;
+    return state;
+  },
+  // v3 adds laws (all at their customary settings) and group opinion.
+  2(state, world) {
+    state.laws = defaultLaws(world);
+    state.opinion = defaultOpinion(world);
+    state.ledger.decrees = 0;
+    state.version = 3;
     return state;
   },
 };
