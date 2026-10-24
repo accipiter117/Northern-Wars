@@ -1,0 +1,9 @@
+{
+  "note": "Placeholder tuning for cosmetic traffic. Speeds are map units per day; Temeria is about 1000 units across.",
+  "seasonSpeed": { "spring": 1, "summer": 1.1, "autumn": 0.95, "winter": 0.6 },
+  "kinds": {
+    "caravan": { "name": "Merchant caravan", "speed": 28, "max": 14, "spawnPerDay": 0.9 },
+    "patrol":  { "name": "Patrol", "speed": 34, "max": 8, "spawnPerDay": 0.5, "reach": 3 },
+    "barge":   { "name": "River barge", "speed": 40, "max": 5, "spawnPerDay": 0.35, "winterSpawn": 0.1 }
+  }
+}

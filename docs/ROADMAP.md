@@ -2,8 +2,8 @@
 
 | Milestone | Scope | Status |
 | --- | --- | --- |
-| M1 The living map | Scaffold, test harness, map render from geography.json, pan and zoom, settlements with basic stats and cards, calendar and speed controls, ambient caravans and patrols on roads and barges on rivers driven by simple placeholder values, save and load, deploy to GitHub Pages | Next |
-| M2 Economy and population | Goods, production, consumption, buildings, taxes, monthly ledger, population growth and decline, trade traffic tied to the economy | Planned |
+| M1 The living map | Scaffold, test harness, map render from geography.json, pan and zoom, settlements with basic stats and cards, calendar and speed controls, ambient caravans and patrols on roads and barges on rivers driven by simple placeholder values, save and load, deploy to GitHub Pages | Done |
+| M2 Economy and population | Goods, production, consumption, buildings, taxes, monthly ledger, population growth and decline, trade traffic tied to the economy | Next |
 | M3 Laws and edicts | Law system, Authority, group reactions, effects over time | Planned |
 | M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Planned |
 | M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Planned |

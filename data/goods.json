@@ -1,0 +1,7 @@
+{
+  "food": { "name": "Food" },
+  "timber": { "name": "Timber" },
+  "stone": { "name": "Stone" },
+  "iron": { "name": "Iron" },
+  "coin": { "name": "Coin" }
+}

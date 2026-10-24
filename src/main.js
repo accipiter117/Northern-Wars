@@ -1,0 +1,257 @@
+// Wires the simulation, the map and the panels together, and owns the clock.
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit } from './sim/index.js';
+import { createCamera, resizeCamera } from './render/camera.js';
+import { attachMapInput } from './render/input.js';
+import { createRenderer } from './render/renderer.js';
+import { createTopbar } from './ui/topbar.js';
+import { createSheet } from './ui/sheet.js';
+import { settlementCardHtml } from './ui/settlementCard.js';
+import { realmMenuHtml, chronicleHtml } from './ui/menu.js';
+import { writeSave, readSave, downloadText } from './ui/storage.js';
+
+const MAX_DAYS_PER_FRAME = 8;
+const params = new URLSearchParams(location.search);
+
+async function readJson(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`Could not load ${path}`);
+  return res.json();
+}
+
+async function boot() {
+  const world = await loadWorld(readJson);
+  const [peoples, faiths, goods] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json'].map(readJson));
+  const lookups = { peoples, faiths, goods };
+
+  let state = startingState(world);
+  let speed = 0;
+  let frac = 0;
+  let selection = null;
+  let unitLabelUntil = 0;
+
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('map');
+  const unitLabel = document.getElementById('unit-label');
+  const toastEl = document.getElementById('toast');
+  const cam = createCamera(world);
+  const renderer = createRenderer(canvas, world, cam);
+
+  const topbar = createTopbar({ onSpeed: setSpeed, onMenu: openMenu });
+  const sheet = createSheet({ onClose: () => { if (selection?.settlement) selection = null; } });
+
+  let toastTimer = 0;
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (toastEl.hidden = true), 2600);
+  }
+
+  function setSpeed(s) {
+    speed = s;
+    topbar.setSpeed(s);
+  }
+
+  function save(quiet) {
+    const err = writeSave(serialize(state));
+    if (err) toast(err);
+    else if (!quiet) toast('The reign is saved.');
+  }
+
+  function replaceState(next, message) {
+    state = next;
+    frac = 0;
+    selection = null;
+    sheet.close();
+    hideUnitLabel();
+    topbar.update(state);
+    if (message) toast(message);
+  }
+
+  // Panels
+
+  function openSettlement(id) {
+    selection = { settlement: id };
+    hideUnitLabel();
+    sheet.open(`settlement:${id}`, settlementCardHtml(world, state, id, lookups));
+  }
+
+  function openMenu() {
+    if (sheet.current === 'menu') return sheet.close();
+    selection = null;
+    const body = sheet.open('menu', realmMenuHtml(world, state, !!readSave()));
+    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
+  }
+
+  function openChronicle() {
+    const body = sheet.open('chronicle', chronicleHtml(state));
+    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
+  }
+
+  function menuAction(action) {
+    if (!action) return;
+    if (action === 'chronicle') openChronicle();
+    else if (action === 'back') openMenu();
+    else if (action === 'save') save(false);
+    else if (action === 'load') {
+      try {
+        replaceState(deserialize(readSave(), world), 'The last save is restored.');
+      } catch (err) {
+        toast(err.message);
+      }
+    } else if (action === 'export') {
+      const d = dateOf(state.day);
+      downloadText(`northern-wars-${world.kingdom.id}-${d.year}-${String(d.month).padStart(2, '0')}.json`, serialize(state));
+    } else if (action === 'import') document.getElementById('import-file').click();
+    else if (action === 'new') {
+      if (confirm('Abandon this reign and start anew? Unsaved progress will be lost.')) {
+        replaceState(createState(world, freshSeed()), 'A new reign begins.');
+        save(true);
+      }
+    }
+  }
+
+  document.getElementById('import-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      replaceState(deserialize(await file.text(), world), 'The reign is imported.');
+      save(true);
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+
+  // Map input
+
+  function hideUnitLabel() {
+    unitLabel.hidden = true;
+    if (selection?.unit) selection = null;
+  }
+
+  function onTap(x, y) {
+    const hit = renderer.pick(x, y, state, frac);
+    if (hit?.settlement) openSettlement(hit.settlement);
+    else if (hit?.unit) {
+      sheet.close();
+      selection = { unit: hit.unit };
+      const u = state.ambient.units.find((v) => v.id === hit.unit);
+      unitLabel.textContent = describeUnit(world, u);
+      unitLabel.hidden = false;
+      unitLabelUntil = performance.now() + 4000;
+    } else {
+      sheet.close();
+      hideUnitLabel();
+    }
+  }
+
+  attachMapInput(canvas, cam, world, { onTap, onChange: () => renderer.invalidate() });
+
+  let firstSize = true;
+  function layout() {
+    document.documentElement.style.setProperty('--bar-h', `${document.getElementById('topbar').offsetHeight}px`);
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    resizeCamera(cam, world, w, h, firstSize);
+    if (firstSize) { cam.x = 500; cam.y = 420; resizeCamera(cam, world, w, h, false); }
+    firstSize = false;
+    renderer.resize(w, h);
+  }
+  new ResizeObserver(layout).observe(stage);
+  layout();
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target instanceof HTMLInputElement) return;
+    if (e.key === ' ') { e.preventDefault(); setSpeed(speed ? 0 : 1); }
+    if (e.key === '1') setSpeed(1);
+    if (e.key === '2') setSpeed(2);
+    if (e.key === '3') setSpeed(4);
+    if (e.key === 'Escape') { sheet.close(); hideUnitLabel(); }
+  });
+
+  // The clock. Whole days go through the simulation; the leftover fraction
+  // only slides ambient units along so motion looks smooth between days.
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.25, (now - last) / 1000);
+    last = now;
+    if (speed > 0) {
+      frac += dt * speed;
+      const days = Math.min(MAX_DAYS_PER_FRAME, Math.floor(frac));
+      if (days > 0) {
+        frac -= days;
+        const month = dateOf(state.day).month;
+        state = step(state, days, world);
+        if (dateOf(state.day).month !== month) save(true);
+        topbar.update(state);
+        refreshOpenSheet();
+      }
+    }
+    if (selection?.unit) {
+      const p = renderer.unitScreen(state, selection.unit, frac);
+      if (!p || now > unitLabelUntil) hideUnitLabel();
+      else {
+        // Keep the label on screen even when its unit is near an edge.
+        const half = unitLabel.offsetWidth / 2 + 8;
+        unitLabel.style.left = `${Math.min(stage.clientWidth - half, Math.max(half, p.x))}px`;
+        unitLabel.style.top = `${p.y}px`;
+      }
+    }
+    renderer.draw(state, frac, selection);
+    requestAnimationFrame(frame);
+  }
+
+  function refreshOpenSheet() {
+    const cur = sheet.current;
+    if (cur?.startsWith('settlement:')) sheet.open(cur, settlementCardHtml(world, state, cur.slice(11), lookups));
+    else if (cur === 'chronicle') openChronicle();
+  }
+
+  topbar.update(state);
+  setSpeed(params.has('paused') ? 0 : 1);
+  document.getElementById('loading').hidden = true;
+  requestAnimationFrame(frame);
+
+  // A small handle for browser tests and curious players.
+  window.northernWars = {
+    world,
+    get state() { return state; },
+    get speed() { return speed; },
+    setSpeed,
+    screenOf(id) {
+      const st = world.byId[id];
+      const r = canvas.getBoundingClientRect();
+      return { x: r.left + (st.x - cam.x) * cam.scale + cam.viewW / 2, y: r.top + (st.y - cam.y) * cam.scale + cam.viewH / 2 };
+    },
+    unitScreenOf(id) {
+      const p = renderer.unitScreen(state, id, frac);
+      const r = canvas.getBoundingClientRect();
+      return p && { x: r.left + p.x, y: r.top + p.y };
+    },
+  };
+}
+
+function freshSeed() {
+  return (Date.now() ^ Math.floor(Math.random() * 0x100000000)) >>> 0;
+}
+
+function startingState(world) {
+  if (params.has('seed')) return createState(world, Number(params.get('seed')) >>> 0);
+  const saved = readSave();
+  if (saved && !params.has('fresh')) {
+    try {
+      return deserialize(saved, world);
+    } catch (err) {
+      console.warn('Saved game ignored:', err.message);
+    }
+  }
+  return createState(world, freshSeed());
+}
+
+boot().catch((err) => {
+  const loading = document.getElementById('loading');
+  loading.hidden = false;
+  loading.textContent = `The map could not be unrolled: ${err.message}`;
+  throw err;
+});
