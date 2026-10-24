@@ -8,6 +8,7 @@ import { totalPopulation } from './state.js';
 import { addDispatch } from './realm.js';
 import { number } from './text.js';
 import { lawEffects } from './laws.js';
+import { foreignTrade, stanceCost } from './neighbours.js';
 
 const GOODS = ['timber', 'stone', 'iron'];
 
@@ -56,6 +57,14 @@ export function goodsYield(world, id, s) {
   const g = world.economy.goods;
   const bonus = g.terrainBonus[s.production] === world.terrainOf[id] ? g.terrainBonusFactor : 1;
   return g.base[s.production] * g.typeScale[world.byId[id].type] * bonus * prosperityMult(world, s) * (1 + buildingEffects(world, s).goodsYield);
+}
+
+// Money in and out for one month's ledger. Construction and decrees are paid
+// when ordered, so they are listed but not counted here.
+export function ledgerNet({ income, expenses }) {
+  const i = income.taxes + income.trade + income.sales + (income.foreign ?? 0);
+  const o = expenses.garrisons + expenses.upkeep + expenses.court + (expenses.edicts ?? 0) + (expenses.gifts ?? 0) + expenses.interest;
+  return { in: i, out: o, net: i - o };
 }
 
 export function realmStock(state) {
@@ -140,12 +149,13 @@ export function monthlyLedger(state, world) {
   const law = lawEffects(state, world);
   const g = world.groups.effects;
   const tradeMult = Math.max(0, 1 + law.trade + (state.opinion.burghers - 50) * g.burgherTrade);
-  const income = { taxes: 0, trade: 0, sales: 0 };
+  const income = { taxes: 0, trade: 0, sales: 0, foreign: foreignTrade(state, world).total };
   const expenses = {
     garrisons: 0,
     upkeep: 0,
     court: e.upkeep.courtMonth * Math.max(0, 1 + law.court),
     edicts: law.monthly,
+    gifts: stanceCost(state, world),
     interest: 0,
     construction: state.ledger.construction,
     decrees: state.ledger.decrees ?? 0,
@@ -172,9 +182,9 @@ export function monthlyLedger(state, world) {
 
   for (const k of Object.keys(income)) income[k] = Math.round(income[k]);
   for (const k of Object.keys(expenses)) expenses[k] = Math.round(expenses[k]);
-  const totalIn = income.taxes + income.trade + income.sales;
-  // Construction and decrees were paid when ordered; listed only for the record.
-  const totalOut = expenses.garrisons + expenses.upkeep + expenses.court + expenses.edicts + expenses.interest;
+  const net = ledgerNet({ income, expenses });
+  const totalIn = net.in;
+  const totalOut = net.out;
   state.treasury += totalIn - totalOut;
 
   // Debt costs the crown its grip on the lords. Past the bankers' limit the

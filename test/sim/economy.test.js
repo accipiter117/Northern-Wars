@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createState, step, serialize, deserialize, canBuild, applyAction,
-  realmStock, foodYield, foodNeed, foodCapacity, totalPopulation,
+  realmStock, foodYield, foodNeed, foodCapacity, totalPopulation, ledgerNet,
 } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { nodeWorld } from '../helpers.js';
@@ -108,7 +108,8 @@ test('the monthly ledger balances', () => {
   const before = s.treasury;
   s = run(s, 30);
   const l = s.ledger.history.at(-1);
-  const net = l.income.taxes + l.income.trade + l.income.sales - l.expenses.garrisons - l.expenses.upkeep - l.expenses.court - l.expenses.edicts - l.expenses.interest;
+  const { net } = ledgerNet(l);
+  assert.ok(l.income.foreign > 0);
   assert.ok(Math.abs(s.treasury - (before + net)) < 1e-6);
 });
 

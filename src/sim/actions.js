@@ -3,6 +3,7 @@
 import { realmStock } from './economy.js';
 import { addDispatch } from './realm.js';
 import { canDecree, decree } from './laws.js';
+import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
 
 const MATERIALS = ['timber', 'stone', 'iron'];
 
@@ -38,6 +39,18 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     decree(next, world, action.law, action.option);
+    return { state: next };
+  }
+  if (action.type === 'stance') {
+    const check = canSetStance(state, world, action.realm, action.stance);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    setStance(next, world, action.realm, action.stance);
+    return { state: next };
+  }
+  if (action.type === 'envoy') {
+    const next = structuredClone(state);
+    if (!resolveEnvoy(next, world, action.id, action.choice)) return { state, error: 'That envoy has gone.' };
     return { state: next };
   }
   return { state, error: `Unknown action ${action.type}.` };

@@ -4,7 +4,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadWorld, createState, step, formatDate, totalPopulation, realmStock, applyAction, canBuild } from '../src/sim/index.js';
+import { loadWorld, createState, step, formatDate, totalPopulation, realmStock, applyAction, canBuild, ledgerNet } from '../src/sim/index.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const [years = 10, mode = 'idle', seed = 1] = process.argv.slice(2);
@@ -38,7 +38,7 @@ function summary(s) {
   const stock = realmStock(s);
   const built = Object.values(s.settlements).reduce((a, st) => a + st.buildings.length, 0);
   const last = s.ledger.history.at(-1);
-  const net = last ? Object.values(last.income).reduce((a, b) => a + b, 0) - (last.expenses.garrisons + last.expenses.upkeep + last.expenses.court + last.expenses.interest) : 0;
+  const net = last ? ledgerNet(last).net : 0;
   return `${formatDate(s.day).padEnd(16)} pop ${String(pop).padStart(6)} food ${String(Math.round(stock.food)).padStart(7)} T/S/I ${Math.round(stock.timber)}/${Math.round(stock.stone)}/${Math.round(stock.iron)}`
     + ` treasury ${String(Math.round(s.treasury)).padStart(6)} net/mo ${String(net).padStart(5)} auth ${s.authority.toFixed(0)} stab ${s.stability.toFixed(0)} pros ${pros.toFixed(0)} unrest ${unrest.toFixed(0)} hungry ${hungry} built ${built}`;
 }

@@ -8,4 +8,6 @@ export { dateOf, formatDate, seasonOf, SEASON_NAMES, MONTHS } from './calendar.j
 export { loadWorld } from './load.js';
 export { canBuild, applyAction } from './actions.js';
 export { canDecree, reactions, enactment, lawEffects, opinionTargets } from './laws.js';
+export { relationTarget, foreignTrade, tradeFactor, canSetStance, envoyText } from './neighbours.js';
+export { ledgerNet } from './economy.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects } from './economy.js';
