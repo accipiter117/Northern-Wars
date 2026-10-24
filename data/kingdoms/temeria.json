@@ -1,0 +1,23 @@
+{
+  "id": "temeria",
+  "name": "Temeria",
+  "title": "the Crown of Temeria",
+  "capital": "vizima",
+  "geography": "data/geography.json",
+  "settlements": "data/settlements.json",
+  "start": {
+    "year": 1262,
+    "month": 3,
+    "day": 1
+  },
+  "treasury": 2500,
+  "authority": 60,
+  "rivers": {
+    "navigable": [
+      "Pontar",
+      "Ismena"
+    ]
+  },
+  "note": "Starting values for the crown. Economy rules are in data/economy.json.",
+  "opening": "Spring comes late to Temeria. The roads are mud, the granaries half full, and the lords watch Vizima to see what kind of crown sits there now."
+}

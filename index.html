@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d1610">
+  <meta name="description" content="Northern Wars: rule the Kingdom of Temeria. A fan-made kingdom simulator.">
+  <title>Northern Wars</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M6 4h20v12c0 7-10 12-10 12S6 23 6 16z' fill='%2323365e' stroke='%23d8c08a' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header id="topbar">
+    <div class="bar-main">
+      <div class="when">
+        <span id="date">&nbsp;</span>
+        <span id="season" class="season">&nbsp;</span>
+      </div>
+      <div class="speeds" role="group" aria-label="Speed">
+        <button type="button" data-speed="0" aria-label="Pause">&#10074;&#10074;</button>
+        <button type="button" data-speed="1" aria-label="Normal speed">1&times;</button>
+        <button type="button" data-speed="2" aria-label="Double speed">2&times;</button>
+        <button type="button" data-speed="4" aria-label="Fastest speed">4&times;</button>
+      </div>
+      <button type="button" id="menu-button" class="icon-button" aria-label="Realm menu">&#9776;</button>
+    </div>
+    <dl class="meters">
+      <div class="meter"><dt>Treasury</dt><dd id="m-treasury">0</dd></div>
+      <div class="meter"><dt>Granary</dt><dd id="m-granary">0</dd></div>
+      <div class="meter"><dt>Authority</dt><dd id="m-authority">0</dd></div>
+      <div class="meter"><dt>Stability</dt><dd id="m-stability">0</dd></div>
+    </dl>
+  </header>
+
+  <main id="stage">
+    <canvas id="map" aria-label="Map of Temeria"></canvas>
+    <div id="unit-label" class="unit-label" hidden></div>
+    <div id="loading" class="loading">Unrolling the map of Temeria</div>
+  </main>
+
+  <aside id="sheet" class="sheet" hidden aria-live="polite">
+    <button type="button" id="sheet-close" class="icon-button sheet-close" aria-label="Close">&times;</button>
+    <div id="sheet-body"></div>
+  </aside>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+  <input type="file" id="import-file" accept="application/json,.json" hidden>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
