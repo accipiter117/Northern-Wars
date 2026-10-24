@@ -1,0 +1,233 @@
+{
+  "note": "The great houses of Temeria. Invented names, not canon characters. Holdings are settlements the house holds of the crown; the seat cannot be taken except by crushing a rebellion. Cares shift loyalty while a law stands. Colours are field and charge for their banner.",
+  "heldTaxShare": 0.5,
+  "loyaltyDrift": 0.01,
+  "favourDecay": 0.9,
+  "grievanceDecay": 0.95,
+  "nobleOpinionWeight": 0.5,
+  "authorityWeight": 0.2,
+  "officeLoyalty": 10,
+  "maxOffices": 2,
+  "ambitionPerMonth": 1.5,
+  "unrestPerDisloyalty": 0.1,
+  "demandChance": 0.25,
+  "demandDefaultDays": 20,
+  "cooldownDays": 180,
+  "rebellion": {
+    "below": 15,
+    "chance": 0.3,
+    "joinBelow": 30,
+    "joinChance": 0.5,
+    "unrest": 20,
+    "authorityPerMonth": 1,
+    "crownCommitted": 0.5,
+    "levyPerPeople": 0.2,
+    "decideAfter": 3,
+    "crownWinsAt": 1.5,
+    "concedeAfter": 6,
+    "endsAbove": 35
+  },
+  "deposition": {
+    "authorityBelow": 15,
+    "stabilityBelow": 75,
+    "months": 6,
+    "regencyAuthority": 40,
+    "note": "Deposed after this many months of Authority below the line together with Stability below its line or any house in rebellion."
+  },
+  "actions": {
+    "honours": {
+      "coin": 300,
+      "favour": 12
+    },
+    "summon": {
+      "authority": 5,
+      "ambition": -15,
+      "favour": 5,
+      "splendidFavour": 5
+    },
+    "levies": {
+      "share": 0.25,
+      "grievance": 10
+    },
+    "fine": {
+      "authority": 5,
+      "perPerson": 0.4,
+      "min": 100,
+      "grievance": 20
+    },
+    "grant": {
+      "favour": 20,
+      "ambition": -20
+    },
+    "strip": {
+      "authority": 20,
+      "grievance": 40,
+      "othersGrievance": 8
+    }
+  },
+  "traits": {
+    "greedy": {
+      "name": "Greedy",
+      "about": "Wants coin and exemptions; fines sting twice as much.",
+      "demands": {
+        "exemption": 2,
+        "coin": 2
+      },
+      "fineGrievance": 2
+    },
+    "proud": {
+      "name": "Proud",
+      "about": "A refused demand is an insult remembered twice over.",
+      "refusal": 2
+    },
+    "pious": {
+      "name": "Pious",
+      "about": "Devoted to the Eternal Fire.",
+      "cares": {
+        "patronage:eternal_fire": 10,
+        "mages:free": -6
+      }
+    },
+    "devout": {
+      "name": "Devout",
+      "about": "Keeps Melitele's feast days and her almshouses.",
+      "cares": {
+        "patronage:melitele": 10,
+        "alms:alms": 5
+      }
+    },
+    "old_blood": {
+      "name": "Old blood",
+      "about": "Keeps the old groves on his lands.",
+      "cares": {
+        "old_ways:suppressed": -15
+      }
+    },
+    "warlike": {
+      "name": "Warlike",
+      "about": "Likes a realm under arms.",
+      "cares": {
+        "conscription:standing": 8,
+        "conscription:none": -8
+      }
+    },
+    "cautious": {
+      "name": "Cautious",
+      "about": "Slow to want more.",
+      "ambition": 0.5
+    },
+    "schemer": {
+      "name": "Schemer",
+      "about": "Always nursing a quarrel with a rival house.",
+      "demands": {
+        "revenge": 3
+      }
+    },
+    "loyalist": {
+      "name": "Loyalist",
+      "about": "His family has served the crown for generations.",
+      "loyalty": 10
+    }
+  },
+  "houses": {
+    "dravnik": {
+      "name": "House Dravnik",
+      "lord": "Lord Radomir Dravnik",
+      "seat": "mayena",
+      "holdings": [
+        "mayena",
+        "brenna",
+        "old_bottoms"
+      ],
+      "traits": [
+        "proud",
+        "warlike"
+      ],
+      "loyalty": 55,
+      "ambition": 40,
+      "colours": [
+        "#7a1f1a",
+        "#e2c46a"
+      ]
+    },
+    "wolbrecht": {
+      "name": "House Wolbrecht",
+      "lord": "Lady Hedda Wolbrecht",
+      "seat": "houtborg",
+      "holdings": [
+        "houtborg",
+        "bondar",
+        "moen"
+      ],
+      "traits": [
+        "devout",
+        "cautious"
+      ],
+      "loyalty": 60,
+      "ambition": 25,
+      "colours": [
+        "#2e5a3a",
+        "#efe6cf"
+      ]
+    },
+    "ostrowicz": {
+      "name": "House Ostrowicz",
+      "lord": "Lord Kazimierz Ostrowicz",
+      "seat": "petrelsteyn",
+      "holdings": [
+        "petrelsteyn",
+        "napeys",
+        "vorune"
+      ],
+      "traits": [
+        "old_blood",
+        "schemer"
+      ],
+      "loyalty": 50,
+      "ambition": 50,
+      "colours": [
+        "#3a3a3a",
+        "#c9a54a"
+      ]
+    },
+    "gelbrand": {
+      "name": "House Gelbrand",
+      "lord": "Lord Ottokar Gelbrand",
+      "seat": "red_fort",
+      "holdings": [
+        "red_fort",
+        "dregsdon",
+        "carcano"
+      ],
+      "traits": [
+        "greedy",
+        "pious"
+      ],
+      "loyalty": 45,
+      "ambition": 55,
+      "colours": [
+        "#a3522a",
+        "#2b2116"
+      ]
+    },
+    "brodowin": {
+      "name": "House Brodowin",
+      "lord": "Lord Wenzel Brodowin",
+      "seat": "dorndal",
+      "holdings": [
+        "dorndal",
+        "burdorff",
+        "zavada"
+      ],
+      "traits": [
+        "loyalist"
+      ],
+      "loyalty": 65,
+      "ambition": 30,
+      "colours": [
+        "#5a3a6a",
+        "#efe6cf"
+      ]
+    }
+  }
+}

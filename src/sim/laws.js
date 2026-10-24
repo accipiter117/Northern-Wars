@@ -90,6 +90,7 @@ export function decree(state, world, lawId, optionId) {
   state.treasury -= law.coin;
   state.ledger.decrees = (state.ledger.decrees ?? 0) + law.coin;
   state.laws[lawId] = { option: optionId, previous: l.option, since: state.day };
+  if (state.reign) state.reign.decrees += 1;
   // The news lands before the law takes hold: a sharp first reaction.
   const after = opinionTargets(state, world);
   for (const g of Object.keys(state.opinion)) {

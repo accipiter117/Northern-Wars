@@ -2,6 +2,7 @@ import { STATE_VERSION, newSettlement } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
+import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { seasonOf } from './calendar.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
@@ -56,6 +57,18 @@ const MIGRATIONS = {
     state.petitions = [];
     state.nextPetitionId = 1;
     state.version = 5;
+    return state;
+  },
+  // v6 adds the great houses, their lands and demands, and the reign record.
+  5(state, world) {
+    state.houses = defaultHouses(world);
+    applyHoldings(state, world);
+    state.demands = [];
+    state.nextDemandId = 1;
+    state.crisisMonths = 0;
+    state.depositions = [];
+    state.reign = newReign(state, state.day);
+    state.version = 6;
     return state;
   },
 };

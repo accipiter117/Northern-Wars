@@ -17,6 +17,7 @@ function assertFinite(value, path) {
 function checkInvariants(s, label) {
   assertFinite(s, label);
   assert.ok(s.treasury >= -world.economy.debt.creditLimit * 2, `${label} treasury ${s.treasury}`);
+  for (const [id, h] of Object.entries(s.houses)) assert.ok(h.loyalty >= 0 && h.loyalty <= 100, `${label} ${id} loyalty`);
   for (const m of ['authority', 'stability', 'sympathy']) assert.ok(s[m] >= 0 && s[m] <= 100, `${label} ${m} ${s[m]}`);
   for (const [id, st] of Object.entries(s.settlements)) {
     for (const m of ['prosperity', 'unrest']) assert.ok(st[m] >= 0 && st[m] <= 100, `${label} ${id}.${m}`);

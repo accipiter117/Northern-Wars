@@ -60,9 +60,12 @@ test('heavy taxes bring in more coin but sour the villages', () => {
 });
 
 test('opinion settles where the laws put it', () => {
+  // Compared with a reign that left the law alone, so petitions and envoys
+  // along the way do not decide the result.
+  const base = run(createState(world, 3), 365);
   const s = run(decree(createState(world, 3), 'nonhumans', 'charter').state, 365);
-  assert.ok(Math.abs(s.opinion.elf - 62) < 1);
-  assert.ok(Math.abs(s.opinion.eternal_fire - 40) < 1);
+  assert.ok(s.opinion.elf > base.opinion.elf + 8, `${s.opinion.elf} vs ${base.opinion.elf}`);
+  assert.ok(s.opinion.eternal_fire < base.opinion.eternal_fire - 6);
 });
 
 test('expulsion drives non-humans from the realm', () => {
