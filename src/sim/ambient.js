@@ -133,6 +133,12 @@ const SPAWNERS = {
 
   // Patrols ride out from strongholds to a nearby place and back.
   patrol(state, world, rng) {
+    // Most riders follow the routes the crown has ordered patrolled.
+    if (state.patrols.length && rng.chance(0.7)) {
+      const p = rng.pick(state.patrols);
+      const out = roadPath(world, p.from, p.to);
+      if (out && out.length > 1) return { route: [...out, ...out.slice(0, -1).reverse()] };
+    }
     const bases = world.geography.settlements
       .filter((s) => state.settlements[s.id].garrison >= 100)
       .map((s) => s.id);

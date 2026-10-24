@@ -1,5 +1,6 @@
 import { totalPopulation, foodNeed, foodYield, goodsYield, foodCapacity, canBuild, seasonOf, dateOf, tensionWeight } from '../sim/index.js';
 import { mixHtml as mix, gaugeHtml, FAITH_COLOURS, PEOPLE_COLOURS, TENSION_WORDS } from './faith.js';
+import { defenceHtml } from './military.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 
 const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Castle', temple: 'Temple' };
@@ -37,6 +38,7 @@ export function settlementCardHtml(world, state, id, data) {
       ${s.troubled > 0 ? '<p class="warn">Riots or raiders have struck here lately. Some folk are leaving.</p>' : ''}
     </div>
     <div data-part="stores">${storesHtml(world, state, id)}</div>
+    <div data-part="defence">${defenceHtml(world, state, id)}</div>
     <div data-part="works">${worksHtml(world, s)}</div>
     <div data-part="build">${buildHtml(world, state, id)}</div>
     <div data-part="peoples">

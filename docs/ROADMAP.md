@@ -8,8 +8,8 @@
 | M3.5 Neighbours | The immediate neighbouring kingdoms brought to life in a small way, for variety and a sense of the wider world | Done |
 | M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Done |
 | M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Done |
-| M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Next |
-| M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Planned |
+| M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Done |
+| M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Next |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -19,6 +19,15 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M6 acceptance criteria
+- Crown garrisons can be held at four levels (skeleton to fortress), paid monthly; lords keep their own.
+- Patrol routes between any two places, limited by crown soldiers and paid monthly, strengthen and protect every settlement on the road and are ridden by the map's patrols.
+- Bandit and monster threat per settlement from poverty, unrest and wild country, cut by patrols, bounties and clearing; raids resolved by local strength against the raiders, reported as dispatches.
+- Plague that spreads along the roads, kills monthly, can be quarantined or nursed, and leaves immunity.
+- An event system (data/events.json) for plague, failed harvests, beasts, witchers, bandit captains, deserters, fires and mine collapses, pausing the game like other decisions.
+- A Military and threats screen, a defence section on settlement cards, and patrol routes, plague, raids, bandit camps and monster lairs on the map.
+- Version 6 saves load with no patrols and every garrison at standard.
 
 ## M5 acceptance criteria
 - Five invented great houses (data/houses.json) with lords, seats, holdings, traits and banner colours; their lands pay the crown half their taxes and keep their own soldiers.

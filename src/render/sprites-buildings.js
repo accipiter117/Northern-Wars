@@ -221,6 +221,87 @@ registerPlaceholder('marker', 'riot', (ctx, x, y, size) => {
   ctx.fill();
 });
 
+// Plague: a pale green miasma over a small skull.
+registerPlaceholder('marker', 'plague', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.fillStyle = 'rgba(140, 170, 90, 0.45)';
+  for (const [dx, dy, rr] of [[-0.3, -0.2, 0.45], [0.3, -0.3, 0.4], [0, -0.6, 0.35]]) {
+    ctx.beginPath();
+    ctx.arc(x + dx * r, y + dy * r, rr * r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.42, Math.PI, 0);
+  ctx.lineTo(x + r * 0.3, y + r * 0.35);
+  ctx.lineTo(x - r * 0.3, y + r * 0.35);
+  ctx.closePath();
+  ctx.fillStyle = '#e9e2cf';
+  ctx.fill();
+  outline(ctx, 0.7);
+  ctx.fillStyle = INK;
+  for (const dx of [-0.17, 0.17]) {
+    ctx.beginPath();
+    ctx.arc(x + dx * r, y - r * 0.02, r * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+});
+
+// Raided: two crossed blades.
+registerPlaceholder('marker', 'raid', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.lineCap = 'round';
+  for (const f of [1, -1]) {
+    ctx.beginPath();
+    ctx.moveTo(x - f * r * 0.6, y + r * 0.6);
+    ctx.lineTo(x + f * r * 0.6, y - r * 0.6);
+    ctx.strokeStyle = '#c8c8c8';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - f * r * 0.65, y + r * 0.25);
+    ctx.lineTo(x - f * r * 0.25, y + r * 0.65);
+    ctx.strokeStyle = '#6b4a2b';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  }
+});
+
+// A bandit camp: a ragged tent by a fire.
+registerPlaceholder('marker', 'bandits', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.8, y + r * 0.5);
+  ctx.lineTo(x - r * 0.2, y - r * 0.5);
+  ctx.lineTo(x + r * 0.4, y + r * 0.5);
+  ctx.closePath();
+  ctx.fillStyle = '#7d6a4f';
+  ctx.fill();
+  outline(ctx, 0.7);
+  ctx.beginPath();
+  ctx.moveTo(x + r * 0.65, y + r * 0.5);
+  ctx.quadraticCurveTo(x + r * 0.4, y + r * 0.1, x + r * 0.65, y - r * 0.15);
+  ctx.quadraticCurveTo(x + r * 0.9, y + r * 0.1, x + r * 0.65, y + r * 0.5);
+  ctx.fillStyle = '#d9662a';
+  ctx.fill();
+});
+
+// A monster's lair: three claw rakes.
+registerPlaceholder('marker', 'monsters', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.lineCap = 'round';
+  for (const dx of [-0.35, 0, 0.35]) {
+    ctx.beginPath();
+    ctx.moveTo(x + dx * r - r * 0.2, y - r * 0.6);
+    ctx.quadraticCurveTo(x + dx * r + r * 0.15, y, x + dx * r - r * 0.05, y + r * 0.6);
+    ctx.strokeStyle = '#7a1f1a';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+  }
+});
+
 // One soldier: a spearman in the crown's blue. `unpaid` greys him out.
 registerPlaceholder('military', 'soldier', (ctx, x, y, size, opts = {}) => {
   const r = size / 2;

@@ -7,6 +7,7 @@ import './sprites-buildings.js';
 import { toScreen, toWorld } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
+import { threatLevel, patrolledSet, patrolRoute, plagueActive } from '../sim/military.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
 const LABEL_FONT = {
@@ -28,6 +29,8 @@ const INNER_SLOTS = [-90, -50, -130, -15, 15];
 const OUTER_SLOTS = [-70, -110, -30, -150];
 const SOLDIERS_PER_FIGURE = 200;
 const MAX_FIGURES = 5;
+// Threat level at which a bandit camp or a monster's lair shows on the map.
+const DANGER = 50;
 
 export function createRenderer(canvas, world, cam) {
   const prep = prepareMap(world);
@@ -73,12 +76,24 @@ export function createRenderer(canvas, world, cam) {
   // The cached map redraws when what stands in a settlement changes: its
   // buildings, works, the size of its garrison or whether it is paid.
   let infraState = null;
+  let infraThreats = {};
   let infraKey = '';
   function updateInfra(state) {
     if (state === infraState) return;
     infraState = state;
-    const key = Object.entries(state.settlements)
-      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}`)
+    infraThreats = {};
+    if (state.patrols) {
+      const patrolled = patrolledSet(state, world);
+      for (const id of Object.keys(state.settlements)) {
+        infraThreats[id] = {
+          bandits: threatLevel(state, world, id, 'bandits', patrolled) >= DANGER,
+          monsters: threatLevel(state, world, id, 'monsters', patrolled) >= DANGER,
+        };
+      }
+    }
+    const marks = (id, s) => `${infraThreats[id]?.bandits ? 'b' : ''}${infraThreats[id]?.monsters ? 'm' : ''}${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
+    const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + Object.entries(state.settlements)
+      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
       .join('|') + (state.unpaid ? '!' : '');
     if (key !== infraKey) {
       infraKey = key;
@@ -122,12 +137,40 @@ export function createRenderer(canvas, world, cam) {
     }
   }
 
+  // Ordered patrol routes: a band of crown blue along the road.
+  function drawPatrols(c) {
+    if (!infraState?.patrols?.length) return;
+    c.save();
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    for (const p of infraState.patrols) {
+      const route = patrolRoute(world, p);
+      c.beginPath();
+      route.forEach((id, i) => (i ? c.lineTo(world.byId[id].x, world.byId[id].y) : c.moveTo(world.byId[id].x, world.byId[id].y)));
+      c.strokeStyle = 'rgba(35, 54, 94, 0.45)';
+      c.lineWidth = 6 / cam.scale;
+      c.stroke();
+    }
+    c.restore();
+  }
+
+  function drawMarkers(c, st, s, p, r) {
+    const marks = [];
+    if (plagueActive(infraState, s)) marks.push('plague');
+    if ((s.raided ?? 0) > infraState.day) marks.push('raid');
+    if (s.troubled > 0) marks.push('riot');
+    if (infraThreats[st.id]?.bandits) marks.push('bandits');
+    if (infraThreats[st.id]?.monsters) marks.push('monsters');
+    marks.slice(0, 3).forEach((m, i) => getSprite('marker', m).draw(c, p.x + r * 0.7 + i * 16, p.y - r - 6, m === 'riot' ? 20 : 16));
+  }
+
   function drawStatic(selectedId) {
     cctx.setTransform(1, 0, 0, 1, 0, 0);
     cctx.clearRect(0, 0, cache.width, cache.height);
     const s = cam.scale * dpr;
     cctx.setTransform(s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale));
     drawMap(cctx, prep, world, 1 / cam.scale, tints);
+    drawPatrols(cctx);
 
     cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawRegionLabels(cctx);
@@ -141,10 +184,7 @@ export function createRenderer(canvas, world, cam) {
       getSprite('settlement', st.id, st.type).draw(cctx, p.x, p.y, iconSize(st.type), { capital: st.id === world.kingdom.capital });
       if (infraState && shown(st)) drawInfrastructure(cctx, st, infraState.settlements[st.id], infraState.unpaid);
       // Trouble shows at every zoom: it is news the crown should not miss.
-      if (infraState?.settlements[st.id].troubled > 0) {
-        const r = iconSize(st.type) / 2;
-        getSprite('marker', 'riot').draw(cctx, p.x + r * 0.7, p.y - r - 6, 20);
-      }
+      if (infraState) drawMarkers(cctx, st, infraState.settlements[st.id], p, iconSize(st.type) / 2);
     }
     drawSettlementLabels(cctx, selectedId);
   }

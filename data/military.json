@@ -1,0 +1,88 @@
+{
+  "note": "Garrisons, patrols and threats. Threat levels run 0 to 100 per settlement and are worked out each month, not stored. Strength is soldiers; walls multiply it, a patrol adds to it.",
+  "garrisonLevels": {
+    "skeleton": {
+      "name": "Skeleton",
+      "factor": 0.5
+    },
+    "standard": {
+      "name": "Standard",
+      "factor": 1
+    },
+    "strong": {
+      "name": "Strong",
+      "factor": 1.5
+    },
+    "fortress": {
+      "name": "Fortress",
+      "factor": 2
+    }
+  },
+  "patrol": {
+    "cost": 40,
+    "soldiersPer": 400,
+    "strength": 60
+  },
+  "walls": 1.5,
+  "threats": {
+    "bandits": {
+      "name": "Bandits",
+      "base": 10,
+      "perPovertyPoint": 0.5,
+      "perUnrestPoint": 0.3,
+      "wild": {
+        "forest": 15,
+        "marsh": 15,
+        "hills": 10
+      },
+      "patrolled": -20
+    },
+    "monsters": {
+      "name": "Monsters",
+      "base": 5,
+      "wild": {
+        "marsh": 30,
+        "forest": 20,
+        "mountains": 20,
+        "hills": 10
+      },
+      "bounties": -15,
+      "patrolled": -5
+    }
+  },
+  "wildReach": 60,
+  "clearedCut": 0.8,
+  "incidentChance": 0.08,
+  "strengthPerThreat": 4,
+  "losses": {
+    "bandits": {
+      "prosperity": 6,
+      "unrest": 8,
+      "food": 0.15,
+      "goods": 0.3,
+      "people": 0.003,
+      "raidedDays": 45
+    },
+    "monsters": {
+      "prosperity": 3,
+      "unrest": 10,
+      "food": 0,
+      "goods": 0,
+      "people": 0.01,
+      "raidedDays": 45
+    }
+  },
+  "plague": {
+    "deathsPerMonth": 0.025,
+    "unrest": 12,
+    "spread": 0.15,
+    "melitele": 0.5,
+    "length": [
+      90,
+      150
+    ],
+    "immunityDays": 1095
+  },
+  "eventChance": 0.3,
+  "eventDefaultDays": 20
+}

@@ -97,6 +97,14 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 - Levies raised through lords and conscription law.
 - No battles in v1. Threats (bandits, monsters, Scoia'tael, riots) are resolved automatically by local strength against threat level, reported as dispatches.
 
+#### As built in M6
+- Garrison levels: skeleton x0.5, standard x1, strong x1.5, fortress x2 of a crown settlement's normal garrison (times the conscription law).
+- Patrols: one per 400 crown soldiers, 40 crowns a month each; +60 strength and -20 bandit / -5 monster threat for every settlement on the road.
+- Threat (0 to 100): bandits = 10 + 0.5 per point of prosperity below 50 + 0.3 x unrest + wild country within 60 units (forest or marsh +15, hills +10); monsters = 5 + marsh 30, forest 20, mountains 20, hills 10, minus 15 with witcher bounties. Cleared threats are cut by 80% for the time bought.
+- Each month every threat strikes with chance 8% x level/100; the raiders' strength is level x 4 x (0.5 to 1.5) against the garrison (x1.5 behind walls) plus any patrol.
+- Plague: 2.5% deaths a month (halved by priestesses or Melitele patronage), 15% chance a month to spread to each road neighbour unless quarantined, lasts 90 to 150 days, then three years' immunity.
+- Events: about one month in three, one card from data/events.json fitting a settlement, season and threat. Decisions open gravest first: deposition, events, demands, envoys, petitions.
+
 ### Events
 - Data-driven event cards with conditions, two or three choices and effects. Examples: plague, failed harvest, a monster in the marshes, a riot in Vizima, a lord's demand, a Scoia'tael ambush, a preacher of the Eternal Fire, a witcher seeking a contract.
 - Major events auto-pause the game.

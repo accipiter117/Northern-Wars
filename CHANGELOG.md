@@ -1,5 +1,14 @@
 # Changelog
 
+## M6 Military holdings and events
+- Garrison levels for every crown settlement, from skeleton to fortress, set from its card.
+- Patrol routes ordered from a new Military and threats screen, drawn on the map and ridden by the mounted patrols.
+- Bandits and monsters that grow in poor, angry and wild places and raid when the garrison is too weak, with bandit camps and monster lairs marked on the map.
+- Plague that spreads along the roads, with quarantine and Melitele's priestesses as answers.
+- Events: plague, failed harvests, beasts, witchers, bandit captains, deserters, fires and mine collapses.
+- A defence section on settlement cards: threats, strength and garrison level.
+- Save version 7.
+
 ## M5 Nobility
 - Five great houses with lords, seats, lands, traits and colours. Their lands pay the crown half their taxes, keep their own soldiers and fly their banners on the map.
 - Loyalty, favour, grievance and ambition for each house, with demands that pause the game: land, tax exemptions, a council seat, a royal match, a feud, coin.

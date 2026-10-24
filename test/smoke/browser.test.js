@@ -291,3 +291,54 @@ test('great houses, rebellion and deposition', async () => {
   assert.deepEqual(errors, []);
   await context.close();
 });
+
+// Military and threats: order a patrol, strengthen a garrison, see plague and
+// raids marked on the map, and answer an event when the clock runs.
+test('military screen, patrols, garrisons and events', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  const s = step(createState(world, 1262), 20, world);
+  for (const k of ['envoys', 'petitions', 'demands']) s[k] = [];
+  s.settlements.maribor.plague = s.day + 100;
+  s.settlements.murky_waters.raided = s.day + 30;
+  s.settlements.murky_waters.raidKind = 'bandits';
+  s.events = [{ id: 1, event: 'witcher', place: 'pontaria', day: s.day }];
+  s.nextEventId = 2;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await page.goto(`${base}?paused`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+
+  await page.click('#menu-button');
+  await page.click('[data-action="military"]');
+  assert.match(await page.textContent('#sheet-body'), /Military and threats[\s\S]*Crown soldiers[\s\S]*Where danger lies/);
+  await page.selectOption('[data-pick="from"]', 'vizima');
+  await page.selectOption('[data-pick="to"]', 'pontaria');
+  await page.click('[data-order-patrol]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.patrols.length), 1);
+  await page.screenshot({ path: join(OUT, 'military.png') });
+  await page.click('#sheet-close');
+
+  const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.touchscreen.tap(viz.x, viz.y);
+  await page.waitForSelector('[data-garrison="strong"]');
+  await page.click('[data-garrison="strong"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.garrisonLevel.vizima), 'strong');
+  await page.click('#sheet-close');
+  await page.screenshot({ path: join(OUT, 'threats-map.png') });
+
+  // The waiting witcher speaks up once the clock runs.
+  await page.click('[data-speed="1"]');
+  await page.waitForSelector('.envoy-from', { timeout: 10000 });
+  assert.match(await page.textContent('#sheet-body'), /News from Chippira[\s\S]*witcher/i);
+  const t = await page.evaluate(() => window.northernWars.state.treasury);
+  await page.click('[data-choice="0"]');
+  assert.ok(await page.evaluate((x) => window.northernWars.state.treasury <= x - 150, t));
+  assert.deepEqual(errors, []);
+  await context.close();
+});
