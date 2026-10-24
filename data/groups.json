@@ -57,6 +57,7 @@
     "peopleUnrest": 0.6,
     "nobleAuthority": 0.03,
     "burgherTrade": 0.004,
-    "authorityRegen": 1
+    "authorityRegen": 1,
+    "authorityRegenBelow": 75
   }
 }

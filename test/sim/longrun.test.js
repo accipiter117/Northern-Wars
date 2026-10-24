@@ -55,3 +55,15 @@ test('different seeds give different reigns', () => {
   const b = step(createState(world, 2), 200, world);
   assert.notEqual(JSON.stringify(a.settlements), JSON.stringify(b.settlements));
 });
+
+test('thirty untended years: the hoard levels off, Authority is not left at the cap, the realm holds', () => {
+  let s = createState(world, 5);
+  const pop0 = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
+  // Decisions are left to take their defaults, as an absent crown would.
+  s = step(s, 30 * YEAR_DAYS, world, { ambient: false });
+  checkInvariants(s, 'thirty years');
+  assert.ok(s.treasury < 70000, `treasury ${s.treasury}`);
+  assert.ok(s.authority < 90, `authority ${s.authority}`);
+  const pop = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
+  assert.ok(pop / pop0 > 0.85 && pop / pop0 < 1.15, `population ratio ${pop / pop0}`);
+});

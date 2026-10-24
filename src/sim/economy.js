@@ -158,7 +158,9 @@ export function monthlyLedger(state, world) {
   const expenses = {
     garrisons: 0,
     upkeep: 0,
-    court: e.upkeep.courtMonth * Math.max(0, 1 + law.court),
+    // A full treasury draws courtiers and hangers-on, so a hoard levels off
+    // instead of piling up for ever.
+    court: e.upkeep.courtMonth * Math.max(0, 1 + law.court) + Math.max(0, state.treasury - e.upkeep.hoardFree) * e.upkeep.hoardPerMonth,
     edicts: law.monthly,
     gifts: stanceCost(state, world),
     patrols: state.patrols.length * world.military.patrol.cost,
@@ -200,7 +202,10 @@ export function monthlyLedger(state, world) {
   const debt = Math.max(0, -state.treasury);
   // Authority returns slowly by itself, faster when the lords are content
   // and the court impresses them, and drains while the crown is in debt.
-  state.authority += g.authorityRegen + (state.opinion.nobles - 50) * g.nobleAuthority + law.authority;
+  // The crown's grip returns by itself only so far; beyond that it takes
+  // content lords or a court that dazzles them.
+  const regen = state.authority < (g.authorityRegenBelow ?? 100) ? g.authorityRegen : 0;
+  state.authority += regen + (state.opinion.nobles - 50) * g.nobleAuthority + law.authority;
   if (debt > 0) state.authority -= (debt / 1000) * debtCfg.authorityPerThousand;
   state.authority = Math.max(0, Math.min(100, state.authority));
   state.unpaid = debt > debtCfg.creditLimit;

@@ -65,6 +65,7 @@ export function ledgerHtml(world, state) {
     <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Trade over the borders', i.foreign ?? 0)}${row('Total', totalIn)}</dl>
     <h3>Expenses</h3>
     <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Edicts', e.edicts ?? 0)}${row('Gifts to friendly realms', e.gifts ?? 0)}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
+    ${state.treasury > world.economy.upkeep.hoardFree ? '<p class="sub">A full treasury draws courtiers and hangers-on: the court costs more while the coffers stay this full.</p>' : ''}
     <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on building works, ${number(e.decrees ?? 0)} on decrees.</p>
     <h3>The past year</h3>
     <table class="history"><thead><tr><th>Month</th><th>Net</th><th>Works</th><th>Treasury</th></tr></thead><tbody>${history}</tbody></table>

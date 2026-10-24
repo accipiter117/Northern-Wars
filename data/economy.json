@@ -89,7 +89,9 @@
   },
   "upkeep": {
     "garrisonPerSoldierMonth": 0.1,
-    "courtMonth": 420
+    "courtMonth": 420,
+    "hoardFree": 5000,
+    "hoardPerMonth": 0.01
   },
   "population": {
     "growthPerMonth": 0.0012,
