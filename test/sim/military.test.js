@@ -11,7 +11,7 @@ const act = (s, a) => applyAction(s, world, a);
 test('event data is sound', () => {
   for (const [id, e] of Object.entries(world.events.events)) {
     assert.equal(e.choices.filter((c) => c.default).length, 1, `${id} needs one default`);
-    assert.doesNotMatch(e.title + e.text + e.choices.map((c) => c.label).join(''), /—/);
+    assert.doesNotMatch(e.title + e.text + e.choices.map((c) => c.label).join(''), /\u2014/);
   }
 });
 

@@ -209,3 +209,11 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { padding: 6px 12px; font-size: 14px; }
 .build.danger { border-color: var(--blood); }
+
+/* Military (M6) */
+.chip.on { background: var(--gold); color: #1d1610; border-color: var(--gold); }
+.chip:disabled { opacity: 0.5; }
+.patrol-order { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.patrol-order .build { flex: 1 1 100%; }
+select.pick { min-height: 44px; font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; flex: 1; }
+.law-option.current .chip { justify-self: start; margin-top: 4px; }

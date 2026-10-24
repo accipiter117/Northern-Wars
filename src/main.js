@@ -11,6 +11,7 @@ import { lawsHtml } from './ui/laws.js';
 import { neighboursHtml, realmCardHtml, envoyHtml } from './ui/neighbours.js';
 import { faithHtml, petitionHtml } from './ui/faith.js';
 import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
+import { militaryHtml, eventHtml } from './ui/military.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -82,8 +83,10 @@ async function boot() {
     body.onclick = (e) => {
       const b = e.target.closest('[data-build]');
       const house = e.target.closest('[data-house]');
+      const level = e.target.closest('[data-garrison]');
       if (b && !b.disabled) order({ type: 'build', settlement: id, building: b.dataset.build });
       else if (house) openHouse(house.dataset.house);
+      else if (level && !level.disabled) order({ type: 'garrison', settlement: id, level: level.dataset.garrison });
     };
   }
 
@@ -282,10 +285,51 @@ async function boot() {
     };
   }
 
+  const patrolPick = { from: 'vizima', to: 'gors_velen' };
+  function openMilitary() {
+    selection = null;
+    const body = sheet.open('military', militaryHtml(world, state, patrolPick));
+    body.onchange = (e) => {
+      const p = e.target.closest('[data-pick]');
+      if (p) patrolPick[p.dataset.pick] = p.value;
+    };
+    body.onclick = (e) => {
+      const place = e.target.closest('[data-place]');
+      const recall = e.target.closest('[data-unpatrol]');
+      if (e.target.closest('[data-order-patrol]')) {
+        order({ type: 'patrol', from: patrolPick.from, to: patrolPick.to });
+        renderer.invalidate();
+      } else if (recall) {
+        order({ type: 'unpatrol', id: Number(recall.dataset.unpatrol) });
+        renderer.invalidate();
+      } else if (place) openSettlement(place.dataset.place);
+      else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  const shownEvents = new Set();
+  function openEvent(id) {
+    const pending = state.events.find((p) => p.id === id);
+    if (!pending) return;
+    shownEvents.add(id);
+    selection = null;
+    hideUnitLabel();
+    const body = sheet.open(`event:${id}`, eventHtml(world, pending));
+    body.onclick = (e) => {
+      const c = e.target.closest('[data-choice]');
+      if (!c) return;
+      order({ type: 'event', id, choice: Number(c.dataset.choice) });
+      sheet.close();
+      showNextDecision();
+    };
+  }
+
   // Decisions waiting on the crown open one at a time, the gravest first.
   // Answering one opens the next, so a crowded morning is dealt with in a row.
   function showNextDecision() {
     if (state.depositions.length > shownDepositions) { openDeposition(); return true; }
+    const event = state.events.find((p) => !shownEvents.has(p.id));
+    if (event) { openEvent(event.id); return true; }
     const demand = state.demands.find((p) => !shownDemands.has(p.id));
     if (demand) { openDemand(demand.id); return true; }
     const envoy = state.envoys.find((p) => !shownEnvoys.has(p.id));
@@ -313,6 +357,7 @@ async function boot() {
     else if (action === 'neighbours') openNeighbours();
     else if (action === 'faith') openFaith();
     else if (action === 'nobles') openNobles();
+    else if (action === 'military') openMilitary();
     else if (action === 'back') openMenu();
     else if (action === 'save') save(false);
     else if (action === 'load') {
@@ -438,6 +483,8 @@ async function boot() {
     else if (cur === 'faith') sheet.patch(cur, faithHtml(world, state, lookups));
     else if (cur?.startsWith('petition:') && !state.petitions.some((p) => `petition:${p.id}` === cur)) sheet.close();
     else if (cur === 'nobles') sheet.patch(cur, noblesHtml(world, state));
+    else if (cur === 'military') sheet.patch(cur, militaryHtml(world, state, patrolPick));
+    else if (cur?.startsWith('event:') && !state.events.some((p) => `event:${p.id}` === cur)) sheet.close();
     else if (cur?.startsWith('house:')) sheet.patch(cur, houseCardHtml(world, state, cur.slice(6), housePicking));
     else if (cur?.startsWith('demand:') && !state.demands.some((p) => `demand:${p.id}` === cur)) sheet.close();
   }
