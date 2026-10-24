@@ -1,0 +1,63 @@
+{
+  "note": "Petitions from the crown's own settlements. Conditions pick a fitting settlement ({place}). Effects: treasury, authority, opinion (by group), and for the settlement: unrest, tension, faith (shift in percentage points); sympathy moves Scoia'tael sympathy. The default choice is taken if the petition is ignored.",
+  "petitions": {
+    "fire_preacher": {
+      "title": "A preacher of the Eternal Fire", "weight": 3, "types": ["city", "town"], "minFaith": { "eternal_fire": 20 },
+      "text": "A preacher of the Eternal Fire draws crowds in the square at {place}, railing against sorcerers, heretics and the non-humans who live among honest folk.",
+      "choices": [
+        { "label": "Let him preach", "effects": { "faith": { "eternal_fire": 8 }, "tension": 12, "opinion": { "eternal_fire": 4 } }, "default": true },
+        { "label": "Have him moved on", "effects": { "authority": -2, "opinion": { "eternal_fire": -6 } } }
+      ]
+    },
+    "hospice": {
+      "title": "A hospice for the sick", "weight": 2, "minFaith": { "melitele": 30 },
+      "text": "The priestesses of Melitele at {place} ask for two hundred and fifty crowns to open a hospice for the sick and the destitute.",
+      "choices": [
+        { "label": "Grant the crowns", "effects": { "treasury": -250, "faith": { "melitele": 6 }, "unrest": -6, "opinion": { "melitele": 6 } } },
+        { "label": "Refuse", "effects": { "opinion": { "melitele": -3 } }, "default": true }
+      ]
+    },
+    "grove": {
+      "title": "The old grove", "weight": 2, "types": ["village"], "minFaith": { "old_ways": 40 },
+      "text": "The villagers of {place} beg leave to keep the old grove at the edge of their fields. The priests of the Fire want it felled and burned.",
+      "choices": [
+        { "label": "Spare the grove", "effects": { "opinion": { "old_ways": 6, "eternal_fire": -4 } }, "default": true },
+        { "label": "Fell it", "effects": { "faith": { "old_ways": -10, "eternal_fire": 4 }, "unrest": 5, "opinion": { "old_ways": -8, "eternal_fire": 4 } } }
+      ]
+    },
+    "quarter": {
+      "title": "The non-human quarter", "weight": 3, "minTension": 40, "minNonhuman": 0.05,
+      "text": "Townsfolk of {place} demand that the dwarven and elven quarter be walled off and its gates shut at dusk.",
+      "choices": [
+        { "label": "Wall it off", "effects": { "tension": 5, "unrest": -4, "opinion": { "burghers": 3, "dwarf": -6, "elf": -6, "halfling": -4 } } },
+        { "label": "Refuse them", "effects": { "tension": -5, "opinion": { "burghers": -3 } }, "default": true },
+        { "label": "Post soldiers in the streets", "effects": { "treasury": -150, "tension": -15 } }
+      ]
+    },
+    "elf_youths": {
+      "title": "Gone to the woods", "weight": 2, "minPeople": { "elf": 10 }, "minSympathy": 25,
+      "text": "Young elves from {place} have vanished into the forest with bows and little else. Their elders say nothing at all.",
+      "choices": [
+        { "label": "Search the woods", "effects": { "sympathy": 8, "opinion": { "elf": -6, "eternal_fire": 2 } } },
+        { "label": "Leave it be", "effects": { "sympathy": 5 }, "default": true },
+        { "label": "Offer an amnesty", "effects": { "authority": -5, "sympathy": -12, "opinion": { "eternal_fire": -4, "elf": 4 } } }
+      ]
+    },
+    "pilgrim_escort": {
+      "title": "Pilgrims on the road", "weight": 2, "types": ["town", "village"], "minFaith": { "melitele": 40 },
+      "text": "Pilgrims bound for the Temple of Melitele gather at {place}, afraid of the road ahead. They ask the crown for an escort.",
+      "choices": [
+        { "label": "Send an escort", "effects": { "treasury": -100, "opinion": { "melitele": 5, "peasants": 2 } } },
+        { "label": "Let them take their chances", "effects": { "opinion": { "melitele": -2 } }, "default": true }
+      ]
+    },
+    "dwarven_forge": {
+      "title": "A dwarven forge", "weight": 2, "minPeople": { "dwarf": 50 },
+      "text": "Dwarven smiths at {place} want to build a great forge inside the walls. The human guild says the noise and the competition are intolerable.",
+      "choices": [
+        { "label": "Allow the forge", "effects": { "tension": 6, "opinion": { "dwarf": 6, "burghers": -4 } } },
+        { "label": "Side with the guild", "effects": { "tension": -3, "opinion": { "dwarf": -6, "burghers": 3 } }, "default": true }
+      ]
+    }
+  }
+}

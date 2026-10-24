@@ -1,6 +1,7 @@
 import { STATE_VERSION, newSettlement } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
+import { tensionTarget } from './culture.js';
 import { seasonOf } from './calendar.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
@@ -42,6 +43,19 @@ const MIGRATIONS = {
     state.envoys = [];
     state.nextEnvoyId = 1;
     state.version = 4;
+    return state;
+  },
+  // v5 adds tension between peoples, Scoia'tael sympathy and petitions.
+  4(state, world) {
+    for (const [id, s] of Object.entries(state.settlements)) {
+      s.troubled = 0;
+      s.tension = 0;
+      s.tension = tensionTarget(state, world, id);
+    }
+    state.sympathy = 20;
+    state.petitions = [];
+    state.nextPetitionId = 1;
+    state.version = 5;
     return state;
   },
 };

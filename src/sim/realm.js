@@ -5,6 +5,8 @@ import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed } from './econ
 import { monthlyPopulation } from './population.js';
 import { lawEffects, stepOpinionDay, opinionUnrest } from './laws.js';
 import { stepNeighboursDay, monthlyEnvoy } from './neighbours.js';
+import { stepCultureDay, monthlyCulture, tensionUnrest } from './culture.js';
+import { stepPetitionsDay, monthlyPetition } from './petitions.js';
 
 const CHRONICLE_LIMIT = 200;
 
@@ -34,6 +36,8 @@ export function stepRealmDay(state, world, rng) {
   stepEconomyDay(state, world);
   stepOpinionDay(state, world);
   stepNeighboursDay(state, world);
+  stepCultureDay(state, world);
+  stepPetitionsDay(state, world);
   const law = lawEffects(state, world);
   const m = world.economy.mood;
   for (const [id, s] of Object.entries(state.settlements)) {
@@ -44,7 +48,7 @@ export function stepRealmDay(state, world, rng) {
     // Each settlement has a mood it settles towards: where it started, moved
     // by hunger, winter, unpaid soldiers and what the crown has built there.
     const type = world.byId[id].type;
-    let unrestTarget = start.unrest + fx.unrest + s.hunger * m.hungerUnrest + law.unrest[type] + opinionUnrest(state, world, id, s);
+    let unrestTarget = start.unrest + fx.unrest + s.hunger * m.hungerUnrest + law.unrest[type] + opinionUnrest(state, world, id, s) + tensionUnrest(world, s);
     if (date.season === 'winter') unrestTarget += m.winterUnrest;
     if (state.unpaid && s.garrison > 0) unrestTarget += world.economy.debt.unpaidUnrest;
     unrestTarget -= Math.max(0, s.prosperity - 50) * m.prosperityCalm;
@@ -61,6 +65,8 @@ export function stepRealmDay(state, world, rng) {
     monthlyLedger(state, world);
     monthlyPopulation(state, world, rng);
     monthlyEnvoy(state, world, rng);
+    monthlyCulture(state, world, rng);
+    monthlyPetition(state, world, rng);
   }
 }
 
