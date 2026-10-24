@@ -4,6 +4,8 @@
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 
+const say = (state, text) => addDispatch(state, text, 'abroad');
+
 export function defaultNeighbours(world) {
   const out = {};
   for (const [id, r] of Object.entries(world.neighbours.realms)) out[id] = { relation: r.relation, stance: 'neutral', stanceSince: null };
@@ -72,7 +74,7 @@ export function setStance(state, world, id, stance) {
   state.neighbours[id].stanceSince = state.day;
   const name = world.geography.neighbours[id].name;
   const words = { friendly: `Gifts and warm letters go to ${name}.`, neutral: `The crown's envoys to ${name} are told to be correct, and no more.`, cold: `Envoys from ${name} are kept waiting at Vizima.` };
-  addDispatch(state, words[stance]);
+  say(state, words[stance]);
 }
 
 // Once a month an envoy may arrive from a realm whose mood and trade suit
@@ -124,7 +126,7 @@ export function resolveEnvoy(state, world, envoyId, choice, ignored = false) {
   if (fx.losses) gate.garrison = Math.max(0, gate.garrison - fx.losses);
   const { title } = envoyText(world, pending);
   const name = world.geography.neighbours[pending.realm].name;
-  addDispatch(state, ignored
+  say(state, ignored
     ? `${title} (${name}): no answer came from Vizima, so it was taken as "${c.label.toLowerCase()}".`
     : `${title} (${name}): the crown chose to ${c.label.toLowerCase()}.`);
   return true;

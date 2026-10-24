@@ -6,6 +6,8 @@
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 
+const say = (state, text) => addDispatch(state, text, 'faith');
+
 const NONHUMAN = ['dwarf', 'elf', 'halfling'];
 
 export function nonhumanShare(s) {
@@ -82,7 +84,7 @@ export function monthlyCulture(state, world, rng) {
       s.prosperity = clamp(s.prosperity - c.riot.prosperity, 0, 100);
       s.troubled = c.riot.troubledDays;
       if (state.reign) state.reign.riots += 1;
-      addDispatch(state, `Riot in ${name}. Stones thrown, shutters broken, a dwarf's shop set alight. The watch restored order by nightfall.`);
+      say(state, `Riot in ${name}. Stones thrown, shutters broken, a dwarf's shop set alight. The watch restored order by nightfall.`);
     }
   }
 
@@ -111,7 +113,7 @@ function pogrom(state, world, rng, id, s, name) {
   s.unrest = clamp(s.unrest + world.culture.riot.unrest, 0, 100);
   s.troubled = world.culture.riot.troubledDays * 2;
   if (state.reign) state.reign.pogroms += 1;
-  addDispatch(state, `Pogrom in ${name}. A mob went through the non-human quarter with torches and cudgels. ${lost} dwarves, elves and halflings are dead or fled. Mahakam and Brokilon will hear of it.`);
+  say(state, `Pogrom in ${name}. A mob went through the non-human quarter with torches and cudgels. ${lost} dwarves, elves and halflings are dead or fled. Mahakam and Brokilon will hear of it.`);
 }
 
 // A Scoia'tael band strikes near woodland: a settlement close to a forest
@@ -124,7 +126,7 @@ function ambush(state, world, rng) {
   s.prosperity = clamp(s.prosperity - world.culture.sympathy.ambushProsperity, 0, 100);
   s.unrest = clamp(s.unrest + 5, 0, 100);
   s.troubled = Math.max(s.troubled, 30);
-  addDispatch(state, `Scoia'tael on the road near ${st.name}. A cart burned, two drovers dead, arrows in the trees. The commandos melted back into the forest.`);
+  say(state, `Scoia'tael on the road near ${st.name}. A cart burned, two drovers dead, arrows in the trees. The commandos melted back into the forest.`);
 }
 
 function normaliseFaith(s) {

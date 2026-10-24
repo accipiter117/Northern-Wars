@@ -1,4 +1,4 @@
-import { formatDate, totalPopulation, realmStock, MONTHS, ledgerNet } from '../sim/index.js';
+import { formatDate, dateOf, totalPopulation, realmStock, MONTHS, ledgerNet } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 
 const signed = (n) => (n < 0 ? `−${number(-n)}` : number(n));
@@ -34,6 +34,7 @@ export function realmMenuHtml(world, state, hasSave) {
       <button type="button" data-action="neighbours">Neighbouring realms<small>Relations, trade and envoys</small></button>
       <button type="button" data-action="ledger">Ledger<small>Where the crowns come from and where they go</small></button>
       <button type="button" data-action="chronicle">Chronicle<small>Dispatches from across the realm</small></button>
+      <button type="button" data-action="help">Help<small>The hints again, and turning them on or off</small></button>
       <button type="button" data-action="save">Save now<small>Also saved at the start of every month</small></button>
       <button type="button" data-action="load" ${hasSave ? '' : 'disabled'}>Load last save</button>
       <button type="button" data-action="export">Export save<small>Download the reign as a file</small></button>
@@ -70,12 +71,52 @@ export function ledgerHtml(world, state) {
   `;
 }
 
-export function chronicleHtml(state) {
-  const items = state.chronicle.slice().reverse().map((d) =>
-    `<li><time>${formatDate(d.day)}</time>${escapeHtml(d.text)}</li>`).join('');
+const CHRONICLE_KINDS = {
+  all: 'All',
+  treasury: 'Treasury and works',
+  realm: 'Laws and people',
+  abroad: 'Abroad',
+  faith: 'Faith and peoples',
+  nobles: 'The houses',
+  military: 'War and peril',
+};
+
+// The chronicle: how this reign stands, then every dispatch, newest first,
+// grouped by year and filtered by subject.
+export function chronicleHtml(state, filter = 'all') {
+  const r = state.reign;
+  let pop = 0;
+  for (const s of Object.values(state.settlements)) pop += totalPopulation(s);
+  const years = Math.floor((state.day - r.since) / 365);
+  const change = pop - r.popStart;
+  const summary = `
+    <h3>Reign ${r.number}${state.depositions.length ? ` (after ${state.depositions.length} deposition${state.depositions.length === 1 ? '' : 's'})` : ''}</h3>
+    <dl class="stats">
+      <div><dt>Ruling since</dt><dd>${formatDate(r.since)}</dd></div>
+      <div><dt>Years</dt><dd>${years}</dd></div>
+      <div><dt>People</dt><dd>${number(pop)} <small>(${change >= 0 ? '+' : '\u2212'}${number(Math.abs(change))})</small></dd></div>
+      <div><dt>Decrees</dt><dd>${r.decrees}</dd></div>
+      <div><dt>Buildings</dt><dd>${r.built}</dd></div>
+      <div><dt>Riots and pogroms</dt><dd>${r.riots + r.pogroms}</dd></div>
+    </dl>`;
+  const chips = Object.entries(CHRONICLE_KINDS).map(([k, label]) =>
+    `<button type="button" class="chip${k === filter ? ' on' : ''}" data-chronicle="${k}" aria-pressed="${k === filter}">${label}</button>`).join(' ');
+  let year = null;
+  const items = [];
+  for (const d of state.chronicle.slice().reverse()) {
+    if (filter !== 'all' && (d.kind ?? 'realm') !== filter) continue;
+    const y = dateOf(d.day).year;
+    if (y !== year) {
+      year = y;
+      items.push(`<li class="year">${y}</li>`);
+    }
+    items.push(`<li><time>${formatDate(d.day)}</time>${escapeHtml(d.text)}</li>`);
+  }
   return `
-    <h2>Chronicle</h2>
-    <div class="menu-list"><button type="button" data-action="back">Back to the realm</button></div>
-    <ul class="chronicle">${items || '<li>Nothing of note yet.</li>'}</ul>
+    <div data-part="head"><h2>Chronicle</h2>
+      <div class="menu-list"><button type="button" data-action="back">Back to the realm</button></div></div>
+    <div data-part="summary">${summary}</div>
+    <div data-part="filter"><div class="chips chronicle-filter">${chips}</div></div>
+    <div data-part="entries"><ul class="chronicle">${items.join('') || '<li>Nothing of note yet.</li>'}</ul></div>
   `;
 }

@@ -12,6 +12,7 @@ import { neighboursHtml, realmCardHtml, envoyHtml } from './ui/neighbours.js';
 import { faithHtml, petitionHtml } from './ui/faith.js';
 import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
 import { militaryHtml, eventHtml } from './ui/military.js';
+import { createHints, helpHtml } from './ui/hints.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -25,7 +26,8 @@ async function readJson(path) {
 
 async function boot() {
   const world = await loadWorld(readJson);
-  const [peoples, faiths, goods] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json'].map(readJson));
+  const [peoples, faiths, goods, hintData] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json', 'data/hints.json'].map(readJson));
+  const hints = createHints(hintData, { disabled: params.has('nohints') });
   const lookups = { peoples, faiths, goods };
 
   let state = startingState(world);
@@ -79,6 +81,7 @@ async function boot() {
   function openSettlement(id) {
     selection = { settlement: id };
     hideUnitLabel();
+    hints.note('townOpened');
     const body = sheet.open(`settlement:${id}`, settlementCardHtml(world, state, id, lookups));
     body.onclick = (e) => {
       const b = e.target.closest('[data-build]');
@@ -327,6 +330,12 @@ async function boot() {
   // Decisions waiting on the crown open one at a time, the gravest first.
   // Answering one opens the next, so a crowded morning is dealt with in a row.
   function showNextDecision() {
+    const opened = nextDecision();
+    if (opened) hints.note('decision');
+    return opened;
+  }
+
+  function nextDecision() {
     if (state.depositions.length > shownDepositions) { openDeposition(); return true; }
     const event = state.events.find((p) => !shownEvents.has(p.id));
     if (event) { openEvent(event.id); return true; }
@@ -339,14 +348,26 @@ async function boot() {
     return false;
   }
 
+  function openHelp() {
+    const body = sheet.open('help', helpHtml(hintData, hints.enabled));
+    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
+  }
+
   function openLedger() {
     const body = sheet.open('ledger', ledgerHtml(world, state));
     body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
   }
 
+  let chronicleFilter = 'all';
   function openChronicle() {
-    const body = sheet.open('chronicle', chronicleHtml(state));
-    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
+    const body = sheet.open('chronicle', chronicleHtml(state, chronicleFilter));
+    body.onclick = (e) => {
+      const f = e.target.closest('[data-chronicle]');
+      if (f) {
+        chronicleFilter = f.dataset.chronicle;
+        sheet.patch('chronicle', chronicleHtml(state, chronicleFilter));
+      } else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
   }
 
   function menuAction(action) {
@@ -358,6 +379,11 @@ async function boot() {
     else if (action === 'faith') openFaith();
     else if (action === 'nobles') openNobles();
     else if (action === 'military') openMilitary();
+    else if (action === 'help') openHelp();
+    else if (action === 'hints-off' || action === 'hints-on') {
+      hints.setEnabled(action === 'hints-on');
+      openHelp();
+    }
     else if (action === 'back') openMenu();
     else if (action === 'save') save(false);
     else if (action === 'load') {
@@ -441,6 +467,8 @@ async function boot() {
   // The clock. Whole days go through the simulation; the leftover fraction
   // only slides ambient units along so motion looks smooth between days.
   let last = performance.now();
+  let lastSheetRefresh = 0;
+  let lastHintCheck = 0;
   function frame(now) {
     const dt = Math.min(0.25, (now - last) / 1000);
     last = now;
@@ -453,7 +481,12 @@ async function boot() {
         state = step(state, days, world);
         if (dateOf(state.day).month !== month) save(true);
         topbar.update(state);
-        refreshOpenSheet();
+        // Open panels follow the realm twice a second at most: at 4x that
+        // spares the phone rebuilding a card four times a second.
+        if (now - lastSheetRefresh > 500) {
+          lastSheetRefresh = now;
+          refreshOpenSheet();
+        }
         if (showNextDecision()) setSpeed(0);
       }
     }
@@ -468,13 +501,17 @@ async function boot() {
       }
     }
     renderer.draw(state, frac, selection);
+    if (now - lastHintCheck > 1000) {
+      lastHintCheck = now;
+      hints.check(state);
+    }
     requestAnimationFrame(frame);
   }
 
   function refreshOpenSheet() {
     const cur = sheet.current;
     if (cur?.startsWith('settlement:')) sheet.patch(cur, settlementCardHtml(world, state, cur.slice(11), lookups));
-    else if (cur === 'chronicle') sheet.patch(cur, chronicleHtml(state));
+    else if (cur === 'chronicle') sheet.patch(cur, chronicleHtml(state, chronicleFilter));
     else if (cur === 'ledger') sheet.patch(cur, ledgerHtml(world, state));
     else if (cur === 'laws') sheet.patch(cur, lawsHtml(world, state, openLaw));
     else if (cur === 'neighbours') sheet.patch(cur, neighboursHtml(world, state));
@@ -499,6 +536,7 @@ async function boot() {
     world,
     get state() { return state; },
     get speed() { return speed; },
+    get renderStats() { return renderer.stats; },
     setSpeed,
     screenOf(id) {
       const st = world.byId[id];

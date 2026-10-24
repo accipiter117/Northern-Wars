@@ -9,6 +9,8 @@ import { canHouseAction, houseAction, resolveDemand } from './houses.js';
 import { canSetGarrison, canAddPatrol, addPatrol, resolveEvent } from './military.js';
 import { addDispatch as note } from './realm.js';
 
+const say = (state, text) => addDispatch(state, text, 'treasury');
+
 const MATERIALS = ['timber', 'stone', 'iron'];
 
 // Why a building can or cannot be raised here, in words fit for a button.
@@ -79,7 +81,7 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     next.garrisonLevel[action.settlement] = action.level;
-    note(next, `${world.byId[action.settlement].name} is to be held with a ${world.military.garrisonLevels[action.level].name.toLowerCase()} garrison.`);
+    note(next, `${world.byId[action.settlement].name} is to be held with a ${world.military.garrisonLevels[action.level].name.toLowerCase()} garrison.`, 'military');
     return { state: next };
   }
   if (action.type === 'patrol') {
@@ -120,5 +122,5 @@ function startBuilding(state, world, id, buildingId) {
     for (const s of Object.values(state.settlements)) s.stock[m] -= (left * s.stock[m]) / total;
   }
   state.settlements[id].construction = { building: buildingId, daysLeft: b.days, days: b.days };
-  addDispatch(state, `Work begins on a ${b.name.toLowerCase()} at ${world.byId[id].name}.`);
+  say(state, `Work begins on a ${b.name.toLowerCase()} at ${world.byId[id].name}.`);
 }

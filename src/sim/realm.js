@@ -10,7 +10,7 @@ import { stepPetitionsDay, monthlyPetition } from './petitions.js';
 import { stepHousesDay, monthlyHouses, holderUnrest } from './houses.js';
 import { monthlyThreats, monthlyEvent, stepEventsDay, plagueActive } from './military.js';
 
-const CHRONICLE_LIMIT = 200;
+const CHRONICLE_LIMIT = 400;
 
 export function clamp(v, lo, hi) {
   return v < lo ? lo : v > hi ? hi : v;
@@ -83,7 +83,9 @@ export function stepRealmDay(state, world, rng) {
   }
 }
 
-export function addDispatch(state, text) {
-  state.chronicle.push({ day: state.day, text });
+// Every dispatch carries a kind, so the chronicle can be read by subject:
+// treasury, realm, abroad, faith, nobles or military.
+export function addDispatch(state, text, kind = 'realm') {
+  state.chronicle.push({ day: state.day, text, kind });
   if (state.chronicle.length > CHRONICLE_LIMIT) state.chronicle.splice(0, state.chronicle.length - CHRONICLE_LIMIT);
 }

@@ -12,6 +12,8 @@ import { foreignTrade, stanceCost } from './neighbours.js';
 import { crownShare } from './houses.js';
 import { garrisonFactor, quarantined } from './military.js';
 
+const say = (state, text) => addDispatch(state, text, 'treasury');
+
 const GOODS = ['timber', 'stone', 'iron'];
 
 export function buildingEffects(world, s) {
@@ -140,7 +142,7 @@ function advanceConstruction(state, world) {
       s.buildings.push(b);
       if (state.reign) state.reign.built += 1;
       s.construction = null;
-      addDispatch(state, `The ${world.buildings[b].name.toLowerCase()} at ${world.byId[id].name} is finished.`);
+      say(state, `The ${world.buildings[b].name.toLowerCase()} at ${world.byId[id].name} is finished.`);
     }
   }
 }
@@ -223,5 +225,5 @@ export function monthlyLedger(state, world) {
     ? `The treasury holds ${number(state.treasury)}.`
     : `The crown owes ${debtCfg.lender} ${number(debt)} crowns${expenses.interest ? `, and paid ${number(expenses.interest)} in interest` : ''}.`;
   if (state.unpaid) text += ' The bankers will lend no more. The garrisons go unpaid and men are deserting.';
-  addDispatch(state, text);
+  say(state, text);
 }

@@ -7,6 +7,8 @@ import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import { roadPath } from './world.js';
 
+const say = (state, text) => addDispatch(state, text, 'military');
+
 const mil = (world) => world.military;
 
 export function garrisonFactor(state, world, id) {
@@ -93,7 +95,7 @@ function raid(state, world, id, s, kind) {
   s.raided = state.day + l.raidedDays;
   s.raidKind = kind;
   const name = world.byId[id].name;
-  addDispatch(state, kind === 'bandits'
+  say(state, kind === 'bandits'
     ? `Bandits fell on ${name}: barns emptied, a carter hanged from his own shafts${dead ? `, ${dead} dead` : ''}. The garrison was too few to stop them.`
     : `Something came out of the wilds by night at ${name}. ${dead || 'Several'} villagers taken; the rest bar their doors at dusk.`);
 }
@@ -110,7 +112,7 @@ function plagueMonth(state, world, rng) {
       s.population[k] -= n;
       dead += n;
     }
-    if (dead) addDispatch(state, `Plague in ${world.byId[id].name}: ${dead} dead this month.`);
+    if (dead) say(state, `Plague in ${world.byId[id].name}: ${dead} dead this month.`);
     if (quarantined(state, s)) continue;
     for (const { to } of world.adjacency[id]) {
       const t = state.settlements[to];
@@ -120,7 +122,7 @@ function plagueMonth(state, world, rng) {
   }
   for (const id of new Set(spreadTo)) {
     startPlague(state, world, id, rngLength(world, rng));
-    addDispatch(state, `The plague has reached ${world.byId[id].name}.`);
+    say(state, `The plague has reached ${world.byId[id].name}.`);
   }
   for (const s of Object.values(state.settlements)) if (!plagueActive(state, s)) s.priestesses = false;
 }
@@ -213,7 +215,7 @@ export function resolveEvent(state, world, eventId, choice, ignored = false, rng
   if (fx.quarantine) s.quarantine = state.day + fx.quarantine;
   if (fx.priestesses) s.priestesses = true;
   const t = eventText(world, pending);
-  addDispatch(state, ignored
+  say(state, ignored
     ? `${t.title} (${t.place}): Vizima gave no orders, so it was taken as "${c.label.toLowerCase()}".`
     : `${t.title} (${t.place}): the crown chose to ${c.label.toLowerCase()}.`);
   return true;
@@ -240,5 +242,5 @@ export function canAddPatrol(state, world, from, to) {
 
 export function addPatrol(state, world, from, to) {
   state.patrols.push({ id: state.nextPatrolId++, from, to });
-  addDispatch(state, `A patrol now rides the road from ${world.byId[from].name} to ${world.byId[to].name}.`);
+  say(state, `A patrol now rides the road from ${world.byId[from].name} to ${world.byId[to].name}.`);
 }

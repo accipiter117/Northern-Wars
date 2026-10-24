@@ -35,8 +35,15 @@ const DANGER = 50;
 export function createRenderer(canvas, world, cam) {
   const prep = prepareMap(world);
   const ctx = canvas.getContext('2d');
+  // Two cached layers: the painted map (redrawn only when the camera moves or
+  // a neighbour's colour changes) and the settlements, dressing and labels on
+  // top of it (redrawn when what stands in a settlement changes).
+  const base = document.createElement('canvas');
+  const bctx = base.getContext('2d');
   const cache = document.createElement('canvas');
   const cctx = cache.getContext('2d');
+  let baseDirty = true;
+  const stats = { base: 0, overlay: 0 };
   let dpr = 1;
   let dirty = true;
   let lastSelected = null;
@@ -44,13 +51,14 @@ export function createRenderer(canvas, world, cam) {
 
   function resize(w, h) {
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    for (const c of [canvas, cache]) {
+    for (const c of [canvas, base, cache]) {
       c.width = Math.round(w * dpr);
       c.height = Math.round(h * dpr);
     }
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     dirty = true;
+    baseDirty = true;
   }
 
   const zoomRel = () => cam.scale / cam.contain;
@@ -71,6 +79,7 @@ export function createRenderer(canvas, world, cam) {
       if (b <= -2) tints[id] = `rgba(150, 40, 30, ${Math.min(0.3, -b * 0.03)})`;
     }
     dirty = true;
+    baseDirty = true;
   }
 
   // The cached map redraws when what stands in a settlement changes: its
@@ -78,11 +87,16 @@ export function createRenderer(canvas, world, cam) {
   let infraState = null;
   let infraThreats = {};
   let infraKey = '';
+  let threatKey = '';
   function updateInfra(state) {
     if (state === infraState) return;
     infraState = state;
-    infraThreats = {};
-    if (state.patrols) {
+    // Danger marks are reckoned once a month (or when patrols change), so a
+    // threat hovering near the line does not make the map flicker and redraw.
+    const tk = `${Math.floor(state.day / 30)}|${(state.patrols ?? []).map((p) => p.id).join()}|${JSON.stringify(state.laws?.bounties ?? '')}`;
+    if (tk !== threatKey && state.patrols) {
+      threatKey = tk;
+      infraThreats = {};
       const patrolled = patrolledSet(state, world);
       for (const id of Object.keys(state.settlements)) {
         infraThreats[id] = {
@@ -165,11 +179,20 @@ export function createRenderer(canvas, world, cam) {
   }
 
   function drawStatic(selectedId) {
-    cctx.setTransform(1, 0, 0, 1, 0, 0);
-    cctx.clearRect(0, 0, cache.width, cache.height);
     const s = cam.scale * dpr;
-    cctx.setTransform(s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale));
-    drawMap(cctx, prep, world, 1 / cam.scale, tints);
+    const worldTransform = [s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale)];
+    if (baseDirty) {
+      bctx.setTransform(1, 0, 0, 1, 0, 0);
+      bctx.clearRect(0, 0, base.width, base.height);
+      bctx.setTransform(...worldTransform);
+      drawMap(bctx, prep, world, 1 / cam.scale, tints);
+      baseDirty = false;
+      stats.base += 1;
+    }
+    stats.overlay += 1;
+    cctx.setTransform(1, 0, 0, 1, 0, 0);
+    cctx.drawImage(base, 0, 0);
+    cctx.setTransform(...worldTransform);
     drawPatrols(cctx);
 
     cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -251,10 +274,17 @@ export function createRenderer(canvas, world, cam) {
     }
   }
 
+  // A frame identical to the last (paused, nothing selected changing, camera
+  // still) is skipped, so a paused game costs next to no battery.
+  let lastFrame = null;
   function draw(state, frac, selection) {
     const selectedId = selection?.settlement ?? null;
     updateTints(state);
     updateInfra(state);
+    const frame = { state, frac, unit: selection?.unit ?? null, selectedId };
+    if (!dirty && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
+      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit) return;
+    lastFrame = frame;
     if (dirty || selectedId !== lastSelected) {
       drawStatic(selectedId);
       dirty = false;
@@ -317,7 +347,10 @@ export function createRenderer(canvas, world, cam) {
     return toScreen(cam, w.x, w.y);
   }
 
-  return { resize, draw, pick, unitScreen, invalidate: () => (dirty = true) };
+  return {
+    resize, draw, pick, unitScreen, stats,
+    invalidate: () => { dirty = true; baseDirty = true; },
+  };
 }
 
 // Soldier figures shown beside a settlement: one per 200 men, at most five,
