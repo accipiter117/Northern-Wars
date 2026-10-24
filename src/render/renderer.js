@@ -3,6 +3,7 @@
 // redrawn when the camera moves, so a still map costs little battery.
 import { prepareMap, drawMap, COLOURS } from './mapLayer.js';
 import { getSprite } from './sprites.js';
+import './sprites-buildings.js';
 import { toScreen, toWorld } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
@@ -20,6 +21,13 @@ const LABEL_ZOOM = { city: 0, town: 1.5, castle: 1.9, temple: 1.9, village: 2.6 
 const PRIORITY = { city: 0, town: 1, temple: 2, castle: 3, village: 4 };
 const SERIF = '"Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif';
 const UNIT_SIZE = 14;
+// Where building icons sit round a settlement, in degrees (0 is east, -90 is
+// north): an inner arc over the top and right, then an outer arc. The left
+// side is kept for the garrison and the space below for the name.
+const INNER_SLOTS = [-90, -50, -130, -15, 15];
+const OUTER_SLOTS = [-70, -110, -30, -150];
+const SOLDIERS_PER_FIGURE = 200;
+const MAX_FIGURES = 5;
 
 export function createRenderer(canvas, world, cam) {
   const prep = prepareMap(world);
@@ -62,6 +70,48 @@ export function createRenderer(canvas, world, cam) {
     dirty = true;
   }
 
+  // The cached map redraws when what stands in a settlement changes: its
+  // buildings, works, the size of its garrison or whether it is paid.
+  let infraState = null;
+  let infraKey = '';
+  function updateInfra(state) {
+    if (state === infraState) return;
+    infraState = state;
+    const key = Object.entries(state.settlements)
+      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}`)
+      .join('|') + (state.unpaid ? '!' : '');
+    if (key !== infraKey) {
+      infraKey = key;
+      dirty = true;
+    }
+  }
+
+  function drawInfrastructure(c, st, s, unpaid) {
+    const p = toScreen(cam, st.x, st.y);
+    const k = iconSize(st.type) / ICON_SIZE[st.type];
+    const iconR = iconSize(st.type) / 2;
+    const bsize = 13 * k;
+    const icons = s.buildings.filter((b) => b !== 'walls');
+    if (s.construction) icons.push('scaffold');
+    icons.forEach((b, i) => {
+      const outer = i >= INNER_SLOTS.length;
+      const deg = outer ? OUTER_SLOTS[(i - INNER_SLOTS.length) % OUTER_SLOTS.length] : INNER_SLOTS[i];
+      const rad = (deg * Math.PI) / 180;
+      const dist = iconR + bsize / 2 + 2 + (outer ? bsize + 1 : 0);
+      getSprite('building', b, 'scaffold').draw(c, p.x + Math.cos(rad) * dist, p.y + Math.sin(rad) * dist, bsize);
+    });
+    const n = figures(s.garrison);
+    if (n) {
+      const size = 9 * k;
+      const step = size * 0.6;
+      const x0 = p.x - iconR - 4 * k;
+      for (let i = 0; i < n; i++) {
+        getSprite('military', 'soldier').draw(c, x0 - i * step, p.y + 3 * k, size, { unpaid });
+      }
+      getSprite('military', 'banner').draw(c, x0 - n * step - 2 * k, p.y, 14 * k, { unpaid });
+    }
+  }
+
   function drawStatic(selectedId) {
     cctx.setTransform(1, 0, 0, 1, 0, 0);
     cctx.clearRect(0, 0, cache.width, cache.height);
@@ -71,9 +121,15 @@ export function createRenderer(canvas, world, cam) {
 
     cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawRegionLabels(cctx);
+    const z = zoomRel();
+    const shown = (st) => z >= LABEL_ZOOM[st.type] || st.id === selectedId;
     for (const st of ordered.slice().reverse()) {
       const p = toScreen(cam, st.x, st.y);
+      if (shown(st) && infraState?.settlements[st.id].buildings.includes('walls')) {
+        getSprite('building', 'walls').draw(cctx, p.x, p.y, iconSize(st.type) + 6);
+      }
       getSprite('settlement', st.id, st.type).draw(cctx, p.x, p.y, iconSize(st.type), { capital: st.id === world.kingdom.capital });
+      if (infraState && shown(st)) drawInfrastructure(cctx, st, infraState.settlements[st.id], infraState.unpaid);
     }
     drawSettlementLabels(cctx, selectedId);
   }
@@ -143,6 +199,7 @@ export function createRenderer(canvas, world, cam) {
   function draw(state, frac, selection) {
     const selectedId = selection?.settlement ?? null;
     updateTints(state);
+    updateInfra(state);
     if (dirty || selectedId !== lastSelected) {
       drawStatic(selectedId);
       dirty = false;
@@ -181,7 +238,10 @@ export function createRenderer(canvas, world, cam) {
     for (const st of world.geography.settlements) {
       const p = toScreen(cam, st.x, st.y);
       const d = Math.hypot(p.x - sx, p.y - sy);
-      const reach = Math.max(22, iconSize(st.type) / 2 + 8);
+      // Buildings and soldiers round a settlement count as part of it.
+      const dressed = zoomRel() >= LABEL_ZOOM[st.type] && infraState
+        && (infraState.settlements[st.id].buildings.length || figures(infraState.settlements[st.id].garrison));
+      const reach = Math.max(22, iconSize(st.type) / 2 + 8) + (dressed ? 20 : 0);
       const score = d * 0.5;
       if (d < reach && (!best || score < best.d)) best = { d: score, hit: { settlement: st.id } };
     }
@@ -203,6 +263,13 @@ export function createRenderer(canvas, world, cam) {
   }
 
   return { resize, draw, pick, unitScreen, invalidate: () => (dirty = true) };
+}
+
+// Soldier figures shown beside a settlement: one per 200 men, at most five,
+// and at least one for any real garrison.
+function figures(garrison) {
+  if (garrison < 50) return 0;
+  return Math.min(MAX_FIGURES, Math.max(1, Math.round(garrison / SOLDIERS_PER_FIGURE)));
 }
 
 function ring(ctx, x, y, r) {

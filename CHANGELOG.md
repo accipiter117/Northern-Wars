@@ -1,5 +1,12 @@
 # Changelog
 
+## Map dressing: soldiers and buildings
+- Garrisons stand beside their settlements as blue-coated spearmen (one per 200 men, up to five) under a Temerian banner; unpaid garrisons turn grey under a ragged banner.
+- Patrols ride as mounted lancers facing the way they travel.
+- Every finished building appears as a small icon round its settlement (fields, watermill, granary, lumber camp, quarry, iron mine, market hall, workshops, shrine), works in progress as scaffolding, and stone walls as a ring round the settlement marker.
+- Icons, soldiers and banners are sprites in the registry (src/render/sprites-buildings.js), ready to be replaced by painted art.
+- Tapping a settlement's soldiers or buildings opens its card, which now marks an unpaid garrison.
+
 ## M3.5 Neighbouring realms
 - Eleven neighbouring realms with rulers, tempers, relations, border trade and gateways, on a new Neighbouring realms screen and as cards opened by tapping their land on the map.
 - Stances (friendly, neutral, cold) and the crown's laws move each realm's relation; neighbouring lands are tinted green or red on the map to match.

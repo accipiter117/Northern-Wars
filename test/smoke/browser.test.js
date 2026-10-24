@@ -142,3 +142,38 @@ for (const vp of VIEWPORTS) {
     await context.close();
   });
 }
+
+// A realm with works raised and garrisons swollen: buildings, scaffolding,
+// walls, soldiers and banners are drawn beside their settlements without errors.
+test('buildings and garrisons show beside their settlements', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  const s = step(createState(world, 1262), 20, world);
+  s.envoys = [];
+  s.settlements.vizima.buildings = ['mill', 'granary', 'market', 'workshop', 'walls'];
+  s.settlements.vizima.construction = { building: 'shrine', daysLeft: 20, days: 30 };
+  s.settlements.vizima.garrison = 1100;
+  s.settlements.white_orchard.buildings = ['fields', 'mill', 'shrine'];
+  s.unpaid = true;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await page.goto(`${base}?paused`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.mouse.move(viz.x, viz.y);
+  await page.mouse.wheel(0, -900);
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: join(OUT, 'infrastructure.png') });
+  // A tap on the soldiers beside Vizima opens Vizima.
+  const z = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.touchscreen.tap(z.x - 34, z.y + 2);
+  await page.waitForSelector('#sheet:not([hidden])');
+  assert.match(await page.textContent('#sheet-body'), /Vizima[\s\S]*unpaid[\s\S]*Raising: Shrine/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});

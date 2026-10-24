@@ -19,6 +19,7 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 - Coordinates are a local Temeria map space (1000 wide, 929 tall, origin top-left).
 - Layers: sea and neighbouring lands (muted, named, not playable); Temeria outline; terrain zones (marsh, forest, hills, mountains; clip to the Temeria outline); rivers and Lake Vizima; roads (from the roads edge list); settlements; ambient units; labels.
 - Pan, pinch zoom and tap to select. Labels for small settlements appear only when zoomed in.
+- Settlements are dressed with what stands in them: an icon per crown building in an arc above and to the right, scaffolding for works under way, walls as a ring, and the garrison on the left as soldier figures (one per 200 men, up to five) under a banner that turns grey and ragged when pay stops. Dressing appears at the same zoom as the settlement's label.
 
 ## Realm-level meters
 - Treasury (crowns), Granary (food stores).
