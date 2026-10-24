@@ -9,6 +9,7 @@ import { settlementCardHtml } from './ui/settlementCard.js';
 import { realmMenuHtml, chronicleHtml, ledgerHtml } from './ui/menu.js';
 import { lawsHtml } from './ui/laws.js';
 import { neighboursHtml, realmCardHtml, envoyHtml } from './ui/neighbours.js';
+import { faithHtml, petitionHtml } from './ui/faith.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -162,6 +163,34 @@ async function boot() {
     };
   }
 
+  function openFaith() {
+    selection = null;
+    const body = sheet.open('faith', faithHtml(world, state, lookups));
+    body.onclick = (e) => {
+      const place = e.target.closest('[data-place]');
+      const pet = e.target.closest('[data-petition]');
+      if (place) openSettlement(place.dataset.place);
+      else if (pet) openPetition(Number(pet.dataset.petition));
+      else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  const shownPetitions = new Set();
+  function openPetition(id) {
+    const pending = state.petitions.find((p) => p.id === id);
+    if (!pending) return;
+    shownPetitions.add(id);
+    selection = null;
+    hideUnitLabel();
+    const body = sheet.open(`petition:${id}`, petitionHtml(world, pending));
+    body.onclick = (e) => {
+      const c = e.target.closest('[data-choice]');
+      if (!c) return;
+      order({ type: 'petition', id, choice: Number(c.dataset.choice) });
+      sheet.close();
+    };
+  }
+
   function openLedger() {
     const body = sheet.open('ledger', ledgerHtml(world, state));
     body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
@@ -178,6 +207,7 @@ async function boot() {
     else if (action === 'ledger') openLedger();
     else if (action === 'laws') openLaws();
     else if (action === 'neighbours') openNeighbours();
+    else if (action === 'faith') openFaith();
     else if (action === 'back') openMenu();
     else if (action === 'save') save(false);
     else if (action === 'load') {
@@ -275,9 +305,13 @@ async function boot() {
         topbar.update(state);
         refreshOpenSheet();
         const fresh = state.envoys.find((p) => !shownEnvoys.has(p.id));
+        const asking = state.petitions.find((p) => !shownPetitions.has(p.id));
         if (fresh) {
           setSpeed(0);
           openEnvoy(fresh.id);
+        } else if (asking) {
+          setSpeed(0);
+          openPetition(asking.id);
         }
       }
     }
@@ -304,6 +338,8 @@ async function boot() {
     else if (cur === 'neighbours') sheet.patch(cur, neighboursHtml(world, state));
     else if (cur?.startsWith('realm:')) sheet.patch(cur, realmCardHtml(world, state, cur.slice(6)));
     else if (cur?.startsWith('envoy:') && !state.envoys.some((p) => `envoy:${p.id}` === cur)) sheet.close();
+    else if (cur === 'faith') sheet.patch(cur, faithHtml(world, state, lookups));
+    else if (cur?.startsWith('petition:') && !state.petitions.some((p) => `petition:${p.id}` === cur)) sheet.close();
   }
 
   topbar.update(state);

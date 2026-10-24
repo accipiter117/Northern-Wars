@@ -1,5 +1,15 @@
 # Changelog
 
+## M4 Faith, culture and peoples
+- Faith shifts over the years with the crown's patronage and laws; the Eternal Fire slowly gains in the cities.
+- Tension between humans and non-humans in every settlement, shown on the settlement card where non-humans live.
+- Riots and pogroms, with a smoke-and-flame marker over riot-struck settlements and refugees fleeing them.
+- Scoia'tael sympathy among the elves, and commando ambushes near the forests when it runs high.
+- Petitions from Temerian settlements, answered like envoys.
+- Pilgrims on the road to the Temple of Melitele.
+- A Faith and peoples screen: realm faith, the peoples, Scoia'tael sympathy, the tensest places and waiting petitions.
+- Save version 5.
+
 ## Map dressing: soldiers and buildings
 - Garrisons stand beside their settlements as blue-coated spearmen (one per 200 men, up to five) under a Temerian banner; unpaid garrisons turn grey under a ragged banner.
 - Patrols ride as mounted lancers facing the way they travel.

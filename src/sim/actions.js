@@ -4,6 +4,7 @@ import { realmStock } from './economy.js';
 import { addDispatch } from './realm.js';
 import { canDecree, decree } from './laws.js';
 import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
+import { resolvePetition } from './petitions.js';
 
 const MATERIALS = ['timber', 'stone', 'iron'];
 
@@ -51,6 +52,11 @@ export function applyAction(state, world, action) {
   if (action.type === 'envoy') {
     const next = structuredClone(state);
     if (!resolveEnvoy(next, world, action.id, action.choice)) return { state, error: 'That envoy has gone.' };
+    return { state: next };
+  }
+  if (action.type === 'petition') {
+    const next = structuredClone(state);
+    if (!resolvePetition(next, world, action.id, action.choice)) return { state, error: 'That petition has been settled.' };
     return { state: next };
   }
   return { state, error: `Unknown action ${action.type}.` };

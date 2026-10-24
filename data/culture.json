@@ -1,0 +1,66 @@
+{
+  "note": "Faith, tension and the Scoia'tael. Faith shares are percentages. Tension runs 0 to 100 in each settlement and only bites where non-humans live.",
+  "faith": {
+    "driftPerMonth": 0.03,
+    "cityFire": 1.25,
+    "patron": 1.5,
+    "rival": 0.85,
+    "lawPulls": {
+      "old_ways:suppressed": {
+        "old_ways": 0.5
+      },
+      "mages:banished": {
+        "eternal_fire": 1.1
+      }
+    }
+  },
+  "tension": {
+    "base": 15,
+    "perFirePercent": 0.4,
+    "hunger": 30,
+    "povertyPerPoint": 0.3,
+    "drift": 0.02,
+    "laws": {
+      "nonhumans:charter": -10,
+      "nonhumans:expulsion": 25,
+      "patronage:eternal_fire": 8,
+      "public_order:martial": -5
+    },
+    "unrest": 0.15,
+    "fullShare": 0.12,
+    "minShare": 0.02
+  },
+  "riot": {
+    "above": 50,
+    "chance": 0.6,
+    "unrest": 15,
+    "prosperity": 5,
+    "troubledDays": 60
+  },
+  "pogrom": {
+    "above": 72,
+    "chance": 0.5,
+    "lossMin": 0.1,
+    "lossMax": 0.2,
+    "opinion": {
+      "elf": -10,
+      "dwarf": -10,
+      "halfling": -5
+    },
+    "relation": {
+      "mahakam": -10,
+      "brokilon": -10
+    },
+    "sympathy": 15,
+    "tensionAfter": -30
+  },
+  "sympathy": {
+    "driftPerMonth": 0.08,
+    "perElfPoint": 1.2,
+    "ambushAbove": 60,
+    "ambushChance": 0.35,
+    "ambushProsperity": 4
+  },
+  "petitionChance": 0.3,
+  "petitionDefaultDays": 20
+}

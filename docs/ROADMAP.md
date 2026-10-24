@@ -6,8 +6,8 @@
 | M2 Economy and population | Goods, production, consumption, buildings, taxes, monthly ledger, population growth and decline, trade traffic tied to the economy | Done |
 | M3 Laws and edicts | Law system, Authority, group reactions, effects over time | Done |
 | M3.5 Neighbours | The immediate neighbouring kingdoms brought to life in a small way, for variety and a sense of the wider world | Done |
-| M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Next |
-| M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Planned |
+| M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Done |
+| M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Next |
 | M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Planned |
 | M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Planned |
 
@@ -19,6 +19,16 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M4 acceptance criteria
+- Each settlement's faith mix drifts monthly towards a target set by the crown's patronage, laws and the Eternal Fire's pull on cities.
+- Tension between humans and non-humans in every settlement, raised by the Fire, hunger, poverty and harsh laws, lowered by charters; it only bites where non-humans live.
+- High tension brings riots, and at its worst pogroms that kill or scatter non-humans and anger Mahakam, Brokilon and the non-human peoples.
+- Scoia'tael sympathy follows elven opinion and pogroms; above 60 it brings ambushes near forests.
+- Petitions from Temerian settlements arrive about one month in three, pause the game, and default if ignored.
+- Pilgrims walk to the Temple of Melitele; refugees flee riot-struck and starving places.
+- A Faith and peoples screen, tension on settlement cards, and a smoke-and-flame marker on riot-struck settlements.
+- Version 4 saves load with tension and petitions.
 
 ## M3.5 acceptance criteria
 - The eleven neighbouring realms each have a ruler, a temper, a relation with Temeria, border trade, a gateway town and laws they care about (data/neighbours.json).

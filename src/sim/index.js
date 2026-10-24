@@ -10,4 +10,6 @@ export { canBuild, applyAction } from './actions.js';
 export { canDecree, reactions, enactment, lawEffects, opinionTargets } from './laws.js';
 export { relationTarget, foreignTrade, tradeFactor, canSetStance, envoyText } from './neighbours.js';
 export { ledgerNet } from './economy.js';
+export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
+export { petitionText } from './petitions.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects } from './economy.js';

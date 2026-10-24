@@ -1,5 +1,6 @@
 import { relationTarget, foreignTrade, canSetStance, envoyText, formatDate } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
+import { decisionHtml } from './faith.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 const back = (action, label) => `<div class="menu-list"><button type="button" data-action="${action}">${label}</button></div>`;
@@ -74,13 +75,5 @@ export function realmCardHtml(world, state, id) {
 
 export function envoyHtml(world, pending) {
   const t = envoyText(world, pending);
-  const realm = world.geography.neighbours[pending.realm].name;
-  const buttons = t.choices.map((label, i) => `<button type="button" class="build" data-choice="${i}"><span class="build-name">${escapeHtml(label)}</span></button>`).join('');
-  return `
-    <p class="sub envoy-from">An envoy from ${escapeHtml(realm)}</p>
-    <h2>${escapeHtml(t.title)}</h2>
-    <p>${escapeHtml(t.text)}</p>
-    <div class="build-list">${buttons}</div>
-    <p class="sub">Leave it unanswered and the cautious choice will be made for you in time.</p>
-  `;
+  return decisionHtml(`An envoy from ${world.geography.neighbours[pending.realm].name}`, t.title, t.text, t.choices);
 }

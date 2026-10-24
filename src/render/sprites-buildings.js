@@ -196,6 +196,31 @@ registerPlaceholder('building', 'walls', (ctx, x, y, size) => {
   ctx.setLineDash([]);
 });
 
+// Trouble in a settlement: a lick of flame under a plume of smoke.
+registerPlaceholder('marker', 'riot', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.fillStyle = 'rgba(70, 60, 55, 0.55)';
+  for (const [dx, dy, rr] of [[0.1, -0.55, 0.35], [0.35, -0.9, 0.3], [0.05, -1.2, 0.25]]) {
+    ctx.beginPath();
+    ctx.arc(x + dx * r, y + dy * r, rr * r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.moveTo(x, y + r * 0.5);
+  ctx.quadraticCurveTo(x - r * 0.5, y, x - r * 0.1, y - r * 0.5);
+  ctx.quadraticCurveTo(x, y - r * 0.1, x + r * 0.15, y - r * 0.35);
+  ctx.quadraticCurveTo(x + r * 0.5, y, x, y + r * 0.5);
+  ctx.fillStyle = '#d9662a';
+  ctx.fill();
+  outline(ctx, 0.6);
+  ctx.beginPath();
+  ctx.moveTo(x, y + r * 0.4);
+  ctx.quadraticCurveTo(x - r * 0.2, y + r * 0.1, x, y - r * 0.15);
+  ctx.quadraticCurveTo(x + r * 0.2, y + r * 0.1, x, y + r * 0.4);
+  ctx.fillStyle = '#f3c75a';
+  ctx.fill();
+});
+
 // One soldier: a spearman in the crown's blue. `unpaid` greys him out.
 registerPlaceholder('military', 'soldier', (ctx, x, y, size, opts = {}) => {
   const r = size / 2;

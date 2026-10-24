@@ -3,8 +3,9 @@ import { streamSeed } from './rng.js';
 import { computeStability, addDispatch } from './realm.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
+import { tensionTarget } from './culture.js';
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -32,10 +33,14 @@ export function createState(world, seed = 1) {
     neighbours: defaultNeighbours(world),
     envoys: [],
     nextEnvoyId: 1,
+    sympathy: 20,
+    petitions: [],
+    nextPetitionId: 1,
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],
   };
+  for (const id of Object.keys(settlements)) settlements[id].tension = tensionTarget(state, world, id);
   state.stability = computeStability(state);
   if (k.opening) addDispatch(state, k.opening);
   return state;
@@ -54,6 +59,8 @@ export function newSettlement(world, d, season) {
     hunger: 0,
     buildings: [],
     construction: null,
+    tension: 0,
+    troubled: 0,
   };
   const f = world.economy.food;
   const need = totalPopulation(s) * f.perPersonDay * (season === 'winter' ? f.winterFactor : 1);

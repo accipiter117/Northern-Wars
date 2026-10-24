@@ -41,6 +41,20 @@
       "max": 6,
       "spawnPerDay": 0.6,
       "tradeBaseline": 100
+    },
+    "pilgrim": {
+      "name": "Pilgrims",
+      "speed": 16,
+      "max": 8,
+      "spawnPerDay": 0.5,
+      "faithBaseline": 45,
+      "shrine": "temple_melitele"
+    },
+    "refugee": {
+      "name": "Refugees",
+      "speed": 14,
+      "max": 10,
+      "spawnPerDay": 0.8
     }
   }
 }

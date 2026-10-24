@@ -6,7 +6,7 @@ import { distanceToPolygon } from './geometry.js';
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions }) {
   const byId = {};
   for (const s of geography.settlements) byId[s.id] = s;
 
@@ -38,8 +38,17 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     terrainOf[s.id] = best.kind;
   }
 
+  // Settlements within reach of a forest, or of Brokilon itself, are where
+  // Scoia'tael commandos strike.
+  const forestNear = {};
+  const woods = [...(geography.terrain.forest ?? []).map((z) => z.shape), ...(geography.neighbours.brokilon?.shapes ?? [])];
+  for (const s of geography.settlements) forestNear[s.id] = woods.some((sh) => distanceToPolygon(s.x, s.y, sh) < 60);
+
   return {
     kingdom,
+    forestNear,
+    culture,
+    petitions,
     economy,
     buildings: buildings.buildings,
     laws,
