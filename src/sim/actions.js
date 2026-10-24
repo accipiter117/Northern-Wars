@@ -2,6 +2,7 @@
 // of the state, so the UI can ask "could I?" before it asks "do it".
 import { realmStock } from './economy.js';
 import { addDispatch } from './realm.js';
+import { canDecree, decree } from './laws.js';
 
 const MATERIALS = ['timber', 'stone', 'iron'];
 
@@ -30,6 +31,13 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     startBuilding(next, world, action.settlement, action.building);
+    return { state: next };
+  }
+  if (action.type === 'law') {
+    const check = canDecree(state, world, action.law, action.option);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    decree(next, world, action.law, action.option);
     return { state: next };
   }
   return { state, error: `Unknown action ${action.type}.` };

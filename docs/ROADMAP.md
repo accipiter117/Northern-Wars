@@ -4,7 +4,8 @@
 | --- | --- | --- |
 | M1 The living map | Scaffold, test harness, map render from geography.json, pan and zoom, settlements with basic stats and cards, calendar and speed controls, ambient caravans and patrols on roads and barges on rivers driven by simple placeholder values, save and load, deploy to GitHub Pages | Done |
 | M2 Economy and population | Goods, production, consumption, buildings, taxes, monthly ledger, population growth and decline, trade traffic tied to the economy | Done |
-| M3 Laws and edicts | Law system, Authority, group reactions, effects over time | Next |
+| M3 Laws and edicts | Law system, Authority, group reactions, effects over time | Done |
+| M3.5 Neighbours | The immediate neighbouring kingdoms brought to life in a small way, for variety and a sense of the wider world | Next |
 | M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Planned |
 | M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Planned |
 | M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Planned |
@@ -18,6 +19,14 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M3 acceptance criteria
+- Fourteen laws in three categories, each with two or three options, all in data/laws.json.
+- Decreeing costs Authority and crowns, jolts the groups affected, and phases in over 30 days; a law cannot be changed again until it has taken hold.
+- Nine groups (nobles, burghers, peasants, three faiths, three non-human peoples) hold an opinion that drifts towards what the laws give them, and that opinion moves unrest, trade and Authority.
+- Authority regenerates monthly, faster with content lords and a splendid court, and drains with debt.
+- A Laws screen shows the realm's mood and every law, with costs and who each option pleases or angers.
+- Version 2 saves load with the customary laws.
 
 ## M2 acceptance criteria
 - Every settlement keeps its own stores of food, timber, stone and iron; the realm totals are their sum.

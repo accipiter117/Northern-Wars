@@ -108,7 +108,7 @@ test('the monthly ledger balances', () => {
   const before = s.treasury;
   s = run(s, 30);
   const l = s.ledger.history.at(-1);
-  const net = l.income.taxes + l.income.trade + l.income.sales - l.expenses.garrisons - l.expenses.upkeep - l.expenses.court - l.expenses.interest;
+  const net = l.income.taxes + l.income.trade + l.income.sales - l.expenses.garrisons - l.expenses.upkeep - l.expenses.court - l.expenses.edicts - l.expenses.interest;
   assert.ok(Math.abs(s.treasury - (before + net)) < 1e-6);
 });
 

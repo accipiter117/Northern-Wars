@@ -1,0 +1,62 @@
+{
+  "note": "The estates and communities whose opinion of the crown laws move. Opinion runs 0 to 100 and starts at 50.",
+  "groups": {
+    "nobles": {
+      "name": "Nobles",
+      "about": "The lords and their households. Their mood feeds the crown's Authority."
+    },
+    "burghers": {
+      "name": "Burghers",
+      "about": "Merchants, guildsmen and townsfolk. They keep the towns calm and the tolls flowing."
+    },
+    "peasants": {
+      "name": "Peasants",
+      "about": "The villages that grow the realm's bread."
+    },
+    "eternal_fire": {
+      "name": "Clergy of the Eternal Fire",
+      "about": "Zealous, urban, wary of magic and non-humans."
+    },
+    "melitele": {
+      "name": "Priestesses of Melitele",
+      "about": "Healers and almoners, loved by the poor."
+    },
+    "old_ways": {
+      "name": "Keepers of the Old Ways",
+      "about": "Druids and wise women of the countryside, strongest in Velen."
+    },
+    "dwarf": {
+      "name": "Dwarves",
+      "about": "Smiths, miners and bankers."
+    },
+    "elf": {
+      "name": "Elves",
+      "about": "Few, watchful, and quick to sympathise with the Scoia'tael."
+    },
+    "halfling": {
+      "name": "Halflings",
+      "about": "Farmers of the southern fields."
+    }
+  },
+  "effects": {
+    "note": "How opinion turns into consequences. Points are opinion away from 50.",
+    "drift": 0.02,
+    "settlementUnrest": {
+      "peasants": {
+        "village": 0.25
+      },
+      "burghers": {
+        "town": 0.25,
+        "city": 0.25
+      },
+      "nobles": {
+        "castle": 0.25
+      }
+    },
+    "faithUnrest": 0.25,
+    "peopleUnrest": 0.6,
+    "nobleAuthority": 0.03,
+    "burgherTrade": 0.004,
+    "authorityRegen": 1
+  }
+}

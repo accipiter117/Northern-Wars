@@ -1,0 +1,539 @@
+{
+  "note": "Laws and their options. Changing a law costs Authority and crowns, then phases in over enactDays. Effects are fractions (0.2 = +20%) or points; unrest and prosperity may be scoped by settlement type. Opinion values shift each group's settled view of the crown while the law stands.",
+  "enactDays": 30,
+  "shock": 0.4,
+  "categories": {
+    "economy": "Treasury and trade",
+    "order": "Order and the realm",
+    "faith": "Faith and peoples"
+  },
+  "laws": {
+    "taxation": {
+      "name": "Taxation",
+      "category": "economy",
+      "default": "standard",
+      "authority": 10,
+      "coin": 50,
+      "options": {
+        "light": {
+          "name": "Light taxes",
+          "blurb": "The crown takes less and is loved more.",
+          "effects": {
+            "tax": -0.25,
+            "prosperity": 2
+          },
+          "opinion": {
+            "peasants": 8,
+            "burghers": 6
+          }
+        },
+        "standard": {
+          "name": "Customary taxes",
+          "blurb": "What the crown has always taken.",
+          "effects": {},
+          "opinion": {}
+        },
+        "heavy": {
+          "name": "Heavy taxes",
+          "blurb": "Fill the treasury and empty every purse.",
+          "effects": {
+            "tax": 0.35,
+            "prosperity": -3
+          },
+          "opinion": {
+            "peasants": -10,
+            "burghers": -8,
+            "nobles": -2
+          }
+        }
+      }
+    },
+    "noble_privilege": {
+      "name": "Noble tax privileges",
+      "category": "economy",
+      "default": "exempt",
+      "authority": 20,
+      "coin": 0,
+      "options": {
+        "exempt": {
+          "name": "Lords exempt",
+          "blurb": "The lords pay in blood and service, not coin.",
+          "effects": {},
+          "opinion": {}
+        },
+        "taxed": {
+          "name": "Lords taxed",
+          "blurb": "Every estate pays its share. The lords will remember.",
+          "effects": {
+            "tax": 0.15
+          },
+          "opinion": {
+            "nobles": -15,
+            "peasants": 4,
+            "burghers": 4
+          }
+        }
+      }
+    },
+    "guilds": {
+      "name": "Guild charters",
+      "category": "economy",
+      "default": "chartered",
+      "authority": 10,
+      "coin": 100,
+      "options": {
+        "free": {
+          "name": "Free trade",
+          "blurb": "Any man may sell what he makes. The guilds howl.",
+          "effects": {
+            "trade": 0.15
+          },
+          "opinion": {
+            "burghers": -8,
+            "peasants": 3,
+            "dwarf": 4
+          }
+        },
+        "chartered": {
+          "name": "Royal charters",
+          "blurb": "The guilds keep their rights at the crown's pleasure.",
+          "effects": {},
+          "opinion": {}
+        },
+        "monopoly": {
+          "name": "Guild monopolies",
+          "blurb": "The guilds rule their trades. Prices rise, and so does their gratitude.",
+          "effects": {
+            "trade": -0.18,
+            "prosperity": {
+              "town": 3,
+              "city": 3
+            }
+          },
+          "opinion": {
+            "burghers": 12,
+            "peasants": -4,
+            "dwarf": -4
+          }
+        }
+      }
+    },
+    "grain_prices": {
+      "name": "Grain prices",
+      "category": "economy",
+      "default": "market",
+      "authority": 10,
+      "coin": 100,
+      "options": {
+        "market": {
+          "name": "Free market",
+          "blurb": "Bread costs what bread costs.",
+          "effects": {},
+          "opinion": {}
+        },
+        "controlled": {
+          "name": "Price controls",
+          "blurb": "Cheap bread in the towns, thin purses in the villages.",
+          "effects": {
+            "unrest": {
+              "town": -3,
+              "city": -4
+            },
+            "prosperity": {
+              "village": -3
+            }
+          },
+          "opinion": {
+            "peasants": -8,
+            "burghers": 4
+          }
+        },
+        "granaries": {
+          "name": "Royal granaries",
+          "blurb": "The crown buys at harvest and keeps it under guard. Costly, but less rots.",
+          "effects": {
+            "storage": 0.12,
+            "monthly": 180
+          },
+          "opinion": {
+            "peasants": 3
+          }
+        }
+      }
+    },
+    "corvee": {
+      "name": "Road corvee",
+      "category": "economy",
+      "default": "none",
+      "authority": 10,
+      "coin": 50,
+      "options": {
+        "none": {
+          "name": "No corvee",
+          "blurb": "The roads mend themselves, or do not.",
+          "effects": {},
+          "opinion": {}
+        },
+        "corvee": {
+          "name": "Corvee labour",
+          "blurb": "Every village gives days to the roads. Carts move faster; backs ache.",
+          "effects": {
+            "trade": 0.1,
+            "prosperity": {
+              "village": -2
+            }
+          },
+          "opinion": {
+            "peasants": -10,
+            "burghers": 4
+          }
+        }
+      }
+    },
+    "conscription": {
+      "name": "Conscription",
+      "category": "order",
+      "default": "seasonal",
+      "authority": 15,
+      "coin": 100,
+      "options": {
+        "none": {
+          "name": "No levy",
+          "blurb": "Only paid men under arms. Fewer swords, more ploughs.",
+          "effects": {
+            "garrison": -0.2,
+            "foodYield": 0.02
+          },
+          "opinion": {
+            "peasants": 4,
+            "nobles": -3
+          }
+        },
+        "seasonal": {
+          "name": "Seasonal levy",
+          "blurb": "Men serve between sowing and harvest.",
+          "effects": {},
+          "opinion": {}
+        },
+        "standing": {
+          "name": "Standing muster",
+          "blurb": "A soldier in every hall. The fields go short of hands.",
+          "effects": {
+            "garrison": 0.4,
+            "foodYield": -0.06
+          },
+          "opinion": {
+            "peasants": -8,
+            "nobles": 5
+          }
+        }
+      }
+    },
+    "public_order": {
+      "name": "Public order",
+      "category": "order",
+      "default": "watch",
+      "authority": 10,
+      "coin": 50,
+      "options": {
+        "watch": {
+          "name": "Town watch",
+          "blurb": "Lanterns, rattles and old men with pikes.",
+          "effects": {},
+          "opinion": {}
+        },
+        "curfew": {
+          "name": "Curfews",
+          "blurb": "Indoors by the evening bell.",
+          "effects": {
+            "unrest": {
+              "town": -4,
+              "city": -4
+            },
+            "prosperity": {
+              "town": -2,
+              "city": -2
+            },
+            "garrisonUpkeep": 0.1
+          },
+          "opinion": {
+            "burghers": -5
+          }
+        },
+        "martial": {
+          "name": "Martial law",
+          "blurb": "Soldiers on every corner and gallows in every square.",
+          "effects": {
+            "unrest": -10,
+            "prosperity": -6,
+            "garrisonUpkeep": 0.3
+          },
+          "opinion": {
+            "burghers": -12,
+            "peasants": -6,
+            "nobles": 4
+          }
+        }
+      }
+    },
+    "court": {
+      "name": "The royal court",
+      "category": "order",
+      "default": "customary",
+      "authority": 5,
+      "coin": 0,
+      "options": {
+        "frugal": {
+          "name": "A frugal court",
+          "blurb": "Plain food, few feasts, fewer courtiers.",
+          "effects": {
+            "court": -0.3,
+            "authority": -0.3
+          },
+          "opinion": {
+            "nobles": -8
+          }
+        },
+        "customary": {
+          "name": "A customary court",
+          "blurb": "As kings have kept it.",
+          "effects": {},
+          "opinion": {}
+        },
+        "splendid": {
+          "name": "A splendid court",
+          "blurb": "Tourneys, masques and favours. The lords come to Vizima and stay.",
+          "effects": {
+            "court": 0.6,
+            "authority": 0.6
+          },
+          "opinion": {
+            "nobles": 10,
+            "peasants": -2
+          }
+        }
+      }
+    },
+    "bounties": {
+      "name": "Monster bounties",
+      "category": "order",
+      "default": "none",
+      "authority": 5,
+      "coin": 0,
+      "options": {
+        "none": {
+          "name": "No bounties",
+          "blurb": "Villages deal with their own drowners.",
+          "effects": {},
+          "opinion": {}
+        },
+        "witchers": {
+          "name": "Witcher contracts",
+          "blurb": "Royal coin for mutants who kill monsters. The priests of the Fire mutter.",
+          "effects": {
+            "monthly": 100,
+            "prosperity": {
+              "village": 2
+            }
+          },
+          "opinion": {
+            "peasants": 6,
+            "eternal_fire": -4
+          }
+        }
+      }
+    },
+    "mages": {
+      "name": "Registration of mages",
+      "category": "order",
+      "default": "registered",
+      "authority": 10,
+      "coin": 50,
+      "options": {
+        "free": {
+          "name": "Mages free",
+          "blurb": "Sorcerers come and go as they please.",
+          "effects": {
+            "trade": 0.03
+          },
+          "opinion": {
+            "eternal_fire": -8,
+            "burghers": 2,
+            "elf": 2
+          }
+        },
+        "registered": {
+          "name": "Mages registered",
+          "blurb": "Every sorcerer known by name to the crown.",
+          "effects": {},
+          "opinion": {}
+        },
+        "banished": {
+          "name": "Magic banished",
+          "blurb": "Sorcery outlawed. The Fire rejoices; the healers and the wealthy do not.",
+          "effects": {
+            "trade": -0.05,
+            "prosperity": {
+              "city": -2
+            }
+          },
+          "opinion": {
+            "eternal_fire": 10,
+            "burghers": -4,
+            "melitele": -3,
+            "elf": -4
+          }
+        }
+      }
+    },
+    "patronage": {
+      "name": "Faith of the crown",
+      "category": "faith",
+      "default": "tolerance",
+      "authority": 15,
+      "coin": 100,
+      "options": {
+        "tolerance": {
+          "name": "Tolerance",
+          "blurb": "The crown prays where it likes and favours no altar.",
+          "effects": {},
+          "opinion": {}
+        },
+        "eternal_fire": {
+          "name": "Patron of the Eternal Fire",
+          "blurb": "Gold for the Fire's temples. Its preachers keep order in the cities, and keep score.",
+          "effects": {
+            "monthly": 150,
+            "unrest": {
+              "city": -3
+            }
+          },
+          "opinion": {
+            "eternal_fire": 15,
+            "melitele": -8,
+            "old_ways": -10,
+            "elf": -6,
+            "dwarf": -6
+          }
+        },
+        "melitele": {
+          "name": "Patron of Melitele",
+          "blurb": "Gold for the goddess's hospices and almshouses.",
+          "effects": {
+            "monthly": 150,
+            "growth": 0.15
+          },
+          "opinion": {
+            "melitele": 15,
+            "eternal_fire": -10,
+            "peasants": 4
+          }
+        }
+      }
+    },
+    "nonhumans": {
+      "name": "Non-human rights",
+      "category": "faith",
+      "default": "restricted",
+      "authority": 20,
+      "coin": 100,
+      "options": {
+        "charter": {
+          "name": "Equal charter",
+          "blurb": "Dwarf, elf and halfling stand equal with men under the crown's law.",
+          "effects": {
+            "trade": 0.05
+          },
+          "opinion": {
+            "dwarf": 12,
+            "elf": 12,
+            "halfling": 12,
+            "eternal_fire": -10,
+            "burghers": -3
+          }
+        },
+        "restricted": {
+          "name": "Quarters and restrictions",
+          "blurb": "Non-humans may live and trade, within their quarters and their limits.",
+          "effects": {},
+          "opinion": {}
+        },
+        "expulsion": {
+          "name": "Expulsion",
+          "blurb": "Non-humans are to leave the realm. Many will. Some will take to the woods.",
+          "effects": {
+            "trade": -0.15,
+            "nonhumanExodus": 0.03
+          },
+          "opinion": {
+            "dwarf": -30,
+            "elf": -30,
+            "halfling": -30,
+            "eternal_fire": 12,
+            "peasants": 3
+          }
+        }
+      }
+    },
+    "old_ways": {
+      "name": "The Old Ways",
+      "category": "faith",
+      "default": "tolerated",
+      "authority": 10,
+      "coin": 50,
+      "options": {
+        "tolerated": {
+          "name": "Tolerated",
+          "blurb": "The groves and their keepers are left in peace.",
+          "effects": {},
+          "opinion": {}
+        },
+        "suppressed": {
+          "name": "Suppressed",
+          "blurb": "Groves felled, wise women questioned. Velen will not forget.",
+          "effects": {
+            "unrest": {
+              "village": 3
+            }
+          },
+          "opinion": {
+            "old_ways": -20,
+            "eternal_fire": 8,
+            "peasants": -3
+          }
+        }
+      }
+    },
+    "alms": {
+      "name": "Poor relief",
+      "category": "faith",
+      "default": "none",
+      "authority": 5,
+      "coin": 0,
+      "options": {
+        "none": {
+          "name": "No relief",
+          "blurb": "The poor are the Church's concern.",
+          "effects": {},
+          "opinion": {}
+        },
+        "alms": {
+          "name": "Royal alms",
+          "blurb": "Bread and broth at the crown's expense.",
+          "effects": {
+            "monthly": 120,
+            "unrest": {
+              "city": -2,
+              "town": -2
+            },
+            "growth": 0.1
+          },
+          "opinion": {
+            "melitele": 6,
+            "peasants": 4
+          }
+        }
+      }
+    }
+  }
+}

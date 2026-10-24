@@ -7,6 +7,7 @@ import { dateOf } from './calendar.js';
 import { totalPopulation } from './state.js';
 import { addDispatch } from './realm.js';
 import { number } from './text.js';
+import { lawEffects } from './laws.js';
 
 const GOODS = ['timber', 'stone', 'iron'];
 
@@ -28,17 +29,17 @@ export function foodNeed(world, s, season) {
   return totalPopulation(s) * f.perPersonDay * (season === 'winter' ? f.winterFactor : 1);
 }
 
-export function foodCapacity(world, s) {
+export function foodCapacity(world, s, law = null) {
   const f = world.economy.food;
   const base = Math.max(f.storageMin, totalPopulation(s) * f.perPersonDay * f.storageDays);
-  return base * (1 + buildingEffects(world, s).storage);
+  return base * (1 + buildingEffects(world, s).storage + (law?.storage ?? 0));
 }
 
 const weightMean = new WeakMap();
 
 // Food grown per day this month. Month weights are normalised so a year's
 // harvest equals the farm base times 365, whatever the shape of the curve.
-export function foodYield(world, id, s, month) {
+export function foodYield(world, id, s, month, law = null) {
   const f = world.economy.food;
   let mean = weightMean.get(f);
   if (!mean) weightMean.set(f, (mean = f.monthWeights.reduce((a, b) => a + b, 0) / 12));
@@ -46,7 +47,7 @@ export function foodYield(world, id, s, month) {
   const focus = s.production === 'food' ? f.farmingFocus.food : f.farmingFocus.other;
   const terrain = f.terrainYield[world.terrainOf[id]] ?? 1;
   const fx = buildingEffects(world, s);
-  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield) * (f.monthWeights[month - 1] / mean);
+  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield + (law?.foodYield ?? 0)) * (f.monthWeights[month - 1] / mean);
 }
 
 // Timber, stone or iron per day, for settlements whose trade is one of those.
@@ -65,8 +66,9 @@ export function realmStock(state) {
 
 export function stepEconomyDay(state, world) {
   const date = dateOf(state.day);
+  const law = lawEffects(state, world);
   for (const [id, s] of Object.entries(state.settlements)) {
-    s.stock.food += foodYield(world, id, s, date.month);
+    s.stock.food += foodYield(world, id, s, date.month, law);
     if (GOODS.includes(s.production)) s.stock[s.production] += goodsYield(world, id, s);
     const need = foodNeed(world, s, date.season);
     let shortfall = 0;
@@ -77,7 +79,7 @@ export function stepEconomyDay(state, world) {
     }
     // Hunger is smoothed so one bad day is not a famine, but a bad month is.
     s.hunger = s.hunger * 0.9 + shortfall * 0.1;
-    s.stock.food = Math.min(s.stock.food, foodCapacity(world, s));
+    s.stock.food = Math.min(s.stock.food, foodCapacity(world, s, law));
   }
   shipFood(state, world, date.season);
   advanceConstruction(state, world);
@@ -135,16 +137,27 @@ function advanceConstruction(state, world) {
 export function monthlyLedger(state, world) {
   const e = world.economy;
   const debtCfg = e.debt;
+  const law = lawEffects(state, world);
+  const g = world.groups.effects;
+  const tradeMult = Math.max(0, 1 + law.trade + (state.opinion.burghers - 50) * g.burgherTrade);
   const income = { taxes: 0, trade: 0, sales: 0 };
-  const expenses = { garrisons: 0, upkeep: 0, court: e.upkeep.courtMonth, interest: 0, construction: state.ledger.construction };
+  const expenses = {
+    garrisons: 0,
+    upkeep: 0,
+    court: e.upkeep.courtMonth * Math.max(0, 1 + law.court),
+    edicts: law.monthly,
+    interest: 0,
+    construction: state.ledger.construction,
+    decrees: state.ledger.decrees ?? 0,
+  };
 
   for (const [id, s] of Object.entries(state.settlements)) {
     const pop = totalPopulation(s);
     const mult = prosperityMult(world, s);
     const fx = buildingEffects(world, s);
-    income.taxes += pop * e.taxes.perPersonMonth * mult;
+    income.taxes += pop * e.taxes.perPersonMonth * mult * Math.max(0, 1 + law.tax);
     const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
-    income.trade += pop * e.trade.perPersonMonth[world.byId[id].type] * focus * mult * (1 + fx.trade);
+    income.trade += pop * e.trade.perPersonMonth[world.byId[id].type] * focus * mult * (1 + fx.trade) * tradeMult;
     for (const g of GOODS) {
       const over = s.stock[g] - e.goods.storageCap;
       if (over > 0) {
@@ -152,7 +165,7 @@ export function monthlyLedger(state, world) {
         s.stock[g] = e.goods.storageCap;
       }
     }
-    expenses.garrisons += s.garrison * e.upkeep.garrisonPerSoldierMonth;
+    expenses.garrisons += s.garrison * e.upkeep.garrisonPerSoldierMonth * (1 + law.garrisonUpkeep);
     for (const b of s.buildings) expenses.upkeep += world.buildings[b].upkeep;
   }
   if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth;
@@ -160,26 +173,33 @@ export function monthlyLedger(state, world) {
   for (const k of Object.keys(income)) income[k] = Math.round(income[k]);
   for (const k of Object.keys(expenses)) expenses[k] = Math.round(expenses[k]);
   const totalIn = income.taxes + income.trade + income.sales;
-  // Construction was paid when ordered; it is listed here only for the record.
-  const totalOut = expenses.garrisons + expenses.upkeep + expenses.court + expenses.interest;
+  // Construction and decrees were paid when ordered; listed only for the record.
+  const totalOut = expenses.garrisons + expenses.upkeep + expenses.court + expenses.edicts + expenses.interest;
   state.treasury += totalIn - totalOut;
 
   // Debt costs the crown its grip on the lords. Past the bankers' limit the
   // soldiers go unpaid, grumble and slip away.
   const debt = Math.max(0, -state.treasury);
-  const base = world.kingdom.authority;
+  // Authority returns slowly by itself, faster when the lords are content
+  // and the court impresses them, and drains while the crown is in debt.
+  state.authority += g.authorityRegen + (state.opinion.nobles - 50) * g.nobleAuthority + law.authority;
   if (debt > 0) state.authority -= (debt / 1000) * debtCfg.authorityPerThousand;
-  else if (state.authority < base) state.authority = Math.min(base, state.authority + debtCfg.authorityRecovery);
   state.authority = Math.max(0, Math.min(100, state.authority));
   state.unpaid = debt > debtCfg.creditLimit;
-  if (state.unpaid) {
-    for (const s of Object.values(state.settlements)) s.garrison = Math.floor(s.garrison * (1 - debtCfg.desertionPerMonth));
+  for (const [id, s] of Object.entries(state.settlements)) {
+    if (state.unpaid) s.garrison = Math.floor(s.garrison * (1 - debtCfg.desertionPerMonth));
+    else {
+      // Garrisons drift towards what the conscription law calls for.
+      const target = world.settlementData[id].garrison * Math.max(0, 1 + law.garrison);
+      s.garrison = Math.max(0, Math.round(s.garrison + (target - s.garrison) * 0.1));
+    }
   }
 
   const date = dateOf(state.day - 1);
   state.ledger.history.push({ year: date.year, month: date.month, income, expenses, treasury: Math.round(state.treasury) });
   if (state.ledger.history.length > 12) state.ledger.history.shift();
   state.ledger.construction = 0;
+  state.ledger.decrees = 0;
 
   let text = `The ledger for the month: ${number(totalIn)} crowns in, ${number(totalOut)} out. `;
   text += state.treasury >= 0

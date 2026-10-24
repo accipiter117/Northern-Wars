@@ -1,5 +1,14 @@
 # Changelog
 
+## M3 Laws and edicts
+- Fourteen laws in three categories, decreed from a new Laws screen (realm menu). Each decree costs Authority and crowns and phases in over a month.
+- Nine groups with an opinion of the crown, shown as the realm's mood with arrows for which way each is heading. Opinion moves unrest, trade and Authority.
+- Authority now regenerates monthly, helped by content lords and a splendid court, and drained by debt.
+- Laws reach taxes, trade, garrison size and pay, harvests, granary storage, the court's cost, monthly edicts, growth, and the exodus of non-humans under expulsion.
+- The ledger lists edicts and decree costs.
+- Save version 3; older saves gain the customary laws.
+- tools/lawbalance.mjs compares every law option against doing nothing.
+
 ## M2 Economy and population
 - Per-settlement stockpiles of food, timber, stone and iron; the Granary meter shows the realm total.
 - Harvest-shaped farming that depends on settlement type, trade, terrain, prosperity and buildings; winter appetite; spoilage; grain shipped from full stores to hungry ones.

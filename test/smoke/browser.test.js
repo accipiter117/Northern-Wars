@@ -31,6 +31,7 @@ for (const vp of VIEWPORTS) {
     const errors = [];
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     page.on('pageerror', (e) => errors.push(e.message));
+    page.on('dialog', (d) => d.accept());
 
     await page.goto(`${base}?seed=1262&fresh`);
     await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
@@ -93,6 +94,18 @@ for (const vp of VIEWPORTS) {
     await page.click('#menu-button');
     await page.click('[data-action="save"]');
     assert.ok(await page.evaluate(() => localStorage.getItem('northern-wars.save')?.includes('northern-wars-save')));
+    // Decree heavy taxes from the Laws screen.
+    await page.click('[data-action="laws"]');
+    assert.match(await page.textContent('#sheet-body'), /The realm's mood[\s\S]*Peasants[\s\S]*Taxation/);
+    const authority = await page.evaluate(() => window.northernWars.state.authority);
+    await page.click('[data-law="taxation"]');
+    await page.click('[data-decree="taxation:heavy"]');
+    assert.equal(await page.evaluate(() => window.northernWars.state.laws.taxation.option), 'heavy');
+    assert.equal(await page.evaluate(() => window.northernWars.state.authority), authority - 10);
+    assert.match(await page.textContent('[data-law="taxation"]'), /Heavy taxes[\s\S]*Taking hold/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-laws.png`) });
+    await page.click('[data-action="back"]');
+
     await page.click('[data-action="ledger"]');
     assert.match(await page.textContent('#sheet-body'), /Taxes[\s\S]*Garrisons[\s\S]*The past year/);
     await page.screenshot({ path: join(OUT, `${vp.name}-ledger.png`) });
