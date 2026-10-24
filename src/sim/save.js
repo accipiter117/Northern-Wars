@@ -1,5 +1,6 @@
 import { STATE_VERSION, newSettlement } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
+import { defaultNeighbours } from './neighbours.js';
 import { seasonOf } from './calendar.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
@@ -33,6 +34,14 @@ const MIGRATIONS = {
     state.opinion = defaultOpinion(world);
     state.ledger.decrees = 0;
     state.version = 3;
+    return state;
+  },
+  // v4 adds the neighbouring realms and their envoys.
+  3(state, world) {
+    state.neighbours = defaultNeighbours(world);
+    state.envoys = [];
+    state.nextEnvoyId = 1;
+    state.version = 4;
     return state;
   },
 };

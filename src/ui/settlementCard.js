@@ -28,7 +28,7 @@ export function settlementCardHtml(world, state, id, data) {
         <div><dt>Population</dt><dd>${number(pop)}</dd></div>
         <div><dt>Holder</dt><dd>${holder}</dd></div>
         <div><dt>Produces</dt><dd>${escapeHtml(data.goods[s.production]?.name ?? s.production)}</dd></div>
-        <div><dt>Garrison</dt><dd>${s.garrison ? number(s.garrison) : 'None'}</dd></div>
+        <div><dt>Garrison</dt><dd>${s.garrison ? `${number(s.garrison)}${state.unpaid ? ' <small>unpaid</small>' : ''}` : 'None'}</dd></div>
       </dl>
       ${gauge('Prosperity', s.prosperity, describeLevel(s.prosperity, PROSPERITY_WORDS), false)}
       ${gauge('Unrest', s.unrest, describeLevel(s.unrest, UNREST_WORDS), true)}

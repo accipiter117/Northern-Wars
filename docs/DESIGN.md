@@ -19,6 +19,7 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 - Coordinates are a local Temeria map space (1000 wide, 929 tall, origin top-left).
 - Layers: sea and neighbouring lands (muted, named, not playable); Temeria outline; terrain zones (marsh, forest, hills, mountains; clip to the Temeria outline); rivers and Lake Vizima; roads (from the roads edge list); settlements; ambient units; labels.
 - Pan, pinch zoom and tap to select. Labels for small settlements appear only when zoomed in.
+- Settlements are dressed with what stands in them: an icon per crown building in an arc above and to the right, scaffolding for works under way, walls as a ring, and the garrison on the left as soldier figures (one per 200 men, up to five) under a banner that turns grey and ragged when pay stops. Dressing appears at the same zoom as the settlement's label.
 
 ## Realm-level meters
 - Treasury (crowns), Granary (food stores).
@@ -83,6 +84,13 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 ### Events
 - Data-driven event cards with conditions, two or three choices and effects. Examples: plague, failed harvest, a monster in the marshes, a riot in Vizima, a lord's demand, a Scoia'tael ambush, a preacher of the Eternal Fire, a witcher seeking a contract.
 - Major events auto-pause the game.
+
+## Neighbouring realms (M3.5, kept small)
+- The eleven realms on the map are no longer only scenery: Redania, Kaedwen, Aedirn, Mahakam, Brokilon, Cidaris, Kerack, Verden, Brugge, Sodden and Cintra each have a ruler (lore figures of the period), a temper, a relation with Temeria from -100 to 100, border trade and a gateway town.
+- Relation drifts (1% of the gap a day) towards: the realm's starting view, plus the crown's stance (friendly +25 at 30 crowns a month in gifts, neutral 0, cold -25), plus the laws it cares about (Mahakam and Brokilon about non-human rights, Redania about mages and the Eternal Fire, and so on).
+- Trade a month = the realm's trade x (0.5 + relation/100), up to 1.5x; nothing below -30. Brokilon never trades.
+- Envoys: about one month in three, one envoy card from a fitting realm (trade pacts, border disputes, refugees, marriages, loans, smugglers, Mahakam's smiths, dryad arrows, spies). Each has two or three choices touching relation, the treasury, Authority, group opinion, settlers or soldiers. The game pauses on arrival; ignored envoys default after 20 days. This is the seed of the M6 event system.
+- No armies, wars or treaties yet.
 
 ## Ambient units
 Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG). Kinds and what drives their numbers:

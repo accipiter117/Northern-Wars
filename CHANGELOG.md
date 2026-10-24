@@ -1,5 +1,20 @@
 # Changelog
 
+## Map dressing: soldiers and buildings
+- Garrisons stand beside their settlements as blue-coated spearmen (one per 200 men, up to five) under a Temerian banner; unpaid garrisons turn grey under a ragged banner.
+- Patrols ride as mounted lancers facing the way they travel.
+- Every finished building appears as a small icon round its settlement (fields, watermill, granary, lumber camp, quarry, iron mine, market hall, workshops, shrine), works in progress as scaffolding, and stone walls as a ring round the settlement marker.
+- Icons, soldiers and banners are sprites in the registry (src/render/sprites-buildings.js), ready to be replaced by painted art.
+- Tapping a settlement's soldiers or buildings opens its card, which now marks an unpaid garrison.
+
+## M3.5 Neighbouring realms
+- Eleven neighbouring realms with rulers, tempers, relations, border trade and gateways, on a new Neighbouring realms screen and as cards opened by tapping their land on the map.
+- Stances (friendly, neutral, cold) and the crown's laws move each realm's relation; neighbouring lands are tinted green or red on the map to match.
+- Border trade and gifts in the ledger. Foreign caravans, with red pennants, cross the borders to Temerian towns.
+- Envoys with choices arrive about one month in three and pause the game; unanswered ones are settled cautiously after 20 days.
+- ledgerNet() is the single sum of a month's accounts, used everywhere.
+- Save version 4.
+
 ## M3 Laws and edicts
 - Fourteen laws in three categories, decreed from a new Laws screen (realm menu). Each decree costs Authority and crowns and phases in over a month.
 - Nine groups with an opinion of the crown, shown as the realm's mood with arrows for which way each is heading. Opinion moves unrest, trade and Authority.

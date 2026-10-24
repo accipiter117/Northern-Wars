@@ -1,0 +1,78 @@
+{
+  "note": "Envoys from neighbouring realms. {ruler}, {realm} and {gateway} are filled in. Effects: relation, treasury, authority, opinion (by group), settlers (people added to the gateway), losses (soldiers lost at the gateway). If ignored for envoyDefaultDays, the choice marked default is taken.",
+  "envoys": {
+    "trade_pact": {
+      "title": "A trade pact", "weight": 3, "minRelation": 10, "needsTrade": true,
+      "text": "Envoys of {ruler} propose lower tolls on both sides of the border. The merchants of {gateway} are already counting the profit.",
+      "choices": [
+        { "label": "Seal the pact", "effects": { "relation": 10, "opinion": { "burghers": 5 } } },
+        { "label": "Decline politely", "effects": { "relation": -5 }, "default": true }
+      ]
+    },
+    "border_dispute": {
+      "title": "A border dispute", "weight": 3,
+      "text": "Surveyors from {realm} have planted stakes in the meadows beyond {gateway} and claim them for {ruler}.",
+      "choices": [
+        { "label": "Cede the meadows", "effects": { "relation": 10, "authority": -5, "opinion": { "nobles": -5 } } },
+        { "label": "Pull up the stakes", "effects": { "relation": -15, "opinion": { "nobles": 4 } }, "default": true },
+        { "label": "Buy them off", "effects": { "relation": 5, "treasury": -300 } }
+      ]
+    },
+    "refugees": {
+      "title": "Refugees at the border", "weight": 2,
+      "text": "Hungry families from {realm} gather on the road outside {gateway}, begging to be let in.",
+      "choices": [
+        { "label": "Open the gates", "effects": { "settlers": 200, "relation": 5, "opinion": { "peasants": -3, "melitele": 4 } } },
+        { "label": "Turn them back", "effects": { "relation": -5, "opinion": { "melitele": -4 } }, "default": true }
+      ]
+    },
+    "marriage": {
+      "title": "An offer of marriage", "weight": 1, "minRelation": 15, "excludes": ["brokilon", "mahakam"],
+      "text": "{ruler} proposes a match between a child of {realm}'s royal house and a Temerian lord's heir. A dowry is expected.",
+      "choices": [
+        { "label": "Accept the match", "effects": { "relation": 20, "authority": 3, "treasury": -200, "opinion": { "nobles": 3 } } },
+        { "label": "Decline the match", "effects": { "relation": -10 }, "default": true }
+      ]
+    },
+    "loan": {
+      "title": "A request for a loan", "weight": 1, "minRelation": 0, "excludes": ["brokilon", "mahakam"],
+      "text": "{ruler}'s treasury is bare. Their envoy asks, with some embarrassment, for five hundred crowns.",
+      "choices": [
+        { "label": "Lend the money", "effects": { "treasury": -500, "relation": 15 } },
+        { "label": "Refuse", "effects": { "relation": -5 }, "default": true }
+      ]
+    },
+    "smugglers": {
+      "title": "Smugglers", "weight": 2, "needsTrade": true,
+      "text": "Carts from {realm} are slipping untaxed goods past the customs house at {gateway}. Their merchants say it was ever thus.",
+      "choices": [
+        { "label": "Hang the ringleaders", "effects": { "relation": -5, "authority": 2, "opinion": { "burghers": -3 } } },
+        { "label": "Look the other way", "effects": { "authority": -3, "opinion": { "burghers": 3 } }, "default": true }
+      ]
+    },
+    "dwarven_smiths": {
+      "title": "The smiths of Mahakam", "weight": 2, "only": ["mahakam"],
+      "text": "The Elders of Mahakam ask that dwarven smiths be free to work in Temerian towns without guild licence.",
+      "choices": [
+        { "label": "Grant it", "effects": { "relation": 15, "opinion": { "dwarf": 8, "burghers": -5 } } },
+        { "label": "Refuse", "effects": { "relation": -10, "opinion": { "dwarf": -5 } }, "default": true }
+      ]
+    },
+    "dryad_arrows": {
+      "title": "Arrows from Brokilon", "weight": 3, "only": ["brokilon"],
+      "text": "Woodcutters from {gateway} strayed too near Brokilon. Three came back. The rest lie with dryad arrows in them.",
+      "choices": [
+        { "label": "Forbid felling near the forest", "effects": { "relation": 10, "opinion": { "peasants": -4 } } },
+        { "label": "Send soldiers to the edge of the wood", "effects": { "relation": -20, "losses": 20, "opinion": { "peasants": 3, "elf": -4 } }, "default": true }
+      ]
+    },
+    "spy": {
+      "title": "A spy in Vizima", "weight": 2, "only": ["redania", "kaedwen"],
+      "text": "The watch has taken a man in Vizima with letters for {ruler} sewn into his coat.",
+      "choices": [
+        { "label": "Hang him", "effects": { "relation": -15, "authority": 4 } },
+        { "label": "Send him home for a ransom", "effects": { "relation": 5, "treasury": 150 }, "default": true }
+      ]
+    }
+  }
+}

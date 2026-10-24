@@ -38,6 +38,15 @@ for (const vp of VIEWPORTS) {
     const startDay = await page.evaluate(() => window.northernWars.state.day);
 
     // Let traffic build up at full speed, then pause for steady screenshots.
+    // With this seed an envoy from Cintra arrives on 1 April: the game pauses
+    // and asks for an answer.
+    await page.click('[data-speed="4"]');
+    await page.waitForSelector('.envoy-from', { timeout: 20000 });
+    assert.equal(await page.evaluate(() => window.northernWars.speed), 0, 'an envoy pauses the game');
+    assert.match(await page.textContent('#sheet-body'), /An envoy from Cintra[\s\S]*border dispute/i);
+    await page.screenshot({ path: join(OUT, `${vp.name}-envoy.png`) });
+    await page.click('[data-choice="1"]');
+    assert.equal(await page.evaluate(() => window.northernWars.state.envoys.length), 0);
     await page.click('[data-speed="4"]');
     await page.waitForFunction((d) => window.northernWars.state.day >= d + 40, startDay, { timeout: 20000 });
     await page.click('[data-speed="0"]');
@@ -106,6 +115,16 @@ for (const vp of VIEWPORTS) {
     await page.screenshot({ path: join(OUT, `${vp.name}-laws.png`) });
     await page.click('[data-action="back"]');
 
+    // Neighbouring realms: warm to Redania.
+    await page.click('[data-action="neighbours"]');
+    await page.click('[data-realm="redania"]');
+    assert.match(await page.textContent('#sheet-body'), /Redania[\s\S]*Vizimir[\s\S]*Our stance/);
+    await page.click('[data-stance="friendly"]');
+    assert.equal(await page.evaluate(() => window.northernWars.state.neighbours.redania.stance), 'friendly');
+    await page.screenshot({ path: join(OUT, `${vp.name}-realm.png`) });
+    await page.click('[data-action="neighbours"]');
+    await page.click('[data-action="back"]');
+
     await page.click('[data-action="ledger"]');
     assert.match(await page.textContent('#sheet-body'), /Taxes[\s\S]*Garrisons[\s\S]*The past year/);
     await page.screenshot({ path: join(OUT, `${vp.name}-ledger.png`) });
@@ -123,3 +142,38 @@ for (const vp of VIEWPORTS) {
     await context.close();
   });
 }
+
+// A realm with works raised and garrisons swollen: buildings, scaffolding,
+// walls, soldiers and banners are drawn beside their settlements without errors.
+test('buildings and garrisons show beside their settlements', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  const s = step(createState(world, 1262), 20, world);
+  s.envoys = [];
+  s.settlements.vizima.buildings = ['mill', 'granary', 'market', 'workshop', 'walls'];
+  s.settlements.vizima.construction = { building: 'shrine', daysLeft: 20, days: 30 };
+  s.settlements.vizima.garrison = 1100;
+  s.settlements.white_orchard.buildings = ['fields', 'mill', 'shrine'];
+  s.unpaid = true;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await page.goto(`${base}?paused`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.mouse.move(viz.x, viz.y);
+  await page.mouse.wheel(0, -900);
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: join(OUT, 'infrastructure.png') });
+  // A tap on the soldiers beside Vizima opens Vizima.
+  const z = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.touchscreen.tap(z.x - 34, z.y + 2);
+  await page.waitForSelector('#sheet:not([hidden])');
+  assert.match(await page.textContent('#sheet-body'), /Vizima[\s\S]*unpaid[\s\S]*Raising: Shrine/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});

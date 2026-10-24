@@ -1,0 +1,195 @@
+{
+  "note": "The kingdoms around Temeria. Relation runs -100 to 100. Trade is crowns a month at full warmth. Cares shift a realm's settled view of Temeria while a given law stands. Gateway is the settlement their caravans and envoys come through; entry is where they cross the border on the map.",
+  "drift": 0.01,
+  "stances": {
+    "friendly": {
+      "name": "Friendly",
+      "blurb": "Gifts, feasts and open gates.",
+      "relation": 25,
+      "monthly": 30
+    },
+    "neutral": {
+      "name": "Neutral",
+      "blurb": "Correct and cool. Nothing promised.",
+      "relation": 0,
+      "monthly": 0
+    },
+    "cold": {
+      "name": "Cold",
+      "blurb": "Envoys kept waiting, tolls raised at the border.",
+      "relation": -25,
+      "monthly": 0
+    }
+  },
+  "stanceCooldown": 90,
+  "closedBelow": -30,
+  "envoyChance": 0.35,
+  "envoyDefaultDays": 20,
+  "realms": {
+    "redania": {
+      "ruler": "King Vizimir II",
+      "temper": "Shrewd and watchful; Tretogor counts every Temerian soldier.",
+      "relation": 10,
+      "trade": 35,
+      "gateway": "la_valette",
+      "entry": [
+        520,
+        120
+      ],
+      "cares": {
+        "patronage:eternal_fire": 10,
+        "mages:free": -10,
+        "conscription:standing": -10
+      }
+    },
+    "kaedwen": {
+      "ruler": "King Henselt",
+      "temper": "Hard, proud and quick to take offence.",
+      "relation": 0,
+      "trade": 12,
+      "gateway": "flotsam",
+      "entry": [
+        860,
+        18
+      ],
+      "cares": {
+        "conscription:standing": -10,
+        "nonhumans:expulsion": 5
+      }
+    },
+    "aedirn": {
+      "ruler": "King Demavend III",
+      "temper": "A trader's king who likes his roads busy.",
+      "relation": 20,
+      "trade": 18,
+      "gateway": "flotsam",
+      "entry": [
+        985,
+        80
+      ],
+      "cares": {
+        "guilds:free": 10,
+        "nonhumans:charter": 5
+      }
+    },
+    "mahakam": {
+      "ruler": "Brouver Hoog, Elder of Mahakam",
+      "temper": "Patient, rich and long of memory where dwarves are wronged.",
+      "relation": 15,
+      "trade": 22,
+      "gateway": "carreras",
+      "entry": [
+        940,
+        430
+      ],
+      "cares": {
+        "nonhumans:charter": 20,
+        "nonhumans:expulsion": -50,
+        "guilds:free": 5
+      }
+    },
+    "brokilon": {
+      "ruler": "Eithné, Lady of Brokilon",
+      "temper": "The dryads trade with no one and forgive nothing.",
+      "relation": -40,
+      "trade": 0,
+      "gateway": "rissberg",
+      "entry": [
+        280,
+        720
+      ],
+      "cares": {
+        "nonhumans:expulsion": -40,
+        "nonhumans:charter": 15,
+        "old_ways:suppressed": -15
+      }
+    },
+    "cidaris": {
+      "ruler": "King Ethain",
+      "temper": "A small sea kingdom that lives on its harbours.",
+      "relation": 10,
+      "trade": 12,
+      "gateway": "gors_velen",
+      "entry": [
+        60,
+        560
+      ],
+      "cares": {
+        "guilds:free": 10
+      }
+    },
+    "kerack": {
+      "ruler": "King Belohun",
+      "temper": "Greedy, vain and always selling something.",
+      "relation": 5,
+      "trade": 15,
+      "gateway": "gors_velen",
+      "entry": [
+        70,
+        690
+      ],
+      "cares": {
+        "guilds:free": 10,
+        "taxation:heavy": -5
+      }
+    },
+    "verden": {
+      "ruler": "King Ervyll",
+      "temper": "A poor coastal crown in Brokilon's shadow.",
+      "relation": 10,
+      "trade": 8,
+      "gateway": "rissberg",
+      "entry": [
+        250,
+        860
+      ],
+      "cares": {
+        "nonhumans:expulsion": -10
+      }
+    },
+    "brugge": {
+      "ruler": "King Venzlav",
+      "temper": "Careful, and careful to stay on good terms with everyone.",
+      "relation": 15,
+      "trade": 10,
+      "gateway": "vorune",
+      "entry": [
+        450,
+        760
+      ],
+      "cares": {
+        "guilds:free": 5
+      }
+    },
+    "sodden": {
+      "ruler": "the Sodden lords",
+      "temper": "Border lords who remember the last war and fear the next.",
+      "relation": 25,
+      "trade": 12,
+      "gateway": "red_fort",
+      "entry": [
+        800,
+        905
+      ],
+      "cares": {
+        "patronage:melitele": 10,
+        "conscription:standing": 5
+      }
+    },
+    "cintra": {
+      "ruler": "Queen Calanthe",
+      "temper": "The Lioness of Cintra. Generous to friends, terrible to enemies.",
+      "relation": 20,
+      "trade": 15,
+      "gateway": "vidort",
+      "entry": [
+        590,
+        920
+      ],
+      "cares": {
+        "conscription:standing": 5,
+        "conscription:none": -5
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { formatDate, totalPopulation, realmStock, MONTHS } from '../sim/index.js';
+import { formatDate, totalPopulation, realmStock, MONTHS, ledgerNet } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 
 const signed = (n) => (n < 0 ? `−${number(-n)}` : number(n));
@@ -28,6 +28,7 @@ export function realmMenuHtml(world, state, hasSave) {
     </dl>
     <div class="menu-list">
       <button type="button" data-action="laws">Laws and edicts<small>Decree, and see how the realm feels about it</small></button>
+      <button type="button" data-action="neighbours">Neighbouring realms<small>Relations, trade and envoys</small></button>
       <button type="button" data-action="ledger">Ledger<small>Where the crowns come from and where they go</small></button>
       <button type="button" data-action="chronicle">Chronicle<small>Dispatches from across the realm</small></button>
       <button type="button" data-action="save">Save now<small>Also saved at the start of every month</small></button>
@@ -49,20 +50,19 @@ export function ledgerHtml(world, state) {
   }
   const i = last.income;
   const e = last.expenses;
-  const totalIn = i.taxes + i.trade + i.sales;
-  const totalOut = e.garrisons + e.upkeep + e.court + (e.edicts ?? 0) + e.interest;
+  const { in: totalIn, out: totalOut } = ledgerNet(last);
   const row = (label, v) => `<div><dt>${label}</dt><dd>${signed(v)}</dd></div>`;
   const history = state.ledger.history.slice().reverse().map((h) => {
-    const net = h.income.taxes + h.income.trade + h.income.sales - h.expenses.garrisons - h.expenses.upkeep - h.expenses.court - (h.expenses.edicts ?? 0) - h.expenses.interest;
+    const { net } = ledgerNet(h);
     return `<tr><td>${MONTHS[h.month - 1].name.slice(0, 3)} ${h.year}</td><td>${signed(net)}</td><td>${number(h.expenses.construction)}</td><td>${signed(h.treasury)}</td></tr>`;
   }).join('');
   return `
     <h2>Ledger</h2>
     ${back}
     <h3>${MONTHS[last.month - 1].name} ${last.year}: income</h3>
-    <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Total', totalIn)}</dl>
+    <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Trade over the borders', i.foreign ?? 0)}${row('Total', totalIn)}</dl>
     <h3>Expenses</h3>
-    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Edicts', e.edicts ?? 0)}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
+    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Edicts', e.edicts ?? 0)}${row('Gifts to friendly realms', e.gifts ?? 0)}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
     <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on building works, ${number(e.decrees ?? 0)} on decrees.</p>
     <h3>The past year</h3>
     <table class="history"><thead><tr><th>Month</th><th>Net</th><th>Works</th><th>Treasury</th></tr></thead><tbody>${history}</tbody></table>

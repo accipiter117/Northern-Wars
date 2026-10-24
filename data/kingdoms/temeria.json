@@ -5,6 +5,7 @@
   "capital": "vizima",
   "geography": "data/geography.json",
   "settlements": "data/settlements.json",
+  "neighbours": "data/neighbours.json",
   "start": {
     "year": 1262,
     "month": 3,

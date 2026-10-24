@@ -170,23 +170,75 @@ registerPlaceholder('unit', 'grain', (ctx, x, y, size) => {
   wheel(ctx, x + r * 0.5, y + r * 0.45, r * 0.2);
 });
 
-registerPlaceholder('unit', 'patrol', (ctx, x, y, size) => {
+// A caravan from abroad flies a pennant so it reads as foreign at a glance.
+registerPlaceholder('unit', 'foreign', (ctx, x, y, size, opts = {}) => {
+  getSprite('unit', 'caravan').draw(ctx, x, y, size, opts);
   const r = size / 2;
-  // A kite shield in deep blue, the crown's colour.
   ctx.beginPath();
-  ctx.moveTo(x - r * 0.6, y - r * 0.6);
-  ctx.lineTo(x + r * 0.6, y - r * 0.6);
-  ctx.lineTo(x + r * 0.55, y + r * 0.05);
-  ctx.lineTo(x, y + r * 0.75);
-  ctx.lineTo(x - r * 0.55, y + r * 0.05);
+  ctx.moveTo(x - r * 0.6, y - r * 0.2);
+  ctx.lineTo(x - r * 0.6, y - r * 1.2);
+  stroke(ctx, 1);
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.6, y - r * 1.2);
+  ctx.lineTo(x + r * 0.2, y - r * 1.0);
+  ctx.lineTo(x - r * 0.6, y - r * 0.8);
+  ctx.closePath();
+  ctx.fillStyle = '#a3322a';
+  ctx.fill();
+});
+
+// A mounted patrol: horse, rider in the crown's blue, lance with a pennant.
+registerPlaceholder('unit', 'patrol', (ctx, x, y, size, opts = {}) => {
+  const r = size / 2;
+  const f = opts.facing ?? 1;
+  // Horse body, neck and head, drawn facing the direction of travel.
+  ctx.beginPath();
+  ctx.ellipse(x, y + r * 0.2, r * 0.6, r * 0.28, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#6b4a2b';
+  ctx.fill();
+  stroke(ctx, 0.8);
+  ctx.beginPath();
+  ctx.moveTo(x + f * r * 0.45, y + r * 0.05);
+  ctx.lineTo(x + f * r * 0.75, y - r * 0.35);
+  ctx.lineTo(x + f * r * 0.95, y - r * 0.25);
+  ctx.lineTo(x + f * r * 0.6, y + r * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  stroke(ctx, 0.8);
+  ctx.beginPath();
+  for (const dx of [-0.4, -0.2, 0.25, 0.42]) {
+    ctx.moveTo(x + dx * r, y + r * 0.4);
+    ctx.lineTo(x + dx * r, y + r * 0.85);
+  }
+  stroke(ctx, 1);
+  // Rider.
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.2, y);
+  ctx.lineTo(x - r * 0.15, y - r * 0.55);
+  ctx.lineTo(x + r * 0.15, y - r * 0.55);
+  ctx.lineTo(x + r * 0.2, y);
   ctx.closePath();
   ctx.fillStyle = '#23365e';
   ctx.fill();
-  stroke(ctx, 1.2);
+  stroke(ctx, 0.7);
   ctx.beginPath();
-  ctx.arc(x, y - r * 0.1, r * 0.18, 0, Math.PI * 2);
-  ctx.fillStyle = '#e9e2cf';
+  ctx.arc(x, y - r * 0.75, r * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = '#9a9a9a';
   ctx.fill();
+  stroke(ctx, 0.6);
+  // Lance and pennant.
+  ctx.beginPath();
+  ctx.moveTo(x - f * r * 0.1, y + r * 0.1);
+  ctx.lineTo(x + f * r * 0.3, y - r * 1.25);
+  stroke(ctx, 0.9);
+  ctx.beginPath();
+  ctx.moveTo(x + f * r * 0.27, y - r * 1.15);
+  ctx.lineTo(x + f * r * 0.75, y - r * 1.05);
+  ctx.lineTo(x + f * r * 0.24, y - r * 0.9);
+  ctx.closePath();
+  ctx.fillStyle = '#efe6cf';
+  ctx.fill();
+  stroke(ctx, 0.5);
 });
 
 registerPlaceholder('unit', 'barge', (ctx, x, y, size, opts = {}) => {

@@ -97,7 +97,7 @@ function midPoint(pts) {
 
 // Draws the map in world units. `px` converts screen pixels to world units at
 // the current zoom, so strokes keep a steady on-screen weight.
-export function drawMap(ctx, prep, world, px) {
+export function drawMap(ctx, prep, world, px, tints = {}) {
   const g = world.geography;
   ctx.fillStyle = COLOURS.sea;
   ctx.fillRect(-2000, -2000, g.width + 4000, g.height + 4000);
@@ -116,6 +116,10 @@ export function drawMap(ctx, prep, world, px) {
     for (const p of n.paths) {
       ctx.fillStyle = COLOURS.neighbour;
       ctx.fill(p);
+      if (tints[n.id]) {
+        ctx.fillStyle = tints[n.id];
+        ctx.fill(p);
+      }
       ctx.strokeStyle = COLOURS.neighbourInk;
       ctx.lineWidth = 1 * px;
       ctx.stroke(p);

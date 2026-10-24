@@ -8,6 +8,7 @@ import { createSheet } from './ui/sheet.js';
 import { settlementCardHtml } from './ui/settlementCard.js';
 import { realmMenuHtml, chronicleHtml, ledgerHtml } from './ui/menu.js';
 import { lawsHtml } from './ui/laws.js';
+import { neighboursHtml, realmCardHtml, envoyHtml } from './ui/neighbours.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -120,6 +121,47 @@ async function boot() {
     };
   }
 
+  function openNeighbours() {
+    selection = null;
+    const body = sheet.open('neighbours', neighboursHtml(world, state));
+    body.onclick = (e) => {
+      const realm = e.target.closest('[data-realm]');
+      const envoy = e.target.closest('[data-envoy]');
+      if (realm) openRealm(realm.dataset.realm);
+      else if (envoy) openEnvoy(Number(envoy.dataset.envoy));
+      else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  function openRealm(id) {
+    selection = null;
+    hideUnitLabel();
+    const body = sheet.open(`realm:${id}`, realmCardHtml(world, state, id));
+    body.onclick = (e) => {
+      const st = e.target.closest('[data-stance]');
+      if (st && !st.disabled) order({ type: 'stance', realm: id, stance: st.dataset.stance });
+      else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  // Envoys pause the game and wait for an answer, once each. Closed unanswered,
+  // they stay listed under Neighbouring realms until their time runs out.
+  const shownEnvoys = new Set();
+  function openEnvoy(id) {
+    const pending = state.envoys.find((p) => p.id === id);
+    if (!pending) return;
+    shownEnvoys.add(id);
+    selection = null;
+    hideUnitLabel();
+    const body = sheet.open(`envoy:${id}`, envoyHtml(world, pending));
+    body.onclick = (e) => {
+      const c = e.target.closest('[data-choice]');
+      if (!c) return;
+      order({ type: 'envoy', id, choice: Number(c.dataset.choice) });
+      sheet.close();
+    };
+  }
+
   function openLedger() {
     const body = sheet.open('ledger', ledgerHtml(world, state));
     body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
@@ -135,6 +177,7 @@ async function boot() {
     if (action === 'chronicle') openChronicle();
     else if (action === 'ledger') openLedger();
     else if (action === 'laws') openLaws();
+    else if (action === 'neighbours') openNeighbours();
     else if (action === 'back') openMenu();
     else if (action === 'save') save(false);
     else if (action === 'load') {
@@ -177,6 +220,7 @@ async function boot() {
   function onTap(x, y) {
     const hit = renderer.pick(x, y, state, frac);
     if (hit?.settlement) openSettlement(hit.settlement);
+    else if (hit?.neighbour) openRealm(hit.neighbour);
     else if (hit?.unit) {
       sheet.close();
       selection = { unit: hit.unit };
@@ -230,6 +274,11 @@ async function boot() {
         if (dateOf(state.day).month !== month) save(true);
         topbar.update(state);
         refreshOpenSheet();
+        const fresh = state.envoys.find((p) => !shownEnvoys.has(p.id));
+        if (fresh) {
+          setSpeed(0);
+          openEnvoy(fresh.id);
+        }
       }
     }
     if (selection?.unit) {
@@ -252,6 +301,9 @@ async function boot() {
     else if (cur === 'chronicle') sheet.patch(cur, chronicleHtml(state));
     else if (cur === 'ledger') sheet.patch(cur, ledgerHtml(world, state));
     else if (cur === 'laws') sheet.patch(cur, lawsHtml(world, state, openLaw));
+    else if (cur === 'neighbours') sheet.patch(cur, neighboursHtml(world, state));
+    else if (cur?.startsWith('realm:')) sheet.patch(cur, realmCardHtml(world, state, cur.slice(6)));
+    else if (cur?.startsWith('envoy:') && !state.envoys.some((p) => `envoy:${p.id}` === cur)) sheet.close();
   }
 
   topbar.update(state);

@@ -62,10 +62,11 @@ test('ambient traffic spawns every kind on roads and rivers', () => {
     s = step(s, 1, world);
     for (const u of s.ambient.units) seen.add(u.kind);
   }
-  assert.deepEqual([...seen].sort(), ['barge', 'caravan', 'grain', 'patrol']);
+  assert.deepEqual([...seen].sort(), ['barge', 'caravan', 'foreign', 'grain', 'patrol']);
   for (const u of s.ambient.units) {
     if (u.river) assert.ok(['Pontar', 'Ismena'].includes(u.river));
-    else for (let i = 1; i < u.route.length; i++) {
+    if (u.entry) assert.ok(world.neighbours.realms[u.entry].trade > 0);
+    if (!u.river) for (let i = 1; i < u.route.length; i++) {
       const linked = world.adjacency[u.route[i - 1]].some((e) => e.to === u.route[i]);
       assert.ok(linked, `${u.route[i - 1]} to ${u.route[i]} is not a road`);
     }

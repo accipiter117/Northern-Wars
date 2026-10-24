@@ -4,6 +4,7 @@ import { dateOf } from './calendar.js';
 import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed } from './economy.js';
 import { monthlyPopulation } from './population.js';
 import { lawEffects, stepOpinionDay, opinionUnrest } from './laws.js';
+import { stepNeighboursDay, monthlyEnvoy } from './neighbours.js';
 
 const CHRONICLE_LIMIT = 200;
 
@@ -32,6 +33,7 @@ export function stepRealmDay(state, world, rng) {
   const date = dateOf(state.day);
   stepEconomyDay(state, world);
   stepOpinionDay(state, world);
+  stepNeighboursDay(state, world);
   const law = lawEffects(state, world);
   const m = world.economy.mood;
   for (const [id, s] of Object.entries(state.settlements)) {
@@ -58,6 +60,7 @@ export function stepRealmDay(state, world, rng) {
   if (date.day === 1) {
     monthlyLedger(state, world);
     monthlyPopulation(state, world, rng);
+    monthlyEnvoy(state, world, rng);
   }
 }
 

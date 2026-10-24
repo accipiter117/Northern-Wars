@@ -2,8 +2,9 @@ import { dayNumber, seasonOf } from './calendar.js';
 import { streamSeed } from './rng.js';
 import { computeStability, addDispatch } from './realm.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
+import { defaultNeighbours } from './neighbours.js';
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -28,6 +29,9 @@ export function createState(world, seed = 1) {
     ledger: { construction: 0, decrees: 0, history: [] },
     laws: defaultLaws(world),
     opinion: defaultOpinion(world),
+    neighbours: defaultNeighbours(world),
+    envoys: [],
+    nextEnvoyId: 1,
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],

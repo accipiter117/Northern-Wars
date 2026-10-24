@@ -5,7 +5,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadWorld, createState, step, totalPopulation } from '../src/sim/index.js';
+import { loadWorld, createState, step, totalPopulation, ledgerNet } from '../src/sim/index.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const [years = 5, seed = 1] = process.argv.slice(2).map(Number);
@@ -22,7 +22,7 @@ function run(lawId, optionId) {
   for (let m = 0; m < months; m++) {
     s = step(s, 30, world, { ambient: false });
     const l = s.ledger.history.at(-1);
-    if (l) net += l.income.taxes + l.income.trade + l.income.sales - l.expenses.garrisons - l.expenses.upkeep - l.expenses.court - l.expenses.edicts - l.expenses.interest;
+    if (l) net += ledgerNet(l).net;
     stab += s.stability;
   }
   const pop = Object.values(s.settlements).reduce((a, st) => a + totalPopulation(st), 0);

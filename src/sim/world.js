@@ -6,7 +6,7 @@ import { distanceToPolygon } from './geometry.js';
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys }) {
   const byId = {};
   for (const s of geography.settlements) byId[s.id] = s;
 
@@ -44,6 +44,8 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     buildings: buildings.buildings,
     laws,
     groups,
+    neighbours,
+    envoys,
     terrainOf,
     geography,
     settlementData: settlements.settlements,
