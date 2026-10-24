@@ -10,6 +10,7 @@ import { realmMenuHtml, chronicleHtml, ledgerHtml } from './ui/menu.js';
 import { lawsHtml } from './ui/laws.js';
 import { neighboursHtml, realmCardHtml, envoyHtml } from './ui/neighbours.js';
 import { faithHtml, petitionHtml } from './ui/faith.js';
+import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -64,6 +65,7 @@ async function boot() {
   function replaceState(next, message) {
     state = next;
     frac = 0;
+    shownDepositions = state.depositions.length;
     selection = null;
     sheet.close();
     hideUnitLabel();
@@ -79,7 +81,9 @@ async function boot() {
     const body = sheet.open(`settlement:${id}`, settlementCardHtml(world, state, id, lookups));
     body.onclick = (e) => {
       const b = e.target.closest('[data-build]');
+      const house = e.target.closest('[data-house]');
       if (b && !b.disabled) order({ type: 'build', settlement: id, building: b.dataset.build });
+      else if (house) openHouse(house.dataset.house);
     };
   }
 
@@ -160,6 +164,7 @@ async function boot() {
       if (!c) return;
       order({ type: 'envoy', id, choice: Number(c.dataset.choice) });
       sheet.close();
+      showNextDecision();
     };
   }
 
@@ -188,7 +193,106 @@ async function boot() {
       if (!c) return;
       order({ type: 'petition', id, choice: Number(c.dataset.choice) });
       sheet.close();
+      showNextDecision();
     };
+  }
+
+  function openNobles() {
+    selection = null;
+    const body = sheet.open('nobles', noblesHtml(world, state));
+    body.onclick = (e) => {
+      const house = e.target.closest('[data-house]');
+      const demand = e.target.closest('[data-demand]');
+      if (house) openHouse(house.dataset.house);
+      else if (demand) openDemand(Number(demand.dataset.demand));
+      else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  let housePicking = null;
+  function openHouse(id, picking = null) {
+    selection = null;
+    hideUnitLabel();
+    housePicking = picking;
+    const body = sheet.open(`house:${id}`, houseCardHtml(world, state, id, picking));
+    body.onclick = (e) => {
+      const t = e.target;
+      const act = t.closest('[data-house-action]');
+      const pick = t.closest('[data-house-pick]');
+      const grant = t.closest('[data-grant]');
+      const strip = t.closest('[data-strip]');
+      const place = t.closest('[data-place]');
+      const name = world.houses.houses[id].name;
+      if (act && !act.disabled) {
+        const kind = act.dataset.houseAction;
+        // Fines and levies leave grievances behind, so ask once.
+        if ((kind === 'fine' || kind === 'levies') && !confirm(`${act.querySelector('.build-name').textContent}: ${name}?`)) return;
+        order({ type: 'house', house: id, kind });
+      } else if (pick && !pick.disabled) {
+        openHouse(id, housePicking === pick.dataset.housePick ? null : pick.dataset.housePick);
+      } else if (grant) {
+        if (confirm(`Grant ${world.byId[grant.dataset.grant].name} to ${name}?`)) {
+          order({ type: 'house', house: id, kind: 'grant', settlement: grant.dataset.grant });
+          openHouse(id);
+        }
+      } else if (strip) {
+        if (confirm(`Strip ${name} of ${world.byId[strip.dataset.strip].name}? Every house will remember.`)) {
+          order({ type: 'house', house: id, kind: 'strip', settlement: strip.dataset.strip });
+          openHouse(id);
+        }
+      } else if (place) openSettlement(place.dataset.place);
+      else menuAction(t.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  const shownDemands = new Set();
+  function openDemand(id) {
+    const pending = state.demands.find((p) => p.id === id);
+    if (!pending) return;
+    shownDemands.add(id);
+    selection = null;
+    hideUnitLabel();
+    const body = sheet.open(`demand:${id}`, demandHtml(world, pending));
+    body.onclick = (e) => {
+      const c = e.target.closest('[data-choice]');
+      if (!c) return;
+      order({ type: 'demand', id, choice: Number(c.dataset.choice) });
+      sheet.close();
+      showNextDecision();
+    };
+  }
+
+  // A deposition is shown once, when it happens. The regency is already in
+  // place; the player may carry on or start afresh.
+  let shownDepositions = state.depositions.length;
+  function openDeposition() {
+    shownDepositions = state.depositions.length;
+    const summary = state.depositions.at(-1);
+    const body = sheet.open('deposition', depositionHtml(summary));
+    body.onclick = (e) => {
+      if (e.target.closest('[data-regency]')) {
+        sheet.close();
+        showNextDecision();
+        toast('The regency council takes up the crown.');
+      } else if (e.target.closest('[data-new-reign]') && confirm('Abandon this realm and start anew?')) {
+        replaceState(createState(world, freshSeed()), 'A new reign begins.');
+        shownDepositions = state.depositions.length;
+        save(true);
+      }
+    };
+  }
+
+  // Decisions waiting on the crown open one at a time, the gravest first.
+  // Answering one opens the next, so a crowded morning is dealt with in a row.
+  function showNextDecision() {
+    if (state.depositions.length > shownDepositions) { openDeposition(); return true; }
+    const demand = state.demands.find((p) => !shownDemands.has(p.id));
+    if (demand) { openDemand(demand.id); return true; }
+    const envoy = state.envoys.find((p) => !shownEnvoys.has(p.id));
+    if (envoy) { openEnvoy(envoy.id); return true; }
+    const petition = state.petitions.find((p) => !shownPetitions.has(p.id));
+    if (petition) { openPetition(petition.id); return true; }
+    return false;
   }
 
   function openLedger() {
@@ -208,6 +312,7 @@ async function boot() {
     else if (action === 'laws') openLaws();
     else if (action === 'neighbours') openNeighbours();
     else if (action === 'faith') openFaith();
+    else if (action === 'nobles') openNobles();
     else if (action === 'back') openMenu();
     else if (action === 'save') save(false);
     else if (action === 'load') {
@@ -304,15 +409,7 @@ async function boot() {
         if (dateOf(state.day).month !== month) save(true);
         topbar.update(state);
         refreshOpenSheet();
-        const fresh = state.envoys.find((p) => !shownEnvoys.has(p.id));
-        const asking = state.petitions.find((p) => !shownPetitions.has(p.id));
-        if (fresh) {
-          setSpeed(0);
-          openEnvoy(fresh.id);
-        } else if (asking) {
-          setSpeed(0);
-          openPetition(asking.id);
-        }
+        if (showNextDecision()) setSpeed(0);
       }
     }
     if (selection?.unit) {
@@ -340,6 +437,9 @@ async function boot() {
     else if (cur?.startsWith('envoy:') && !state.envoys.some((p) => `envoy:${p.id}` === cur)) sheet.close();
     else if (cur === 'faith') sheet.patch(cur, faithHtml(world, state, lookups));
     else if (cur?.startsWith('petition:') && !state.petitions.some((p) => `petition:${p.id}` === cur)) sheet.close();
+    else if (cur === 'nobles') sheet.patch(cur, noblesHtml(world, state));
+    else if (cur?.startsWith('house:')) sheet.patch(cur, houseCardHtml(world, state, cur.slice(6), housePicking));
+    else if (cur?.startsWith('demand:') && !state.demands.some((p) => `demand:${p.id}` === cur)) sheet.close();
   }
 
   topbar.update(state);

@@ -17,7 +17,7 @@ test('house data is sound and the houses hold their lands from the start', () =>
   }
   for (const [id, d] of Object.entries(world.demands.demands)) {
     assert.equal(d.choices.filter((c) => c.default).length, 1, `${id} needs one default`);
-    assert.doesNotMatch(d.title + d.text + d.choices.map((c) => c.label).join(''), /—/);
+    assert.doesNotMatch(d.title + d.text + d.choices.map((c) => c.label).join(''), /\u2014/);
   }
   assert.equal(s.settlements.vizima.holder, 'crown');
   assert.equal(s.settlements.mayena.holder, 'dravnik');

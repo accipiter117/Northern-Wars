@@ -201,3 +201,11 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .realm-row { border: 1px solid var(--line); border-radius: 8px; background: rgba(0, 0, 0, 0.12); }
 .cares { margin: 0; padding-left: 18px; line-height: 1.6; font-size: 14px; }
 .envoy-from { text-transform: uppercase; letter-spacing: 0.08em; font-style: normal; font-size: 12px; margin-bottom: 4px; }
+
+/* Nobles (M5) */
+.house-swatch { display: inline-block; width: 14px; height: 18px; border: 3px solid; border-radius: 2px 2px 7px 7px; vertical-align: -3px; }
+.badge { display: inline-block; font-size: 12px; padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); font-weight: 400; }
+.badge.bad { border-color: var(--blood); color: #e8a08e; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 6px 12px; font-size: 14px; }
+.build.danger { border-color: var(--blood); }
