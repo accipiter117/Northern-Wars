@@ -1,5 +1,13 @@
 # Changelog
 
+## M3.5 Neighbouring realms
+- Eleven neighbouring realms with rulers, tempers, relations, border trade and gateways, on a new Neighbouring realms screen and as cards opened by tapping their land on the map.
+- Stances (friendly, neutral, cold) and the crown's laws move each realm's relation; neighbouring lands are tinted green or red on the map to match.
+- Border trade and gifts in the ledger. Foreign caravans, with red pennants, cross the borders to Temerian towns.
+- Envoys with choices arrive about one month in three and pause the game; unanswered ones are settled cautiously after 20 days.
+- ledgerNet() is the single sum of a month's accounts, used everywhere.
+- Save version 4.
+
 ## M3 Laws and edicts
 - Fourteen laws in three categories, decreed from a new Laws screen (realm menu). Each decree costs Authority and crowns and phases in over a month.
 - Nine groups with an opinion of the crown, shown as the realm's mood with arrows for which way each is heading. Opinion moves unrest, trade and Authority.

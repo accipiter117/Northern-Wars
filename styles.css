@@ -195,3 +195,9 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .gauge.mood span { background: #7f9f6a; }
 .up { color: #9fc48a; }
 .down { color: #e0745e; }
+
+/* Neighbours */
+.realm-list { display: grid; gap: 6px; }
+.realm-row { border: 1px solid var(--line); border-radius: 8px; background: rgba(0, 0, 0, 0.12); }
+.cares { margin: 0; padding-left: 18px; line-height: 1.6; font-size: 14px; }
+.envoy-from { text-transform: uppercase; letter-spacing: 0.08em; font-style: normal; font-size: 12px; margin-bottom: 4px; }

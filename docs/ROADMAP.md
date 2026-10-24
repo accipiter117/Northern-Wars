@@ -5,8 +5,8 @@
 | M1 The living map | Scaffold, test harness, map render from geography.json, pan and zoom, settlements with basic stats and cards, calendar and speed controls, ambient caravans and patrols on roads and barges on rivers driven by simple placeholder values, save and load, deploy to GitHub Pages | Done |
 | M2 Economy and population | Goods, production, consumption, buildings, taxes, monthly ledger, population growth and decline, trade traffic tied to the economy | Done |
 | M3 Laws and edicts | Law system, Authority, group reactions, effects over time | Done |
-| M3.5 Neighbours | The immediate neighbouring kingdoms brought to life in a small way, for variety and a sense of the wider world | Next |
-| M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Planned |
+| M3.5 Neighbours | The immediate neighbouring kingdoms brought to life in a small way, for variety and a sense of the wider world | Done |
+| M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Next |
 | M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Planned |
 | M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Planned |
 | M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Planned |
@@ -19,6 +19,14 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M3.5 acceptance criteria
+- The eleven neighbouring realms each have a ruler, a temper, a relation with Temeria, border trade, a gateway town and laws they care about (data/neighbours.json).
+- Relations drift towards a target set by the crown's stance (friendly, neutral, cold) and the laws in force. Friendly stances cost gifts; a stance holds for at least 90 days.
+- Border trade appears in the ledger and stops when relations fall below -30. Foreign caravans cross the border and travel to Temerian towns.
+- Envoys arrive about one month in three with a choice (data/envoys.json). The game pauses for them; unanswered envoys take the cautious answer after 20 days.
+- Neighbouring lands are tinted by relation on the map and can be tapped to open their card.
+- Version 3 saves load with every realm at its starting relation.
 
 ## M3 acceptance criteria
 - Fourteen laws in three categories, each with two or three options, all in data/laws.json.

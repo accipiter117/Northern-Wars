@@ -15,7 +15,7 @@ test('every neighbour on the map has a realm, a known gateway and sound envoy da
   for (const [id, e] of Object.entries(world.envoys.envoys)) {
     for (const r of [...(e.only ?? []), ...(e.excludes ?? [])]) assert.ok(ids.includes(r), `${id}: ${r}`);
     assert.equal(e.choices.filter((c) => c.default).length, 1, `${id} needs one default`);
-    assert.doesNotMatch(e.text + e.title + e.choices.map((c) => c.label).join(''), /—/);
+    assert.doesNotMatch(e.text + e.title + e.choices.map((c) => c.label).join(''), /\u2014/);
   }
 });
 

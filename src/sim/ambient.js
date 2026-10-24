@@ -5,6 +5,7 @@
 import { seasonOf } from './calendar.js';
 import { dist, nearby, roadPath, polylineLength } from './world.js';
 import { totalPopulation } from './state.js';
+import { foreignTrade } from './neighbours.js';
 
 export function stepAmbientDay(state, world, rng) {
   const cfg = world.ambient;
@@ -23,7 +24,7 @@ export function stepAmbientDay(state, world, rng) {
     const k = cfg.kinds[kind];
     const count = kept.reduce((n, u) => n + (u.kind === kind ? 1 : 0), 0);
     let rate = season === 'winter' && k.winterSpawn !== undefined ? k.winterSpawn : k.spawnPerDay;
-    rate *= RATE[kind]?.(state, k) ?? 1;
+    rate *= RATE[kind]?.(state, k, world) ?? 1;
     if (count >= k.max || !rng.chance(rate)) continue;
     const unit = SPAWNERS[kind](state, world, rng);
     if (!unit) continue;
@@ -42,6 +43,9 @@ const RATE = {
     if (!last) return 1;
     return Math.min(2, Math.max(0.3, (last.income.trade + last.income.sales) / k.tradeBaseline));
   },
+  foreign(state, k, world) {
+    return Math.min(1.5, foreignTrade(state, world).total / k.tradeBaseline);
+  },
   grain(state, k) {
     const flowing = Object.values(state.flows.in).reduce((a, b) => a + b, 0);
     return Math.min(1, flowing / k.flowBaseline);
@@ -49,6 +53,20 @@ const RATE = {
 };
 
 const SPAWNERS = {
+  // Merchants from abroad cross the border, pass their gateway town and
+  // carry on to a Temerian market. Realms they would not trade with send none.
+  foreign(state, world, rng) {
+    const trade = foreignTrade(state, world).by;
+    const realms = Object.keys(trade).filter((id) => trade[id] > 0);
+    if (!realms.length) return null;
+    const realm = weightedPick(rng, realms, (id) => trade[id]);
+    const gate = world.neighbours.realms[realm].gateway;
+    const towns = world.geography.settlements.filter((s) => s.type === 'city' || s.type === 'town').map((s) => s.id);
+    const to = weightedPick(rng, towns, (id) => totalPopulation(state.settlements[id]));
+    const route = to === gate ? [gate] : roadPath(world, gate, to);
+    return route ? { entry: realm, route } : null;
+  },
+
   // Grain carts follow where food is actually moving: from full stores to
   // hungry ones.
   grain(state, world, rng) {
@@ -119,12 +137,16 @@ const pointCache = new WeakMap();
 export function unitPoints(world, u) {
   let byUnit = pointCache.get(world);
   if (!byUnit) pointCache.set(world, (byUnit = new Map()));
-  const key = u.river ? `r:${u.river}:${u.reverse ? 1 : 0}` : `p:${u.route.join(',')}`;
+  const key = u.river ? `r:${u.river}:${u.reverse ? 1 : 0}` : `p:${u.entry ?? ''}:${u.route.join(',')}`;
   let entry = byUnit.get(key);
   if (!entry) {
     let pts = u.river
       ? world.rivers[u.river].points
       : u.route.map((id) => ({ x: world.byId[id].x, y: world.byId[id].y }));
+    if (u.entry) {
+      const [x, y] = world.neighbours.realms[u.entry].entry;
+      pts = [{ x, y }, ...pts];
+    }
     if (u.river && u.reverse) pts = [...pts].reverse();
     entry = { pts, length: polylineLength(pts) };
     byUnit.set(key, entry);
@@ -162,6 +184,9 @@ export function describeUnit(world, u) {
     const { pts } = unitPoints(world, u);
     const east = pts[pts.length - 1].x > pts[0].x;
     return `${kind} on the ${world.rivers[u.river].name}, heading ${east ? 'east' : 'west'}`;
+  }
+  if (u.entry) {
+    return `${kind} from ${world.geography.neighbours[u.entry].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
   }
   const from = world.byId[u.route[0]].name;
   if (u.kind === 'patrol') {

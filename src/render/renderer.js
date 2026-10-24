@@ -3,7 +3,8 @@
 // redrawn when the camera moves, so a still map costs little battery.
 import { prepareMap, drawMap, COLOURS } from './mapLayer.js';
 import { getSprite } from './sprites.js';
-import { toScreen } from './camera.js';
+import { toScreen, toWorld } from './camera.js';
+import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
@@ -44,12 +45,29 @@ export function createRenderer(canvas, world, cam) {
   const zoomRel = () => cam.scale / cam.contain;
   const iconSize = (type) => ICON_SIZE[type] * Math.min(1.5, Math.max(0.8, Math.sqrt(zoomRel() / 2)));
 
+  // Neighbouring lands warm to green or sour to red with their relation,
+  // bucketed so the cached map only redraws when the colour visibly changes.
+  let tintKey = '';
+  let tints = {};
+  function updateTints(state) {
+    const buckets = Object.entries(state.neighbours).map(([id, n]) => [id, Math.round(n.relation / 10)]);
+    const key = buckets.map(([id, b]) => `${id}${b}`).join();
+    if (key === tintKey) return;
+    tintKey = key;
+    tints = {};
+    for (const [id, b] of buckets) {
+      if (b >= 2) tints[id] = `rgba(80, 130, 60, ${Math.min(0.3, b * 0.03)})`;
+      if (b <= -2) tints[id] = `rgba(150, 40, 30, ${Math.min(0.3, -b * 0.03)})`;
+    }
+    dirty = true;
+  }
+
   function drawStatic(selectedId) {
     cctx.setTransform(1, 0, 0, 1, 0, 0);
     cctx.clearRect(0, 0, cache.width, cache.height);
     const s = cam.scale * dpr;
     cctx.setTransform(s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale));
-    drawMap(cctx, prep, world, 1 / cam.scale);
+    drawMap(cctx, prep, world, 1 / cam.scale, tints);
 
     cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawRegionLabels(cctx);
@@ -124,6 +142,7 @@ export function createRenderer(canvas, world, cam) {
 
   function draw(state, frac, selection) {
     const selectedId = selection?.settlement ?? null;
+    updateTints(state);
     if (dirty || selectedId !== lastSelected) {
       drawStatic(selectedId);
       dirty = false;
@@ -166,7 +185,14 @@ export function createRenderer(canvas, world, cam) {
       const score = d * 0.5;
       if (d < reach && (!best || score < best.d)) best = { d: score, hit: { settlement: st.id } };
     }
-    return best?.hit ?? null;
+    if (best) return best.hit;
+    // Nothing close: perhaps a tap on a neighbouring land.
+    const w = toWorld(cam, sx, sy);
+    if (pointInPolygon(w.x, w.y, world.geography.temeria)) return null;
+    for (const [id, n] of Object.entries(world.geography.neighbours)) {
+      if (n.shapes.some((sh) => pointInPolygon(w.x, w.y, sh))) return { neighbour: id };
+    }
+    return null;
   }
 
   function unitScreen(state, id, frac) {

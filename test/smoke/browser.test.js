@@ -38,6 +38,15 @@ for (const vp of VIEWPORTS) {
     const startDay = await page.evaluate(() => window.northernWars.state.day);
 
     // Let traffic build up at full speed, then pause for steady screenshots.
+    // With this seed an envoy from Cintra arrives on 1 April: the game pauses
+    // and asks for an answer.
+    await page.click('[data-speed="4"]');
+    await page.waitForSelector('.envoy-from', { timeout: 20000 });
+    assert.equal(await page.evaluate(() => window.northernWars.speed), 0, 'an envoy pauses the game');
+    assert.match(await page.textContent('#sheet-body'), /An envoy from Cintra[\s\S]*border dispute/i);
+    await page.screenshot({ path: join(OUT, `${vp.name}-envoy.png`) });
+    await page.click('[data-choice="1"]');
+    assert.equal(await page.evaluate(() => window.northernWars.state.envoys.length), 0);
     await page.click('[data-speed="4"]');
     await page.waitForFunction((d) => window.northernWars.state.day >= d + 40, startDay, { timeout: 20000 });
     await page.click('[data-speed="0"]');
@@ -104,6 +113,16 @@ for (const vp of VIEWPORTS) {
     assert.equal(await page.evaluate(() => window.northernWars.state.authority), authority - 10);
     assert.match(await page.textContent('[data-law="taxation"]'), /Heavy taxes[\s\S]*Taking hold/);
     await page.screenshot({ path: join(OUT, `${vp.name}-laws.png`) });
+    await page.click('[data-action="back"]');
+
+    // Neighbouring realms: warm to Redania.
+    await page.click('[data-action="neighbours"]');
+    await page.click('[data-realm="redania"]');
+    assert.match(await page.textContent('#sheet-body'), /Redania[\s\S]*Vizimir[\s\S]*Our stance/);
+    await page.click('[data-stance="friendly"]');
+    assert.equal(await page.evaluate(() => window.northernWars.state.neighbours.redania.stance), 'friendly');
+    await page.screenshot({ path: join(OUT, `${vp.name}-realm.png`) });
+    await page.click('[data-action="neighbours"]');
     await page.click('[data-action="back"]');
 
     await page.click('[data-action="ledger"]');

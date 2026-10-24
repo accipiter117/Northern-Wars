@@ -170,6 +170,23 @@ registerPlaceholder('unit', 'grain', (ctx, x, y, size) => {
   wheel(ctx, x + r * 0.5, y + r * 0.45, r * 0.2);
 });
 
+// A caravan from abroad flies a pennant so it reads as foreign at a glance.
+registerPlaceholder('unit', 'foreign', (ctx, x, y, size, opts = {}) => {
+  getSprite('unit', 'caravan').draw(ctx, x, y, size, opts);
+  const r = size / 2;
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.6, y - r * 0.2);
+  ctx.lineTo(x - r * 0.6, y - r * 1.2);
+  stroke(ctx, 1);
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.6, y - r * 1.2);
+  ctx.lineTo(x + r * 0.2, y - r * 1.0);
+  ctx.lineTo(x - r * 0.6, y - r * 0.8);
+  ctx.closePath();
+  ctx.fillStyle = '#a3322a';
+  ctx.fill();
+});
+
 registerPlaceholder('unit', 'patrol', (ctx, x, y, size) => {
   const r = size / 2;
   // A kite shield in deep blue, the crown's colour.

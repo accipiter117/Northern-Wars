@@ -28,6 +28,7 @@ export function realmMenuHtml(world, state, hasSave) {
     </dl>
     <div class="menu-list">
       <button type="button" data-action="laws">Laws and edicts<small>Decree, and see how the realm feels about it</small></button>
+      <button type="button" data-action="neighbours">Neighbouring realms<small>Relations, trade and envoys</small></button>
       <button type="button" data-action="ledger">Ledger<small>Where the crowns come from and where they go</small></button>
       <button type="button" data-action="chronicle">Chronicle<small>Dispatches from across the realm</small></button>
       <button type="button" data-action="save">Save now<small>Also saved at the start of every month</small></button>
