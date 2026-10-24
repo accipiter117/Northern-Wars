@@ -39,6 +39,13 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 - Buildings: a short list per settlement type (farms, mills, mines, markets, workshops, walls, granaries, temples). Built from the settlement card with crown funds; take days to complete.
 - Trade traffic between settlements is shown as caravans; volume reflects prosperity and road safety.
 
+#### As built in M2
+- Stockpiles are per settlement (food, timber, stone, iron); coin goes straight to the treasury. The top bar Granary is the realm's total food.
+- One measure of food feeds a hundred people for a day. Each settlement farms the ground around it (terrain within reach changes the yield); cities cannot feed themselves and depend on grain shipped from villages.
+- Grain moves through one realm-wide market (no road distances yet), losing 5% on the way.
+- Debt: the dwarven banking houses lend up to a credit limit at 2% a month. Every thousand crowns owed costs Authority each month (the lords' faith in the crown); past the limit, garrisons go unpaid, unrest rises and soldiers desert. When the great houses arrive (M5), debt should also lower their loyalty directly.
+- All numbers are in data/economy.json and data/buildings.json. `node tools/balance.mjs [years] [idle|builder|borrower]` shows how they play out.
+
 ### Laws and edicts
 Around 12 to 15 laws in categories, each with options. Changing a law costs Authority and coin, takes effect over time, and pleases or angers specific groups (nobles, burghers, peasants, clergy of each faith, each non-human people). Examples:
 - Taxation: light, standard, heavy.

@@ -1,12 +1,12 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit } from './sim/index.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction } from './sim/index.js';
 import { createCamera, resizeCamera } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createTopbar } from './ui/topbar.js';
 import { createSheet } from './ui/sheet.js';
 import { settlementCardHtml } from './ui/settlementCard.js';
-import { realmMenuHtml, chronicleHtml } from './ui/menu.js';
+import { realmMenuHtml, chronicleHtml, ledgerHtml } from './ui/menu.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -36,7 +36,7 @@ async function boot() {
   const cam = createCamera(world);
   const renderer = createRenderer(canvas, world, cam);
 
-  const topbar = createTopbar({ onSpeed: setSpeed, onMenu: openMenu });
+  const topbar = createTopbar(world, { onSpeed: setSpeed, onMenu: openMenu });
   const sheet = createSheet({ onClose: () => { if (selection?.settlement) selection = null; } });
 
   let toastTimer = 0;
@@ -73,13 +73,33 @@ async function boot() {
   function openSettlement(id) {
     selection = { settlement: id };
     hideUnitLabel();
-    sheet.open(`settlement:${id}`, settlementCardHtml(world, state, id, lookups));
+    const body = sheet.open(`settlement:${id}`, settlementCardHtml(world, state, id, lookups));
+    body.onclick = (e) => {
+      const b = e.target.closest('[data-build]');
+      if (b && !b.disabled) order({ type: 'build', settlement: id, building: b.dataset.build });
+    };
+  }
+
+  // Player orders go through the simulation's own rules, like everything else.
+  function order(action) {
+    const out = applyAction(state, world, action);
+    if (out.error) return toast(out.error);
+    state = out.state;
+    topbar.update(state);
+    refreshOpenSheet();
+    const last = state.chronicle.at(-1);
+    if (last) toast(last.text);
   }
 
   function openMenu() {
     if (sheet.current === 'menu') return sheet.close();
     selection = null;
     const body = sheet.open('menu', realmMenuHtml(world, state, !!readSave()));
+    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
+  }
+
+  function openLedger() {
+    const body = sheet.open('ledger', ledgerHtml(world, state));
     body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
   }
 
@@ -91,6 +111,7 @@ async function boot() {
   function menuAction(action) {
     if (!action) return;
     if (action === 'chronicle') openChronicle();
+    else if (action === 'ledger') openLedger();
     else if (action === 'back') openMenu();
     else if (action === 'save') save(false);
     else if (action === 'load') {
@@ -204,8 +225,9 @@ async function boot() {
 
   function refreshOpenSheet() {
     const cur = sheet.current;
-    if (cur?.startsWith('settlement:')) sheet.open(cur, settlementCardHtml(world, state, cur.slice(11), lookups));
-    else if (cur === 'chronicle') openChronicle();
+    if (cur?.startsWith('settlement:')) sheet.patch(cur, settlementCardHtml(world, state, cur.slice(11), lookups));
+    else if (cur === 'chronicle') sheet.patch(cur, chronicleHtml(state));
+    else if (cur === 'ledger') sheet.patch(cur, ledgerHtml(world, state));
   }
 
   topbar.update(state);

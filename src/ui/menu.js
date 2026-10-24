@@ -1,17 +1,33 @@
-import { formatDate, totalPopulation } from '../sim/index.js';
+import { formatDate, totalPopulation, realmStock, MONTHS } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
+
+const signed = (n) => (n < 0 ? `−${number(-n)}` : number(n));
 
 export function realmMenuHtml(world, state, hasSave) {
   let people = 0;
   let soldiers = 0;
+  let works = 0;
   for (const s of Object.values(state.settlements)) {
     people += totalPopulation(s);
     soldiers += s.garrison;
+    if (s.construction) works++;
   }
+  const stock = realmStock(state);
+  const debt = state.treasury < 0
+    ? `<p class="warn">The crown owes ${escapeHtml(world.economy.debt.lender)} ${number(-state.treasury)} crowns. They will lend up to ${number(world.economy.debt.creditLimit)}.${state.unpaid ? ' They will lend no more, and the garrisons go unpaid.' : ''}</p>`
+    : '';
   return `
     <h2>The Realm of ${escapeHtml(world.kingdom.name)}</h2>
-    <p class="sub">${number(people)} souls in ${world.geography.settlements.length} settlements, ${number(soldiers)} under arms.</p>
+    <p class="sub">${number(people)} souls in ${world.geography.settlements.length} settlements, ${number(soldiers)} under arms${works ? `, ${works} building works under way` : ''}.</p>
+    ${debt}
+    <dl class="stats">
+      <div><dt>Food</dt><dd>${number(stock.food)}</dd></div>
+      <div><dt>Timber</dt><dd>${number(stock.timber)}</dd></div>
+      <div><dt>Stone</dt><dd>${number(stock.stone)}</dd></div>
+      <div><dt>Iron</dt><dd>${number(stock.iron)}</dd></div>
+    </dl>
     <div class="menu-list">
+      <button type="button" data-action="ledger">Ledger<small>Where the crowns come from and where they go</small></button>
       <button type="button" data-action="chronicle">Chronicle<small>Dispatches from across the realm</small></button>
       <button type="button" data-action="save">Save now<small>Also saved at the start of every month</small></button>
       <button type="button" data-action="load" ${hasSave ? '' : 'disabled'}>Load last save</button>
@@ -21,6 +37,34 @@ export function realmMenuHtml(world, state, hasSave) {
     </div>
     <h3>Coming in later milestones</h3>
     <p class="sub">Laws, Faith and Peoples, Nobles, Military.</p>
+  `;
+}
+
+export function ledgerHtml(world, state) {
+  const back = '<div class="menu-list"><button type="button" data-action="back">Back to the realm</button></div>';
+  const last = state.ledger.history.at(-1);
+  if (!last) {
+    return `<h2>Ledger</h2>${back}<p class="sub">The first accounts are drawn up at the start of next month.</p>`;
+  }
+  const i = last.income;
+  const e = last.expenses;
+  const totalIn = i.taxes + i.trade + i.sales;
+  const totalOut = e.garrisons + e.upkeep + e.court + e.interest;
+  const row = (label, v) => `<div><dt>${label}</dt><dd>${signed(v)}</dd></div>`;
+  const history = state.ledger.history.slice().reverse().map((h) => {
+    const net = h.income.taxes + h.income.trade + h.income.sales - h.expenses.garrisons - h.expenses.upkeep - h.expenses.court - h.expenses.interest;
+    return `<tr><td>${MONTHS[h.month - 1].name.slice(0, 3)} ${h.year}</td><td>${signed(net)}</td><td>${number(h.expenses.construction)}</td><td>${signed(h.treasury)}</td></tr>`;
+  }).join('');
+  return `
+    <h2>Ledger</h2>
+    ${back}
+    <h3>${MONTHS[last.month - 1].name} ${last.year}: income</h3>
+    <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Total', totalIn)}</dl>
+    <h3>Expenses</h3>
+    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
+    <p class="sub">Building works paid for this month: ${number(e.construction)} crowns.</p>
+    <h3>The past year</h3>
+    <table class="history"><thead><tr><th>Month</th><th>Net</th><th>Works</th><th>Treasury</th></tr></thead><tbody>${history}</tbody></table>
   `;
 }
 

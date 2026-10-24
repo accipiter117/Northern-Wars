@@ -4,11 +4,13 @@
   "private": true,
   "description": "A mobile-first browser kingdom simulator set in the Witcher world. Fan project.",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
-    "test:sim": "node --test \"test/sim/*.test.js\"",
-    "test:smoke": "node --test \"test/smoke/*.test.js\"",
+    "test": "node tools/test.js",
+    "test:sim": "node tools/test.js sim",
+    "test:smoke": "node tools/test.js smoke",
     "serve": "node tools/serve.js"
   },
   "devDependencies": {

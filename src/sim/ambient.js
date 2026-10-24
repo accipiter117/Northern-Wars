@@ -22,7 +22,8 @@ export function stepAmbientDay(state, world, rng) {
   for (const kind of Object.keys(cfg.kinds)) {
     const k = cfg.kinds[kind];
     const count = kept.reduce((n, u) => n + (u.kind === kind ? 1 : 0), 0);
-    const rate = season === 'winter' && k.winterSpawn !== undefined ? k.winterSpawn : k.spawnPerDay;
+    let rate = season === 'winter' && k.winterSpawn !== undefined ? k.winterSpawn : k.spawnPerDay;
+    rate *= RATE[kind]?.(state, k) ?? 1;
     if (count >= k.max || !rng.chance(rate)) continue;
     const unit = SPAWNERS[kind](state, world, rng);
     if (!unit) continue;
@@ -34,7 +35,32 @@ export function stepAmbientDay(state, world, rng) {
   }
 }
 
+// How busy each kind of traffic is, read from the real economy.
+const RATE = {
+  caravan(state, k) {
+    const last = state.ledger.history.at(-1);
+    if (!last) return 1;
+    return Math.min(2, Math.max(0.3, (last.income.trade + last.income.sales) / k.tradeBaseline));
+  },
+  grain(state, k) {
+    const flowing = Object.values(state.flows.in).reduce((a, b) => a + b, 0);
+    return Math.min(1, flowing / k.flowBaseline);
+  },
+};
+
 const SPAWNERS = {
+  // Grain carts follow where food is actually moving: from full stores to
+  // hungry ones.
+  grain(state, world, rng) {
+    const outs = Object.keys(state.flows.out);
+    const ins = Object.keys(state.flows.in);
+    if (!outs.length || !ins.length) return null;
+    const from = weightedPick(rng, outs, (id) => state.flows.out[id]);
+    const to = weightedPick(rng, ins, (id) => state.flows.in[id]);
+    const route = from === to ? null : roadPath(world, from, to);
+    return route && route.length > 1 ? { route } : null;
+  },
+
   // Trade flows between places with people and money, so both ends are
   // weighted by prosperity and size.
   caravan(state, world, rng) {
