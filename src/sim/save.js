@@ -71,6 +71,19 @@ const MIGRATIONS = {
     state.version = 6;
     return state;
   },
+  // v7 adds garrison levels, patrols, threats, plague and events.
+  6(state) {
+    state.garrisonLevel = {};
+    state.patrols = [];
+    state.nextPatrolId = 1;
+    state.events = [];
+    state.nextEventId = 1;
+    for (const s of Object.values(state.settlements)) {
+      Object.assign(s, { plague: 0, quarantine: 0, priestesses: false, cleared: {}, raided: 0, raidKind: null });
+    }
+    state.version = 7;
+    return state;
+  },
 };
 
 export function deserialize(text, world) {

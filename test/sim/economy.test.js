@@ -84,7 +84,7 @@ test('the crown can borrow up to the bankers\' limit, and debt costs Authority a
   const last = s.ledger.history.at(-1);
   assert.ok(last.expenses.interest >= 130);
   assert.ok(s.authority < 60);
-  assert.ok(s.chronicle.at(-1).text.includes('owes'));
+  assert.ok(s.chronicle.some((d) => d.text.includes('owes')));
 });
 
 test('past the limit, soldiers go unpaid and desert', () => {

@@ -6,7 +6,7 @@ import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 
-export const STATE_VERSION = 6;
+export const STATE_VERSION = 7;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -42,6 +42,11 @@ export function createState(world, seed = 1) {
     nextDemandId: 1,
     crisisMonths: 0,
     depositions: [],
+    garrisonLevel: {},
+    patrols: [],
+    nextPatrolId: 1,
+    events: [],
+    nextEventId: 1,
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],
@@ -69,6 +74,12 @@ export function newSettlement(world, d, season) {
     construction: null,
     tension: 0,
     troubled: 0,
+    plague: 0,
+    quarantine: 0,
+    priestesses: false,
+    cleared: {},
+    raided: 0,
+    raidKind: null,
   };
   const f = world.economy.food;
   const need = totalPopulation(s) * f.perPersonDay * (season === 'winter' ? f.winterFactor : 1);

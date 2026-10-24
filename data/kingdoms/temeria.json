@@ -7,6 +7,7 @@
   "settlements": "data/settlements.json",
   "neighbours": "data/neighbours.json",
   "houses": "data/houses.json",
+  "military": "data/military.json",
   "start": {
     "year": 1262,
     "month": 3,

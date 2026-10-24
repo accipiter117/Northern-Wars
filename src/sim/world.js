@@ -6,7 +6,7 @@ import { distanceToPolygon } from './geometry.js';
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events }) {
   const byId = {};
   for (const s of geography.settlements) byId[s.id] = s;
 
@@ -44,9 +44,23 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   const woods = [...(geography.terrain.forest ?? []).map((z) => z.shape), ...(geography.neighbours.brokilon?.shapes ?? [])];
   for (const s of geography.settlements) forestNear[s.id] = woods.some((sh) => distanceToPolygon(s.x, s.y, sh) < 60);
 
+  // Which kinds of wild country lie within reach of each settlement: where
+  // bandits hide and monsters breed.
+  const wildOf = {};
+  const reach = military?.wildReach ?? 60;
+  for (const s of geography.settlements) {
+    wildOf[s.id] = {};
+    for (const [kind, zones] of Object.entries(geography.terrain)) {
+      if (zones.some((z) => distanceToPolygon(s.x, s.y, z.shape) < reach)) wildOf[s.id][kind] = true;
+    }
+  }
+
   return {
     kingdom,
     forestNear,
+    wildOf,
+    military,
+    events,
     culture,
     petitions,
     houses,

@@ -1,0 +1,282 @@
+{
+  "note": "Events in the realm that wait on the crown. {place} is filled in. Conditions: types, seasons, minThreat, minPeople, produces, needs (unpaid, plagueFree, noPlagueAnywhere), laws. Effects: treasury, authority, opinion; for the place: unrest, prosperity and garrison (signed changes), food and people (fractions lost), clear (threat: days), plague (true starts it), quarantine (days), priestesses (true halves plague deaths there), nearbyFood (fraction lost in its village neighbours). The default is taken if the crown does not answer.",
+  "events": {
+    "plague": {
+      "title": "Plague",
+      "weight": 1,
+      "types": [
+        "city",
+        "town"
+      ],
+      "needs": [
+        "noPlagueAnywhere"
+      ],
+      "text": "Sickness has come to {place}. Fever, black swellings, carts at dawn. The priestesses say it will spread along the roads.",
+      "choices": [
+        {
+          "label": "Quarantine the town",
+          "effects": {
+            "plague": true,
+            "quarantine": 120,
+            "unrest": 8,
+            "opinion": {
+              "burghers": -4
+            }
+          }
+        },
+        {
+          "label": "Send Melitele's priestesses",
+          "effects": {
+            "plague": true,
+            "priestesses": true,
+            "treasury": -300,
+            "opinion": {
+              "melitele": 5
+            }
+          }
+        },
+        {
+          "label": "Let it run its course",
+          "effects": {
+            "plague": true
+          },
+          "default": true
+        }
+      ]
+    },
+    "failed_harvest": {
+      "title": "A failed harvest",
+      "weight": 2,
+      "types": [
+        "village"
+      ],
+      "seasons": [
+        "summer",
+        "autumn"
+      ],
+      "text": "Blight and hail have ruined the fields around {place}. The barns will be half empty this winter.",
+      "choices": [
+        {
+          "label": "Send royal grain and seed",
+          "effects": {
+            "treasury": -350,
+            "opinion": {
+              "peasants": 4
+            }
+          }
+        },
+        {
+          "label": "They must manage",
+          "effects": {
+            "food": 0.5,
+            "nearbyFood": 0.4,
+            "unrest": 8,
+            "opinion": {
+              "peasants": -3
+            }
+          },
+          "default": true
+        }
+      ]
+    },
+    "monster": {
+      "title": "A beast in the wilds",
+      "weight": 3,
+      "minThreat": {
+        "monsters": 30
+      },
+      "text": "Something has been taking people near {place}. Three gone this month; the last was found in pieces by the water.",
+      "choices": [
+        {
+          "label": "Hire a witcher",
+          "effects": {
+            "treasury": -250,
+            "clear": {
+              "monsters": 365
+            },
+            "opinion": {
+              "peasants": 3,
+              "eternal_fire": -2
+            }
+          }
+        },
+        {
+          "label": "Send soldiers",
+          "effects": {
+            "garrison": -25,
+            "clear": {
+              "monsters": 180
+            }
+          }
+        },
+        {
+          "label": "Tell them to stay indoors",
+          "effects": {
+            "people": 0.01,
+            "unrest": 6,
+            "opinion": {
+              "peasants": -3
+            }
+          },
+          "default": true
+        }
+      ]
+    },
+    "witcher": {
+      "title": "A witcher at the gate",
+      "weight": 2,
+      "minThreat": {
+        "monsters": 20
+      },
+      "text": "A witcher, grey and scarred, has ridden into {place} asking whether there is work. The children stare at his eyes.",
+      "choices": [
+        {
+          "label": "Give him a contract",
+          "effects": {
+            "treasury": -150,
+            "clear": {
+              "monsters": 365
+            },
+            "opinion": {
+              "eternal_fire": -2
+            }
+          }
+        },
+        {
+          "label": "Send him on his way",
+          "effects": {},
+          "default": true
+        }
+      ]
+    },
+    "bandit_captain": {
+      "title": "A bandit captain",
+      "weight": 3,
+      "minThreat": {
+        "bandits": 40
+      },
+      "text": "A bandit captain who has been robbing the roads near {place} sends word: two hundred crowns, and his men will move on.",
+      "choices": [
+        {
+          "label": "Pay him",
+          "effects": {
+            "treasury": -200,
+            "clear": {
+              "bandits": 180
+            },
+            "authority": -3
+          }
+        },
+        {
+          "label": "Hunt him down",
+          "effects": {
+            "garrison": -30,
+            "clear": {
+              "bandits": 365
+            },
+            "authority": 2
+          }
+        },
+        {
+          "label": "Ignore him",
+          "effects": {
+            "prosperity": -5,
+            "unrest": 5
+          },
+          "default": true
+        }
+      ]
+    },
+    "deserters": {
+      "title": "Deserters",
+      "weight": 2,
+      "needs": [
+        "unpaid"
+      ],
+      "text": "Unpaid soldiers have walked away from their posts near {place}. They are living off the villages now, and not gently.",
+      "choices": [
+        {
+          "label": "Pardon them if they return",
+          "effects": {
+            "authority": -3,
+            "garrison": 15
+          }
+        },
+        {
+          "label": "Hang those who are caught",
+          "effects": {
+            "authority": 2,
+            "unrest": 4,
+            "opinion": {
+              "peasants": -2
+            },
+            "garrison": -15
+          },
+          "default": true
+        }
+      ]
+    },
+    "fire": {
+      "title": "Fire",
+      "weight": 2,
+      "types": [
+        "city",
+        "town"
+      ],
+      "seasons": [
+        "summer"
+      ],
+      "text": "A fire started in a tannery at {place} and took a whole quarter before the wind turned.",
+      "choices": [
+        {
+          "label": "Pay to rebuild",
+          "effects": {
+            "treasury": -300,
+            "unrest": -3,
+            "opinion": {
+              "burghers": 4
+            }
+          }
+        },
+        {
+          "label": "Let them rebuild themselves",
+          "effects": {
+            "prosperity": -8,
+            "unrest": 6
+          },
+          "default": true
+        }
+      ]
+    },
+    "mine_collapse": {
+      "title": "A collapse underground",
+      "weight": 2,
+      "produces": [
+        "iron",
+        "stone"
+      ],
+      "text": "A gallery has fallen in at {place}. Eleven men are still below. The families want the crown to pay for the dead.",
+      "choices": [
+        {
+          "label": "Pay compensation",
+          "effects": {
+            "treasury": -150,
+            "opinion": {
+              "peasants": 3
+            }
+          }
+        },
+        {
+          "label": "Refuse",
+          "effects": {
+            "unrest": 7,
+            "opinion": {
+              "peasants": -3
+            }
+          },
+          "default": true
+        }
+      ]
+    }
+  }
+}

@@ -6,6 +6,8 @@ import { canDecree, decree } from './laws.js';
 import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
 import { resolvePetition } from './petitions.js';
 import { canHouseAction, houseAction, resolveDemand } from './houses.js';
+import { canSetGarrison, canAddPatrol, addPatrol, resolveEvent } from './military.js';
+import { addDispatch as note } from './realm.js';
 
 const MATERIALS = ['timber', 'stone', 'iron'];
 
@@ -70,6 +72,32 @@ export function applyAction(state, world, action) {
   if (action.type === 'demand') {
     const next = structuredClone(state);
     if (!resolveDemand(next, world, action.id, action.choice)) return { state, error: 'That demand has been settled.' };
+    return { state: next };
+  }
+  if (action.type === 'garrison') {
+    const check = canSetGarrison(state, world, action.settlement, action.level);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    next.garrisonLevel[action.settlement] = action.level;
+    note(next, `${world.byId[action.settlement].name} is to be held with a ${world.military.garrisonLevels[action.level].name.toLowerCase()} garrison.`);
+    return { state: next };
+  }
+  if (action.type === 'patrol') {
+    const check = canAddPatrol(state, world, action.from, action.to);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    addPatrol(next, world, action.from, action.to);
+    return { state: next };
+  }
+  if (action.type === 'unpatrol') {
+    if (!state.patrols.some((p) => p.id === action.id)) return { state, error: 'No such patrol.' };
+    const next = structuredClone(state);
+    next.patrols = next.patrols.filter((p) => p.id !== action.id);
+    return { state: next };
+  }
+  if (action.type === 'event') {
+    const next = structuredClone(state);
+    if (!resolveEvent(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
     return { state: next };
   }
   return { state, error: `Unknown action ${action.type}.` };

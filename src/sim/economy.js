@@ -10,6 +10,7 @@ import { number } from './text.js';
 import { lawEffects } from './laws.js';
 import { foreignTrade, stanceCost } from './neighbours.js';
 import { crownShare } from './houses.js';
+import { garrisonFactor, quarantined } from './military.js';
 
 const GOODS = ['timber', 'stone', 'iron'];
 
@@ -64,7 +65,7 @@ export function goodsYield(world, id, s) {
 // when ordered, so they are listed but not counted here.
 export function ledgerNet({ income, expenses }) {
   const i = income.taxes + income.trade + income.sales + (income.foreign ?? 0);
-  const o = expenses.garrisons + expenses.upkeep + expenses.court + (expenses.edicts ?? 0) + (expenses.gifts ?? 0) + expenses.interest;
+  const o = expenses.garrisons + expenses.upkeep + expenses.court + (expenses.edicts ?? 0) + (expenses.gifts ?? 0) + (expenses.patrols ?? 0) + expenses.interest;
   return { in: i, out: o, net: i - o };
 }
 
@@ -158,6 +159,7 @@ export function monthlyLedger(state, world) {
     court: e.upkeep.courtMonth * Math.max(0, 1 + law.court),
     edicts: law.monthly,
     gifts: stanceCost(state, world),
+    patrols: state.patrols.length * world.military.patrol.cost,
     interest: 0,
     construction: state.ledger.construction,
     decrees: state.ledger.decrees ?? 0,
@@ -171,7 +173,7 @@ export function monthlyLedger(state, world) {
     const share = crownShare(state, world, s);
     income.taxes += pop * e.taxes.perPersonMonth * mult * Math.max(0, 1 + law.tax) * share;
     const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
-    income.trade += pop * e.trade.perPersonMonth[world.byId[id].type] * focus * mult * (1 + fx.trade) * tradeMult * share;
+    income.trade += pop * e.trade.perPersonMonth[world.byId[id].type] * focus * mult * (1 + fx.trade) * tradeMult * share * (quarantined(state, s) ? 0 : 1);
     for (const g of GOODS) {
       const over = s.stock[g] - e.goods.storageCap;
       if (over > 0) {
@@ -204,7 +206,8 @@ export function monthlyLedger(state, world) {
     if (state.unpaid) s.garrison = Math.floor(s.garrison * (1 - debtCfg.desertionPerMonth));
     else {
       // Garrisons drift towards what the conscription law calls for.
-      const target = world.settlementData[id].garrison * Math.max(0, 1 + law.garrison);
+      const level = s.holder === 'crown' ? garrisonFactor(state, world, id) : 1;
+      const target = world.settlementData[id].garrison * Math.max(0, 1 + law.garrison) * level;
       s.garrison = Math.max(0, Math.round(s.garrison + (target - s.garrison) * 0.1));
     }
   }
