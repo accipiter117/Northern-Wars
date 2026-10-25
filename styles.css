@@ -217,3 +217,22 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .patrol-order .build { flex: 1 1 100%; }
 select.pick { min-height: 44px; font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; flex: 1; }
 .law-option.current .chip { justify-self: start; margin-top: 4px; }
+
+/* Chronicle (M7) */
+.chronicle .year { font-size: 18px; color: var(--gold); border-bottom: 1px solid var(--line); padding-top: 14px; font-weight: 600; }
+.chronicle-filter { margin-top: 10px; }
+
+/* Hints (M7): a note pinned under the top bar, clear of the sheets. */
+.hint {
+  position: fixed; z-index: 8; left: calc(var(--safe-l) + 10px); right: calc(var(--safe-r) + 10px);
+  top: calc(var(--bar-h, 110px) + 8px); max-width: 520px; margin: 0 auto;
+  background: rgba(42, 33, 24, 0.97); border: 1px solid var(--gold); border-radius: 10px;
+  padding: 10px 14px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6); font-size: 15px; line-height: 1.4;
+}
+.hint[hidden] { display: none; }
+.hint p { margin: 0 0 6px; }
+.hint-title { color: var(--gold); font-weight: 600; }
+.hint-buttons { display: flex; gap: 8px; }
+.hint-buttons button { flex: 1; font-size: 14px; }
+.help li { font-size: 15px; }
+@media (orientation: landscape) { .hint { right: auto; width: min(420px, 48vw); } }

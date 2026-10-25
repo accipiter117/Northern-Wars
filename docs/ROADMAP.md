@@ -9,7 +9,7 @@
 | M4 Faith, culture and peoples | Faith mix, tension, non-human populations, pilgrims and refugees | Done |
 | M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Done |
 | M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Done |
-| M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Next |
+| M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -19,6 +19,13 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M7 acceptance criteria
+- Thirty-year runs of four kinds of crown (idle, steward, spendthrift, tyrant) over several seeds with nothing running away; findings and dials in docs/BALANCE.md; a thirty-year guard in the test suite.
+- A full treasury levels off (courtiers and hangers-on), and Authority regrows by itself only to 75.
+- A chronicle with a summary of the reign, dispatches by subject and grouped by year.
+- Tutorial hints that appear once each when their moment comes, with a Help screen to read them again or turn them off.
+- Steady play at 60 frames a second on a CPU slowed four times with a 3x screen; the painted map is not redrawn during play, guarded by a smoke test.
 
 ## M6 acceptance criteria
 - Crown garrisons can be held at four levels (skeleton to fortress), paid monthly; lords keep their own.

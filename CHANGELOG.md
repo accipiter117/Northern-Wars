@@ -1,5 +1,13 @@
 # Changelog
 
+## M7 Balance and polish
+- Long-run balance: thirty-year runs of four kinds of crown, written up in docs/BALANCE.md with the dials worth turning, and tools/longrun.mjs to repeat them.
+- A full treasury now draws courtiers and hangers-on (1% a month of anything above 5,000), so an idle hoard levels off around 43,000 instead of passing 150,000.
+- Authority regrows by itself only up to 75; beyond that it takes content lords or a splendid court.
+- Chronicle: a summary of the reign, filters by subject, entries grouped by year, and room for 400 dispatches.
+- Tutorial hints for a first reign, and a Help screen.
+- Performance: the map is split into a painted layer and a settlement layer, danger marks are reckoned monthly, panels refresh twice a second at most, and a paused game stops drawing.
+
 ## M6 Military holdings and events
 - Garrison levels for every crown settlement, from skeleton to fortress, set from its card.
 - Patrol routes ordered from a new Military and threats screen, drawn on the map and ridden by the mounted patrols.

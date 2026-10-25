@@ -5,6 +5,8 @@ import { number } from './text.js';
 import { prosperityMult } from './economy.js';
 import { lawEffects } from './laws.js';
 
+const say = (state, text) => addDispatch(state, text, 'realm');
+
 export function monthlyPopulation(state, world, rng) {
   const p = world.economy.population;
   const starving = [];
@@ -25,9 +27,9 @@ export function monthlyPopulation(state, world, rng) {
     }
     if (s.hunger > 0.2) starving.push(world.byId[id].name);
   }
-  if (exiles >= 1) addDispatch(state, `${number(exiles)} dwarves, elves and halflings left the realm this month, carrying what they could.`);
+  if (exiles >= 1) say(state, `${number(exiles)} dwarves, elves and halflings left the realm this month, carrying what they could.`);
   if (starving.length) {
     const names = starving.length > 3 ? `${starving.slice(0, 3).join(', ')} and ${starving.length - 3} more` : starving.join(', ');
-    addDispatch(state, `Hunger stalks ${names}. The old and the young are the first to go.`);
+    say(state, `Hunger stalks ${names}. The old and the young are the first to go.`);
   }
 }

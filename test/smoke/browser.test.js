@@ -33,7 +33,7 @@ for (const vp of VIEWPORTS) {
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('dialog', (d) => d.accept());
 
-    await page.goto(`${base}?seed=1262&fresh`);
+    await page.goto(`${base}?seed=1262&fresh&nohints`);
     await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
     const startDay = await page.evaluate(() => window.northernWars.state.day);
 
@@ -152,7 +152,7 @@ for (const vp of VIEWPORTS) {
     await page.screenshot({ path: join(OUT, `${vp.name}-chronicle.png`) });
 
     // A reload resumes the saved reign.
-    await page.goto(base);
+    await page.goto(`${base}?nohints`);
     await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
     assert.ok(await page.evaluate(() => window.northernWars.state.day) >= paused);
 
@@ -180,7 +180,7 @@ test('buildings and garrisons show beside their settlements', async () => {
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
   await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
-  await page.goto(`${base}?paused`);
+  await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
   const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
   await page.mouse.move(viz.x, viz.y);
@@ -216,7 +216,7 @@ test('faith screen, petitions and riot markers', async () => {
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
   await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
-  await page.goto(`${base}?paused`);
+  await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
   await page.screenshot({ path: join(OUT, 'riot-marker.png') });
 
@@ -262,7 +262,7 @@ test('great houses, rebellion and deposition', async () => {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('dialog', (d) => d.accept());
   await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
-  await page.goto(`${base}?paused`);
+  await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
 
   await page.click('#menu-button');
@@ -311,7 +311,7 @@ test('military screen, patrols, garrisons and events', async () => {
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
   await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
-  await page.goto(`${base}?paused`);
+  await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
 
   await page.click('#menu-button');
@@ -340,5 +340,48 @@ test('military screen, patrols, garrisons and events', async () => {
   await page.click('[data-choice="0"]');
   assert.ok(await page.evaluate((x) => window.northernWars.state.treasury <= x - 150, t));
   assert.deepEqual(errors, []);
+  await context.close();
+});
+
+// Hints: the welcome note, the town note once a card is opened, and turning
+// them off and on again from Help.
+test('tutorial hints appear once and can be turned off', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}?seed=3&fresh&paused`);
+  await page.waitForSelector('#hint:not([hidden])', { timeout: 5000 });
+  assert.match(await page.textContent('#hint'), /The crown of Temeria/);
+  await page.screenshot({ path: join(OUT, 'hint.png') });
+  await page.click('[data-hint="ok"]');
+  const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.touchscreen.tap(viz.x, viz.y);
+  await page.waitForSelector('#hint:not([hidden])', { timeout: 5000 });
+  assert.match(await page.textContent('#hint'), /A town's card/);
+  await page.click('[data-hint="off"]');
+  await page.click('#menu-button');
+  await page.click('[data-action="help"]');
+  assert.match(await page.textContent('#sheet-body'), /Help[\s\S]*Turn hints back on[\s\S]*The great houses/);
+  await page.click('[data-action="hints-on"]');
+  assert.match(await page.textContent('#sheet-body'), /Turn hints off/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+// Performance guard: in steady play the painted map is not redrawn, and the
+// settlement layer only rarely, so phones are spared needless work.
+test('steady play does not redraw the painted map', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  await page.goto(`${base}?seed=7&fresh&nohints`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  await page.waitForTimeout(500);
+  const before = await page.evaluate(() => ({ ...window.northernWars.renderStats }));
+  await page.evaluate(() => window.northernWars.setSpeed(4));
+  await page.waitForTimeout(2500);
+  const after = await page.evaluate(() => ({ ...window.northernWars.renderStats, day: window.northernWars.state.day }));
+  assert.equal(after.base - before.base, 0, 'painted map redrawn during play');
+  assert.ok(after.overlay - before.overlay <= 3, `settlement layer redrawn ${after.overlay - before.overlay} times`);
   await context.close();
 });

@@ -7,6 +7,8 @@
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 
+const say = (state, text) => addDispatch(state, text, 'nobles');
+
 const cfg = (world) => world.houses;
 
 export function defaultHouses(world) {
@@ -188,7 +190,7 @@ export function resolveDemand(state, world, demandId, choice, ignored = false) {
   }
   const t = demandText(world, pending);
   const filled = t.choices[choice];
-  addDispatch(state, ignored
+  say(state, ignored
     ? `${t.title} (${t.house}): no answer came from the throne, so it was taken as "${filled.toLowerCase()}".`
     : `${t.title} (${t.house}): the crown chose to ${filled.toLowerCase()}.`);
   return true;
@@ -232,11 +234,11 @@ export function houseAction(state, world, houseId, kind, settlementId) {
   if (a.coin) state.treasury -= a.coin;
   if (kind === 'honours') {
     h.favour += a.favour;
-    addDispatch(state, `${def.lord} is honoured at court with a chain of office and a seat at the king's table.`);
+    say(state, `${def.lord} is honoured at court with a chain of office and a seat at the king's table.`);
   } else if (kind === 'summon') {
     h.ambition = clamp(h.ambition + a.ambition, 0, 100);
     h.favour += a.favour + (state.laws.court?.option === 'splendid' ? a.splendidFavour : 0);
-    addDispatch(state, `${def.lord} is summoned to Vizima and kept close for a season.`);
+    say(state, `${def.lord} is summoned to Vizima and kept close for a season.`);
   } else if (kind === 'levies') {
     let raised = 0;
     for (const id of holdingsOf(state, houseId)) {
@@ -246,23 +248,23 @@ export function houseAction(state, world, houseId, kind, settlementId) {
     }
     state.settlements[world.kingdom.capital].garrison += raised;
     h.grievance += a.grievance;
-    addDispatch(state, `${def.name} sends ${raised} men to Vizima at the crown's demand, with poor grace.`);
+    say(state, `${def.name} sends ${raised} men to Vizima at the crown's demand, with poor grace.`);
   } else if (kind === 'fine') {
     const fine = Math.max(a.min, Math.round(housePower(state, world, houseId).people * a.perPerson));
     state.treasury += fine;
     const greedy = traitsOf(world, houseId).reduce((m, t) => m * (t.fineGrievance ?? 1), 1);
     h.grievance += a.grievance * greedy;
-    addDispatch(state, `${def.name} is fined ${fine} crowns for its insolence, and pays.`);
+    say(state, `${def.name} is fined ${fine} crowns for its insolence, and pays.`);
   } else if (kind === 'grant') {
     state.settlements[settlementId].holder = houseId;
     h.favour += a.favour;
     h.ambition = clamp(h.ambition + a.ambition, 0, 100);
-    addDispatch(state, `${world.byId[settlementId].name} is granted to ${def.name}.`);
+    say(state, `${world.byId[settlementId].name} is granted to ${def.name}.`);
   } else if (kind === 'strip') {
     state.settlements[settlementId].holder = 'crown';
     h.grievance += a.grievance;
     for (const [id, other] of Object.entries(state.houses)) if (id !== houseId) other.grievance += a.othersGrievance;
-    addDispatch(state, `${def.name} is stripped of ${world.byId[settlementId].name}. Every lord in Temeria takes note.`);
+    say(state, `${def.name} is stripped of ${world.byId[settlementId].name}. Every lord in Temeria takes note.`);
   }
 }
 
@@ -280,11 +282,11 @@ function rebellions(state, world, rng) {
   for (const [id, h] of Object.entries(state.houses)) {
     if (!h.rebel && h.loyalty < r.below && rng.chance(r.chance)) {
       h.rebel = { since: state.day, months: 0 };
-      addDispatch(state, `${name(id)} has risen in rebellion. Its banners fly over its castles and its levies bar the roads.`);
+      say(state, `${name(id)} has risen in rebellion. Its banners fly over its castles and its levies bar the roads.`);
       for (const [oid, o] of Object.entries(state.houses)) {
         if (oid !== id && !o.rebel && o.loyalty < r.joinBelow && rng.chance(r.joinChance)) {
           o.rebel = { since: state.day, months: 0 };
-          addDispatch(state, `${name(oid)} joins the rising.`);
+          say(state, `${name(oid)} joins the rising.`);
         }
       }
     }
@@ -297,7 +299,7 @@ function rebellions(state, world, rng) {
     state.authority = clamp(state.authority - r.authorityPerMonth, 0, 100);
     if (h.loyalty > r.endsAbove) {
       h.rebel = null;
-      addDispatch(state, `${name(id)} lays down its arms and sends hostages to Vizima. The rising is over.`);
+      say(state, `${name(id)} lays down its arms and sends hostages to Vizima. The rising is over.`);
     }
   }
   const still = rebels.filter((id) => state.houses[id].rebel);
@@ -310,7 +312,7 @@ function rebellions(state, world, rng) {
       const h = state.houses[id];
       for (const sid of holdingsOf(state, id)) if (sid !== cfg(world).houses[id].seat) state.settlements[sid].holder = 'crown';
       Object.assign(h, { rebel: null, loyalty: 35, favour: 0, grievance: 0, ambition: 0, office: false });
-      addDispatch(state, `The crown's soldiers break ${name(id)}. Its lands are forfeit, all but its seat, and its lord bends the knee.`);
+      say(state, `The crown's soldiers break ${name(id)}. Its lands are forfeit, all but its seat, and its lord bends the knee.`);
     }
     state.authority = clamp(state.authority + 10, 0, 100);
   } else if (months >= r.concedeAfter) {
@@ -319,7 +321,7 @@ function rebellions(state, world, rng) {
       const land = nearbyCrownLand(state, world, id)[0];
       if (land) state.settlements[land].holder = id;
       Object.assign(h, { rebel: null, favour: h.favour + 30, grievance: 0 });
-      addDispatch(state, `Too weak to win, the crown makes terms with ${name(id)}${land ? ` and cedes ${world.byId[land].name}` : ''}.`);
+      say(state, `Too weak to win, the crown makes terms with ${name(id)}${land ? ` and cedes ${world.byId[land].name}` : ''}.`);
     }
     state.authority = clamp(state.authority - 15, 0, 100);
   }
@@ -335,7 +337,7 @@ function deposition(state, world) {
   if (state.authority < d.authorityBelow && (state.stability < d.stabilityBelow || rising)) state.crisisMonths += 1;
   else state.crisisMonths = Math.max(0, state.crisisMonths - 1);
   if (state.crisisMonths === Math.ceil(d.months / 2)) {
-    addDispatch(state, 'In the great halls the lords speak openly of a regency.');
+    say(state, 'In the great halls the lords speak openly of a regency.');
   }
   if (state.crisisMonths < d.months) return;
   const pop = Object.values(state.settlements).reduce((a, s) => a + totalPopulation(s), 0);
@@ -345,7 +347,7 @@ function deposition(state, world) {
   state.crisisMonths = 0;
   for (const h of Object.values(state.houses)) h.grievance /= 2;
   state.reign = { number: state.reign.number + 1, since: state.day, popStart: pop, decrees: 0, built: 0, riots: 0, pogroms: 0 };
-  addDispatch(state, 'The great houses have deposed the crown. A regency council rules in Vizima in the name of the heir.');
+  say(state, 'The great houses have deposed the crown. A regency council rules in Vizima in the name of the heir.');
 }
 
 export function newReign(state, day) {

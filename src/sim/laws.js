@@ -3,6 +3,8 @@
 // it has fully taken hold, the old law's effects fade as the new one's grow.
 import { addDispatch, clamp } from './realm.js';
 
+const say = (state, text) => addDispatch(state, text, 'realm');
+
 const SUMMED = ['tax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'authority', 'monthly', 'storage', 'growth', 'nonhumanExodus'];
 const SCOPED = ['unrest', 'prosperity'];
 const TYPES = ['village', 'town', 'city', 'castle', 'temple'];
@@ -97,7 +99,7 @@ export function decree(state, world, lawId, optionId) {
     state.opinion[g] = clamp(state.opinion[g] + (after[g] - before[g]) * world.laws.shock, 0, 100);
   }
   const opt = law.options[optionId];
-  addDispatch(state, `By royal decree: ${opt.name.toLowerCase()}. ${opt.blurb}`);
+  say(state, `By royal decree: ${opt.name.toLowerCase()}. ${opt.blurb}`);
 }
 
 // Who a choice pleases and who it angers, relative to the law standing now.

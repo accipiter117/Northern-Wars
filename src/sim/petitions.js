@@ -5,6 +5,8 @@ import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import { nonhumanShare, shiftFaith } from './culture.js';
 
+const say = (state, text) => addDispatch(state, text, 'faith');
+
 function fits(state, world, p, id) {
   const s = state.settlements[id];
   if (p.types && !p.types.includes(world.byId[id].type)) return false;
@@ -63,7 +65,7 @@ export function resolvePetition(state, world, petitionId, choice, ignored = fals
   if (fx.faith) shiftFaith(s, fx.faith);
   if (fx.sympathy) state.sympathy = clamp(state.sympathy + fx.sympathy, 0, 100);
   const { title, place } = petitionText(world, pending);
-  addDispatch(state, ignored
+  say(state, ignored
     ? `${title} (${place}): Vizima sent no answer, so it was taken as "${c.label.toLowerCase()}".`
     : `${title} (${place}): the crown chose to ${c.label.toLowerCase()}.`);
   return true;
