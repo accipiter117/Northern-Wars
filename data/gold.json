@@ -76,7 +76,7 @@
   },
   "banditThreat": 20,
   "banditReach": 70,
-  "greed": 0.12,
+  "greed": 0.06,
   "mahakam": {
     "reach": 170,
     "relation": -8

@@ -12,6 +12,7 @@
 | M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Done |
 | M8 The wider North | A larger world with living neighbouring realms (towns, roads, growth, buildings, garrisons, traffic) under a fog of war lifted by watchers, merchants, friends, embassies and spies | Done |
 | M9 War with neighbours | Armies raised from levies, lords and hired companies; marshals, orders and stances; battles, sieges, raids; towns that change hands; invasions, wars between neighbours, calls to arms; peace, tribute and truces | Done |
+| M11 Trade, gold and a busier realm | Crown trade routes at home and abroad, gold deposits and prospecting, sixteen new buildings with limits per place, and settlements laid out as living places on the map (houses, fields, workshops, walls, smoke and workers) | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -21,6 +22,14 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M11 acceptance criteria
+(Numbered M11 as asked; no M10 has been defined yet.)
+- Crown trade routes between Temerian towns and cities, or to a neighbour's towns and cities once relations are good enough, ordered from a town's card or the Trade screen. Each earns from both ends' size and fortunes, the haul, wares one end has and the other lacks, and road safety; costs coin to open and a little each month; earns more with a market hall at either end; follows the roads; is drawn on the map with crown caravans in proportion to its takings; is cut and robbed by bandits, protected by patrols, closed by war and reduced by cool relations; and has its own ledger line. How many the crown runs is limited, and raised by market halls, guildhalls, harbours and the guild law.
+- Gold deposits at set hill and mountain sites (the Mahakam foothills by Carreras and Zavada, the Pass of Klamat by Razwan, the Tukaj Hills by Petrelsteyn and Rissberg) and two hidden ones found by prospecting (coin, time and a chance of failure). A gold mine pays directly until its seam runs out, slowly at first; gold draws miners and dwarves, bandits, greedy neighbours and Mahakam's displeasure.
+- Sixteen new buildings, each limited to suitable places, with economic ones paying back as set in docs/BALANCE.md; cities hold more buildings than towns, towns more than villages.
+- Settlements laid out as places: deterministic from the seed, nothing on roads, rivers or neighbours; houses grow with the people; fields as patchwork; mills on rivers, mines on hills, harbours on the water, lumber camps at forest edges, walls round the whole; smoke, workers, beasts, boats and builders; seasons on the fields and snow in winter; drawn back to front through the sprite registry; compact clusters far off, full layouts close up; each pre-rendered and redrawn only when it changes.
+- Tests for route income and closure in war, deposits running out, prospecting, building limits and layouts; a browser test of a busy Vizima on a four-times-slowed CPU; hints; save version 10 with an upgrade path.
 
 ## M9 acceptance criteria
 - The crown can declare war from a neighbour's card, at a cost in Authority unless it has a just cause; trade with the enemy stops.

@@ -1,5 +1,14 @@
 # Changelog
 
+## M11 Trade, gold and a busier realm
+- Crown trade routes, from a town's card or the new Trade and gold screen: between our towns and cities, or into a friendly neighbour's. Each earns by the towns' size and fortunes, the haul, what each sells the other and how safe the road is; bandits rob them, patrols protect them, war closes them. Every route has its own ledger line, a gold thread on the map and crown caravans on the road.
+- Gold: known seams in the Mahakam foothills, the Pass of Klamat and the Tukaj Hills, and hidden ones for prospectors to find. A gold mine pays every month until the seam runs out, and brings miners, dwarves, bandits, envious neighbours and Mahakam's frown.
+- Sixteen new buildings: harbour, warehouse, smithy, armoury, tannery, brewery, inn, bathhouse, hospice of Melitele, cathedral of the Eternal Fire, guildhall, dwarven bank, barracks, paved streets, sewers and the gold mine. Villages hold five buildings, castles five, towns eight, cities twelve.
+- A busier map: every settlement is laid out as a place, with houses that multiply as it grows, patchwork fields, mills on the river, mines in the hills, walls round the town, smoke from the chimneys and workers on the roads to the fields. Fields green in spring, gold at harvest and bare under snow in winter. Far off, places show as compact clusters.
+- A faster map: panning slides the drawn map instead of redrawing it, and the fog is cheaper.
+- tools/payback.mjs measures how long each building takes to pay back.
+- Save version 10.
+
 ## M9 War with neighbours
 - War: declare it from a neighbour's card, be invaded by a neighbour who hates us or smells weakness (after war drums), be called to a true friend's side, and watch the neighbours fight one another.
 - Armies raised from the crown levy, the lords' men and free companies, each with a marshal and a bold or cautious stance; ordered to hold a place, besiege a town or raid a realm.

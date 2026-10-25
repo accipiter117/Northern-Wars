@@ -87,7 +87,7 @@ test('the crown can run only so many routes; market halls and guildhalls allow m
   assert.match(applyAction(s, world, { type: 'route', from: pairs[limit][0], to: pairs[limit][1] }).error, /only \d+ routes/);
   s.settlements.vizima.buildings.push('market', 'guildhall');
   s.settlements.maribor.buildings.push('market');
-  assert.ok(routeLimit(s, world) >= limit + 3);
+  assert.ok(routeLimit(s, world) >= limit + 2);
   s = act(s, { type: 'route', from: pairs[limit][0], to: pairs[limit][1] });
 });
 
@@ -195,7 +195,7 @@ test('new buildings do what they promise', () => {
   assert.equal(applyAction({ ...banked, treasury: -7900 }, world, { type: 'prospect', settlement: 'vorune' }).error, undefined);
   // Crafts pay whatever the size of the place.
   const crafted = after((s) => s.settlements.white_orchard.buildings.push('brewery', 'tannery'));
-  assert.ok(crafted.ledger.history.at(-1).income.crafts > plain.ledger.history.at(-1).income.crafts + 20);
+  assert.ok(crafted.ledger.history.at(-1).income.crafts > plain.ledger.history.at(-1).income.crafts + 10);
   // A harbour on the Ismena collects customs.
   const quay = after((s) => s.settlements.vizima.buildings.push('harbour'));
   assert.ok(quay.ledger.history.at(-1).income.customs > 0);

@@ -57,6 +57,17 @@ const BUILD_ORDER = ['fields', 'mill', 'granary', 'goldmine', 'market', 'harbour
 function steward(s, month, spend) {
   s = answer(s, true);
   s = warPolicy(s);
+  // Open the most lucrative trade route the crown can, before building.
+  if (month % 6 === 1 && s.treasury > 900) {
+    const ends = world.geography.settlements.filter((x) => x.type === 'town' || x.type === 'city').map((x) => x.id);
+    let best = null;
+    for (const a of ends) for (const b of ends) {
+      if (a >= b || !canOpenRoute(s, world, a, b).ok) continue;
+      const v = routeValue(s, world, { from: a, to: b }).value;
+      if (!best || v > best.v) best = { a, b, v };
+    }
+    if (best) s = act(s, { type: 'route', from: best.a, to: best.b });
+  }
   for (let i = 0; i < (spend ? 3 : 1); i++) {
     let built = false;
     for (const b of BUILD_ORDER) {
@@ -81,17 +92,6 @@ function steward(s, month, spend) {
       const near = world.adjacency[id][0]?.to;
       if (near) s = act(s, { type: 'patrol', from: id, to: near });
     }
-  }
-  // Open the most lucrative trade route the crown can, once a year.
-  if (month % 12 === 7 && s.treasury > 1500) {
-    const ends = world.geography.settlements.filter((x) => x.type === 'town' || x.type === 'city').map((x) => x.id);
-    let best = null;
-    for (const a of ends) for (const b of ends) {
-      if (a >= b || !canOpenRoute(s, world, a, b).ok) continue;
-      const v = routeValue(s, world, { from: a, to: b }).value;
-      if (!best || v > best.v) best = { a, b, v };
-    }
-    if (best) s = act(s, { type: 'route', from: best.a, to: best.b });
   }
   // Keep the lords sweet.
   for (const id of Object.keys(s.houses)) {

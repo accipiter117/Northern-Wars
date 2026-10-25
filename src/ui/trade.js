@@ -66,7 +66,7 @@ export function tradeHtml(world, state, form) {
     <div data-part="head"><h2>Trade and gold</h2>${back}
       <dl class="stats">
         <div><dt>Routes</dt><dd>${state.routes.length} of ${limit}</dd></div>
-        <div><dt>Last month</dt><dd>${last ? `${number(takings)} crowns` : 'Not yet reckoned'}</dd></div>
+        <div><dt>Last month</dt><dd>${last ? `${number(takings)} crowns` : 'None yet'}</dd></div>
       </dl>
       <p class="sub">A crown route earns from the size and fortunes of both towns, the length of the haul, wares one has and the other lacks, and safe roads. Patrols protect it; bandits rob it; war closes it. Market halls, guildhalls and harbours let the crown run more.</p></div>
     <div data-part="routes"><h3>Crown trade routes</h3>${routes || '<p class="sub">None yet.</p>'}</div>

@@ -62,7 +62,8 @@ export function routeLimit(state, world) {
     if (s.buildings.includes('market')) markets++;
     extra += buildingEffects(world, s).routes;
   }
-  return Math.max(1, t.limit.base + Math.floor(markets * t.limit.perMarket) + extra + (t.limit.guilds[state.laws.guilds?.option] ?? 0));
+  const n = t.limit.base + Math.floor(markets * t.limit.perMarket) + extra + (t.limit.guilds[state.laws.guilds?.option] ?? 0);
+  return Math.max(1, Math.min(t.limit.max ?? 99, n));
 }
 
 function produce(state, world, id) {
@@ -119,8 +120,11 @@ export function routeValue(state, world, r) {
     if (p.buildings.includes('market')) bonus += t.marketBonus;
     if (p.stock) bonus += buildingEffects(world, p).routeValue;
   }
-  out.parts = { size, fortunes, haul, wares, safety: safety.factor, threat: safety.avg, relation, bonus };
-  out.value = size * fortunes * haul * wares * safety.factor * relation * bonus;
+  // A town's merchants are only so many: routes from the same town share them.
+  const others = (id) => Math.max(1, (state.routes ?? []).filter((x) => x !== r && (x.from === id || x.to === id)).length + 1);
+  const crowding = 1 / Math.sqrt(Math.sqrt(others(r.from) * others(r.to)));
+  out.parts = { size, fortunes, haul, wares, safety: safety.factor, threat: safety.avg, relation, bonus, crowding };
+  out.value = size * fortunes * haul * wares * safety.factor * relation * bonus * crowding;
   return out;
 }
 
