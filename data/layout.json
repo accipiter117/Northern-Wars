@@ -1,0 +1,258 @@
+{
+  "note": "How settlements are laid out on the map. Sizes and distances are in map units (Temeria is about 1000 across). Zoom thresholds are screen pixels per map unit. Every piece is drawn through the sprite registry under 'structure'.",
+  "zoom": {
+    "full": 2.0,
+    "life": 2.8
+  },
+  "core": {
+    "city": {
+      "radius": 13,
+      "perPeople": 9000,
+      "maxRadius": 19,
+      "houses": [
+        12,
+        500,
+        44
+      ],
+      "house": 2.3
+    },
+    "town": {
+      "radius": 7.5,
+      "perPeople": 2200,
+      "maxRadius": 11,
+      "houses": [
+        6,
+        230,
+        22
+      ],
+      "house": 2.0
+    },
+    "village": {
+      "radius": 4.5,
+      "perPeople": 350,
+      "maxRadius": 7,
+      "houses": [
+        3,
+        90,
+        10
+      ],
+      "house": 1.8
+    },
+    "castle": {
+      "radius": 4.5,
+      "perPeople": 250,
+      "maxRadius": 6,
+      "houses": [
+        2,
+        100,
+        6
+      ],
+      "house": 1.7
+    },
+    "temple": {
+      "radius": 4,
+      "perPeople": 150,
+      "maxRadius": 5,
+      "houses": [
+        1,
+        100,
+        3
+      ],
+      "house": 1.7
+    }
+  },
+  "landmark": {
+    "city": 5.5,
+    "town": 3.6,
+    "village": 2.6,
+    "castle": 4.2,
+    "temple": 3.6
+  },
+  "fields": {
+    "base": {
+      "food": 5,
+      "other": 2,
+      "city": 7
+    },
+    "perBuilding": 5,
+    "size": [
+      3.2,
+      5.4
+    ],
+    "ring": [
+      1.25,
+      2.9
+    ],
+    "types": [
+      "village",
+      "town",
+      "city",
+      "castle",
+      "temple"
+    ]
+  },
+  "pastures": {
+    "village": 1,
+    "town": 1,
+    "castle": 1
+  },
+  "clearance": {
+    "road": 0.9,
+    "river": 1.2,
+    "between": 0.25,
+    "neighbourShare": 0.8
+  },
+  "buildings": {
+    "fields": {
+      "place": "fields"
+    },
+    "mill": {
+      "place": "river",
+      "size": 2.6,
+      "reach": 2.2,
+      "life": [
+        "workers"
+      ]
+    },
+    "granary": {
+      "place": "core",
+      "size": 2.6
+    },
+    "lumber": {
+      "place": "forest",
+      "size": 2.8,
+      "reach": 2.8,
+      "life": [
+        "workers",
+        "smoke"
+      ]
+    },
+    "quarry": {
+      "place": "hills",
+      "size": 2.8,
+      "reach": 2.8,
+      "life": [
+        "workers"
+      ]
+    },
+    "mine": {
+      "place": "hills",
+      "size": 2.8,
+      "reach": 2.8,
+      "life": [
+        "workers",
+        "smoke"
+      ]
+    },
+    "market": {
+      "place": "core",
+      "size": 3.2
+    },
+    "workshop": {
+      "place": "core",
+      "size": 2.8,
+      "life": [
+        "smoke"
+      ]
+    },
+    "walls": {
+      "place": "ring"
+    },
+    "shrine": {
+      "place": "core",
+      "size": 2.0
+    },
+    "watchtower": {
+      "place": "edge",
+      "size": 2.2
+    },
+    "harbour": {
+      "place": "water",
+      "size": 3.2,
+      "reach": 3.5,
+      "life": [
+        "boats",
+        "workers"
+      ]
+    },
+    "warehouse": {
+      "place": "core",
+      "size": 3.0
+    },
+    "smithy": {
+      "place": "core",
+      "size": 2.4,
+      "life": [
+        "smoke"
+      ]
+    },
+    "armoury": {
+      "place": "core",
+      "size": 2.8
+    },
+    "tannery": {
+      "place": "edge",
+      "size": 2.6,
+      "life": [
+        "smoke"
+      ]
+    },
+    "brewery": {
+      "place": "core",
+      "size": 2.8,
+      "life": [
+        "smoke"
+      ]
+    },
+    "inn": {
+      "place": "road",
+      "size": 2.6,
+      "life": [
+        "smoke"
+      ]
+    },
+    "bathhouse": {
+      "place": "core",
+      "size": 2.8,
+      "life": [
+        "steam"
+      ]
+    },
+    "hospice": {
+      "place": "core",
+      "size": 2.8
+    },
+    "cathedral": {
+      "place": "core",
+      "size": 4.8
+    },
+    "guildhall": {
+      "place": "core",
+      "size": 3.2
+    },
+    "bank": {
+      "place": "core",
+      "size": 3.0
+    },
+    "barracks": {
+      "place": "edge",
+      "size": 3.2
+    },
+    "paving": {
+      "place": "streets"
+    },
+    "sewers": {
+      "place": "streets"
+    },
+    "goldmine": {
+      "place": "deposit",
+      "size": 3.0,
+      "reach": 4.0,
+      "life": [
+        "workers",
+        "smoke"
+      ]
+    }
+  },
+  "workersPerSite": 2
+}

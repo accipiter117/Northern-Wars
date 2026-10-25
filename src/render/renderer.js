@@ -5,6 +5,10 @@ import { prepareMap, drawMap, COLOURS } from './mapLayer.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
 import './sprites-war.js';
+import { createSettlementArt, seasonLook } from './settlementArt.js';
+import { dateOf } from '../sim/calendar.js';
+import { totalPopulation } from '../sim/state.js';
+import { houseCount } from './layout.js';
 import { toScreen, toWorld } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
@@ -29,18 +33,22 @@ const PRIORITY = { city: 0, town: 1, temple: 2, castle: 3, village: 4 };
 const SERIF = '"Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif';
 const UNIT_SIZE = 14;
 const ARMY_SIZE = 26;
-// Where building icons sit round a settlement, in degrees (0 is east, -90 is
-// north): an inner arc over the top and right, then an outer arc. The left
-// side is kept for the garrison and the space below for the name.
-const INNER_SLOTS = [-90, -50, -130, -15, 15];
-const OUTER_SLOTS = [-70, -110, -30, -150];
 const SOLDIERS_PER_FIGURE = 200;
 const MAX_FIGURES = 5;
 // Threat level at which a bandit camp or a monster's lair shows on the map.
 const DANGER = 50;
 
-export function createRenderer(canvas, world, cam) {
+export function createRenderer(canvas, world, cam, layoutCfg) {
   const prep = prepareMap(world);
+  const art = createSettlementArt(world, layoutCfg);
+  // How far each settlement's ground reaches on screen, for labels and taps.
+  let footprint = {};
+  function artView(p, st, colour) {
+    return {
+      scale: cam.scale, dpr, x: p.x, y: p.y, look: seasonLook(dateOf(infraState.day).month),
+      compactPx: 1, compactRadius: iconSize(st.type) * 0.75 + 3, colour,
+    };
+  }
   const ctx = canvas.getContext('2d');
   // Three cached layers, laid one on another each frame: the painted map
   // (redrawn only when the camera moves or a neighbour's colour changes),
@@ -259,8 +267,8 @@ export function createRenderer(canvas, world, cam) {
     }
     const marks = (id, s) => `${infraThreats[id]?.bandits ? 'b' : ''}${infraThreats[id]?.monsters ? 'm' : ''}${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
     const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + (state.routes ?? []).map((r) => `${r.from}>${r.to}${r.closed ? 'x' : ''}`).join() + Object.entries(state.settlements)
-      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${s.occupier ?? ''}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
-      .join('|') + (state.unpaid ? '!' : '') + foreignKey;
+      .map(([id, s]) => `${id}:${houseCount(layoutCfg, world.byId[id].type, totalPopulation(s))}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${s.occupier ?? ''}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
+      .join('|') + (state.unpaid ? '!' : '') + foreignKey + seasonLook(dateOf(state.day).month).season + seasonLook(dateOf(state.day).month).snow;
     if (key !== infraKey) {
       infraKey = key;
       dirty = true;
@@ -276,20 +284,11 @@ export function createRenderer(canvas, world, cam) {
     return { colours: house.colours, rebel: !!infraState.houses?.[s.holder]?.rebel };
   }
 
-  function drawInfrastructure(c, st, s, unpaid) {
+  // The garrison beside a settlement, at the west edge of its ground.
+  function drawInfrastructure(c, st, s, unpaid, reach) {
     const p = toScreen(cam, st.x, st.y);
     const k = iconSize(st.type) / ICON_SIZE[st.type];
-    const iconR = iconSize(st.type) / 2;
-    const bsize = 13 * k;
-    const icons = s.buildings.filter((b) => b !== 'walls');
-    if (s.construction) icons.push('scaffold');
-    icons.forEach((b, i) => {
-      const outer = i >= INNER_SLOTS.length;
-      const deg = outer ? OUTER_SLOTS[(i - INNER_SLOTS.length) % OUTER_SLOTS.length] : INNER_SLOTS[i];
-      const rad = (deg * Math.PI) / 180;
-      const dist = iconR + bsize / 2 + 2 + (outer ? bsize + 1 : 0);
-      getSprite('building', b, 'scaffold').draw(c, p.x + Math.cos(rad) * dist, p.y + Math.sin(rad) * dist, bsize);
-    });
+    const iconR = Math.max(iconSize(st.type) / 2, reach ?? 0);
     const n = figures(s.garrison);
     const banner = bannerFor(s);
     // The crown pays only its own soldiers, so only they go grey when pay stops.
@@ -374,15 +373,25 @@ export function createRenderer(canvas, world, cam) {
     drawRegionLabels(cctx);
     const z = zoomRel();
     const shown = (st) => z >= LABEL_ZOOM[st.type] || st.id === selectedId;
+    footprint = {};
+    const full = cam.scale >= layoutCfg.zoom.full;
     for (const st of ordered.slice().reverse()) {
       const p = toScreen(cam, st.x, st.y);
-      if (shown(st) && infraState?.settlements[st.id].buildings.includes('walls')) {
-        getSprite('building', 'walls').draw(cctx, p.x, p.y, iconSize(st.type) + 6);
+      const s = infraState?.settlements[st.id];
+      const onScreen = p.x > -160 && p.y > -160 && p.x < cam.viewW + 160 && p.y < cam.viewH + 160;
+      let reach = iconSize(st.type) / 2;
+      // Houses, buildings and fields round the settlement: the whole layout
+      // when close, a compact cluster round its marker when far.
+      if (s && onScreen && (full || shown(st) || st.type === 'city' || st.type === 'town')) {
+        reach = Math.max(reach, art.draw(cctx, st, {
+          people: totalPopulation(s), production: s.production, buildings: s.buildings, construction: s.construction?.building,
+        }, infraState.seed, artView(p, st, s.occupier ? sideColours(world, s.occupier)[0] : null)));
       }
-      getSprite('settlement', st.id, st.type).draw(cctx, p.x, p.y, iconSize(st.type), { capital: st.id === world.kingdom.capital });
-      if (infraState && shown(st)) drawInfrastructure(cctx, st, infraState.settlements[st.id], infraState.unpaid);
+      if (!full) getSprite('settlement', st.id, st.type).draw(cctx, p.x, p.y, iconSize(st.type), { capital: st.id === world.kingdom.capital });
+      footprint[st.id] = reach;
+      if (s && shown(st)) drawInfrastructure(cctx, st, s, infraState.unpaid, full ? reach : null);
       // Trouble shows at every zoom: it is news the crown should not miss.
-      if (infraState) drawMarkers(cctx, st, infraState.settlements[st.id], p, iconSize(st.type) / 2);
+      if (s) drawMarkers(cctx, st, s, p, full ? reach * 0.6 : iconSize(st.type) / 2);
     }
     drawForeign(cctx, z);
     drawSettlementLabels(cctx, selectedId);
@@ -396,14 +405,18 @@ export function createRenderer(canvas, world, cam) {
       if (p.x < -60 || p.y < -60 || p.x > cam.viewW + 60 || p.y > cam.viewH + 60) continue;
       // Remembered places are drawn faded: this is how they were, not how they are.
       c.globalAlpha = f.visible ? 1 : 0.55;
-      if (z >= LABEL_ZOOM[st.type] && f.buildings.includes('walls')) getSprite('building', 'walls').draw(c, p.x, p.y, iconSize(st.type) + 6);
-      getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });
+      const full = cam.scale >= layoutCfg.zoom.full;
+      const colours = sideColours(world, f.owner ?? st.realm);
+      let reach = iconSize(st.type) / 2;
+      if (full || z >= LABEL_ZOOM[st.type] || st.type === 'city') {
+        reach = Math.max(reach, art.draw(c, st, {
+          people: f.population, production: st.type === 'village' ? 'food' : 'other', buildings: f.buildings, construction: f.construction,
+        }, infraState.seed, artView(p, st, colours[0])));
+      }
+      if (!full) getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });
+      footprint[st.id] = reach;
       if (z >= LABEL_ZOOM[st.type]) {
-        const colours = sideColours(world, f.owner ?? st.realm);
-        drawInfrastructure(c, st, {
-          buildings: f.buildings, construction: f.construction ? { building: f.construction } : null,
-          garrison: f.garrison, holder: 'foreign', banner: colours ? { colours } : {},
-        }, false);
+        drawInfrastructure(c, st, { garrison: f.garrison, holder: 'foreign', banner: colours ? { colours } : {} }, false, full ? reach : null);
       }
       c.globalAlpha = 1;
     }
@@ -466,7 +479,7 @@ export function createRenderer(canvas, world, cam) {
       if (p.x < -80 || p.y < -40 || p.x > cam.viewW + 80 || p.y > cam.viewH + 40) continue;
       c.font = `${LABEL_FONT[st.type]} ${SERIF}`;
       const w = c.measureText(st.name).width;
-      const y = p.y + iconSize(st.type) / 2 + 2;
+      const y = p.y + Math.max(iconSize(st.type) / 2, (footprint[st.id] ?? 0) * 1.08) + 2;
       const box = { x0: p.x - w / 2 - 2, x1: p.x + w / 2 + 2, y0: y, y1: y + 15 };
       if (st.id !== selectedId && placed.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0)) continue;
       placed.push(box);
@@ -502,10 +515,11 @@ export function createRenderer(canvas, world, cam) {
     ctx.drawImage(cache, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    drawLifeLayer(state, frac);
     if (selectedId) {
       const st = world.byId[selectedId];
       const p = toScreen(cam, st.x, st.y);
-      ring(ctx, p.x, p.y, iconSize(st.type) / 2 + 6);
+      ring(ctx, p.x, p.y, Math.max(iconSize(st.type) / 2, footprint[selectedId] ?? 0) + 6);
     }
 
     for (const u of state.ambient.units) {
@@ -520,6 +534,20 @@ export function createRenderer(canvas, world, cam) {
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
     drawWar(state, frac, selection);
+  }
+
+  // Smoke, workers, beasts and boats round the settlements in view, only
+  // when close enough to see them.
+  function drawLifeLayer(state, frac) {
+    if (cam.scale < layoutCfg.zoom.life) return;
+    const look = seasonLook(dateOf(state.day).month);
+    const time = state.day + frac;
+    for (const st of [...ordered, ...foreignOrdered]) {
+      if (!state.settlements[st.id] && !foreignView[st.id]?.visible) continue;
+      const p = toScreen(cam, st.x, st.y);
+      if (p.x < -120 || p.y < -120 || p.x > cam.viewW + 120 || p.y > cam.viewH + 120) continue;
+      art.drawLife(ctx, st, cam.scale, p.x, p.y, time, look);
+    }
   }
 
   // Battlefields of the last days, sieges, and the armies themselves. The
@@ -601,7 +629,7 @@ export function createRenderer(canvas, world, cam) {
       // Buildings and soldiers round a settlement count as part of it.
       const dressed = zoomRel() >= LABEL_ZOOM[st.type] && infraState
         && (infraState.settlements[st.id].buildings.length || figures(infraState.settlements[st.id].garrison));
-      const reach = Math.max(22, iconSize(st.type) / 2 + 8) + (dressed ? 20 : 0);
+      const reach = Math.max(22, iconSize(st.type) / 2 + 8, (footprint[st.id] ?? 0) * 0.9) + (dressed ? 20 : 0);
       const score = d * 0.5;
       if (d < reach && (!best || score < best.d)) best = { d: score, hit: { settlement: st.id } };
     }
@@ -632,7 +660,7 @@ export function createRenderer(canvas, world, cam) {
   }
 
   return {
-    resize, draw, pick, unitScreen, armyScreen, stats,
+    resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     canSeePoint: (x, y) => !vision || canSee(world, vision, x, y),
     foreignInfo: (id) => foreignView[id] ?? null,

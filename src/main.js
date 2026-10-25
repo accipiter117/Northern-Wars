@@ -28,7 +28,7 @@ async function readJson(path) {
 
 async function boot() {
   const world = await loadWorld(readJson);
-  const [peoples, faiths, goods, hintData] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json', 'data/hints.json'].map(readJson));
+  const [peoples, faiths, goods, hintData, layoutCfg] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json', 'data/hints.json', 'data/layout.json'].map(readJson));
   const hints = createHints(hintData, { disabled: params.has('nohints') });
   const lookups = { peoples, faiths, goods };
 
@@ -43,7 +43,7 @@ async function boot() {
   const unitLabel = document.getElementById('unit-label');
   const toastEl = document.getElementById('toast');
   const cam = createCamera(world);
-  const renderer = createRenderer(canvas, world, cam);
+  const renderer = createRenderer(canvas, world, cam, layoutCfg);
 
   const topbar = createTopbar(world, { onSpeed: setSpeed, onMenu: openMenu });
   const sheet = createSheet({ onClose: () => { if (selection?.settlement) selection = null; } });
@@ -715,6 +715,7 @@ async function boot() {
     get state() { return state; },
     get speed() { return speed; },
     get renderStats() { return renderer.stats; },
+    get artStats() { return renderer.artStats; },
     // What a tap at these page coordinates would pick, for browser tests.
     pickAt(x, y) {
       const r = canvas.getBoundingClientRect();
