@@ -5,6 +5,7 @@
 // they meet an enemy, starve or storm the towns they besiege, and carry off
 // what they can.
 import { creditLimit, realmEffect } from './economy.js';
+import { stationedStrength, freeCompanies } from './forces.js';
 import { addDispatch, clamp } from './realm.js';
 import { roadPath, dist } from './world.js';
 import { seasonOf } from './calendar.js';
@@ -46,7 +47,10 @@ export function musterPreview(state, world, opts) {
   for (const id of Object.keys(levy)) if (!levy[id]) delete levy[id];
   const companies = clamp(Math.floor(opts.companies ?? 0), 0, r.maxCompanies);
   const fromLevy = Object.values(levy).reduce((a, b) => a + b, 0);
-  return { levy, houses, refuse, companies, soldiers: fromLevy + companies * r.company, coin: companies * r.companyCoin };
+  // The crown's own standing companies march with it.
+  const units = freeCompanies(state).filter((c) => (opts.units ?? []).includes(c.id) && !c.task && c.routed <= state.day);
+  const unitMen = units.reduce((a, c) => a + c.men, 0);
+  return { levy, houses, refuse, companies, units: units.map((c) => c.id), unitMen, soldiers: fromLevy + companies * r.company + unitMen, coin: companies * r.companyCoin };
 }
 
 export function crownArmies(state) {
@@ -79,9 +83,24 @@ export function raiseArmy(state, world, opts) {
   });
   // The realm's armouries arm the levy.
   a.arms = 1 + Math.min(0.3, realmEffect(state, world, 'armyArms'));
+  // Standing companies leave their stations and march under the marshal;
+  // their quality lifts the whole army.
+  a.units = [];
+  let worth = p.soldiers - p.unitMen;
+  for (const id of p.units) {
+    const c = state.forces.companies.find((x) => x.id === id);
+    c.army = a.id;
+    c.task = null;
+    c.way = [];
+    a.units.push({ id, men: c.men });
+    const t = world.forces.companies[c.type];
+    worth += c.men * t.perMan * (1 + (c.xp ?? 0) * world.forces.xp.bonus) * (world.forces.suits.soldiers[c.type] ?? 1);
+  }
+  a.quality = worth / Math.max(1, p.soldiers);
   const parts = [];
   if (Object.keys(p.levy).length) parts.push(p.houses.length ? `crown and noble levies (${p.houses.map((h) => world.houses.houses[h].name).join(', ')})` : 'the crown levy');
   if (p.companies) parts.push(`${p.companies} free compan${p.companies === 1 ? 'y' : 'ies'}`);
+  if (p.units.length) parts.push(`${p.units.length} of the crown's standing compan${p.units.length === 1 ? 'y' : 'ies'}`);
   say(state, `${a.name} gathers at ${world.byId[opts.muster].name}: ${round(a.soldiers)} men from ${parts.join(' and ')}${a.marshal ? `, under ${w.marshals[a.marshal].name}` : ''}.`);
   for (const hid of p.refuse) say(state, `${world.houses.houses[hid].name} sends excuses instead of men.`);
   return a;
@@ -105,6 +124,22 @@ export function disbandArmy(state, world, a, quiet = false) {
   const f = clamp(a.soldiers / Math.max(1, a.raised), 0, 1);
   for (const [id, n] of Object.entries(a.levy)) {
     if (ownerOf(state, world, id) === a.side) placeOf(state, world, id).garrison += round(n * f);
+  }
+  // The standing companies march home to their stations, with what they
+  // learned on the way.
+  const pos = armyPosition(world, a);
+  for (const u of a.units ?? []) {
+    const c = state.forces?.companies.find((x) => x.id === u.id);
+    if (!c) continue;
+    c.army = null;
+    c.men = Math.min(c.max, round(u.men * f));
+    c.xp = Math.min(world.forces.xp.max, (c.xp ?? 0) + (a.wins ?? 0) * world.forces.xp.win);
+    c.x = pos.x;
+    c.y = pos.y;
+    c.node = a.at;
+    c.way = [];
+    c.order = c.order.kind === 'hunt' ? { kind: 'station' } : c.order;
+    if (c.men < 8) state.forces.companies = state.forces.companies.filter((x) => x !== c);
   }
   state.armies = state.armies.filter((x) => x.id !== a.id);
   if (!quiet && a.side === TEMERIA) say(state, `${a.name} is stood down. ${round(a.soldiers)} men go home.`);
@@ -200,7 +235,7 @@ function marshalSkill(world, a) {
 
 export function armyStrength(state, world, a, defending = false) {
   const st = W(world).stances[a.stance] ?? W(world).stances.cautious;
-  let v = a.soldiers * marshalSkill(world, a) * (0.5 + a.morale / 100) * (defending ? st.defence : st.attack) * (a.arms ?? 1);
+  let v = a.soldiers * marshalSkill(world, a) * (0.5 + a.morale / 100) * (defending ? st.defence : st.attack) * (a.arms ?? 1) * (a.quality ?? 1);
   if (!a.to && ownerOf(state, world, a.at) === a.side && hasWalls(state, world, a.at)) v *= W(world).battle.wallsDefence;
   return v;
 }
@@ -213,7 +248,9 @@ function placeDefence(state, world, id) {
   const militia = peopleAt(state, world, id) * W(world).siege.militiaPerPerson;
   const type = world.byId[id].type;
   const armed = 1 + p.buildings.reduce((v, b) => v + (world.buildings[b].effects.soldierStrength ?? 0), 0);
-  return (p.garrison * armed + militia) * (hasWalls(state, world, id) ? b.wallsDefence : 1) * (type === 'castle' ? b.castleDefence : type === 'city' ? b.cityDefence : 1);
+  // The crown's companies stationed there stand on the walls too.
+  const companies = ownerOf(state, world, id) === TEMERIA ? stationedStrength(state, world, id) : 0;
+  return (p.garrison * armed + militia + companies) * (hasWalls(state, world, id) ? b.wallsDefence : 1) * (type === 'castle' ? b.castleDefence : type === 'city' ? b.cityDefence : 1);
 }
 
 // ---- The day ----
@@ -432,6 +469,7 @@ function fight(state, world, rng, a, b, where) {
   lose.soldiers -= deadL;
   win.soldiers -= deadW;
   win.morale = clamp(win.morale + bt.moraleWin, 0, 100);
+  win.wins = (win.wins ?? 0) + 1;
   lose.morale = clamp(lose.morale - bt.moraleLoss, 0, 100);
   a.fought = state.day;
   b.fought = state.day;
@@ -476,6 +514,17 @@ function glory(state, world, kind, a) {
     const house = W(world).marshals[a?.marshal]?.house;
     if (house && state.houses?.[house] && v > 0) state.houses[house].favour += g.houseFavour;
   }
+}
+
+// An army beaten by the crown's companies falls back as from a lost battle.
+export function routArmy(state, world, a) {
+  a.morale = clamp(a.morale - W(world).battle.moraleLoss, 0, 100);
+  a.siege = null;
+  a.raiding = null;
+  a.retreating = true;
+  a.routed = state.day + W(world).battle.routedDays;
+  if (!routeTo(world, a, refuge(state, world, a))) halt(a);
+  if (a.soldiers < W(world).minArmy) disbandArmy(state, world, a, true);
 }
 
 // ---- Sieges and raids ----

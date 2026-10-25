@@ -94,8 +94,8 @@ export function monthlyCulture(state, world, rng) {
   // Scoia'tael sympathy follows how the elves feel about the crown.
   const sy = c.sympathy;
   const target = clamp((50 - state.opinion.elf) * sy.perElfPoint + 20, 0, 100);
+  // High sympathy now sends commandos out of the woods (threats.js).
   state.sympathy = clamp(state.sympathy + (target - state.sympathy) * sy.driftPerMonth, 0, 100);
-  if (state.sympathy > sy.ambushAbove && rng.chance(sy.ambushChance * (state.sympathy / 100))) ambush(state, world, rng);
 }
 
 function pogrom(state, world, rng, id, s, name) {
@@ -117,19 +117,6 @@ function pogrom(state, world, rng, id, s, name) {
   s.troubled = world.culture.riot.troubledDays * 2;
   if (state.reign) state.reign.pogroms += 1;
   say(state, `Pogrom in ${name}. A mob went through the non-human quarter with torches and cudgels. ${lost} dwarves, elves and halflings are dead or fled. Mahakam and Brokilon will hear of it.`);
-}
-
-// A Scoia'tael band strikes near woodland: a settlement close to a forest
-// loses goods, trade and a little of its confidence.
-function ambush(state, world, rng) {
-  const near = world.geography.settlements.filter((st) => world.forestNear[st.id]);
-  if (!near.length) return;
-  const st = rng.pick(near);
-  const s = state.settlements[st.id];
-  s.prosperity = clamp(s.prosperity - world.culture.sympathy.ambushProsperity, 0, 100);
-  s.unrest = clamp(s.unrest + 5, 0, 100);
-  s.troubled = Math.max(s.troubled, 30);
-  say(state, `Scoia'tael on the road near ${st.name}. A cart burned, two drovers dead, arrows in the trees. The commandos melted back into the forest.`);
 }
 
 function normaliseFaith(s) {

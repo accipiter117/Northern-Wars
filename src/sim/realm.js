@@ -14,6 +14,8 @@ import { stepArmiesDay } from './armies.js';
 import { monthlyWar, stepWarDecisionsDay, warMonths } from './war.js';
 import { leviedMap } from './conflict.js';
 import { monthlyGold, stepGoldDay } from './gold.js';
+import { stepThreatsDay } from './threats.js';
+import { stepCompaniesDay, monthlyCompanies } from './forces.js';
 
 const CHRONICLE_LIMIT = 400;
 
@@ -58,6 +60,10 @@ export function stepRealmDay(state, world, rng) {
     stepArmiesDay(state, world, rng);
     stepWarDecisionsDay(state, world);
   }
+  if (state.threats) {
+    stepThreatsDay(state, world, rng);
+    stepCompaniesDay(state, world, rng);
+  }
   const law = lawEffects(state, world);
   const m = world.economy.mood;
   const wr = world.war?.weariness;
@@ -93,6 +99,7 @@ export function stepRealmDay(state, world, rng) {
 
   if (date.day === 1) {
     monthlyLedger(state, world, rng);
+    monthlyCompanies(state, world);
     if (state.gold) monthlyGold(state, world);
     monthlyPopulation(state, world, rng);
     monthlyEnvoy(state, world, rng);

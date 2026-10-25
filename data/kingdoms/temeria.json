@@ -13,6 +13,7 @@
   "trade": "data/trade.json",
   "gold": "data/gold.json",
   "industry": "data/industry.json",
+  "forces": "data/forces.json",
   "start": {
     "year": 1262,
     "month": 3,

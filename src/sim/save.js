@@ -1,4 +1,6 @@
 import { defaultIndustry } from './industry.js';
+import { defaultForces } from './forces.js';
+import { defaultThreats } from './threats.js';
 import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
@@ -122,6 +124,31 @@ const MIGRATIONS = {
     state.ledger.places = {};
     state.industry = defaultIndustry();
     state.version = 11;
+    return state;
+  },
+  // v12 makes every force and threat a thing on the map. Patrols become
+  // companies of light horse riding the same roads; armies in the field
+  // carry no standing companies yet; garrisons stay as they were.
+  11(state, world) {
+    state.forces = defaultForces(world);
+    state.threats = defaultThreats();
+    const t = world.forces.companies.lightcav;
+    for (const p of state.patrols ?? []) {
+      const home = state.settlements[p.from] && state.settlements[p.from].holder === 'crown' && !state.settlements[p.from].occupier ? p.from : world.kingdom.capital;
+      const at = world.byId[home];
+      state.forces.companies.push({
+        id: state.forces.nextId++, type: 'lightcav', name: `${at.name} Light cavalry${state.forces.companies.some((c) => c.home === home) ? ` (${state.forces.companies.filter((c) => c.home === home).length + 1})` : ''}`,
+        home, station: home, men: t.men, max: t.men, wounded: 0, morale: 70, xp: 0.1,
+        order: { kind: 'patrol', from: p.from, to: p.to }, task: null, x: at.x, y: at.y, node: home, way: [], army: null, wins: 0, fought: -1, routed: 0,
+      });
+    }
+    delete state.patrols;
+    delete state.nextPatrolId;
+    for (const a of state.armies ?? []) {
+      a.units ??= [];
+      a.quality ??= 1;
+    }
+    state.version = 12;
     return state;
   },
 };

@@ -10,7 +10,8 @@ import { number } from './text.js';
 import { lawEffects } from './laws.js';
 import { foreignTrade, stanceCost } from './neighbours.js';
 import { crownShare } from './houses.js';
-import { garrisonFactor, quarantined, patrolCost } from './military.js';
+import { garrisonFactor, quarantined } from './military.js';
+import { companyUpkeep } from './forces.js';
 import { TEMERIA, ownerOf, leviedMap, besieged } from './conflict.js';
 import { tradeLedger, routeKey } from './trade.js';
 import { goldLedger } from './gold.js';
@@ -211,7 +212,7 @@ export function monthlyLedger(state, world, rng = null) {
     court: e.upkeep.courtMonth * Math.max(0, 1 + law.court) + Math.max(0, state.treasury - e.upkeep.hoardFree) * e.upkeep.hoardPerMonth,
     edicts: law.monthly,
     gifts: stanceCost(state, world),
-    patrols: state.patrols.reduce((a, p) => a + patrolCost(state, world, p), 0),
+    companies: 0,
     embassies: Object.keys(state.embassies ?? {}).length * (world.realms?.intelligence.embassy.monthly ?? 0),
     armies: 0,
     occupation: 0,
@@ -245,7 +246,9 @@ export function monthlyLedger(state, world, rng = null) {
     const tax = pop * e.taxes.perPersonMonth[type] * taxProsperity(world, s) * (1 + fx.taxBonus) * Math.max(0, 1 + law.tax) * share;
     income.taxes += tax;
     const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
-    const trade = pop * e.trade.perPersonMonth[type] * focus * mult * (1 + fx.trade) * tradeMult * share * (quarantined(state, s) ? 0 : 1);
+    // Roads held by bandits keep the carts at home.
+    const robbed = 1 - (world.forces?.roads.tradeCut ?? 0) * Math.min(1, (state.threats?.robbed[id] ?? 0) / 30);
+    const trade = pop * e.trade.perPersonMonth[type] * focus * mult * (1 + fx.trade) * tradeMult * share * robbed * (quarantined(state, s) ? 0 : 1);
     income.trade += trade;
     put(id, tax + trade);
     // Each craft pays by the size and fortunes of its place, on its own
@@ -285,7 +288,7 @@ export function monthlyLedger(state, world, rng = null) {
     }
   }
   warLedger(state, world, income, expenses, law);
-  tradeLedger(state, world, income, expenses, rng);
+  tradeLedger(state, world, income, expenses);
   for (const r of state.routes ?? []) {
     const ends = [r.from, r.to].filter((x) => state.settlements[x]);
     for (const x of ends) {
@@ -294,6 +297,12 @@ export function monthlyLedger(state, world, rng = null) {
     }
   }
   goldLedger(state, world, income, put);
+  // The standing companies, paid where they are stationed.
+  for (const c of state.forces?.companies ?? []) {
+    const pay = companyUpkeep(world, c);
+    expenses.companies += pay;
+    cost(c.station, pay);
+  }
   industryLedger(state, world, income, put, dateOf(state.day - 1).season);
   // A dwarven bank lends cheaper.
   if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth * Math.max(0.5, 1 + Math.min(0, realmEffect(state, world, 'interest')));
@@ -347,6 +356,10 @@ export function monthlyLedger(state, world, rng = null) {
   if (state.ledger.history.length > 12) state.ledger.history.shift();
   state.ledger.construction = 0;
   state.ledger.decrees = 0;
+  if (state.threats) {
+    state.threats.blocked = {};
+    state.threats.robbed = {};
+  }
 
   let text = `The ledger for the month: ${number(totalIn)} crowns in, ${number(totalOut)} out. `;
   text += state.treasury >= 0

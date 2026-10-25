@@ -9,14 +9,28 @@ import { foreignTrade } from './neighbours.js';
 import { realmFaith } from './culture.js';
 import { visionOf, updateIntel } from './vision.js';
 
+const HALTED = new Set(['caravan', 'grain', 'goods', 'route', 'export', 'foreign', 'pilgrim']);
+const HALT_RANGE = 18;
+
 export function stepAmbientDay(state, world, rng) {
   const cfg = world.ambient;
   const season = seasonOf(state.day);
   const seasonSpeed = cfg.seasonSpeed[season] ?? 1;
 
+  // Where bands hold the road, carts and caravans stop: stripped, or turned
+  // back to wait. This only reads the threats; it never changes them.
+  const bands = (state.threats?.list ?? []).filter((t) => t.band && t.band.phase === 'lurk').map((t) => t.band);
   const kept = [];
   for (const u of state.ambient.units) {
     u.speed = cfg.kinds[u.kind].speed * seasonSpeed;
+    u.held = false;
+    if (bands.length && HALTED.has(u.kind)) {
+      const p = unitPosition(world, u, u.pos);
+      if (bands.some((b) => Math.hypot(b.x - p.x, b.y - p.y) < HALT_RANGE)) {
+        u.held = true;
+        u.speed = 0;
+      }
+    }
     u.pos += u.speed;
     if (u.pos < unitLength(world, u)) kept.push(u);
   }
@@ -226,14 +240,9 @@ const SPAWNERS = {
     return route && route.length > 1 ? { route } : null;
   },
 
-  // Patrols ride out from strongholds to a nearby place and back.
+  // Garrison riders go out from strongholds to a nearby place and back.
+  // (The crown's patrolling companies are on the map in their own right.)
   patrol(state, world, rng) {
-    // Most riders follow the routes the crown has ordered patrolled.
-    if (state.patrols.length && rng.chance(0.7)) {
-      const p = rng.pick(state.patrols);
-      const out = roadPath(world, p.from, p.to);
-      if (out && out.length > 1) return { route: [...out, ...out.slice(0, -1).reverse()] };
-    }
     const bases = world.geography.settlements
       .filter((s) => state.settlements[s.id].garrison >= 100)
       .map((s) => s.id);

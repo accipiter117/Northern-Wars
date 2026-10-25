@@ -91,14 +91,14 @@ test('the crown can run only so many routes; market halls and guildhalls allow m
   s = act(s, { type: 'route', from: pairs[limit][0], to: pairs[limit][1] });
 });
 
-test('bandits sometimes rob a route on dangerous roads', () => {
+test('bands holding the road rob a route on dangerous roads', () => {
   let robbed = 0;
   for (const seed of [1, 2, 3, 4, 5]) {
     let s = quiet(createState(world, seed));
     s = act(s, { type: 'route', from: 'vizima', to: 'gors_velen' });
     for (const id of Object.keys(s.settlements)) s.settlements[id].prosperity = 10;
     s = run(s, 365);
-    robbed += s.chronicle.filter((c) => /robbed the crown's caravans/.test(c.text)).length;
+    robbed += s.chronicle.filter((c) => /held the road between/.test(c.text)).length;
   }
   assert.ok(robbed > 0);
 });

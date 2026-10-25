@@ -2,7 +2,8 @@
 // earners and keeps the peace, a spendthrift who builds on credit, a
 // tyrant, and the plain answering of whatever the realm asks.
 import {
-  applyAction, canBuild, canDecree, threatLevel, patrolCapacity, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue,
+  applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
+  canRecruit, sightedThreats, bestCompanyFor,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -83,20 +84,51 @@ export function makeCrowns(world) {
       s = act(s, { type: 'law', law: 'bounties', option: 'witchers' });
     }
     if (month === 6 && canDecree(s, world, 'nonhumans', 'charter').ok) s = act(s, { type: 'law', law: 'nonhumans', option: 'charter' });
-    // Patrol the most dangerous roads while soldiers allow.
-    if (month % 12 === 3) {
-      const worst = Object.keys(s.settlements)
-        .map((id) => ({ id, t: Math.max(threatLevel(s, world, id, 'bandits'), threatLevel(s, world, id, 'monsters')) }))
-        .sort((a, b) => b.t - a.t);
-      for (const { id } of worst.slice(0, 4)) {
-        if (s.patrols.length >= Math.min(6, patrolCapacity(s, world))) break;
-        const near = world.adjacency[id][0]?.to;
-        if (near) s = act(s, { type: 'patrol', from: id, to: near });
-      }
-    }
+    s = keepThePeace(s, month);
     // Keep the lords sweet.
     for (const id of Object.keys(s.houses)) {
       if (s.houses[id].loyalty < 35) s = act(s, { type: 'house', house: id, kind: 'honours' });
+    }
+    return s;
+  }
+
+  // A modest standing army that grows with the realm's income: light horse
+  // riding the worst roads, foot and archers standing ready in the towns
+  // nearest danger; sighted camps hunted down when the odds are good, and
+  // witchers hired for beasts too dangerous for the companies.
+  const FORCE = ['lightcav', 'menatarms', 'archers', 'lightcav', 'menatarms', 'crossbows', 'archers', 'menatarms', 'lightcav', 'menatarms'];
+  function keepThePeace(s, month) {
+    const h = s.ledger.history;
+    const income = h.length ? h.reduce((a, m) => a + ledgerNet(m).in, 0) / h.length : 1100;
+    const want = Math.min(FORCE.length, 2 + Math.floor(income / 650));
+    const danger = (id) => Math.max(threatLevel(s, world, id, 'bandits'), threatLevel(s, world, id, 'monsters'));
+    const worst = Object.keys(s.settlements).filter((id) => !s.settlements[id].occupier).sort((a, b) => danger(b) - danger(a));
+    if (month % 2 === 0 && s.forces.companies.length < want && s.treasury > 1500) {
+      const kind = FORCE[s.forces.companies.length];
+      // Muster in the crown town or city nearest the worst danger.
+      const towns = Object.keys(s.settlements).filter((id) => canRecruit(s, world, id, kind).ok);
+      const hot = world.byId[worst[s.forces.companies.length % 4]];
+      towns.sort((a, b) => Math.hypot(world.byId[a].x - hot.x, world.byId[a].y - hot.y) - Math.hypot(world.byId[b].x - hot.x, world.byId[b].y - hot.y));
+      if (towns.length) {
+        s = act(s, { type: 'recruit', settlement: towns[0], kind });
+        const c = s.forces.companies.at(-1);
+        if (c && c.station === towns[0] && c.order.kind === 'station') {
+          const patrols = s.forces.companies.filter((x) => x.order.kind === 'patrol').length;
+          if (kind === 'lightcav' && patrols < 2) {
+            const road = worst.find((id) => !s.forces.companies.some((x) => x.order.from === id)) ?? worst[0];
+            const to = world.adjacency[road][0]?.to;
+            if (to) s = act(s, { type: 'company', id: c.id, order: { kind: 'patrol', from: road, to } });
+          } else s = act(s, { type: 'company', id: c.id, order: { kind: 'respond', radius: 150 } });
+        }
+      }
+    }
+    // Hunt what has been seen, when the odds are good; witchers for the worst beasts.
+    for (const t of sightedThreats(s)) {
+      if (!['bandits', 'monsters'].includes(t.kind)) continue;
+      if (s.forces.companies.some((c) => c.task?.threat === t.id) || s.threats.contracts.some((c) => c.threat === t.id)) continue;
+      const best = bestCompanyFor(s, world, t);
+      if (best && best.odds.chance >= 0.65) s = act(s, { type: 'company', id: best.c.id, order: { kind: 'hunt', threat: t.id } });
+      else if (t.kind === 'monsters' && s.treasury > 2500) s = act(s, { type: 'witcher', threat: t.id });
     }
     return s;
   }

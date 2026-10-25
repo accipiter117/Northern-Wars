@@ -1,5 +1,5 @@
 {
-  "note": "Garrisons, patrols and threats. Threat levels run 0 to 100 per settlement and are worked out each month, not stored. Strength is soldiers; walls multiply it, a patrol adds to it.",
+  "note": "Garrisons, threat levels and plague. Threat levels run 0 to 100 per settlement and are worked out each month, not stored; they decide where bandit camps and monster lairs appear and grow (data/forces.json). Strength is soldiers; walls multiply it.",
   "garrisonLevels": {
     "skeleton": {
       "name": "Skeleton",
@@ -17,12 +17,6 @@
       "name": "Fortress",
       "factor": 2
     }
-  },
-  "patrol": {
-    "cost": 6,
-    "soldiersPer": 400,
-    "strength": 60,
-    "perLength": 0.22
   },
   "walls": 1.5,
   "threats": {
@@ -53,26 +47,6 @@
   },
   "wildReach": 60,
   "clearedCut": 0.8,
-  "incidentChance": 0.08,
-  "strengthPerThreat": 4,
-  "losses": {
-    "bandits": {
-      "prosperity": 6,
-      "unrest": 8,
-      "food": 0.15,
-      "goods": 0.3,
-      "people": 0.003,
-      "raidedDays": 45
-    },
-    "monsters": {
-      "prosperity": 3,
-      "unrest": 10,
-      "food": 0,
-      "goods": 0,
-      "people": 0.01,
-      "raidedDays": 45
-    }
-  },
   "plague": {
     "deathsPerMonth": 0.025,
     "unrest": 12,

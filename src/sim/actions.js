@@ -6,7 +6,9 @@ import { canDecree, decree } from './laws.js';
 import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
 import { resolvePetition } from './petitions.js';
 import { canHouseAction, houseAction, resolveDemand } from './houses.js';
-import { canSetGarrison, canAddPatrol, addPatrol, resolveEvent } from './military.js';
+import { canSetGarrison, resolveEvent } from './military.js';
+import { canRecruit, recruit, canOrderCompany, orderCompany, disbandCompany } from './forces.js';
+import { witcherCost } from './threats.js';
 import { canOpenEmbassy, openEmbassy, closeEmbassy, canSendSpy, sendSpy } from './realms.js';
 import { makeRng } from './rng.js';
 import { depositAt, canProspect, startProspect } from './gold.js';
@@ -108,17 +110,40 @@ export function applyAction(state, world, action) {
     note(next, `${world.byId[action.settlement].name} is to be held with a ${world.military.garrisonLevels[action.level].name.toLowerCase()} garrison.`, 'military');
     return { state: next };
   }
-  if (action.type === 'patrol') {
-    const check = canAddPatrol(state, world, action.from, action.to);
+  if (action.type === 'recruit') {
+    const check = canRecruit(state, world, action.settlement, action.kind);
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
-    addPatrol(next, world, action.from, action.to);
+    recruit(next, world, action.settlement, action.kind);
     return { state: next };
   }
-  if (action.type === 'unpatrol') {
-    if (!state.patrols.some((p) => p.id === action.id)) return { state, error: 'No such patrol.' };
+  if (action.type === 'company') {
+    const c = state.forces?.companies.find((x) => x.id === action.id);
+    if (action.disband) {
+      if (!c) return { state, error: 'No such company.' };
+      if (c.army) return { state, error: 'It marches with an army.' };
+      const next = structuredClone(state);
+      disbandCompany(next, world, next.forces.companies.find((x) => x.id === action.id));
+      return { state: next };
+    }
+    const check = canOrderCompany(state, world, c, action.order);
+    if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
-    next.patrols = next.patrols.filter((p) => p.id !== action.id);
+    orderCompany(next, world, next.forces.companies.find((x) => x.id === action.id), action.order);
+    return { state: next };
+  }
+  if (action.type === 'witcher') {
+    const t = state.threats?.list.find((x) => x.id === action.threat);
+    if (!t || t.kind !== 'monsters') return { state, error: 'No such lair.' };
+    if (!t.sighted) return { state, error: 'No witcher takes a contract on a rumour.' };
+    if (state.threats.contracts.some((c) => c.threat === t.id)) return { state, error: 'A witcher is already on the trail.' };
+    const cost = witcherCost(state, world, t);
+    if (state.treasury - cost < -creditLimit(state, world)) return { state, error: 'The bankers will not lend that much.' };
+    const next = structuredClone(state);
+    next.treasury -= cost;
+    next.ledger.decrees = (next.ledger.decrees ?? 0) + cost;
+    next.threats.contracts.push({ threat: t.id, until: next.day + world.forces.threats.monsters.witcher.days, cost });
+    addDispatch(next, `A witcher takes the crown's contract on the beasts near ${world.byId[t.near].name}, for ${cost} crowns.`, 'military');
     return { state: next };
   }
   if (action.type === 'embassy') {

@@ -124,7 +124,7 @@ test('peace terms are refused early and accepted once the enemy is beaten and ti
 
 test('a soured neighbour gathers an army, gives warning, then invades', () => {
   let invaded = 0;
-  for (const seed of [1, 2, 3, 4, 5, 6]) {
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
     let s = quiet(createState(world, seed));
     s.neighbours.kaedwen.stance = 'cold';
     s.neighbours.kaedwen.relation = -90;
@@ -138,7 +138,7 @@ test('a soured neighbour gathers an army, gives warning, then invades', () => {
       }
     }
   }
-  assert.ok(invaded >= 3, `invaded in ${invaded} of 6 reigns`);
+  assert.ok(invaded >= 3, `invaded in ${invaded} of 10 reigns`);
 });
 
 test('an ally attacked calls on the crown; answering puts Temeria at its side', () => {

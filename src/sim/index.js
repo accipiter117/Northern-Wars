@@ -16,7 +16,7 @@ export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, dema
 export { informed, realmProsperity, canOpenEmbassy, canSendSpy } from './realms.js';
 export { visionOf, canSee, hasBit } from './vision.js';
 export { travellerPositions } from './ambient.js';
-export { threatLevel, localStrength, patrolledSet, patrolRoute, patrolCapacity, patrolCost, crownSoldiers, canSetGarrison, canAddPatrol, eventText, plagueActive, quarantined } from './military.js';
+export { threatLevel, localStrength, patrolledSet, crownSoldiers, canSetGarrison, eventText, plagueActive, quarantined } from './military.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects, creditLimit, realmEffect } from './economy.js';
 export { TEMERIA, ownerOf, originOf, sideName, sideColours, placesHeldBy, warsOf, atWar, hostile, warScore, exhaustion, heldValue, sideIndex, crownHolds, valueOf, truceUntil } from './conflict.js';
 export { musterPreview, canRaise, canOrder, armyPosition, armyStrength, describeArmy, crownArmies } from './armies.js';
@@ -24,4 +24,10 @@ export { canDeclare, declareCost, peaceTerms, canMakePeace, warDecisionText, rea
 export { routeValue, routeLimit, routeCost, routeEndOk, canOpenRoute, routePath, routeKey, routeSafety } from './trade.js';
 export { depositAt, depositsOf, activeMines, goldYield, canProspect } from './gold.js';
 export { slotsOf } from './actions.js';
-export { goodOf, goodPrice, tollsAt, bridgeCrossings, saltStorage, patrolCostMult, lodgeCut } from './industry.js';
+export { goodOf, goodPrice, tollsAt, bridgeCrossings, saltStorage, lodgeCut } from './industry.js';
+export {
+  freeCompanies, companiesAt, canRecruit, recruitCost, companySlots, canOrderCompany, huntOdds, bestCompanyFor, targetOf, targetPos,
+  describeCompany, companyUpkeep, ORDERS,
+} from './forces.js';
+export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites } from './threats.js';
+export { companyStrength, threatStrength, winChance, oddsWord, resolve, speciesOf, groundAt } from './combat.js';

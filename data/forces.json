@@ -1,0 +1,133 @@
+{
+  "note": "The crown's standing companies and the threats that roam the realm. Strength is fighting power: men x their worth a man x morale (0.5 + morale/100) x experience (1 + 0.3 x xp) x how well the troop suits the foe and the ground. Upkeep is crowns a man a month. Speeds are map units a day.",
+  "companies": {
+    "militia": {
+      "name": "Militia",
+      "plural": "militia",
+      "men": 150, "perMan": 0.8, "upkeep": 0.2, "coin": 100, "speed": 1,
+      "places": ["village", "town", "city", "castle"],
+      "blurb": "Townsmen with spears and a few weeks' drill. Cheap, many, and brittle."
+    },
+    "archers": {
+      "name": "Archers",
+      "plural": "archers",
+      "men": 100, "perMan": 1.0, "upkeep": 0.35, "coin": 250, "speed": 1,
+      "places": ["town", "city", "castle"],
+      "blurb": "Longbowmen from the villages. Good against beasts and anything that comes at them across open ground."
+    },
+    "menatarms": {
+      "name": "Men-at-arms",
+      "plural": "men-at-arms",
+      "men": 100, "perMan": 1.4, "upkeep": 0.5, "coin": 400, "speed": 1,
+      "places": ["town", "city", "castle"],
+      "arms": 15, "armsCoin": 8,
+      "blurb": "Mail, shield and sword. The backbone of any force; needs arms from the smithies."
+    },
+    "crossbows": {
+      "name": "Crossbowmen",
+      "plural": "crossbowmen",
+      "men": 80, "perMan": 1.2, "upkeep": 0.5, "coin": 350, "speed": 0.95,
+      "places": ["town", "city", "castle"],
+      "arms": 10, "armsCoin": 8, "barracks": true, "walls": 1.5,
+      "blurb": "Slow to load, deadly from a wall. They hold towns better than any other troop."
+    },
+    "lightcav": {
+      "name": "Light cavalry",
+      "plural": "light horse",
+      "men": 60, "perMan": 1.5, "upkeep": 0.7, "coin": 400, "speed": 1.6,
+      "places": ["town", "city", "castle"],
+      "horses": 20, "horsesCoin": 22,
+      "blurb": "Fast riders who run bandits down in open country. Poor in woods and marsh."
+    },
+    "knights": {
+      "name": "Knights",
+      "plural": "knights",
+      "men": 50, "perMan": 2.6, "upkeep": 1.4, "coin": 900, "speed": 1.3,
+      "places": ["city", "castle"],
+      "horses": 30, "arms": 10, "armsCoin": 10, "barracks": true,
+      "blurb": "Armoured horsemen who break any line of men. Monsters do not fear a lance."
+    }
+  },
+  "suits": {
+    "bandits": { "militia": 0.9, "archers": 1.0, "menatarms": 1.1, "crossbows": 1.0, "lightcav": 1.25, "knights": 1.1 },
+    "monsters": { "militia": 0.7, "archers": 1.2, "menatarms": 1.0, "crossbows": 1.1, "lightcav": 0.8, "knights": 0.6 },
+    "scoiatael": { "militia": 0.8, "archers": 1.15, "menatarms": 1.0, "crossbows": 1.0, "lightcav": 0.85, "knights": 0.7 },
+    "soldiers": { "militia": 0.8, "archers": 0.95, "menatarms": 1.15, "crossbows": 1.0, "lightcav": 1.0, "knights": 1.5 }
+  },
+  "ground": {
+    "speed": { "open": 1, "hills": 0.8, "forest": 0.75, "marsh": 0.6, "mountains": 0.6 },
+    "mounted": { "open": 1.15, "hills": 0.95, "forest": 0.7, "marsh": 0.65, "mountains": 0.7 },
+    "elvesInForest": 1.3
+  },
+  "baseSpeed": 18,
+  "seasonSpeed": { "spring": 1, "summer": 1.05, "autumn": 0.95, "winter": 0.6 },
+  "engageRange": 14,
+  "perPlace": { "village": 1, "temple": 0, "town": 2, "castle": 2, "city": 3, "barracks": 2 },
+  "barracksXp": 0.1,
+  "stores": { "arms": 60, "horses": 60, "startArms": 30, "smithy": 2, "armoury": 4 },
+  "morale": {
+    "start": 70, "recoverPerMonth": 6, "recoverFast": 12, "unpaidLoss": 12, "desertBelow": 35, "desertShare": 0.12,
+    "win": 10, "loss": 25, "retreatBelow": 30
+  },
+  "wounds": { "share": 0.4, "healPerMonth": 0.15, "healFast": 0.3 },
+  "xp": { "win": 0.08, "max": 1, "bonus": 0.3 },
+  "respond": { "radii": [60, 100, 150], "default": 100, "minOdds": 0.45 },
+  "fight": { "loserLoss": [0.25, 0.5], "winnerLoss": [0.04, 0.12], "power": 3 },
+  "odds": [
+    { "at": 0.9, "word": "Overwhelming" },
+    { "at": 0.65, "word": "Favourable" },
+    { "at": 0.35, "word": "Even" },
+    { "at": 0.1, "word": "Risky" },
+    { "at": 0, "word": "Hopeless" }
+  ],
+  "sight": { "company": 70, "mounted": 95, "rumourReach": 200, "rumourMin": 25, "rumourMax": 90 },
+  "threats": {
+    "bandits": {
+      "name": "Bandit camp", "band": "Bandits", "terrain": ["forest", "marsh", "hills"],
+      "spawnAt": 35, "spawnChance": 0.2, "spacing": 110, "max": 7,
+      "start": [15, 30], "perMan": 0.9, "growth": 0.07, "capBase": 40, "capPerLevel": 1.6, "fadeBelow": 20, "fade": 0.12,
+      "bandAt": 25, "bandChance": 0.55, "bandShare": 0.6, "lurk": [6, 12], "speed": 16, "reach": 160
+    },
+    "monsters": {
+      "name": "Lair", "band": "Beasts", "terrain": ["marsh", "forest", "hills", "mountains"],
+      "spawnAt": 30, "spawnChance": 0.15, "spacing": 120, "max": 6,
+      "growthMonths": 3, "fadeBelow": 15, "fade": 0.08,
+      "bandChance": 0.45, "lurk": [3, 6], "speed": 14, "reach": 120,
+      "witcher": { "base": 150, "perStrength": 2.5, "days": 20, "success": 0.9, "bounty": 0.6 }
+    },
+    "scoiatael": {
+      "name": "Scoia'tael commando", "band": "Scoia'tael", "above": 40, "chance": 0.45,
+      "men": [20, 50], "perMan": 1.6, "lurk": [3, 6], "life": 30, "speed": 22, "max": 2
+    },
+    "raiders": {
+      "name": "Raiding party", "below": -40, "chance": 0.15, "warChance": 0.3,
+      "men": [40, 120], "perMan": 1.1, "speed": 16, "lurk": [2, 4]
+    }
+  },
+  "species": {
+    "marsh": [
+      { "id": "drowners", "name": "Drowners", "one": "drowner", "power": 3, "count": [5, 14], "weight": 8 },
+      { "id": "hag", "name": "A water hag", "one": "water hag", "power": 30, "count": [1, 2], "weight": 2 }
+    ],
+    "forest": [
+      { "id": "wolves", "name": "Wolves", "one": "wolf", "power": 2, "count": [6, 16], "weight": 8 },
+      { "id": "werewolf", "name": "A werewolf", "one": "werewolf", "power": 45, "count": [1, 1], "weight": 1.5 },
+      { "id": "leshen", "name": "A leshen", "one": "leshen", "power": 75, "count": [1, 1], "weight": 0.7 }
+    ],
+    "hills": [
+      { "id": "harpies", "name": "Harpies", "one": "harpy", "power": 3, "count": [6, 14], "weight": 8 },
+      { "id": "griffin", "name": "A griffin", "one": "griffin", "power": 55, "count": [1, 1], "weight": 1.5 }
+    ],
+    "mountains": [
+      { "id": "wyverns", "name": "Wyverns", "one": "wyvern", "power": 18, "count": [1, 3], "weight": 5 },
+      { "id": "forktail", "name": "A forktail", "one": "forktail", "power": 50, "count": [1, 1], "weight": 1.5 }
+    ]
+  },
+  "raids": {
+    "bandits": { "prosperity": 6, "unrest": 8, "food": 0.15, "goods": 0.3, "people": 0.003, "raidedDays": 45, "loot": 0.4 },
+    "monsters": { "prosperity": 3, "unrest": 10, "food": 0, "goods": 0, "people": 0.01, "raidedDays": 45, "loot": 0 },
+    "scoiatael": { "prosperity": 5, "unrest": 6, "food": 0.05, "goods": 0.2, "people": 0.003, "raidedDays": 30, "loot": 0 },
+    "raiders": { "prosperity": 8, "unrest": 8, "food": 0.2, "goods": 0.3, "people": 0.004, "raidedDays": 45, "loot": 0.8 }
+  },
+  "roads": { "tradeCut": 0.5 }
+}

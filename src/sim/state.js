@@ -8,6 +8,8 @@ import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { newIntel, updateIntel, visionOf } from './vision.js';
 import { defaultIndustry } from './industry.js';
+import { defaultForces } from './forces.js';
+import { defaultThreats } from './threats.js';
 import { defaultGold } from './gold.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
@@ -18,7 +20,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 11;
+export const STATE_VERSION = 12;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -55,8 +57,6 @@ export function createState(world, seed = 1) {
     crisisMonths: 0,
     depositions: [],
     garrisonLevel: {},
-    patrols: [],
-    nextPatrolId: 1,
     events: [],
     nextEventId: 1,
     realms: defaultRealms(world),
@@ -67,6 +67,8 @@ export function createState(world, seed = 1) {
     nextRouteId: 1,
     gold: defaultGold(world),
     industry: defaultIndustry(),
+    forces: defaultForces(world),
+    threats: defaultThreats(),
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],

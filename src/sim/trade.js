@@ -2,8 +2,8 @@
 // cities, at home or in a friendly neighbour, and takes its share each
 // month. A route earns from the size and fortunes of both ends, the length
 // of the haul, what each end makes that the other lacks, and how safe the
-// road is between them. Bandits and beasts cut it and rob its caravans;
-// patrols keep it open; war closes it.
+// road is between them. Bands holding its road rob its caravans; patrols
+// keep it open; war closes it.
 import { addDispatch, clamp } from './realm.js';
 import { roadPath, polylineLength } from './world.js';
 import { totalPopulation } from './state.js';
@@ -160,9 +160,9 @@ export function closeRoute(state, world, id) {
   say(state, `The crown's trade route between ${world.byId[r.from].name} and ${world.byId[r.to].name} is wound up.`);
 }
 
-// The month's takings, a line per route, and its upkeep. Bandits on the
-// road may rob a month's caravans.
-export function tradeLedger(state, world, income, expenses, rng = null) {
+// The month's takings, a line per route, and its upkeep. A route whose road
+// a band held for part of the month loses that part of its takings.
+export function tradeLedger(state, world, income, expenses) {
   if (!state.routes?.length) return;
   const t = T(world);
   for (const r of state.routes) {
@@ -170,10 +170,19 @@ export function tradeLedger(state, world, income, expenses, rng = null) {
     let value = v.value;
     r.closed = v.closed;
     r.raided = false;
-    if (!v.closed && rng && rng.chance(t.raid.chance * (1 - v.parts.safety))) {
-      value = 0;
-      r.raided = true;
-      say(state, `Bandits robbed the crown's caravans between ${world.byId[r.from].name} and ${world.byId[r.to].name}. A month's takings lost.`);
+    if (!v.closed && v.path) {
+      let held = 0;
+      for (let i = 1; i < v.path.length; i++) {
+        const k = `${v.path[i - 1]}|${v.path[i]}`;
+        const k2 = `${v.path[i]}|${v.path[i - 1]}`;
+        held = Math.max(held, state.threats?.blocked[k] ?? 0, state.threats?.blocked[k2] ?? 0);
+      }
+      if (held > 0) {
+        const lost = Math.min(1, held / 30);
+        value *= 1 - lost;
+        r.raided = true;
+        say(state, `Bandits held the road between ${world.byId[r.from].name} and ${world.byId[r.to].name} for ${held} day${held === 1 ? '' : 's'}; the crown's caravans lost ${Math.round(lost * 100)}% of the month's takings.`);
+      }
     }
     r.last = Math.round(value);
     income.routes[routeKey(r)] = value;

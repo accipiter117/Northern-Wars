@@ -146,10 +146,6 @@
     "storagePer": 0.06,
     "storageMax": 0.18
   },
-  "stud": {
-    "patrolCut": 0.1,
-    "patrolMin": 0.7
-  },
   "quarter": {
     "rentPerPerson": 0.0045
   },
