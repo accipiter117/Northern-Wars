@@ -62,6 +62,7 @@ export function createHints(data, { disabled = false, onOpen = () => {} } = {}) 
         case 'debt': return state.treasury < 0;
         case 'day120': return state.day - state.reign.since > 120;
         case 'raid': return Object.values(state.settlements).some((s) => (s.raided ?? 0) > state.day);
+        case 'sighted': return (state.threats?.list ?? []).some((t) => t.sighted || t.campSeen);
         case 'lowAuthority': return state.authority < 20;
         case 'day45': return state.day - state.reign.since > 45;
         case 'day150NoRoutes': return state.day - state.reign.since > 150 && !(state.routes ?? []).length;
@@ -85,14 +86,28 @@ export function createHints(data, { disabled = false, onOpen = () => {} } = {}) 
   return { note, check, hide, reset, get enabled() { return !prefs.off && !disabled; }, setEnabled(on) { prefs.off = !on; store(prefs); if (!on) hide(); } };
 }
 
-export function helpHtml(data, enabled) {
+export function helpHtml(data, enabled, pauseOnSighting = false) {
   const items = data.hints.map((h) => `<li><b>${escapeHtml(h.title)}.</b> ${escapeHtml(h.text)}</li>`).join('');
   return `
     <h2>Help</h2>
     <div class="menu-list">
       <button type="button" data-action="back">Back to the realm</button>
       <button type="button" data-action="${enabled ? 'hints-off' : 'hints-on'}">${enabled ? 'Turn hints off' : 'Turn hints back on'}</button>
+      <button type="button" data-action="${pauseOnSighting ? 'sighting-pause-off' : 'sighting-pause-on'}">${pauseOnSighting ? 'Stop pausing when a threat is sighted' : 'Pause when a threat is sighted'}<small>${pauseOnSighting ? 'The game pauses at each new sighting' : 'A short alert shows either way'}</small></button>
     </div>
     <ul class="chronicle help">${items}</ul>
   `;
+}
+
+// Small per-device settings kept beside the hints.
+const PREFS = 'northern-wars.prefs';
+export function loadPrefs() {
+  try {
+    return JSON.parse(localStorage.getItem(PREFS)) ?? {};
+  } catch {
+    return {};
+  }
+}
+export function savePrefs(p) {
+  try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch { /* a nicety */ }
 }

@@ -23,10 +23,15 @@ const say = (state, text) => addDispatch(state, text, 'military');
 const round = Math.round;
 
 export function defaultThreats() {
-  return { list: [], nextId: 1, alerts: [], blocked: {}, robbed: {}, contracts: [] };
+  return { list: [], nextId: 1, alerts: [], blocked: {}, robbed: {}, contracts: [], tally: { raids: 0, dead: 0, roadDays: 0, cleared: 0 } };
 }
 
 const near = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+// A running count of what threats have cost the realm, for the balance tools.
+function tally(state) {
+  return (state.threats.tally ??= { raids: 0, dead: 0, roadDays: 0, cleared: 0 });
+}
 
 // ---- Where threats may appear ----
 
@@ -301,6 +306,7 @@ export function destroyThreat(state, world, t, partOnly = false) {
     t.band = null;
     return;
   }
+  tally(state).cleared += 1;
   const s = state.settlements[t.near];
   if (s && isCamp(t)) s.cleared = { ...(s.cleared ?? {}), [t.kind]: state.day + 120 };
   state.threats.list = state.threats.list.filter((x) => x !== t);
@@ -344,6 +350,7 @@ export function stepThreatsDay(state, world, rng) {
     } else if (b.phase === 'lurk') {
       // Holding the road: carts turn back, caravans are stripped.
       state.threats.blocked[b.seg] = (state.threats.blocked[b.seg] ?? 0) + 1;
+      tally(state).roadDays += 1;
       for (const id of b.seg.split('|')) state.threats.robbed[id] = (state.threats.robbed[id] ?? 0) + 1;
       if (state.day >= b.until) {
         const village = t.kind === 'scoiatael' ? null : pickVillage(state, world, t, b);
@@ -419,7 +426,8 @@ function raidVillage(state, world, rng, t, id) {
   s.raided = state.day + l.raidedDays;
   s.raidKind = t.kind === 'monsters' ? 'monsters' : 'bandits';
   if (t.kind === 'bandits') b.men += b.men * l.loot * 0.2;
-  if (state.reign) state.reign.raided = (state.reign.raided ?? 0) + 1;
+  tally(state).raids += 1;
+  tally(state).dead += dead;
   const text = {
     bandits: `Bandits fell on ${name}: barns emptied, a carter hanged from his own shafts${dead ? `, ${dead} dead` : ''}. The defenders were too few to stop them.`,
     monsters: `${who} came out of the wilds by night at ${name}. ${dead || 'Several'} villagers taken; the rest bar their doors at dusk.`,
@@ -484,6 +492,8 @@ export function updateSight(state, world) {
     const p = threatPos(t);
     const seen = sees(world, vision, p.x, p.y);
     t.sighted = seen;
+    // A camp or lair can be in sight while its band is away, and the other way round.
+    t.campSeen = isCamp(t) && (seen && !t.band ? true : sees(world, vision, t.x, t.y));
     if (seen) {
       t.rumour = null;
       t.lastSeen = state.day;

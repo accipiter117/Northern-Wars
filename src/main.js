@@ -1,5 +1,5 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA } from './sim/index.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor } from './sim/index.js';
 import { createCamera, resizeCamera, panBy } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
@@ -13,8 +13,9 @@ import { faithHtml, petitionHtml } from './ui/faith.js';
 import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
 import { militaryHtml, eventHtml } from './ui/military.js';
 import { warHtml, armyCardHtml, warDecisionHtml, musterPlaces } from './ui/war.js';
+import { forcesHtml, companyCardHtml, threatCardHtml } from './ui/forces.js';
 import { tradeHtml } from './ui/trade.js';
-import { createHints, helpHtml } from './ui/hints.js';
+import { createHints, helpHtml, loadPrefs, savePrefs } from './ui/hints.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -46,7 +47,22 @@ async function boot() {
   const renderer = createRenderer(canvas, world, cam, layoutCfg);
 
   const topbar = createTopbar(world, { onSpeed: setSpeed, onMenu: openMenu });
-  const sheet = createSheet({ onClose: () => { if (selection?.settlement) selection = null; } });
+  const sheet = createSheet({ onClose: () => { if (selection?.settlement || selection?.company || selection?.threat) selection = null; } });
+  const prefs = loadPrefs();
+  // Sightings already announced, so a loaded reign does not cry wolf again.
+  let alertsSeen = new Set((state.threats?.alerts ?? []).map((a) => `${a.id}:${a.day}`));
+  function newSightings() {
+    let fresh = null;
+    for (const a of state.threats?.alerts ?? []) {
+      const k = `${a.id}:${a.day}`;
+      if (alertsSeen.has(k)) continue;
+      alertsSeen.add(k);
+      fresh = a;
+    }
+    if (!fresh) return false;
+    toast(fresh.text);
+    return !!prefs.pauseOnSighting;
+  }
 
   let toastTimer = 0;
   function toast(text) {
@@ -71,6 +87,7 @@ async function boot() {
     state = next;
     frac = 0;
     shownDepositions = state.depositions.length;
+    alertsSeen = new Set((state.threats?.alerts ?? []).map((a) => `${a.id}:${a.day}`));
     selection = null;
     sheet.close();
     hideUnitLabel();
@@ -91,7 +108,11 @@ async function boot() {
       const level = e.target.closest('[data-garrison]');
       const route = e.target.closest('[data-route-from]');
       const prospect = e.target.closest('[data-prospect]');
-      if (route) {
+      const rec = e.target.closest('[data-recruit]');
+      const comp = e.target.closest('[data-company]');
+      if (rec && !rec.disabled) order({ type: 'recruit', settlement: id, kind: rec.dataset.recruit });
+      else if (comp) openCompany(Number(comp.dataset.company));
+      else if (route) {
         tradeForm.from = id;
         openTrade();
       } else if (prospect && !prospect.disabled) order({ type: 'prospect', settlement: id });
@@ -327,26 +348,86 @@ async function boot() {
     };
   }
 
-  const patrolPick = { from: 'vizima', to: 'gors_velen' };
   function openMilitary() {
     selection = null;
-    const body = sheet.open('military', militaryHtml(world, state, patrolPick));
-    body.onchange = (e) => {
-      const p = e.target.closest('[data-pick]');
-      if (p) patrolPick[p.dataset.pick] = p.value;
-    };
+    const body = sheet.open('military', militaryHtml(world, state));
     body.onclick = (e) => {
       const place = e.target.closest('[data-place]');
-      const recall = e.target.closest('[data-unpatrol]');
-      if (e.target.closest('[data-order-patrol]')) {
-        order({ type: 'patrol', from: patrolPick.from, to: patrolPick.to });
-        renderer.invalidate();
-      } else if (recall) {
-        order({ type: 'unpatrol', id: Number(recall.dataset.unpatrol) });
-        renderer.invalidate();
-      } else if (place) openSettlement(place.dataset.place);
+      if (place) openSettlement(place.dataset.place);
       else menuAction(e.target.closest('[data-action]')?.dataset.action);
     };
+  }
+
+  // Forces: every company, army and sighted threat, and the cards for each.
+  function sendNearest(threatId) {
+    const t = state.threats.list.find((x) => x.id === threatId);
+    const best = t && bestCompanyFor(state, world, t);
+    if (!best) return toast('No company is free to send.');
+    order({ type: 'company', id: best.c.id, order: { kind: 'hunt', threat: threatId } });
+  }
+
+  function forcesClick(e) {
+    const t = e.target;
+    const comp = t.closest('[data-company]');
+    const threat = t.closest('[data-threat]');
+    const send = t.closest('[data-send]');
+    const army = t.closest('[data-army]');
+    const witcher = t.closest('[data-witcher]');
+    if (send && !send.disabled) sendNearest(Number(send.dataset.send));
+    else if (witcher) order({ type: 'witcher', threat: Number(witcher.dataset.witcher) });
+    else if (comp) openCompany(Number(comp.dataset.company));
+    else if (threat) openThreat(Number(threat.dataset.threat));
+    else if (army) openArmy(Number(army.dataset.army));
+    else menuAction(t.closest('[data-action]')?.dataset.action);
+  }
+
+  function openForces() {
+    selection = null;
+    hideUnitLabel();
+    const body = sheet.open('forces', forcesHtml(world, state));
+    body.onclick = forcesClick;
+  }
+
+  const companyPick = {};
+  function openCompany(id) {
+    selection = { company: id };
+    hideUnitLabel();
+    for (const k of Object.keys(companyPick)) delete companyPick[k];
+    const body = sheet.open(`company:${id}`, companyCardHtml(world, state, id, companyPick));
+    body.onchange = (e) => {
+      const p = e.target.closest('[data-pick]');
+      if (p) companyPick[p.dataset.pick] = p.dataset.pick === 'route' ? Number(p.value) : p.value;
+    };
+    body.onclick = (e) => {
+      const t = e.target;
+      const kind = t.closest('[data-order-kind]')?.dataset.orderKind;
+      const respond = t.closest('[data-respond]');
+      const hunt = t.closest('[data-hunt]');
+      const huntArmy = t.closest('[data-hunt-army]');
+      const give = (o) => {
+        order({ type: 'company', id, order: o });
+        renderer.invalidate();
+      };
+      if (kind === 'station') give({ kind: 'station', place: companyPick.station });
+      else if (kind === 'patrol') give({ kind: 'patrol', from: companyPick.from, to: companyPick.to });
+      else if (kind === 'escort') give({ kind: 'escort', route: Number(companyPick.route) });
+      else if (respond) give({ kind: 'respond', radius: Number(respond.dataset.respond) });
+      else if (hunt) give({ kind: 'hunt', threat: Number(hunt.dataset.hunt) });
+      else if (huntArmy) give({ kind: 'hunt', army: Number(huntArmy.dataset.huntArmy) });
+      else if (t.closest('[data-disband-company]')) {
+        if (confirm('Stand this company down? Its men go home.')) {
+          order({ type: 'company', id, disband: true });
+          openForces();
+        }
+      } else forcesClick(e);
+    };
+  }
+
+  function openThreat(id) {
+    selection = { threat: id };
+    hideUnitLabel();
+    const body = sheet.open(`threat:${id}`, threatCardHtml(world, state, id));
+    body.onclick = forcesClick;
   }
 
   const shownEvents = new Set();
@@ -398,7 +479,7 @@ async function boot() {
   }
 
   // War: the panel with every war, army and the raising form.
-  const raiseForm = { muster: 'vizima', levy: 'third', nobles: false, companies: 0, marshal: 'vestibor', stance: 'cautious' };
+  const raiseForm = { muster: 'vizima', levy: 'third', nobles: false, companies: 0, marshal: 'vestibor', stance: 'cautious', units: [] };
   function openWar() {
     selection = null;
     hideUnitLabel();
@@ -418,12 +499,18 @@ async function boot() {
       const peace = t.closest('[data-peace]');
       const out = t.closest('[data-withdraw]');
       const dec = t.closest('[data-war-decision]');
-      if (set) {
+      const unit = t.closest('[data-unit]');
+      if (unit) {
+        const uid = Number(unit.dataset.unit);
+        raiseForm.units = raiseForm.units.includes(uid) ? raiseForm.units.filter((x) => x !== uid) : [...raiseForm.units, uid];
+        sheet.patch('war', warHtml(world, state, raiseForm));
+      } else if (set) {
         const [k, v] = set.dataset.set.split(':');
         raiseForm[k] = k === 'companies' ? Number(v) : k === 'nobles' ? v === 'true' : v;
         sheet.patch('war', warHtml(world, state, raiseForm));
       } else if (t.closest('[data-raise]') && !t.closest('[data-raise]').disabled) {
         order({ type: 'raise', ...raiseForm });
+        raiseForm.units = [];
         hints.note('armyRaised');
         const a = state.armies.at(-1);
         if (a?.side === TEMERIA) openArmy(a.id);
@@ -509,7 +596,7 @@ async function boot() {
   }
 
   function openHelp() {
-    const body = sheet.open('help', helpHtml(hintData, hints.enabled));
+    const body = sheet.open('help', helpHtml(hintData, hints.enabled, !!prefs.pauseOnSighting));
     body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
   }
 
@@ -543,10 +630,15 @@ async function boot() {
     else if (action === 'faith') openFaith();
     else if (action === 'nobles') openNobles();
     else if (action === 'military') openMilitary();
+    else if (action === 'forces') openForces();
     else if (action === 'war') openWar();
     else if (action === 'trade') openTrade();
     else if (action === 'help') openHelp();
-    else if (action === 'hints-off' || action === 'hints-on') {
+    else if (action === 'sighting-pause-on' || action === 'sighting-pause-off') {
+      prefs.pauseOnSighting = action === 'sighting-pause-on';
+      savePrefs(prefs);
+      openHelp();
+    } else if (action === 'hints-off' || action === 'hints-on') {
       hints.setEnabled(action === 'hints-on');
       openHelp();
     }
@@ -594,6 +686,8 @@ async function boot() {
     if (hit?.settlement) openSettlement(hit.settlement);
     else if (hit?.neighbour) openRealm(hit.neighbour);
     else if (hit?.foreign) openForeign(hit.foreign);
+    else if (hit?.company) openCompany(hit.company);
+    else if (hit?.threat) openThreat(hit.threat);
     else if (hit?.army) {
       const a = state.armies.find((x) => x.id === hit.army);
       if (a.side === TEMERIA) openArmy(a.id);
@@ -670,6 +764,7 @@ async function boot() {
           lastSheetRefresh = now;
           refreshOpenSheet();
         }
+        if (newSightings()) setSpeed(0);
         if (showNextDecision()) setSpeed(0);
       }
     }
@@ -709,7 +804,10 @@ async function boot() {
     else if (cur === 'faith') sheet.patch(cur, faithHtml(world, state, lookups));
     else if (cur?.startsWith('petition:') && !state.petitions.some((p) => `petition:${p.id}` === cur)) sheet.close();
     else if (cur === 'nobles') sheet.patch(cur, noblesHtml(world, state));
-    else if (cur === 'military') sheet.patch(cur, militaryHtml(world, state, patrolPick));
+    else if (cur === 'military') sheet.patch(cur, militaryHtml(world, state));
+    else if (cur === 'forces') sheet.patch(cur, forcesHtml(world, state));
+    else if (cur?.startsWith('company:')) sheet.patch(cur, companyCardHtml(world, state, Number(cur.slice(8)), companyPick));
+    else if (cur?.startsWith('threat:')) sheet.patch(cur, threatCardHtml(world, state, Number(cur.slice(7))));
     else if (cur?.startsWith('event:') && !state.events.some((p) => `event:${p.id}` === cur)) sheet.close();
     else if (cur?.startsWith('house:')) sheet.patch(cur, houseCardHtml(world, state, cur.slice(6), housePicking));
     else if (cur?.startsWith('demand:') && !state.demands.some((p) => `demand:${p.id}` === cur)) sheet.close();
@@ -752,6 +850,10 @@ async function boot() {
       const st = world.byId[id];
       const r = canvas.getBoundingClientRect();
       return { x: r.left + (st.x - cam.x) * cam.scale + cam.viewW / 2, y: r.top + (st.y - cam.y) * cam.scale + cam.viewH / 2 };
+    },
+    screenOfPoint(x, y) {
+      const r = canvas.getBoundingClientRect();
+      return { x: r.left + (x - cam.x) * cam.scale + cam.viewW / 2, y: r.top + (y - cam.y) * cam.scale + cam.viewH / 2 };
     },
     armyScreenOf(id) {
       const p = renderer.armyScreen(state, id, frac);

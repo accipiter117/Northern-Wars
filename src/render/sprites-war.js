@@ -8,7 +8,7 @@ const INK = '#2b2116';
 // number of figures grows with its size; `selected` adds a gold ring.
 registerPlaceholder('army', 'host', (ctx, x, y, size, opts = {}) => {
   const [field, charge] = opts.colours ?? ['#23365e', '#efe6cf'];
-  const n = Math.max(1, Math.min(4, opts.figures ?? 2));
+  const n = Math.max(1, Math.min(5, opts.figures ?? 2));
   const f = opts.facing ?? 1;
   const fig = size * 0.55;
   // A parchment shadow under the column keeps it readable over any ground.
@@ -16,7 +16,7 @@ registerPlaceholder('army', 'host', (ctx, x, y, size, opts = {}) => {
   ctx.ellipse(x, y + size * 0.32, size * 0.62, size * 0.18, 0, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(43, 33, 22, 0.28)';
   ctx.fill();
-  const offsets = [[0, 0], [-0.32, 0.1], [0.32, 0.1], [0, 0.2]].slice(0, n);
+  const offsets = [[0, 0], [-0.32, 0.1], [0.32, 0.1], [-0.16, 0.22], [0.16, 0.22]].slice(0, n);
   for (const [dx, dy] of offsets.reverse()) {
     getSprite('military', 'soldier').draw(ctx, x + dx * size * f, y + dy * size, fig, { coat: opts.dim ? '#7d776c' : field });
   }

@@ -100,16 +100,21 @@ export function makeCrowns(world) {
   function keepThePeace(s, month) {
     const h = s.ledger.history;
     const income = h.length ? h.reduce((a, m) => a + ledgerNet(m).in, 0) / h.length : 1100;
-    const want = Math.min(FORCE.length, 2 + Math.floor(income / 650));
+    const want = Math.min(FORCE.length, 2 + Math.floor(income / 500));
     const danger = (id) => Math.max(threatLevel(s, world, id, 'bandits'), threatLevel(s, world, id, 'monsters'));
     const worst = Object.keys(s.settlements).filter((id) => !s.settlements[id].occupier).sort((a, b) => danger(b) - danger(a));
     if (month % 2 === 0 && s.forces.companies.length < want && s.treasury > 1500) {
-      const kind = FORCE[s.forces.companies.length];
-      // Muster in the crown town or city nearest the worst danger.
-      const towns = Object.keys(s.settlements).filter((id) => canRecruit(s, world, id, kind).ok);
+      // The next kind on the list that can be raised somewhere (crossbows
+      // need barracks), muster in the crown town nearest the worst danger.
+      let kind = null;
+      let towns = [];
+      for (const k of FORCE.slice(s.forces.companies.length).concat(FORCE)) {
+        towns = Object.keys(s.settlements).filter((id) => canRecruit(s, world, id, k).ok);
+        if (towns.length) { kind = k; break; }
+      }
       const hot = world.byId[worst[s.forces.companies.length % 4]];
       towns.sort((a, b) => Math.hypot(world.byId[a].x - hot.x, world.byId[a].y - hot.y) - Math.hypot(world.byId[b].x - hot.x, world.byId[b].y - hot.y));
-      if (towns.length) {
+      if (kind) {
         s = act(s, { type: 'recruit', settlement: towns[0], kind });
         const c = s.forces.companies.at(-1);
         if (c && c.station === towns[0] && c.order.kind === 'station') {
