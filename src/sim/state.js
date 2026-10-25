@@ -7,6 +7,7 @@ import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { newIntel, updateIntel, visionOf } from './vision.js';
+import { defaultGold } from './gold.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -16,7 +17,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 9;
+export const STATE_VERSION = 10;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -61,6 +62,9 @@ export function createState(world, seed = 1) {
     embassies: {},
     spies: {},
     ...defaultWar(),
+    routes: [],
+    nextRouteId: 1,
+    gold: defaultGold(world),
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],

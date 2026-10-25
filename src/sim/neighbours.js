@@ -5,6 +5,7 @@ import { addDispatch, clamp } from './realm.js';
 import { realmProsperity } from './realms.js';
 import { totalPopulation } from './state.js';
 import { TEMERIA, hostile, placesHeldBy, originOf } from './conflict.js';
+import { mahakamGrudge } from './gold.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 
@@ -23,6 +24,7 @@ export function relationTarget(state, world, id) {
     const [law, option] = key.split(':');
     if (state.laws[law]?.option === option) t += v;
   }
+  if (id === 'mahakam') t += mahakamGrudge(state, world);
   if (world.war && state.wars) t += world.war.claimRelation * placesHeldBy(state, world, TEMERIA).filter((pid) => originOf(world, pid) === id).length;
   return clamp(t, -100, 100);
 }

@@ -131,7 +131,8 @@
       "upkeep": 5,
       "effects": {
         "trade": 0.4,
-        "prosperity": 5
+        "prosperity": 5,
+        "craft": 5
       },
       "blurb": "Draws merchants and their tolls."
     },
@@ -150,7 +151,8 @@
       "upkeep": 5,
       "effects": {
         "trade": 0.25,
-        "prosperity": 3
+        "prosperity": 3,
+        "craft": 6
       },
       "blurb": "Smiths, coopers and weavers working for coin."
     },
@@ -209,6 +211,365 @@
         "vision": 130
       },
       "blurb": "A tall tower on the border. Its watchmen see deep into the neighbouring realm."
+    },
+    "harbour": {
+      "name": "Harbour",
+      "types": [
+        "village",
+        "town",
+        "city"
+      ],
+      "needsWater": true,
+      "cost": {
+        "coin": 550,
+        "timber": 60,
+        "stone": 30
+      },
+      "days": 70,
+      "upkeep": 5,
+      "effects": {
+        "foodYield": 0.12,
+        "trade": 0.1,
+        "craft": 4,
+        "customs": 12,
+        "routes": 1,
+        "routeValue": 0.15
+      },
+      "blurb": "Quays for barges and fishing boats. Food from the water, customs from the river, and a busier trade road."
+    },
+    "warehouse": {
+      "name": "Warehouse",
+      "types": [
+        "town",
+        "city",
+        "castle"
+      ],
+      "cost": {
+        "coin": 300,
+        "timber": 50
+      },
+      "days": 40,
+      "upkeep": 2,
+      "effects": {
+        "goodsStorage": 200,
+        "sales": 0.25
+      },
+      "blurb": "Stores timber, stone and iron, and sells the surplus dearer."
+    },
+    "smithy": {
+      "name": "Smithy",
+      "types": [
+        "village",
+        "town",
+        "city",
+        "castle"
+      ],
+      "cost": {
+        "coin": 300,
+        "stone": 20,
+        "iron": 20
+      },
+      "days": 40,
+      "upkeep": 2,
+      "effects": {
+        "garrisonUpkeep": -0.3,
+        "ironUse": 5,
+        "craft": 3
+      },
+      "blurb": "Mends mail and forges spearheads from the realm's iron. Soldiers here cost less to keep."
+    },
+    "armoury": {
+      "name": "Armoury",
+      "types": [
+        "town",
+        "city",
+        "castle"
+      ],
+      "cost": {
+        "coin": 600,
+        "stone": 40,
+        "iron": 40
+      },
+      "days": 60,
+      "upkeep": 5,
+      "effects": {
+        "soldierStrength": 0.3,
+        "armyArms": 0.05,
+        "ironUse": 8
+      },
+      "blurb": "Racks of arms for the garrison and the levy. Its soldiers fight harder, and so do armies raised while it stands.",
+      "requires": "smithy"
+    },
+    "tannery": {
+      "name": "Tannery",
+      "types": [
+        "village",
+        "town"
+      ],
+      "produces": [
+        "food"
+      ],
+      "cost": {
+        "coin": 250,
+        "timber": 20
+      },
+      "days": 35,
+      "upkeep": 2,
+      "effects": {
+        "craft": 8,
+        "unrest": 2
+      },
+      "blurb": "Hides into leather for coin. The stink carries."
+    },
+    "brewery": {
+      "name": "Brewery",
+      "types": [
+        "village",
+        "town",
+        "city"
+      ],
+      "cost": {
+        "coin": 350,
+        "timber": 30,
+        "stone": 10
+      },
+      "days": 45,
+      "upkeep": 3,
+      "effects": {
+        "craft": 8,
+        "prosperity": 1,
+        "unrest": 1
+      },
+      "blurb": "Barley into ale, and ale into coin. Rowdier evenings."
+    },
+    "inn": {
+      "name": "Inn",
+      "types": [
+        "village",
+        "town",
+        "city"
+      ],
+      "needsRoad": 3,
+      "cost": {
+        "coin": 300,
+        "timber": 40
+      },
+      "days": 40,
+      "upkeep": 2,
+      "effects": {
+        "craft": 7,
+        "trade": 0.05,
+        "vision": 30,
+        "traffic": 0.15
+      },
+      "blurb": "Beds and beer at a crossroads. More travellers on the road, and their gossip reaches us."
+    },
+    "bathhouse": {
+      "name": "Bathhouse",
+      "types": [
+        "town",
+        "city"
+      ],
+      "cost": {
+        "coin": 400,
+        "stone": 40,
+        "timber": 20
+      },
+      "days": 50,
+      "upkeep": 3,
+      "effects": {
+        "plagueSpread": -0.35,
+        "plagueDeaths": -0.2,
+        "prosperity": 2
+      },
+      "blurb": "Hot water and soap. Sickness spreads less."
+    },
+    "hospice": {
+      "name": "Hospice of Melitele",
+      "types": [
+        "village",
+        "town",
+        "city",
+        "temple"
+      ],
+      "cost": {
+        "coin": 350,
+        "stone": 30,
+        "timber": 20
+      },
+      "days": 45,
+      "upkeep": 3,
+      "effects": {
+        "plagueDeaths": -0.5,
+        "plagueSpread": -0.15,
+        "opinion": {
+          "melitele": 3,
+          "peasants": 1
+        },
+        "faith": {
+          "melitele": 1.15
+        }
+      },
+      "blurb": "The priestesses tend the sick and the poor. Fewer die of plague, and Melitele's clergy grow fonder of the crown."
+    },
+    "cathedral": {
+      "name": "Cathedral of the Eternal Fire",
+      "types": [
+        "city"
+      ],
+      "cost": {
+        "coin": 1200,
+        "stone": 150,
+        "timber": 40
+      },
+      "days": 120,
+      "upkeep": 8,
+      "effects": {
+        "authority": 0.4,
+        "unrest": -6,
+        "tension": 12,
+        "opinion": {
+          "eternal_fire": 6,
+          "elf": -3,
+          "dwarf": -2
+        },
+        "faith": {
+          "eternal_fire": 1.25
+        }
+      },
+      "blurb": "A great house of the Fire. Authority and order, but non-humans feel its heat."
+    },
+    "guildhall": {
+      "name": "Guildhall",
+      "types": [
+        "town",
+        "city"
+      ],
+      "cost": {
+        "coin": 700,
+        "stone": 40,
+        "timber": 40
+      },
+      "days": 70,
+      "upkeep": 5,
+      "effects": {
+        "routes": 1,
+        "trade": 0.1,
+        "routeValue": 0.1,
+        "opinion": {
+          "burghers": 4
+        }
+      },
+      "blurb": "Where the guilds meet, and fund caravans. More trade routes, and the burghers are flattered.",
+      "requires": "market"
+    },
+    "bank": {
+      "name": "Dwarven bank",
+      "types": [
+        "city"
+      ],
+      "needsDwarves": 300,
+      "cost": {
+        "coin": 800,
+        "stone": 60
+      },
+      "days": 60,
+      "upkeep": 4,
+      "effects": {
+        "creditLimit": 3000,
+        "interest": -0.25,
+        "opinion": {
+          "dwarf": 3
+        }
+      },
+      "blurb": "A branch of the dwarven banking houses. Cheaper loans, and they lend more."
+    },
+    "barracks": {
+      "name": "Barracks",
+      "types": [
+        "town",
+        "city",
+        "castle"
+      ],
+      "cost": {
+        "coin": 500,
+        "stone": 50,
+        "timber": 30
+      },
+      "days": 60,
+      "upkeep": 4,
+      "effects": {
+        "garrisonBonus": 0.4
+      },
+      "blurb": "Quarters for more crown soldiers here, without a fortress's cost."
+    },
+    "paving": {
+      "name": "Paved streets",
+      "types": [
+        "town",
+        "city"
+      ],
+      "cost": {
+        "coin": 400,
+        "stone": 80
+      },
+      "days": 60,
+      "upkeep": 3,
+      "effects": {
+        "prosperity": 3,
+        "plagueSpread": -0.1,
+        "traffic": 0.15
+      },
+      "blurb": "Cobbles instead of mud. Carts move faster and trade picks up."
+    },
+    "sewers": {
+      "name": "Sewers",
+      "types": [
+        "town",
+        "city"
+      ],
+      "cost": {
+        "coin": 600,
+        "stone": 100
+      },
+      "days": 90,
+      "upkeep": 4,
+      "effects": {
+        "plagueSpread": -0.35,
+        "plagueDeaths": -0.2,
+        "prosperity": 2
+      },
+      "blurb": "Stone drains under the streets. Plague finds less to feed on.",
+      "requires": "paving"
+    },
+    "goldmine": {
+      "name": "Gold mine",
+      "types": [
+        "village",
+        "town",
+        "castle",
+        "city"
+      ],
+      "needsDeposit": true,
+      "cost": {
+        "coin": 700,
+        "timber": 60,
+        "iron": 30
+      },
+      "days": 90,
+      "upkeep": 8,
+      "effects": {
+        "gold": 1
+      },
+      "blurb": "Shafts into a gold seam. Coin straight to the treasury until the seam runs out, and miners, thieves and envious eyes with it."
     }
-  }
+  },
+  "slots": {
+    "city": 12,
+    "town": 8,
+    "village": 5,
+    "castle": 5,
+    "temple": 3
+  },
+  "slotsNote": "How many buildings each kind of place can hold. Walls and watchtowers count too."
 }

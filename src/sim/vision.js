@@ -43,6 +43,8 @@ export function visionOf(state, world, positions = []) {
   for (const s of world.geography.settlements) {
     let r = v.home[s.type] ?? 40;
     if (state.settlements[s.id].buildings.includes('watchtower')) r = Math.max(r, v.watchtower);
+    // Travellers resting at an inn bring word of the road ahead.
+    if (state.settlements[s.id].buildings.includes('inn')) r += world.buildings.inn.effects.vision;
     if (patrolled.has(s.id)) r += v.patrol;
     circles.push({ x: s.x, y: s.y, r });
   }

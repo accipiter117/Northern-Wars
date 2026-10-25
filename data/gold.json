@@ -1,0 +1,85 @@
+{
+  "note": "Gold deposits: where they lie (map units), which settlement works them, how much gold (crowns) they hold and whether the crown knows of them at the start. A mine yields up to `yield` crowns a month, tapering once less than a third is left.",
+  "deposits": {
+    "carreras_seam": {
+      "name": "The Carreras seam",
+      "settlement": "carreras",
+      "x": 848,
+      "y": 418,
+      "gold": 9000,
+      "known": true
+    },
+    "zavada_spur": {
+      "name": "Zavada spur",
+      "settlement": "zavada",
+      "x": 772,
+      "y": 566,
+      "gold": 5000,
+      "known": true
+    },
+    "klamat_reef": {
+      "name": "The Klamat reef",
+      "settlement": "razwan",
+      "x": 712,
+      "y": 708,
+      "gold": 7000,
+      "known": true
+    },
+    "tukaj_east": {
+      "name": "Tukaj diggings",
+      "settlement": "petrelsteyn",
+      "x": 322,
+      "y": 598,
+      "gold": 6000,
+      "known": true
+    },
+    "tukaj_west": {
+      "name": "Rissberg workings",
+      "settlement": "rissberg",
+      "x": 302,
+      "y": 616,
+      "gold": 4000,
+      "known": true
+    },
+    "napeys_vein": {
+      "name": "The Napeys vein",
+      "settlement": "napeys",
+      "x": 396,
+      "y": 638,
+      "gold": 8000,
+      "known": false
+    },
+    "dregsdon_lode": {
+      "name": "Dregsdon lode",
+      "settlement": "dregsdon",
+      "x": 905,
+      "y": 712,
+      "gold": 6000,
+      "known": false
+    }
+  },
+  "yield": 60,
+  "taper": 0.33,
+  "prospect": {
+    "coin": 300,
+    "days": 60,
+    "find": 0.7,
+    "terrain": [
+      "hills",
+      "mountains"
+    ],
+    "reach": 100
+  },
+  "miners": {
+    "growthPerMonth": 0.004,
+    "dwarfShare": 0.3
+  },
+  "banditThreat": 20,
+  "banditReach": 70,
+  "greed": 0.06,
+  "mahakam": {
+    "reach": 170,
+    "relation": -8
+  },
+  "minShare": 0.1
+}

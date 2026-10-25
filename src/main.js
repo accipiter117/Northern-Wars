@@ -13,6 +13,7 @@ import { faithHtml, petitionHtml } from './ui/faith.js';
 import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
 import { militaryHtml, eventHtml } from './ui/military.js';
 import { warHtml, armyCardHtml, warDecisionHtml, musterPlaces } from './ui/war.js';
+import { tradeHtml } from './ui/trade.js';
 import { createHints, helpHtml } from './ui/hints.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
@@ -27,7 +28,7 @@ async function readJson(path) {
 
 async function boot() {
   const world = await loadWorld(readJson);
-  const [peoples, faiths, goods, hintData] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json', 'data/hints.json'].map(readJson));
+  const [peoples, faiths, goods, hintData, layoutCfg] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json', 'data/hints.json', 'data/layout.json'].map(readJson));
   const hints = createHints(hintData, { disabled: params.has('nohints') });
   const lookups = { peoples, faiths, goods };
 
@@ -42,7 +43,7 @@ async function boot() {
   const unitLabel = document.getElementById('unit-label');
   const toastEl = document.getElementById('toast');
   const cam = createCamera(world);
-  const renderer = createRenderer(canvas, world, cam);
+  const renderer = createRenderer(canvas, world, cam, layoutCfg);
 
   const topbar = createTopbar(world, { onSpeed: setSpeed, onMenu: openMenu });
   const sheet = createSheet({ onClose: () => { if (selection?.settlement) selection = null; } });
@@ -88,7 +89,13 @@ async function boot() {
       const b = e.target.closest('[data-build]');
       const house = e.target.closest('[data-house]');
       const level = e.target.closest('[data-garrison]');
-      if (b && !b.disabled) order({ type: 'build', settlement: id, building: b.dataset.build });
+      const route = e.target.closest('[data-route-from]');
+      const prospect = e.target.closest('[data-prospect]');
+      if (route) {
+        tradeForm.from = id;
+        openTrade();
+      } else if (prospect && !prospect.disabled) order({ type: 'prospect', settlement: id });
+      else if (b && !b.disabled) order({ type: 'build', settlement: id, building: b.dataset.build });
       else if (house) openHouse(house.dataset.house);
       else if (level && !level.disabled) order({ type: 'garrison', settlement: id, level: level.dataset.garrison });
     };
@@ -359,6 +366,37 @@ async function boot() {
     };
   }
 
+  // Trade routes, gold mines and prospecting.
+  const tradeForm = { from: 'vizima', to: 'maribor' };
+  function openTrade() {
+    selection = null;
+    hideUnitLabel();
+    hints.note('tradeOpened');
+    const body = sheet.open('trade', tradeHtml(world, state, tradeForm));
+    body.onchange = (e) => {
+      const p = e.target.closest('[data-pick]');
+      if (p) {
+        tradeForm[p.dataset.pick] = p.value;
+        sheet.patch('trade', tradeHtml(world, state, tradeForm));
+      }
+    };
+    body.onclick = (e) => {
+      const t = e.target;
+      const close = t.closest('[data-close-route]');
+      const place = t.closest('[data-place]');
+      if (t.closest('[data-open-route]') && !t.closest('[data-open-route]').disabled) {
+        order({ type: 'route', from: tradeForm.from, to: tradeForm.to });
+        renderer.invalidate();
+      } else if (close) {
+        if (confirm('Wind up this trade route?')) {
+          order({ type: 'route', close: true, id: Number(close.dataset.closeRoute) });
+          renderer.invalidate();
+        }
+      } else if (place) openSettlement(place.dataset.place);
+      else menuAction(t.closest('[data-action]')?.dataset.action);
+    };
+  }
+
   // War: the panel with every war, army and the raising form.
   const raiseForm = { muster: 'vizima', levy: 'third', nobles: false, companies: 0, marshal: 'vestibor', stance: 'cautious' };
   function openWar() {
@@ -502,6 +540,7 @@ async function boot() {
     else if (action === 'nobles') openNobles();
     else if (action === 'military') openMilitary();
     else if (action === 'war') openWar();
+    else if (action === 'trade') openTrade();
     else if (action === 'help') openHelp();
     else if (action === 'hints-off' || action === 'hints-on') {
       hints.setEnabled(action === 'hints-on');
@@ -575,7 +614,8 @@ async function boot() {
     }
   }
 
-  attachMapInput(canvas, cam, world, { onTap, onChange: () => renderer.invalidate() });
+  // The renderer notices the camera moving by itself; a pan only slides its layers.
+  attachMapInput(canvas, cam, world, { onTap, onChange: () => {} });
 
   let firstSize = true;
   function layout() {
@@ -604,7 +644,11 @@ async function boot() {
   let last = performance.now();
   let lastSheetRefresh = 0;
   let lastHintCheck = 0;
+  // How long each frame's own work takes (the realm's days and the drawing),
+  // for the performance test: it must fit well inside a sixtieth of a second.
+  const frameStats = { frames: 0, ms: 0, max: 0, recent: [] };
   function frame(now) {
+    const work = performance.now();
     const dt = Math.min(0.25, (now - last) / 1000);
     last = now;
     if (speed > 0) {
@@ -638,8 +682,14 @@ async function boot() {
     renderer.draw(state, frac, selection);
     if (now - lastHintCheck > 1000) {
       lastHintCheck = now;
-      hints.check(state);
+      hints.check(state, world);
     }
+    const took = performance.now() - work;
+    frameStats.frames += 1;
+    frameStats.ms += took;
+    frameStats.max = Math.max(frameStats.max, took);
+    frameStats.recent.push(took);
+    if (frameStats.recent.length > 600) frameStats.recent.shift();
     requestAnimationFrame(frame);
   }
 
@@ -660,6 +710,7 @@ async function boot() {
     else if (cur?.startsWith('house:')) sheet.patch(cur, houseCardHtml(world, state, cur.slice(6), housePicking));
     else if (cur?.startsWith('demand:') && !state.demands.some((p) => `demand:${p.id}` === cur)) sheet.close();
     else if (cur === 'war') sheet.patch(cur, warHtml(world, state, raiseForm));
+    else if (cur === 'trade') sheet.patch(cur, tradeHtml(world, state, tradeForm));
     else if (cur?.startsWith('army:')) sheet.patch(cur, armyCardHtml(world, state, Number(cur.slice(5)), armyPick));
     else if (cur?.startsWith('warDecision:') && !state.warDecisions.some((p) => `warDecision:${p.id}` === cur)) sheet.close();
   }
@@ -675,6 +726,13 @@ async function boot() {
     get state() { return state; },
     get speed() { return speed; },
     get renderStats() { return renderer.stats; },
+    get artStats() { return renderer.artStats; },
+    get frameStats() {
+      const sorted = [...frameStats.recent].sort((a, b) => a - b);
+      return { frames: frameStats.frames, mean: frameStats.ms / Math.max(1, frameStats.frames), max: frameStats.max, p95: sorted[Math.floor(sorted.length * 0.95)] ?? 0 };
+    },
+    resetFrameStats() { Object.assign(frameStats, { frames: 0, ms: 0, max: 0, recent: [] }); },
+    planOf: (id) => renderer.planOf(id),
     // What a tap at these page coordinates would pick, for browser tests.
     pickAt(x, y) {
       const r = canvas.getBoundingClientRect();

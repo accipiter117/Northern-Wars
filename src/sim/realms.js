@@ -2,6 +2,7 @@
 // Temeria: their towns grow, their rulers raise buildings and keep
 // garrisons, and fires, raids, sickness and fairs come and go. What the
 // crown hears of it depends on its embassies, spies and friends.
+import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { ownerOf, leviedMap, besieged } from './conflict.js';
 
@@ -141,7 +142,7 @@ export function canOpenEmbassy(state, world, rid) {
   if (c.noEmbassy.includes(rid)) return { ok: false, reason: 'They receive no envoys.' };
   if (state.embassies[rid]) return { ok: false, reason: 'We already keep an embassy there.' };
   if (state.neighbours[rid].relation < c.embassy.minRelation) return { ok: false, reason: 'They would not receive our ambassador.' };
-  if (state.treasury - c.embassy.coin < -world.economy.debt.creditLimit) return { ok: false, reason: 'The bankers will not lend that much.' };
+  if (state.treasury - c.embassy.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
   return { ok: true };
 }
 
@@ -160,7 +161,7 @@ export function canSendSpy(state, world, rid) {
   const c = R(world).intelligence.spy;
   if (!state.neighbours[rid]) return { ok: false, reason: 'Unknown realm.' };
   if ((state.spies[rid] ?? 0) > state.day) return { ok: false, reason: `Our agent is already there (${state.spies[rid] - state.day} days left).` };
-  if (state.treasury - c.coin < -world.economy.debt.creditLimit) return { ok: false, reason: 'The bankers will not lend that much.' };
+  if (state.treasury - c.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
   return { ok: true };
 }
 

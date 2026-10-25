@@ -5,6 +5,10 @@ import { prepareMap, drawMap, COLOURS } from './mapLayer.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
 import './sprites-war.js';
+import { createSettlementArt, seasonLook } from './settlementArt.js';
+import { dateOf } from '../sim/calendar.js';
+import { totalPopulation } from '../sim/state.js';
+import { houseCount } from './layout.js';
 import { toScreen, toWorld } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
@@ -12,6 +16,7 @@ import { threatLevel, patrolledSet, patrolRoute, plagueActive } from '../sim/mil
 import { visionOf, canSee, hasBit } from '../sim/vision.js';
 import { travellerPositions } from '../sim/ambient.js';
 import { armyPosition } from '../sim/armies.js';
+import { roadPath } from '../sim/world.js';
 import { TEMERIA, ownerOf, originOf, sideColours } from '../sim/conflict.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
@@ -28,18 +33,22 @@ const PRIORITY = { city: 0, town: 1, temple: 2, castle: 3, village: 4 };
 const SERIF = '"Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif';
 const UNIT_SIZE = 14;
 const ARMY_SIZE = 26;
-// Where building icons sit round a settlement, in degrees (0 is east, -90 is
-// north): an inner arc over the top and right, then an outer arc. The left
-// side is kept for the garrison and the space below for the name.
-const INNER_SLOTS = [-90, -50, -130, -15, 15];
-const OUTER_SLOTS = [-70, -110, -30, -150];
 const SOLDIERS_PER_FIGURE = 200;
 const MAX_FIGURES = 5;
 // Threat level at which a bandit camp or a monster's lair shows on the map.
 const DANGER = 50;
 
-export function createRenderer(canvas, world, cam) {
+export function createRenderer(canvas, world, cam, layoutCfg) {
   const prep = prepareMap(world);
+  const art = createSettlementArt(world, layoutCfg);
+  // How far each settlement's ground reaches on screen, for labels and taps.
+  let footprint = {};
+  function artView(p, st, colour) {
+    return {
+      scale: cam.scale, dpr, x: p.x, y: p.y, look: seasonLook(dateOf(infraState.day).month),
+      compactPx: 1, compactRadius: iconSize(st.type) * 0.75 + 3, colour,
+    };
+  }
   const ctx = canvas.getContext('2d');
   // Three cached layers, laid one on another each frame: the painted map
   // (redrawn only when the camera moves or a neighbour's colour changes),
@@ -53,23 +62,48 @@ export function createRenderer(canvas, world, cam) {
   const cache = document.createElement('canvas');
   const cctx = cache.getContext('2d');
   // One pixel per grid cell of explored ground, scaled up softly as the fog.
+  // The three layers are canvases of their own behind the map canvas. A pan
+  // slides them with a CSS transform, which the browser does on the
+  // graphics chip; the map canvas on top holds only what moves.
+  for (const layer of [base, fog, cache]) {
+    layer.className = 'map-backdrop';
+    layer.setAttribute('aria-hidden', 'true');
+    canvas.parentNode?.insertBefore(layer, canvas);
+  }
   const mask = document.createElement('canvas');
   const mctx = mask.getContext('2d');
   let baseDirty = true;
   let fogDirty = true;
-  const stats = { base: 0, overlay: 0, fog: 0 };
+  let fogPending = false;
+  let lastFog = 0;
+  const FOG_EVERY_MS = 400;
+  const FOG_RES = 0.5;
+  const stats = { base: 0, overlay: 0, fog: 0, relayer: 0 };
   const foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
   let dpr = 1;
   let dirty = true;
   let lastSelected = null;
   const ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
 
+  // The cached layers are drawn a margin larger than the screen, so a pan
+  // only slides them; they are redrawn when the zoom changes or the pan
+  // runs past the margin. `lc` is the camera they were drawn from.
+  let margin = 0;
+  let lc = null;
   function resize(w, h) {
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    for (const c of [canvas, base, fog, cache]) {
-      c.width = Math.round(w * dpr);
-      c.height = Math.round(h * dpr);
+    margin = Math.round(Math.max(w, h) * 0.25);
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    for (const c of [base, fog, cache]) {
+      // The fog is soft, so it is drawn at half the resolution.
+      const res = c === fog ? dpr * FOG_RES : dpr;
+      c.width = Math.round((w + margin * 2) * res);
+      c.height = Math.round((h + margin * 2) * res);
+      c.style.width = `${w + margin * 2}px`;
+      c.style.height = `${h + margin * 2}px`;
     }
+    lc = null;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     dirty = true;
@@ -112,7 +146,9 @@ export function createRenderer(canvas, world, cam) {
   function updateVision(state) {
     if (!world.grid || !state.realms) return;
     vision = visionOf(state, world, travellerPositions(state, world));
-    fogDirty = true;
+    // Watchers move a little each day; the fog follows them a few times a
+    // second at most, which the eye cannot tell from every day.
+    fogPending = true;
     const explored = state.ambient.intel?.explored ?? [];
     const key = explored.join(',');
     if (key !== maskKey) {
@@ -137,9 +173,14 @@ export function createRenderer(canvas, world, cam) {
     fctx.clearRect(0, 0, fog.width, fog.height);
     fogDirty = false;
     if (!vision) return;
+    // Nothing to fog when no foreign land is in reach of the layer.
+    const half = { x: (cam.viewW / 2 + margin) / cam.scale, y: (cam.viewH / 2 + margin) / cam.scale };
+    const view = { x0: cam.x - half.x, x1: cam.x + half.x, y0: cam.y - half.y, y1: cam.y + half.y };
+    if (!prep.neighbours.some((n) => n.boxes.some((b) => b.x1 > view.x0 && b.x0 < view.x1 && b.y1 > view.y0 && b.y0 < view.y1))) return;
     stats.fog += 1;
-    const s = cam.scale * dpr;
-    fctx.setTransform(s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale));
+    const fd = dpr * FOG_RES;
+    const s = cam.scale * fd;
+    fctx.setTransform(s, 0, 0, s, fd * (margin + cam.viewW / 2 - cam.x * cam.scale), fd * (margin + cam.viewH / 2 - cam.y * cam.scale));
     const g = world.grid;
     // Fog lies only over land: the sea is no secret.
     fctx.save();
@@ -152,6 +193,7 @@ export function createRenderer(canvas, world, cam) {
     // Lift the fog wherever someone of ours is watching, softly at the edges.
     fctx.globalCompositeOperation = 'destination-out';
     for (const c of vision.circles) {
+      if (c.x + c.r < view.x0 || c.x - c.r > view.x1 || c.y + c.r < view.y0 || c.y - c.r > view.y1) continue;
       const grad = fctx.createRadialGradient(c.x, c.y, c.r * 0.6, c.x, c.y, c.r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -257,9 +299,9 @@ export function createRenderer(canvas, world, cam) {
       }
     }
     const marks = (id, s) => `${infraThreats[id]?.bandits ? 'b' : ''}${infraThreats[id]?.monsters ? 'm' : ''}${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
-    const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + Object.entries(state.settlements)
-      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${s.occupier ?? ''}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
-      .join('|') + (state.unpaid ? '!' : '') + foreignKey;
+    const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + (state.routes ?? []).map((r) => `${r.from}>${r.to}${r.closed ? 'x' : ''}`).join() + Object.entries(state.settlements)
+      .map(([id, s]) => `${id}:${houseCount(layoutCfg, world.byId[id].type, totalPopulation(s))}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${s.occupier ?? ''}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
+      .join('|') + (state.unpaid ? '!' : '') + foreignKey + seasonLook(dateOf(state.day).month).season + seasonLook(dateOf(state.day).month).snow;
     if (key !== infraKey) {
       infraKey = key;
       dirty = true;
@@ -275,20 +317,11 @@ export function createRenderer(canvas, world, cam) {
     return { colours: house.colours, rebel: !!infraState.houses?.[s.holder]?.rebel };
   }
 
-  function drawInfrastructure(c, st, s, unpaid) {
+  // The garrison beside a settlement, at the west edge of its ground.
+  function drawInfrastructure(c, st, s, unpaid, reach) {
     const p = toScreen(cam, st.x, st.y);
     const k = iconSize(st.type) / ICON_SIZE[st.type];
-    const iconR = iconSize(st.type) / 2;
-    const bsize = 13 * k;
-    const icons = s.buildings.filter((b) => b !== 'walls');
-    if (s.construction) icons.push('scaffold');
-    icons.forEach((b, i) => {
-      const outer = i >= INNER_SLOTS.length;
-      const deg = outer ? OUTER_SLOTS[(i - INNER_SLOTS.length) % OUTER_SLOTS.length] : INNER_SLOTS[i];
-      const rad = (deg * Math.PI) / 180;
-      const dist = iconR + bsize / 2 + 2 + (outer ? bsize + 1 : 0);
-      getSprite('building', b, 'scaffold').draw(c, p.x + Math.cos(rad) * dist, p.y + Math.sin(rad) * dist, bsize);
-    });
+    const iconR = Math.max(iconSize(st.type) / 2, reach ?? 0);
     const n = figures(s.garrison);
     const banner = bannerFor(s);
     // The crown pays only its own soldiers, so only they go grey when pay stops.
@@ -321,6 +354,25 @@ export function createRenderer(canvas, world, cam) {
     c.restore();
   }
 
+  // Crown trade routes: a faint gold thread along the road, grey while closed.
+  function drawRoutes(c) {
+    if (!infraState?.routes?.length) return;
+    c.save();
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.setLineDash([10 / cam.scale, 6 / cam.scale]);
+    for (const r of infraState.routes) {
+      const path = roadPath(world, r.from, r.to, true);
+      if (!path) continue;
+      c.beginPath();
+      path.forEach((id, i) => (i ? c.lineTo(world.byId[id].x, world.byId[id].y) : c.moveTo(world.byId[id].x, world.byId[id].y)));
+      c.strokeStyle = r.closed ? 'rgba(90, 80, 70, 0.4)' : 'rgba(196, 150, 40, 0.55)';
+      c.lineWidth = 4 / cam.scale;
+      c.stroke();
+    }
+    c.restore();
+  }
+
   function drawMarkers(c, st, s, p, r) {
     const marks = [];
     if (plagueActive(infraState, s)) marks.push('plague');
@@ -333,7 +385,7 @@ export function createRenderer(canvas, world, cam) {
 
   function drawStatic(selectedId) {
     const s = cam.scale * dpr;
-    const worldTransform = [s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale)];
+    const worldTransform = [s, 0, 0, s, dpr * (margin + cam.viewW / 2 - cam.x * cam.scale), dpr * (margin + cam.viewH / 2 - cam.y * cam.scale)];
     if (baseDirty) {
       bctx.setTransform(1, 0, 0, 1, 0, 0);
       bctx.clearRect(0, 0, base.width, base.height);
@@ -348,20 +400,31 @@ export function createRenderer(canvas, world, cam) {
     cctx.clearRect(0, 0, cache.width, cache.height);
     cctx.setTransform(...worldTransform);
     drawPatrols(cctx);
+    drawRoutes(cctx);
 
-    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cctx.setTransform(dpr, 0, 0, dpr, dpr * margin, dpr * margin);
     drawRegionLabels(cctx);
     const z = zoomRel();
     const shown = (st) => z >= LABEL_ZOOM[st.type] || st.id === selectedId;
+    footprint = {};
+    const full = cam.scale >= layoutCfg.zoom.full;
     for (const st of ordered.slice().reverse()) {
       const p = toScreen(cam, st.x, st.y);
-      if (shown(st) && infraState?.settlements[st.id].buildings.includes('walls')) {
-        getSprite('building', 'walls').draw(cctx, p.x, p.y, iconSize(st.type) + 6);
+      const s = infraState?.settlements[st.id];
+      const onScreen = p.x > -160 - margin && p.y > -160 - margin && p.x < cam.viewW + 160 + margin && p.y < cam.viewH + 160 + margin;
+      let reach = iconSize(st.type) / 2;
+      // Houses, buildings and fields round the settlement: the whole layout
+      // when close, a compact cluster round its marker when far.
+      if (s && onScreen && (full || shown(st) || st.type === 'city' || st.type === 'town')) {
+        reach = Math.max(reach, art.draw(cctx, st, {
+          people: totalPopulation(s), production: s.production, buildings: s.buildings, construction: s.construction?.building,
+        }, infraState.seed, artView(p, st, s.occupier ? sideColours(world, s.occupier)[0] : null)));
       }
-      getSprite('settlement', st.id, st.type).draw(cctx, p.x, p.y, iconSize(st.type), { capital: st.id === world.kingdom.capital });
-      if (infraState && shown(st)) drawInfrastructure(cctx, st, infraState.settlements[st.id], infraState.unpaid);
+      if (!full) getSprite('settlement', st.id, st.type).draw(cctx, p.x, p.y, iconSize(st.type), { capital: st.id === world.kingdom.capital });
+      footprint[st.id] = reach;
+      if (s && shown(st)) drawInfrastructure(cctx, st, s, infraState.unpaid, full ? reach : null);
       // Trouble shows at every zoom: it is news the crown should not miss.
-      if (infraState) drawMarkers(cctx, st, infraState.settlements[st.id], p, iconSize(st.type) / 2);
+      if (s) drawMarkers(cctx, st, s, p, full ? reach * 0.6 : iconSize(st.type) / 2);
     }
     drawForeign(cctx, z);
     drawSettlementLabels(cctx, selectedId);
@@ -372,17 +435,21 @@ export function createRenderer(canvas, world, cam) {
       const f = foreignView[st.id];
       if (!f) continue;
       const p = toScreen(cam, st.x, st.y);
-      if (p.x < -60 || p.y < -60 || p.x > cam.viewW + 60 || p.y > cam.viewH + 60) continue;
+      if (p.x < -60 - margin || p.y < -60 - margin || p.x > cam.viewW + 60 + margin || p.y > cam.viewH + 60 + margin) continue;
       // Remembered places are drawn faded: this is how they were, not how they are.
       c.globalAlpha = f.visible ? 1 : 0.55;
-      if (z >= LABEL_ZOOM[st.type] && f.buildings.includes('walls')) getSprite('building', 'walls').draw(c, p.x, p.y, iconSize(st.type) + 6);
-      getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });
+      const full = cam.scale >= layoutCfg.zoom.full;
+      const colours = sideColours(world, f.owner ?? st.realm);
+      let reach = iconSize(st.type) / 2;
+      if (full || z >= LABEL_ZOOM[st.type] || st.type === 'city') {
+        reach = Math.max(reach, art.draw(c, st, {
+          people: f.population, production: st.type === 'village' ? 'food' : 'other', buildings: f.buildings, construction: f.construction,
+        }, infraState.seed, artView(p, st, colours[0])));
+      }
+      if (!full) getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });
+      footprint[st.id] = reach;
       if (z >= LABEL_ZOOM[st.type]) {
-        const colours = sideColours(world, f.owner ?? st.realm);
-        drawInfrastructure(c, st, {
-          buildings: f.buildings, construction: f.construction ? { building: f.construction } : null,
-          garrison: f.garrison, holder: 'foreign', banner: colours ? { colours } : {},
-        }, false);
+        drawInfrastructure(c, st, { garrison: f.garrison, holder: 'foreign', banner: colours ? { colours } : {} }, false, full ? reach : null);
       }
       c.globalAlpha = 1;
     }
@@ -442,10 +509,10 @@ export function createRenderer(canvas, world, cam) {
       // Pulled right back, only capitals keep their names.
       if (z < 0.8 && !capitals.has(st.id) && st.id !== selectedId) continue;
       const p = toScreen(cam, st.x, st.y);
-      if (p.x < -80 || p.y < -40 || p.x > cam.viewW + 80 || p.y > cam.viewH + 40) continue;
+      if (p.x < -80 - margin || p.y < -40 - margin || p.x > cam.viewW + 80 + margin || p.y > cam.viewH + 40 + margin) continue;
       c.font = `${LABEL_FONT[st.type]} ${SERIF}`;
       const w = c.measureText(st.name).width;
-      const y = p.y + iconSize(st.type) / 2 + 2;
+      const y = p.y + Math.max(iconSize(st.type) / 2, (footprint[st.id] ?? 0) * 1.08) + 2;
       const box = { x0: p.x - w / 2 - 2, x1: p.x + w / 2 + 2, y0: y, y1: y + 15 };
       if (st.id !== selectedId && placed.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0)) continue;
       placed.push(box);
@@ -465,26 +532,49 @@ export function createRenderer(canvas, world, cam) {
     const selectedId = selection?.settlement ?? null;
     updateTints(state);
     updateInfra(state);
-    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, selectedId };
-    if (!dirty && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
-      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army) return;
+    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
+    if (!dirty && !baseDirty && !fogDirty && !fogPending && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
+      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army
+      && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale) return;
     lastFrame = frame;
-    if (dirty || selectedId !== lastSelected) {
-      drawStatic(selectedId);
-      dirty = false;
-      lastSelected = selectedId;
+    // A new zoom, or a pan past the margin, redraws every layer from here.
+    if (fogPending && performance.now() - lastFog > FOG_EVERY_MS) {
+      fogPending = false;
+      fogDirty = true;
     }
-    if (fogDirty) drawFog();
+    if (!lc || lc.scale !== cam.scale || Math.abs(lc.x - cam.x) * cam.scale > margin * 0.9 || Math.abs(lc.y - cam.y) * cam.scale > margin * 0.9) {
+      lc = { x: cam.x, y: cam.y, scale: cam.scale };
+      stats.relayer += 1;
+      dirty = true;
+      baseDirty = true;
+      fogDirty = true;
+    }
+    withLayerCam(() => {
+      if (dirty || selectedId !== lastSelected) {
+        drawStatic(selectedId);
+        dirty = false;
+        lastSelected = selectedId;
+      }
+      if (fogDirty) {
+        drawFog();
+        lastFog = performance.now();
+      }
+    });
+    // Slide the backdrop by however far the camera has panned since, to the
+    // nearest device pixel.
+    const ox = Math.round((lc.x - cam.x) * cam.scale * dpr) / dpr - margin;
+    const oy = Math.round((lc.y - cam.y) * cam.scale * dpr) / dpr - margin;
+    const shift = `translate(${ox}px, ${oy}px)`;
+    if (base.style.transform !== shift) for (const layer of [base, fog, cache]) layer.style.transform = shift;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(base, 0, 0);
-    ctx.drawImage(fog, 0, 0);
-    ctx.drawImage(cache, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    drawLifeLayer(state, frac);
     if (selectedId) {
       const st = world.byId[selectedId];
       const p = toScreen(cam, st.x, st.y);
-      ring(ctx, p.x, p.y, iconSize(st.type) / 2 + 6);
+      ring(ctx, p.x, p.y, Math.max(iconSize(st.type) / 2, footprint[selectedId] ?? 0) + 6);
     }
 
     for (const u of state.ambient.units) {
@@ -499,6 +589,33 @@ export function createRenderer(canvas, world, cam) {
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
     drawWar(state, frac, selection);
+  }
+
+  // The layers are drawn as seen from the camera they were started from.
+  function withLayerCam(fn) {
+    const { x, y } = cam;
+    cam.x = lc.x;
+    cam.y = lc.y;
+    try {
+      fn();
+    } finally {
+      cam.x = x;
+      cam.y = y;
+    }
+  }
+
+  // Smoke, workers, beasts and boats round the settlements in view, only
+  // when close enough to see them.
+  function drawLifeLayer(state, frac) {
+    if (cam.scale < layoutCfg.zoom.life) return;
+    const look = seasonLook(dateOf(state.day).month);
+    const time = state.day + frac;
+    for (const st of [...ordered, ...foreignOrdered]) {
+      if (!state.settlements[st.id] && !foreignView[st.id]?.visible) continue;
+      const p = toScreen(cam, st.x, st.y);
+      if (p.x < -120 || p.y < -120 || p.x > cam.viewW + 120 || p.y > cam.viewH + 120) continue;
+      art.drawLife(ctx, st, cam.scale, p.x, p.y, time, look);
+    }
   }
 
   // Battlefields of the last days, sieges, and the armies themselves. The
@@ -580,7 +697,7 @@ export function createRenderer(canvas, world, cam) {
       // Buildings and soldiers round a settlement count as part of it.
       const dressed = zoomRel() >= LABEL_ZOOM[st.type] && infraState
         && (infraState.settlements[st.id].buildings.length || figures(infraState.settlements[st.id].garrison));
-      const reach = Math.max(22, iconSize(st.type) / 2 + 8) + (dressed ? 20 : 0);
+      const reach = Math.max(22, iconSize(st.type) / 2 + 8, (footprint[st.id] ?? 0) * 0.9) + (dressed ? 20 : 0);
       const score = d * 0.5;
       if (d < reach && (!best || score < best.d)) best = { d: score, hit: { settlement: st.id } };
     }
@@ -611,7 +728,7 @@ export function createRenderer(canvas, world, cam) {
   }
 
   return {
-    resize, draw, pick, unitScreen, armyScreen, stats,
+    resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     canSeePoint: (x, y) => !vision || canSee(world, vision, x, y),
     foreignInfo: (id) => foreignView[id] ?? null,

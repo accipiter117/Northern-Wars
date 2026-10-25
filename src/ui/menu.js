@@ -1,5 +1,6 @@
-import { formatDate, dateOf, totalPopulation, realmStock, MONTHS, ledgerNet } from '../sim/index.js';
+import { formatDate, dateOf, totalPopulation, realmStock, MONTHS, ledgerNet, creditLimit } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
+import { routeLedgerRows } from './trade.js';
 
 const signed = (n) => (n < 0 ? `−${number(-n)}` : number(n));
 
@@ -15,7 +16,7 @@ export function realmMenuHtml(world, state, hasSave) {
   }
   const stock = realmStock(state);
   const debt = state.treasury < 0
-    ? `<p class="warn">The crown owes ${escapeHtml(world.economy.debt.lender)} ${number(-state.treasury)} crowns. They will lend up to ${number(world.economy.debt.creditLimit)}.${state.unpaid ? ' They will lend no more, and the garrisons go unpaid.' : ''}</p>`
+    ? `<p class="warn">The crown owes ${escapeHtml(world.economy.debt.lender)} ${number(-state.treasury)} crowns. They will lend up to ${number(creditLimit(state, world))}.${state.unpaid ? ' They will lend no more, and the garrisons go unpaid.' : ''}</p>`
     : '';
   return `
     <h2>The Realm of ${escapeHtml(world.kingdom.name)}</h2>
@@ -29,6 +30,7 @@ export function realmMenuHtml(world, state, hasSave) {
     </dl>
     <div class="menu-list">
       <button type="button" data-action="laws">Laws and edicts<small>Decree, and see how the realm feels about it</small></button>
+      <button type="button" data-action="trade">Trade and gold<small>Crown trade routes, gold mines and prospecting</small></button>
       <button type="button" data-action="war">War${state.wars?.some((w) => w.sides.flat().includes('temeria')) ? ' <span class="badge bad">At war</span>' : ''}<small>Armies, marshals, sieges and peace</small></button>
       <button type="button" data-action="military">Military and threats<small>Soldiers, patrols, bandits and monsters</small></button>
       <button type="button" data-action="nobles">The great houses<small>Loyalty, lands, demands and the crown's hand</small></button>
@@ -64,9 +66,9 @@ export function ledgerHtml(world, state) {
     <h2>Ledger</h2>
     ${back}
     <h3>${MONTHS[last.month - 1].name} ${last.year}: income</h3>
-    <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Trade over the borders', i.foreign ?? 0)}${i.conquests ? row('Conquered towns', i.conquests) : ''}${i.tribute ? row('Tribute received', i.tribute) : ''}${row('Total', totalIn)}</dl>
+    <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Trade over the borders', i.foreign ?? 0)}${i.crafts ? row('Crafts (tanners, brewers, inns)', i.crafts) : ''}${i.customs ? row('River and sea customs', i.customs) : ''}${i.gold ? row('Gold', i.gold) : ''}${routeLedgerRows(world, last, row)}${i.conquests ? row('Conquered towns', i.conquests) : ''}${i.tribute ? row('Tribute received', i.tribute) : ''}${row('Total', totalIn)}</dl>
     <h3>Expenses</h3>
-    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Edicts', e.edicts ?? 0)}${row('Gifts to friendly realms', e.gifts ?? 0)}${row('Patrols', e.patrols ?? 0)}${row('Embassies abroad', e.embassies ?? 0)}${e.armies ? row('Armies in the field', e.armies) : ''}${e.occupation ? row('Garrisons in conquered towns', e.occupation) : ''}${e.tribute ? row('Tribute paid', e.tribute) : ''}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
+    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Edicts', e.edicts ?? 0)}${row('Gifts to friendly realms', e.gifts ?? 0)}${row('Patrols', e.patrols ?? 0)}${row('Embassies abroad', e.embassies ?? 0)}${e.armies ? row('Armies in the field', e.armies) : ''}${e.occupation ? row('Garrisons in conquered towns', e.occupation) : ''}${e.tribute ? row('Tribute paid', e.tribute) : ''}${e.routes ? row('Running trade routes', e.routes) : ''}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
     ${state.treasury > world.economy.upkeep.hoardFree ? '<p class="sub">A full treasury draws courtiers and hangers-on: the court costs more while the coffers stay this full.</p>' : ''}
     <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on building works, ${number(e.decrees ?? 0)} on decrees.</p>
     <h3>The past year</h3>

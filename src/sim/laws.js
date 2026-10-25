@@ -1,6 +1,7 @@
 // Laws and the realm's opinion of them. A decree costs Authority and crowns,
 // jolts the groups it touches at once, and then phases in over a month: until
 // it has fully taken hold, the old law's effects fade as the new one's grow.
+import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 
 const say = (state, text) => addDispatch(state, text, 'realm');
@@ -63,6 +64,14 @@ export function opinionTargets(state, world) {
   for (const [id, law] of Object.entries(world.laws.laws)) {
     for (const [g, v] of Object.entries(law.options[state.laws[id].option].opinion)) t[g] += v;
   }
+  // Guildhalls, hospices, cathedrals and banks please their own, a little
+  // more for each, up to a point.
+  const built = {};
+  for (const s of Object.values(state.settlements)) {
+    if (s.occupier) continue;
+    for (const b of s.buildings) for (const [g, v] of Object.entries(world.buildings[b].effects.opinion ?? {})) built[g] = (built[g] ?? 0) + v;
+  }
+  for (const [g, v] of Object.entries(built)) if (g in t) t[g] += clamp(v, -12, 12);
   for (const g of Object.keys(t)) t[g] = clamp(t[g], 0, 100);
   return t;
 }
@@ -80,7 +89,7 @@ export function canDecree(state, world, lawId, optionId) {
   if (l.option === optionId) return { ok: false, reason: 'Already the law of the land.' };
   if (enactment(state, world, lawId) < 1) return { ok: false, reason: 'The last change is still taking hold.' };
   if (state.authority < law.authority) return { ok: false, reason: `Needs ${law.authority} Authority.` };
-  if (state.treasury - law.coin < -world.economy.debt.creditLimit) return { ok: false, reason: 'The bankers will not lend that much.' };
+  if (state.treasury - law.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
   return { ok: true, borrow: law.coin > 0 && state.treasury - law.coin < 0 };
 }
 

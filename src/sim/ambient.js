@@ -43,9 +43,9 @@ export function stepAmbientDay(state, world, rng) {
 export function travellerPositions(state, world, frac = 0) {
   const out = [];
   for (const u of state.ambient.units) {
-    if (u.kind !== 'export' && u.kind !== 'patrol') continue;
+    if (u.kind !== 'export' && u.kind !== 'patrol' && u.kind !== 'route') continue;
     const p = unitPosition(world, u, u.pos + (u.speed ?? 0) * frac);
-    out.push({ kind: u.kind, x: p.x, y: p.y });
+    out.push({ kind: u.kind === 'route' ? 'export' : u.kind, x: p.x, y: p.y });
   }
   return out;
 }
@@ -68,6 +68,12 @@ const RATE = {
     let troubled = 0;
     for (const s of Object.values(state.settlements)) if (fleeing(state, s)) troubled++;
     return Math.min(1, troubled / 3);
+  },
+  // Crown caravans run in proportion to what the routes earn.
+  route(state, k, world) {
+    let v = 0;
+    for (const r of state.routes ?? []) if (!r.closed) v += r.last;
+    return Math.min(3, v * (world.trade?.caravansPerCrown ?? 0));
   },
   grain(state, k) {
     const flowing = Object.values(state.flows.in).reduce((a, b) => a + b, 0);
@@ -123,6 +129,16 @@ const SPAWNERS = {
     const to = realmPick(state, world, rng, rid);
     const route = to ? roadPath(world, from, to, true) : null;
     return route && route.length > 1 ? { route, realm: rid } : null;
+  },
+
+  // A crown caravan works one of the crown's trade routes, from either end.
+  route(state, world, rng) {
+    const open = (state.routes ?? []).filter((r) => !r.closed && r.last > 0);
+    if (!open.length) return null;
+    const r = weightedPick(rng, open, (x) => x.last);
+    const path = roadPath(world, r.from, r.to, true);
+    if (!path || path.length < 2) return null;
+    return { route: rng.chance(0.5) ? [...path] : [...path].reverse(), crownRoute: r.id };
   },
 
   // Pilgrims set out for the Temple of Melitele from wherever her faithful are.
@@ -300,6 +316,9 @@ export function describeUnit(world, u) {
     const realm = world.geography.neighbours[u.realm].name;
     if (u.kind === 'abroad_patrol') return `Riders of ${realm} out of ${world.byId[u.route[0]].name}`;
     return `A caravan of ${realm} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
+  }
+  if (u.kind === 'route') {
+    return `${kind} on the crown's route, from ${world.byId[u.route[0]].name} bound for ${world.byId[u.route[u.route.length - 1]].name}`;
   }
   if (u.kind === 'export') {
     return `${kind} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name} in ${world.geography.neighbours[u.realm].name}`;

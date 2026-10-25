@@ -526,3 +526,105 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   assert.deepEqual(errors, []);
   await ctx2.close();
 });
+
+// Trade and gold: open a crown route from a town's card, see it drawn on the
+// map, and send prospectors into the hills.
+test('trade routes and gold from the town cards and the Trade screen', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('dialog', (d) => d.accept());
+  await page.goto(`${base}?seed=1262&fresh&paused&nohints`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.touchscreen.tap(viz.x, viz.y);
+  await page.click('[data-route-from="vizima"]');
+  assert.match(await page.textContent('#sheet-body'), /Trade and gold[\s\S]*Open a route/);
+  await page.selectOption('[data-pick="to"]', 'maribor');
+  await page.click('[data-open-route]');
+  const routes = await page.evaluate(() => window.northernWars.state.routes);
+  assert.equal(routes.length, 1);
+  assert.deepEqual([routes[0].from, routes[0].to], ['vizima', 'maribor']);
+  assert.match(await page.textContent('#sheet-body'), /Vizima to Maribor[\s\S]*crowns a month/);
+  await page.screenshot({ path: join(OUT, 'trade.png') });
+  await page.click('#sheet-close');
+  // Prospectors go into the Tukaj Hills above Napeys.
+  await page.evaluate(() => { const st = window.northernWars.world.byId.napeys; window.northernWars.lookAt(st.x, st.y); });
+  const nap = await page.evaluate(() => window.northernWars.screenOf('napeys'));
+  await page.touchscreen.tap(nap.x, nap.y);
+  await page.waitForSelector('[data-prospect]');
+  await page.click('[data-prospect]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.gold.prospects.length), 1);
+  assert.match(await page.textContent('#sheet-body'), /Prospectors are in the hills/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+// The busy map: a well-built Vizima close up in portrait and landscape, and
+// the frame rate held while zoomed in and panning on a slowed CPU.
+test('a busy Vizima close up, within a sixtieth of a second a frame on a slowed CPU', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  // Early May: the measured run ends before the first of June brings news
+  // that would pause the game.
+  const s = step(createState(world, 1262), 62, world);
+  for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
+  s.settlements.vizima.buildings = ['mill', 'granary', 'market', 'workshop', 'walls', 'harbour', 'smithy', 'guildhall', 'cathedral', 'bank', 'paving'];
+  s.settlements.vizima.construction = { building: 'bathhouse', daysLeft: 20, days: 50 };
+  s.settlements.vizima.population.human += 6000;
+  s.settlements.white_orchard.buildings = ['fields', 'mill', 'brewery'];
+  s.settlements.murky_waters.buildings = ['fields', 'granary'];
+  s.routes = [{ id: 1, from: 'vizima', to: 'maribor', since: s.day, last: 40, raided: false, closed: null }];
+  s.nextRouteId = 2;
+  for (const vp of VIEWPORTS) {
+    const context = await browser.newContext({ viewport: vp, deviceScaleFactor: 2 });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+    await page.goto(`${base}?paused&nohints`);
+    await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+    await page.evaluate(() => window.northernWars.lookAt(523, 343));
+    await page.screenshot({ path: join(OUT, `${vp.name}-map.png`) });
+    for (let i = 0; i < 5; i++) { await page.mouse.move(vp.width / 2, vp.height / 2); await page.mouse.wheel(0, -600); await page.waitForTimeout(50); }
+    await page.evaluate(() => window.northernWars.lookAt(523, 343));
+    // A few days of life: smoke, workers, the builders at the bathhouse.
+    await page.evaluate(() => window.northernWars.setSpeed(1));
+    await page.waitForTimeout(800);
+    await page.evaluate(() => window.northernWars.setSpeed(0));
+    await page.waitForTimeout(150);
+    await page.screenshot({ path: join(OUT, `${vp.name}-vizima.png`) });
+    const plan = await page.evaluate(() => window.northernWars.planOf('vizima'));
+    assert.ok(plan.items.filter((i) => i.kind === 'house').length >= 30, 'Vizima is full of houses');
+    for (const b of ['cathedral', 'harbour', 'market', 'bank']) assert.ok(plan.items.some((i) => i.sprite === b), `${b} stands in Vizima`);
+    assert.ok(plan.items.some((i) => i.kind === 'scaffold'), 'the bathhouse is going up');
+    assert.ok(plan.walls);
+
+    if (vp.name === 'portrait') {
+      // Four times slower CPU, the realm running, zoomed in, panning about. What
+      // is measured is the game's own work in each frame (its days and its
+      // drawing), which must fit easily in a sixtieth of a second; the
+      // headless browser's software compositing is not the phone's.
+      const cdp = await context.newCDPSession(page);
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+      await page.evaluate(() => window.northernWars.setSpeed(1));
+      await page.waitForTimeout(300);
+      await page.evaluate(() => window.northernWars.resetFrameStats());
+      await page.mouse.move(195, 500);
+      await page.mouse.down();
+      for (let i = 0; i < 40; i++) { await page.mouse.move(195 + Math.sin(i / 6) * 100, 500 + Math.cos(i / 6) * 100); await page.waitForTimeout(30); }
+      await page.mouse.up();
+      const f = await page.evaluate(() => window.northernWars.frameStats);
+      assert.ok(f.frames > 30, `${f.frames} frames drawn`);
+      assert.ok(f.mean < 8, `${f.mean.toFixed(1)} ms a frame on average`);
+      assert.ok(f.p95 < 1000 / 60, `${f.p95.toFixed(1)} ms for the slowest frames`);
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    }
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});

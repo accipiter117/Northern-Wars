@@ -154,6 +154,25 @@ registerPlaceholder('unit', 'caravan', (ctx, x, y, size, opts = {}) => {
   wheel(ctx, x + r * 0.45, y + r * 0.35, r * 0.2);
 });
 
+// A crown caravan: a covered wagon under the crown's gold pennant.
+registerPlaceholder('unit', 'route', (ctx, x, y, size, opts = {}) => {
+  getSprite('unit', 'caravan').draw(ctx, x, y, size, opts);
+  const r = size / 2;
+  const f = opts.facing ?? 1;
+  ctx.beginPath();
+  ctx.moveTo(x - f * r * 0.5, y - r * 0.4);
+  ctx.lineTo(x - f * r * 0.5, y - r * 1.25);
+  stroke(ctx, 0.8);
+  ctx.beginPath();
+  ctx.moveTo(x - f * r * 0.5, y - r * 1.25);
+  ctx.lineTo(x - f * r * 0.05, y - r * 1.1);
+  ctx.lineTo(x - f * r * 0.5, y - r * 0.95);
+  ctx.closePath();
+  ctx.fillStyle = '#c9a03a';
+  ctx.fill();
+  stroke(ctx, 0.5);
+});
+
 registerPlaceholder('unit', 'grain', (ctx, x, y, size) => {
   const r = size / 2;
   ctx.fillStyle = '#d9b45a';

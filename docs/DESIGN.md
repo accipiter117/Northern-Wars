@@ -19,7 +19,7 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 - Coordinates are a local Temeria map space (1000 wide, 929 tall, origin top-left).
 - Layers: sea and neighbouring lands (muted, named, not playable); Temeria outline; terrain zones (marsh, forest, hills, mountains; clip to the Temeria outline); rivers and Lake Vizima; roads (from the roads edge list); settlements; ambient units; labels.
 - Pan, pinch zoom and tap to select. Labels for small settlements appear only when zoomed in.
-- Settlements are dressed with what stands in them: an icon per crown building in an arc above and to the right, scaffolding for works under way, walls as a ring, and the garrison on the left as soldier figures (one per 200 men, up to five) under a banner that turns grey and ragged when pay stops. Dressing appears at the same zoom as the settlement's label.
+- Settlements are laid out as places (since M11): houses round a landmark, every crown building in its own spot, fields as patchwork, walls round the whole, and the garrison on the left as soldier figures (one per 200 men, up to five) under a banner that turns grey and ragged when pay stops. See "Trade, gold and a busier realm (M11)".
 
 ## Realm-level meters
 - Treasury (crowns), Granary (food stores).
@@ -136,6 +136,42 @@ This replaces "no battles in v1": the owner asked for war. The crown still gover
 - How wars start: the crown declares (Authority 5 plus a quarter of any warmth between us; nothing if they hold Temerian land); a neighbour invades when it hates us, holds claims, smells weakness (Authority under 25 or a rising) or is simply greedy (Kaedwen and Redania most), after 45 days of war drums the crown hears of; rival realms fight one another; a true ally attacked asks the crown to join.
 - Peace: the crown leading a war can offer peace as we were, each keeps what it holds, tribute to us, or bought peace; each term has a price to the enemy, and they accept once their weariness plus how badly the war goes for them outweighs it (never in the first three months). The enemy sues for peace when tired and dictates terms when winning: a victor keeps one prize (never a great city unless it was a rout) and may demand tribute. Peace brings a three-year truce. Unanswered, the crown fights when attacked, takes an offered peace and stays out of a friend's war.
 - War weariness: unrest rises the longer the realm is at war (up to +10), and the burghers sour while trade with the enemy is shut.
+
+## Trade, gold and a busier realm (M11)
+All numbers are in data/trade.json, data/gold.json, data/buildings.json and data/layout.json.
+
+### Crown trade routes
+- Between two towns or cities: ours, or a neighbour's (one end must be ours) once that realm's relation is 20 or more, it trades with us and we are not at war. Opened from a town's card or Trade and gold in the menu, for 400 crowns plus 0.8 a unit of road; 12 crowns a month to run.
+- A month's takings = 0.0038 x the square root of both towns' people x their fortunes (average prosperity / 55) x the haul (road length / 350, from 0.6 to 1.6) x wares (1.3 if they make different things, 0.75 if the same; a foreign town always counts as different) x road safety (1 less 0.9% per point of the worst threat along the way, at least a quarter) x relation abroad (the border-trade factor, x1.25) x a quarter more for each market hall at either end and the harbour and guildhall bonuses, divided by the square root of how many routes share each end.
+- Bandits rob a month's takings with a chance of 30% x (1 - safety). An occupied end, or war with the far end's realm, closes the route.
+- The crown runs 2 routes, plus one for every two market halls, one for each guildhall and harbour, plus one under free guilds and minus one under a guild monopoly, up to 8.
+- Each route is a ledger line, a gold thread along the road on the map, and crown caravans in proportion to its takings (their merchants see abroad like any Temerian merchant).
+
+### Gold
+- Seams (data/gold.json): the Carreras seam (9,000 crowns), Zavada spur (5,000), the Klamat reef by Razwan (7,000), Tukaj diggings by Petrelsteyn (6,000) and Rissberg workings (4,000), all known; the Napeys vein (8,000) and the Dregsdon lode (6,000), hidden.
+- Prospecting from the card of a place within 100 units of hills or mountains: 300 crowns, 60 days; a hidden seam there is found seven times in ten (otherwise the prospectors may try again); where there is none, they say so and are not sent again.
+- A gold mine yields 60 crowns a month (a lord takes his share in his lands) until less than a third is left, then less and less (never under a tenth), until the seam is worked out.
+- Side effects: 0.4% more people a month at the mine (three in ten of them dwarves); +20 bandit threat within 70 units; each working mine makes greedy neighbours greedier; each mine within 170 of Mahakam costs 8 relation with it.
+
+### New buildings
+- Harbour (on a river, the lake or the sea; Gors Velen, Anchor and Acorn Bay count as ports): food from the water, trade, customs on navigable water, route value, one more route.
+- Warehouse: stores 200 more timber, stone and iron; surplus sells for a quarter more.
+- Smithy: soldiers here cost 30% less to keep; uses iron. Armoury (needs a smithy): its garrison fights 30% harder, and armies raised while it stands fight 5% harder (up to 30%); uses iron.
+- Tannery (where food is grown) and brewery: coin from local produce; a little unrest.
+- Inn (at a crossroads of three roads): coin, trade, sight 30 further, busier roads.
+- Bathhouse, hospice of Melitele and sewers (needs paved streets): plague spreads less and kills fewer; the hospice pleases Melitele's clergy and draws her faithful.
+- Cathedral of the Eternal Fire (cities): +0.4 Authority a month, less unrest, more tension and more of the Fire; pleases its clergy, displeases elves and dwarves.
+- Guildhall (needs a market hall): one more route, better routes, pleases the burghers.
+- Dwarven bank (cities with 300 dwarves): the bankers lend 3,000 more and charge a quarter less interest.
+- Barracks: 40% more crown soldiers kept here at the ordinary pay.
+- Paved streets: prosperity, a little less plague, faster carts.
+- Places hold villages 5, castles 5, temples 3, towns 8, cities 12 buildings.
+
+### The map as a living place
+- Each settlement's layout (src/render/layout.js) is planned from the game's seed: a landmark (keep, hall, chapel, temple) at the heart; houses in rings round it, more as the people grow (a city from 12 up to 44), spilling outside the walls once the heart is full; buildings by kind (core, edge, by a road, on the river, on the water, towards the hills, the forest or the gold seam); fields as patchwork in a ring outside, pastures for villages; walls round the whole. Nothing is placed on a road, a river, the lake, the sea, or nearer another settlement than its own. Pieces are drawn back to front.
+- Up close (2 screen pixels per map unit or more) the whole layout shows; further off, a compact cluster round the settlement's marker. Close enough (2.8), smoke rises from chimneys and smithies, workers walk to the fields, mines and quays, beasts graze, boats bob, builders work on scaffolding. Life follows game time, so a paused realm holds still.
+- Fields are green in spring, ripening in summer, gold at harvest and bare in winter, with snow on roofs and fields from December to February.
+- Each layout is drawn once into its own canvas, and again only when a building, the population step, the season or the zoom step changes. Everything is drawn through the sprite registry ('structure' and 'life'), ready for painted art.
 
 ## Ambient units
 Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG). Kinds and what drives their numbers:
