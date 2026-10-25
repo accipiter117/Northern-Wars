@@ -238,3 +238,10 @@ select.pick { min-height: 44px; font: inherit; color: var(--text); background: v
 .hint-buttons button { flex: 1; font-size: 14px; }
 .help li { font-size: 15px; }
 @media (orientation: landscape) { .hint { right: auto; width: min(420px, 48vw); } }
+
+/* War: the raising form and each war's standing. */
+.form-row { display: grid; gap: 6px; margin: 12px 0 4px; }
+.form-row > span { font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.form-row select.pick { width: 100%; }
+.war-row { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 10px; }
+.war-row:first-child { border-top: none; margin-top: 0; }

@@ -20,6 +20,14 @@
     { "id": "raid", "trigger": "raid", "title": "Raiders",
       "text": "Bandits or beasts have struck. A stronger garrison, walls and a patrol on the road protect a place; Military and threats in the menu shows where danger is gathering." },
     { "id": "authority", "trigger": "lowAuthority", "title": "Authority is slipping",
-      "text": "With little Authority you cannot pass laws or bend the lords. It recovers each month, faster when the houses are content and the court impresses them." }
+      "text": "With little Authority you cannot pass laws or bend the lords. It recovers each month, faster when the houses are content and the court impresses them." },
+    { "id": "drums", "trigger": "warDrums", "title": "War drums",
+      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a strong Authority, or an army of your own may change their minds." },
+    { "id": "war", "trigger": "atWar", "title": "At war",
+      "text": "War in the menu raises armies: a levy from crown garrisons, the lords' men, and hired companies. Give each army an order and a stance and its marshal does the marching. Tap an army on the map for its card." },
+    { "id": "army", "trigger": "armyRaised", "title": "Your army",
+      "text": "Hold a place and the army meets any enemy that comes near. Besiege a town and it starves or storms it, then holds it. Raid a realm and it plunders unwalled places, then comes home. Levied men leave garrisons thin." },
+    { "id": "lost", "trigger": "townLost", "title": "A town lost",
+      "text": "An enemy holds a Temerian town: it pays the crown nothing and its lord is furious. Retake it by siege, or make peace. A peace where each keeps what it holds gives it away for good, but it remains a just cause for a later war." }
   ]
 }

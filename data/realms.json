@@ -23,7 +23,7 @@
   },
   "realms": {
     "redania":  { "capital": "tretogor", "colours": ["#8b1e1e", "#efe6cf"], "builds": ["market", "walls", "workshop", "granary", "mill", "fields"] },
-    "kaedwen":  { "capital": "ard_carraigh", "colours": ["#3b5b8a", "#e2c46a"], "builds": ["walls", "granary", "fields", "mill", "market"] },
+    "kaedwen":  { "capital": "ard_carraigh", "colours": ["#6b4a8a", "#e2c46a"], "builds": ["walls", "granary", "fields", "mill", "market"] },
     "aedirn":   { "capital": "vengerberg", "colours": ["#a07a2a", "#2b2116"], "builds": ["market", "fields", "mill", "workshop", "walls"] },
     "mahakam":  { "capital": "carbon", "colours": ["#5a4a3a", "#d9b45a"], "builds": ["workshop", "market", "walls", "granary"] },
     "brokilon": { "capital": "duen_canell", "colours": ["#2e5a3a", "#c9e2a8"], "builds": [] },
@@ -69,6 +69,7 @@
     "friendly": 70,
     "friendlyAt": 40,
     "allyAt": 75,
-    "embassy": 170
+    "embassy": 170,
+    "army": 90
   }
 }

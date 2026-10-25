@@ -18,3 +18,6 @@ export { visionOf, canSee, hasBit } from './vision.js';
 export { travellerPositions } from './ambient.js';
 export { threatLevel, localStrength, patrolledSet, patrolRoute, patrolCapacity, crownSoldiers, canSetGarrison, canAddPatrol, eventText, plagueActive, quarantined } from './military.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects } from './economy.js';
+export { TEMERIA, ownerOf, originOf, sideName, sideColours, placesHeldBy, warsOf, atWar, hostile, warScore, exhaustion, heldValue, sideIndex, crownHolds, valueOf, truceUntil } from './conflict.js';
+export { musterPreview, canRaise, canOrder, armyPosition, armyStrength, describeArmy, crownArmies } from './armies.js';
+export { canDeclare, declareCost, peaceTerms, canMakePeace, warDecisionText, realmPotential } from './war.js';

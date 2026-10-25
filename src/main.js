@@ -1,6 +1,6 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction } from './sim/index.js';
-import { createCamera, resizeCamera } from './render/camera.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA } from './sim/index.js';
+import { createCamera, resizeCamera, panBy } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createTopbar } from './ui/topbar.js';
@@ -12,6 +12,7 @@ import { neighboursHtml, realmCardHtml, envoyHtml, foreignCardHtml } from './ui/
 import { faithHtml, petitionHtml } from './ui/faith.js';
 import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
 import { militaryHtml, eventHtml } from './ui/military.js';
+import { warHtml, armyCardHtml, warDecisionHtml, musterPlaces } from './ui/war.js';
 import { createHints, helpHtml } from './ui/hints.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
@@ -154,7 +155,13 @@ async function boot() {
       const emb = t.closest('[data-embassy]');
       const spy = t.closest('[data-spy]');
       const place = t.closest('[data-foreign]');
-      if (st && !st.disabled) order({ type: 'stance', realm: id, stance: st.dataset.stance });
+      const declare = t.closest('[data-declare]');
+      if (declare && !declare.disabled) {
+        if (confirm(`Declare war on ${world.geography.neighbours[id].name}?`)) {
+          order({ type: 'declare', realm: id });
+          openWar();
+        }
+      } else if (st && !st.disabled) order({ type: 'stance', realm: id, stance: st.dataset.stance });
       else if (emb && !emb.disabled) order({ type: 'embassy', realm: id, close: emb.dataset.embassy === 'close' });
       else if (spy && !spy.disabled) {
         if (confirm(`Send a spy into ${world.geography.neighbours[id].name}? If caught, they will not forget it.`)) order({ type: 'spy', realm: id });
@@ -352,6 +359,94 @@ async function boot() {
     };
   }
 
+  // War: the panel with every war, army and the raising form.
+  const raiseForm = { muster: 'vizima', levy: 'third', nobles: false, companies: 0, marshal: 'vestibor', stance: 'cautious' };
+  function openWar() {
+    selection = null;
+    hideUnitLabel();
+    if (!musterPlaces(world, state).includes(raiseForm.muster)) raiseForm.muster = musterPlaces(world, state)[0];
+    const body = sheet.open('war', warHtml(world, state, raiseForm));
+    body.onchange = (e) => {
+      const p = e.target.closest('[data-pick]');
+      if (p) {
+        raiseForm[p.dataset.pick] = p.value;
+        sheet.patch('war', warHtml(world, state, raiseForm));
+      }
+    };
+    body.onclick = (e) => {
+      const t = e.target;
+      const set = t.closest('[data-set]');
+      const army = t.closest('[data-army]');
+      const peace = t.closest('[data-peace]');
+      const out = t.closest('[data-withdraw]');
+      const dec = t.closest('[data-war-decision]');
+      if (set) {
+        const [k, v] = set.dataset.set.split(':');
+        raiseForm[k] = k === 'companies' ? Number(v) : k === 'nobles' ? v === 'true' : v;
+        sheet.patch('war', warHtml(world, state, raiseForm));
+      } else if (t.closest('[data-raise]') && !t.closest('[data-raise]').disabled) {
+        order({ type: 'raise', ...raiseForm });
+        hints.note('armyRaised');
+        const a = state.armies.at(-1);
+        if (a?.side === TEMERIA) openArmy(a.id);
+      } else if (army) openArmy(Number(army.dataset.army));
+      else if (peace && !peace.disabled) {
+        const [war, terms] = peace.dataset.peace.split(':');
+        if (confirm('Make peace on these terms?')) order({ type: 'peace', war: Number(war), terms });
+      } else if (out && confirm('Leave our friend to fight alone?')) order({ type: 'withdraw', war: Number(out.dataset.withdraw) });
+      else if (dec) openWarDecision(Number(dec.dataset.warDecision));
+      else menuAction(t.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  const armyPick = {};
+  function openArmy(id) {
+    selection = { army: id };
+    hideUnitLabel();
+    const body = sheet.open(`army:${id}`, armyCardHtml(world, state, id, armyPick));
+    body.onchange = (e) => {
+      const p = e.target.closest('[data-pick]');
+      if (p) armyPick[p.dataset.pick] = p.value;
+    };
+    body.onclick = (e) => {
+      const t = e.target;
+      const ord = t.closest('[data-order]');
+      const stance = t.closest('[data-stance]');
+      const raid = t.closest('[data-raid]');
+      const a = state.armies.find((x) => x.id === id);
+      if (!a) return menuAction(t.closest('[data-action]')?.dataset.action);
+      if (ord) {
+        const kind = ord.dataset.order;
+        const sel = body.querySelector(`[data-pick="${kind === 'defend' ? 'hold' : 'siege'}"]`);
+        order({ type: 'army', army: id, order: kind, target: sel?.value });
+      } else if (stance) order({ type: 'army', army: id, order: a.order, target: a.target, stance: stance.dataset.stance });
+      else if (raid) order({ type: 'army', army: id, order: 'raid', target: raid.dataset.raid });
+      else if (t.closest('[data-disband]')) {
+        if (confirm(`Stand down ${a.name}?`)) {
+          order({ type: 'disband', army: id });
+          openWar();
+        }
+      } else menuAction(t.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  const shownWarDecisions = new Set();
+  function openWarDecision(id) {
+    const pending = state.warDecisions.find((p) => p.id === id);
+    if (!pending) return;
+    shownWarDecisions.add(id);
+    selection = null;
+    hideUnitLabel();
+    const body = sheet.open(`warDecision:${id}`, warDecisionHtml(world, state, pending));
+    body.onclick = (e) => {
+      const c = e.target.closest('[data-choice]');
+      if (!c) return;
+      order({ type: 'warDecision', id, choice: Number(c.dataset.choice) });
+      sheet.close();
+      if (!showNextDecision() && pending.kind === 'declared' && state.wars.length) openWar();
+    };
+  }
+
   // Decisions waiting on the crown open one at a time, the gravest first.
   // Answering one opens the next, so a crowded morning is dealt with in a row.
   function showNextDecision() {
@@ -362,6 +457,8 @@ async function boot() {
 
   function nextDecision() {
     if (state.depositions.length > shownDepositions) { openDeposition(); return true; }
+    const warDecision = state.warDecisions?.find((p) => !shownWarDecisions.has(p.id));
+    if (warDecision) { openWarDecision(warDecision.id); return true; }
     const event = state.events.find((p) => !shownEvents.has(p.id));
     if (event) { openEvent(event.id); return true; }
     const demand = state.demands.find((p) => !shownDemands.has(p.id));
@@ -404,6 +501,7 @@ async function boot() {
     else if (action === 'faith') openFaith();
     else if (action === 'nobles') openNobles();
     else if (action === 'military') openMilitary();
+    else if (action === 'war') openWar();
     else if (action === 'help') openHelp();
     else if (action === 'hints-off' || action === 'hints-on') {
       hints.setEnabled(action === 'hints-on');
@@ -445,7 +543,7 @@ async function boot() {
 
   function hideUnitLabel() {
     unitLabel.hidden = true;
-    if (selection?.unit) selection = null;
+    if (selection?.unit || selection?.label) selection = null;
   }
 
   function onTap(x, y) {
@@ -453,6 +551,17 @@ async function boot() {
     if (hit?.settlement) openSettlement(hit.settlement);
     else if (hit?.neighbour) openRealm(hit.neighbour);
     else if (hit?.foreign) openForeign(hit.foreign);
+    else if (hit?.army) {
+      const a = state.armies.find((x) => x.id === hit.army);
+      if (a.side === TEMERIA) openArmy(a.id);
+      else {
+        sheet.close();
+        selection = { army: a.id, label: true };
+        unitLabel.textContent = describeArmy(state, world, a);
+        unitLabel.hidden = false;
+        unitLabelUntil = performance.now() + 4000;
+      }
+    }
     else if (hit?.unit) {
       sheet.close();
       selection = { unit: hit.unit };
@@ -516,8 +625,8 @@ async function boot() {
         if (showNextDecision()) setSpeed(0);
       }
     }
-    if (selection?.unit) {
-      const p = renderer.unitScreen(state, selection.unit, frac);
+    if (selection?.unit || selection?.label) {
+      const p = selection.unit ? renderer.unitScreen(state, selection.unit, frac) : renderer.armyScreen(state, selection.army, frac);
       if (!p || now > unitLabelUntil) hideUnitLabel();
       else {
         // Keep the label on screen even when its unit is near an edge.
@@ -550,6 +659,9 @@ async function boot() {
     else if (cur?.startsWith('event:') && !state.events.some((p) => `event:${p.id}` === cur)) sheet.close();
     else if (cur?.startsWith('house:')) sheet.patch(cur, houseCardHtml(world, state, cur.slice(6), housePicking));
     else if (cur?.startsWith('demand:') && !state.demands.some((p) => `demand:${p.id}` === cur)) sheet.close();
+    else if (cur === 'war') sheet.patch(cur, warHtml(world, state, raiseForm));
+    else if (cur?.startsWith('army:')) sheet.patch(cur, armyCardHtml(world, state, Number(cur.slice(5)), armyPick));
+    else if (cur?.startsWith('warDecision:') && !state.warDecisions.some((p) => `warDecision:${p.id}` === cur)) sheet.close();
   }
 
   topbar.update(state);
@@ -569,10 +681,20 @@ async function boot() {
       return renderer.pick(x - r.left, y - r.top, state, frac);
     },
     setSpeed,
+    // Bring a map point to the middle of the screen.
+    lookAt(x, y) {
+      panBy(cam, world, (cam.x - x) * cam.scale, (cam.y - y) * cam.scale);
+      renderer.invalidate();
+    },
     screenOf(id) {
       const st = world.byId[id];
       const r = canvas.getBoundingClientRect();
       return { x: r.left + (st.x - cam.x) * cam.scale + cam.viewW / 2, y: r.top + (st.y - cam.y) * cam.scale + cam.viewH / 2 };
+    },
+    armyScreenOf(id) {
+      const p = renderer.armyScreen(state, id, frac);
+      const r = canvas.getBoundingClientRect();
+      return p && { x: r.left + p.x, y: r.top + p.y };
     },
     unitScreenOf(id) {
       const p = renderer.unitScreen(state, id, frac);

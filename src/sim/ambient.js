@@ -63,10 +63,10 @@ const RATE = {
   pilgrim(state, k) {
     return Math.min(1.5, realmFaith(state).melitele / k.faithBaseline);
   },
-  // Refugees only walk when somewhere is in trouble or starving.
+  // Refugees only walk when somewhere is in trouble, starving or sacked.
   refugee(state) {
     let troubled = 0;
-    for (const s of Object.values(state.settlements)) if (s.troubled > 0 || s.hunger > 0.2) troubled++;
+    for (const s of Object.values(state.settlements)) if (fleeing(state, s)) troubled++;
     return Math.min(1, troubled / 3);
   },
   grain(state, k) {
@@ -138,7 +138,7 @@ const SPAWNERS = {
   // People flee a troubled or starving place for the nearest town or city
   // that is neither.
   refugee(state, world, rng) {
-    const bad = (id) => state.settlements[id].troubled > 0 || state.settlements[id].hunger > 0.2;
+    const bad = (id) => fleeing(state, state.settlements[id]);
     const sources = world.geography.settlements.map((s) => s.id).filter(bad);
     if (!sources.length) return null;
     const from = rng.pick(sources);
@@ -219,6 +219,11 @@ const SPAWNERS = {
     return { river, reverse: rng.chance(0.5) };
   },
 };
+
+// A place people are leaving: riots, hunger, or an army through its gates.
+function fleeing(state, s) {
+  return s.troubled > 0 || s.hunger > 0.2 || (s.sacked ?? 0) > state.day;
+}
 
 function weightedPick(rng, items, weight) {
   let total = 0;

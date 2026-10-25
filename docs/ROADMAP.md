@@ -11,6 +11,7 @@
 | M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Done |
 | M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Done |
 | M8 The wider North | A larger world with living neighbouring realms (towns, roads, growth, buildings, garrisons, traffic) under a fog of war lifted by watchers, merchants, friends, embassies and spies | Done |
+| M9 War with neighbours | Armies raised from levies, lords and hired companies; marshals, orders and stances; battles, sieges, raids; towns that change hands; invasions, wars between neighbours, calls to arms; peace, tribute and truces | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -20,6 +21,15 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M9 acceptance criteria
+- The crown can declare war from a neighbour's card, at a cost in Authority unless it has a just cause; trade with the enemy stops.
+- Armies are raised from a crown levy, the lords' men and free companies, with a marshal and a stance, and are given orders: hold, besiege or raid. They march the roads on the map in their colours, fight battles, starve or storm towns and plunder.
+- Towns change hands: an occupied Temerian town pays nothing and takes no orders; a conquered foreign town pays the crown. The map shows the new master's colours round every town that changed hands, siege rings and battlefields.
+- Neighbours invade (with warning), fight each other, and call on the crown as allies; foreign armies are seen only where the crown can see.
+- Wars end in peace (as we were, each keeps what it holds, tribute, bought peace), offered by the crown or by the enemy, followed by a truce.
+- Victories and defeats move Authority and the lords; long wars breed unrest. Version 8 saves load at peace.
+- Thirty-year runs stay sane for every kind of crown.
 
 ## M8 acceptance criteria
 - The map reaches beyond Temeria to every neighbour's real extent, with 35 foreign towns, cities and castles, their roads and roads across the borders; Temeria keeps its coordinates.

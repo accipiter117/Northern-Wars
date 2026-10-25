@@ -4,12 +4,15 @@
 import { prepareMap, drawMap, COLOURS } from './mapLayer.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
+import './sprites-war.js';
 import { toScreen, toWorld } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
 import { threatLevel, patrolledSet, patrolRoute, plagueActive } from '../sim/military.js';
 import { visionOf, canSee, hasBit } from '../sim/vision.js';
 import { travellerPositions } from '../sim/ambient.js';
+import { armyPosition } from '../sim/armies.js';
+import { TEMERIA, ownerOf, originOf, sideColours } from '../sim/conflict.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
 const LABEL_FONT = {
@@ -24,6 +27,7 @@ const LABEL_ZOOM = { city: 0, town: 1.5, castle: 1.9, temple: 1.9, village: 2.6 
 const PRIORITY = { city: 0, town: 1, temple: 2, castle: 3, village: 4 };
 const SERIF = '"Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif';
 const UNIT_SIZE = 14;
+const ARMY_SIZE = 26;
 // Where building icons sit round a settlement, in degrees (0 is east, -90 is
 // north): an inner arc over the top and right, then an outer arc. The left
 // side is kept for the garrison and the space below for the name.
@@ -84,7 +88,7 @@ export function createRenderer(canvas, world, cam) {
   let tints = {};
   function updateTints(state) {
     const buckets = Object.entries(state.neighbours).map(([id, n]) => [id, Math.round(n.relation / 10)]);
-    const key = buckets.map(([id, b]) => `${id}${b}`).join();
+    const key = buckets.map(([id, b]) => `${id}${b}`).join() + ownKey;
     if (key === tintKey) return;
     tintKey = key;
     tints = {};
@@ -183,13 +187,54 @@ export function createRenderer(canvas, world, cam) {
       const live = state.realms[st.realm]?.settlements[st.id];
       const visible = canSee(world, vision, st.x, st.y);
       const snap = visible && live
-        ? { population: live.population, garrison: live.garrison, buildings: live.buildings, construction: live.construction?.building ?? null, prosperity: live.prosperity }
+        ? { population: live.population, garrison: live.garrison, buildings: live.buildings, construction: live.construction?.building ?? null, prosperity: live.prosperity, owner: live.owner ?? st.realm }
         : intel?.seen[st.id];
       if (!snap) continue;
       foreignView[st.id] = { visible, ...snap };
-      parts.push(`${st.id}:${visible ? 1 : 0}:${snap.buildings.join('+')}:${snap.construction ?? ''}:${figures(snap.garrison)}`);
+      parts.push(`${st.id}:${visible ? 1 : 0}:${snap.buildings.join('+')}:${snap.construction ?? ''}:${figures(snap.garrison)}:${snap.owner ?? ''}`);
     }
+    updateOwnership(state);
     return parts.join('|');
+  }
+
+  // Towns that have changed hands, as the crown knows them: ours as they
+  // are, foreign ones as last seen. Each casts its new master's colour over
+  // the country round it, so the borders seem to move.
+  let ownKey = '';
+  let owned = [];
+  function updateOwnership(state) {
+    owned = [];
+    for (const id of Object.keys(state.settlements)) {
+      const owner = ownerOf(state, world, id);
+      if (owner !== TEMERIA) owned.push({ id, owner });
+    }
+    for (const st of foreignOrdered) {
+      const owner = foreignView[st.id]?.owner;
+      if (owner && owner !== st.realm) owned.push({ id: st.id, owner });
+    }
+    const key = owned.map((o) => `${o.id}>${o.owner}`).join();
+    if (key !== ownKey) {
+      ownKey = key;
+      baseDirty = true;
+      dirty = true;
+    }
+  }
+
+  const WASH = { city: 90, town: 70, castle: 60, village: 50, temple: 45 };
+  function drawOwnership(c) {
+    for (const { id, owner } of owned) {
+      const st = world.byId[id];
+      const r = WASH[st.type];
+      const [field] = sideColours(world, owner);
+      const grad = c.createRadialGradient(st.x, st.y, 0, st.x, st.y, r);
+      grad.addColorStop(0, hexAlpha(field, 0.45));
+      grad.addColorStop(0.7, hexAlpha(field, 0.25));
+      grad.addColorStop(1, hexAlpha(field, 0));
+      c.fillStyle = grad;
+      c.beginPath();
+      c.arc(st.x, st.y, r, 0, Math.PI * 2);
+      c.fill();
+    }
   }
 
   function updateInfra(state) {
@@ -213,7 +258,7 @@ export function createRenderer(canvas, world, cam) {
     }
     const marks = (id, s) => `${infraThreats[id]?.bandits ? 'b' : ''}${infraThreats[id]?.monsters ? 'm' : ''}${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
     const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + Object.entries(state.settlements)
-      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
+      .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${s.occupier ?? ''}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
       .join('|') + (state.unpaid ? '!' : '') + foreignKey;
     if (key !== infraKey) {
       infraKey = key;
@@ -224,6 +269,7 @@ export function createRenderer(canvas, world, cam) {
   // A lord's lands fly his colours; a rebel's banner is slashed in red.
   function bannerFor(s) {
     if (s.banner) return s.banner;
+    if (s.occupier) return { colours: sideColours(world, s.occupier) };
     const house = world.houses?.houses[s.holder];
     if (!house) return {};
     return { colours: house.colours, rebel: !!infraState.houses?.[s.holder]?.rebel };
@@ -293,6 +339,7 @@ export function createRenderer(canvas, world, cam) {
       bctx.clearRect(0, 0, base.width, base.height);
       bctx.setTransform(...worldTransform);
       drawMap(bctx, prep, world, 1 / cam.scale, tints);
+      drawOwnership(bctx);
       baseDirty = false;
       stats.base += 1;
     }
@@ -331,7 +378,7 @@ export function createRenderer(canvas, world, cam) {
       if (z >= LABEL_ZOOM[st.type] && f.buildings.includes('walls')) getSprite('building', 'walls').draw(c, p.x, p.y, iconSize(st.type) + 6);
       getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });
       if (z >= LABEL_ZOOM[st.type]) {
-        const colours = world.realms?.realms[st.realm]?.colours;
+        const colours = sideColours(world, f.owner ?? st.realm);
         drawInfrastructure(c, st, {
           buildings: f.buildings, construction: f.construction ? { building: f.construction } : null,
           garrison: f.garrison, holder: 'foreign', banner: colours ? { colours } : {},
@@ -418,9 +465,9 @@ export function createRenderer(canvas, world, cam) {
     const selectedId = selection?.settlement ?? null;
     updateTints(state);
     updateInfra(state);
-    const frame = { state, frac, unit: selection?.unit ?? null, selectedId };
+    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, selectedId };
     if (!dirty && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
-      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit) return;
+      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army) return;
     lastFrame = frame;
     if (dirty || selectedId !== lastSelected) {
       drawStatic(selectedId);
@@ -451,6 +498,55 @@ export function createRenderer(canvas, world, cam) {
         .draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing, colours });
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
+    drawWar(state, frac, selection);
+  }
+
+  // Battlefields of the last days, sieges, and the armies themselves. The
+  // crown sees its own armies everywhere, and foreign ones only in sight.
+  function drawWar(state, frac, selection) {
+    if (!state.armies) return;
+    for (const b of state.battles) {
+      if (state.day - b.day > 12 || !unitInSight(b)) continue;
+      const p = toScreen(cam, b.x, b.y);
+      getSprite('marker', 'battle').draw(ctx, p.x + 10, p.y - 14, 18);
+    }
+    for (const a of state.armies) {
+      if (!a.siege || !unitInSight(world.byId[a.at])) continue;
+      const st = world.byId[a.at];
+      const p = toScreen(cam, st.x, st.y);
+      getSprite('marker', 'siege').draw(ctx, p.x, p.y, iconSize(st.type) + 22, { colours: sideColours(world, a.side), progress: a.siege.progress });
+    }
+    for (const a of state.armies) {
+      const w = armyAt(a, frac);
+      if (!w) continue;
+      const p = toScreen(cam, w.x, w.y);
+      if (p.x < -30 || p.y < -30 || p.x > cam.viewW + 30 || p.y > cam.viewH + 30) continue;
+      const facing = Math.cos(w.angle) >= 0 ? 1 : -1;
+      const size = ARMY_SIZE * Math.max(0.75, Math.min(1.2, Math.sqrt(zoomRel())));
+      getSprite('army', a.side, 'host').draw(ctx, p.x, p.y - 6, size, {
+        colours: sideColours(world, a.side), figures: Math.ceil(a.soldiers / 600), facing, dim: a.retreating,
+      });
+      if (selection?.army === a.id) ring(ctx, p.x, p.y - 6, size / 2 + 6);
+    }
+  }
+
+  function armyAt(a, frac) {
+    const w = armyPosition(world, a, a.to ? (a.speed ?? 0) * frac : 0);
+    // Several armies at one place stand side by side rather than on top.
+    if (!a.to) {
+      const here = infraState?.armies?.filter((b) => !b.to && b.at === a.at) ?? [];
+      const i = here.findIndex((b) => b.id === a.id);
+      if (i > 0) w.x += i * 14 / cam.scale;
+      w.y -= 10 / cam.scale;
+    }
+    if (a.side !== TEMERIA && !unitInSight(w)) return null;
+    return w;
+  }
+
+  function armyScreen(state, id, frac) {
+    const a = state.armies?.find((x) => x.id === id);
+    const w = a && armyAt(a, frac);
+    return w ? toScreen(cam, w.x, w.y) : null;
   }
 
   // Traffic abroad shows only where the crown can see it.
@@ -462,6 +558,15 @@ export function createRenderer(canvas, world, cam) {
   // crowd the roads into towns, and a tap on a town means the town.
   function pick(sx, sy, state, frac) {
     let best = null;
+    // An army is a deliberate thing to tap, so it wins over what lies under it.
+    for (const a of state.armies ?? []) {
+      const w = armyAt(a, frac);
+      if (!w) continue;
+      const p = toScreen(cam, w.x, w.y);
+      const d = Math.hypot(p.x - sx, p.y - 6 - sy);
+      if (d < 22 && (!best || d < best.d)) best = { d, hit: { army: a.id } };
+    }
+    if (best) return best.hit;
     for (const u of state.ambient.units) {
       const w = unitPosition(world, u, u.pos + u.speed * frac);
       if (!unitInSight(w)) continue;
@@ -506,7 +611,7 @@ export function createRenderer(canvas, world, cam) {
   }
 
   return {
-    resize, draw, pick, unitScreen, stats,
+    resize, draw, pick, unitScreen, armyScreen, stats,
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     canSeePoint: (x, y) => !vision || canSee(world, vision, x, y),
     foreignInfo: (id) => foreignView[id] ?? null,
@@ -556,4 +661,9 @@ function spaced(c, text, x, y, gap, halo = null) {
     cx += widths[i] + gap;
   });
   c.textAlign = align;
+}
+
+function hexAlpha(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }

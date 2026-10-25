@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   loadWorld, createState, step, applyAction, canBuild, canDecree, totalPopulation, ledgerNet, realmFaith,
-  threatLevel, patrolCapacity, holdingsOf,
+  threatLevel, patrolCapacity, holdingsOf, warsOf, peaceTerms, crownArmies,
 } from '../src/sim/index.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -31,10 +31,32 @@ function answer(s, generous) {
   return s;
 }
 
+// A sensible crown at war: one army to hold the capital, peace on the best
+// terms the enemy will take, and no part in other people's wars.
+function warPolicy(s) {
+  for (const d of [...s.warDecisions]) {
+    const choice = d.kind === 'call' ? 1 : 0;
+    s = act(s, { type: 'warDecision', id: d.id, choice });
+  }
+  const wars = warsOf(s, 'temeria');
+  if (wars.length && !crownArmies(s).length) {
+    s = act(s, { type: 'raise', muster: 'vizima', levy: 'third', nobles: true, companies: 0, marshal: 'vestibor', stance: 'cautious' });
+  }
+  for (const w of wars) {
+    for (const key of ['tribute', 'keep', 'white']) {
+      const t = peaceTerms(s, world, w).list.find((x) => x.key === key);
+      if (t.accept) { s = act(s, { type: 'peace', war: w.id, terms: key }); break; }
+    }
+  }
+  if (!warsOf(s, 'temeria').length) for (const a of crownArmies(s)) s = act(s, { type: 'disband', army: a.id });
+  return s;
+}
+
 const BUILD_ORDER = ['fields', 'mill', 'granary', 'market', 'walls', 'workshop', 'shrine', 'lumber', 'quarry', 'mine'];
 
 function steward(s, month, spend) {
   s = answer(s, true);
+  s = warPolicy(s);
   for (let i = 0; i < (spend ? 3 : 1); i++) {
     let built = false;
     for (const b of BUILD_ORDER) {
@@ -84,12 +106,13 @@ function report(s, label, totals) {
   const last = s.ledger.history.at(-1);
   console.log(`${label.padEnd(10)} pop ${String(pop).padStart(6)} treasury ${String(Math.round(s.treasury)).padStart(7)} net ${String(last ? ledgerNet(last).net : 0).padStart(5)}`
     + ` auth ${s.authority.toFixed(0).padStart(3)} stab ${s.stability.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
+    + ` wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`
     + ` faith F/M/O ${f.eternal_fire.toFixed(0)}/${f.melitele.toFixed(0)}/${f.old_ways.toFixed(0)} built ${totals.built} riots ${totals.riots} raids ${totals.raids} rebellions ${totals.rebels} deposed ${s.depositions.length}`);
 }
 
 for (const seed of seedList.split(',').map(Number)) {
   let s = createState(world, seed);
-  const totals = { built: 0, riots: 0, raids: 0, rebels: 0 };
+  const totals = { built: 0, riots: 0, raids: 0, rebels: 0, wars: 0 };
   let seenDay = s.day;
   console.log(`--- ${mode}, seed ${seed}`);
   report(s, 'start', totals);
@@ -105,6 +128,7 @@ for (const seed of seedList.split(',').map(Number)) {
       if (/^(Riot|Pogrom)/.test(d.text)) totals.riots++;
       if (/^(Bandits fell|Something came|Scoia'tael on the road)/.test(d.text)) totals.raids++;
       if (/risen in rebellion|joins the rising/.test(d.text)) totals.rebels++;
+      if (/^(Temeria is at war with|.* is at war with Temeria)/.test(d.text)) totals.wars++;
     }
     seenDay = s.day;
     if ((m + 1) % 120 === 0) report(s, `year ${(m + 1) / 12}`, totals);

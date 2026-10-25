@@ -61,6 +61,9 @@ export function createHints(data, { disabled = false } = {}) {
         case 'day120': return state.day - state.reign.since > 120;
         case 'raid': return Object.values(state.settlements).some((s) => (s.raided ?? 0) > state.day);
         case 'lowAuthority': return state.authority < 20;
+        case 'atWar': return (state.wars ?? []).some((w) => w.sides.flat().includes('temeria'));
+        case 'warDrums': return (state.musters ?? []).length > 0;
+        case 'townLost': return Object.values(state.settlements).some((s) => s.occupier);
         default: return flags.has(t);
       }
     };

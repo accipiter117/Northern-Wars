@@ -8,6 +8,8 @@
 // nothing in the rules of the game reads it, so it never changes outcomes.
 import { pointInPolygon } from './geometry.js';
 import { patrolledSet } from './military.js';
+import { armyPosition } from './armies.js';
+import { TEMERIA, ownerOf } from './conflict.js';
 
 export function buildGrid(world) {
   const g = world.geography;
@@ -43,6 +45,16 @@ export function visionOf(state, world, positions = []) {
     if (state.settlements[s.id].buildings.includes('watchtower')) r = Math.max(r, v.watchtower);
     if (patrolled.has(s.id)) r += v.patrol;
     circles.push({ x: s.x, y: s.y, r });
+  }
+  // Our armies abroad see the country they march through; towns we have
+  // taken watch the land round them as our own do.
+  for (const a of state.armies ?? []) {
+    if (a.side !== TEMERIA) continue;
+    const p = armyPosition(world, a);
+    circles.push({ x: p.x, y: p.y, r: v.army ?? 90 });
+  }
+  for (const s of world.foreign) {
+    if (state.realms?.[s.realm]?.settlements[s.id]?.owner === TEMERIA) circles.push({ x: s.x, y: s.y, r: v.home[s.type] ?? 40 });
   }
   for (const rid of Object.keys(state.embassies ?? {})) {
     const cap = world.byId[world.realms.realms[rid]?.capital];
@@ -112,7 +124,7 @@ export function updateIntel(state, world, vision) {
       const p = world.byId[id];
       if (!canSee(world, vision, p.x, p.y)) continue;
       intel.seen[id] = {
-        day: state.day, realm: rid, population: s.population, prosperity: s.prosperity, garrison: s.garrison,
+        day: state.day, realm: rid, owner: ownerOf(state, world, id), population: s.population, prosperity: s.prosperity, garrison: s.garrison,
         buildings: [...s.buildings], construction: s.construction?.building ?? null,
       };
     }

@@ -9,6 +9,7 @@
   "realms": "data/realms.json",
   "houses": "data/houses.json",
   "military": "data/military.json",
+  "war": "data/war.json",
   "start": {
     "year": 1262,
     "month": 3,

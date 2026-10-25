@@ -69,6 +69,7 @@ export function monthlyThreats(state, world, rng) {
   const m = mil(world);
   const patrolled = patrolledSet(state, world);
   for (const [id, s] of Object.entries(state.settlements)) {
+    if (s.occupier) continue;
     for (const kind of Object.keys(m.threats)) {
       const level = threatLevel(state, world, id, kind, patrolled);
       if (!rng.chance(m.incidentChance * (level / 100))) continue;
@@ -143,6 +144,7 @@ function startPlague(state, world, id, days) {
 function fits(state, world, e, id) {
   const s = state.settlements[id];
   const type = world.byId[id].type;
+  if (s.occupier) return false;
   if (e.types && !e.types.includes(type)) return false;
   if (e.produces && !e.produces.includes(s.production)) return false;
   for (const [kind, min] of Object.entries(e.minThreat ?? {})) if (threatLevel(state, world, id, kind) < min) return false;
@@ -226,6 +228,7 @@ export function resolveEvent(state, world, eventId, choice, ignored = false, rng
 export function canSetGarrison(state, world, id, level) {
   const s = state.settlements[id];
   if (!s || !mil(world).garrisonLevels[level]) return { ok: false, reason: 'Unknown.' };
+  if (s.occupier) return { ok: false, reason: 'The enemy holds it.' };
   if (s.holder !== 'crown') return { ok: false, reason: 'The lord keeps his own soldiers here.' };
   if ((state.garrisonLevel[id] ?? 'standard') === level) return { ok: false, reason: 'Already so.' };
   if (!world.settlementData[id].garrison) return { ok: false, reason: 'No garrison to speak of.' };

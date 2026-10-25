@@ -3,6 +3,7 @@
 // garrisons, and fires, raids, sickness and fairs come and go. What the
 // crown hears of it depends on its embassies, spies and friends.
 import { addDispatch, clamp } from './realm.js';
+import { ownerOf, leviedMap, besieged } from './conflict.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 const R = (world) => world.realms;
@@ -43,21 +44,27 @@ export function informed(state, world, rid) {
 
 export function monthlyRealms(state, world, rng) {
   const e = R(world).economy;
+  const levied = leviedMap(state);
+  // Towns taken from one realm pay their new masters; Temeria's conquests
+  // are reckoned in the crown's own ledger.
+  const purse = {};
   for (const [rid, realm] of Object.entries(state.realms)) {
-    let income = 0;
-    let upkeep = 0;
     for (const [id, s] of Object.entries(realm.settlements)) {
+      const owner = ownerOf(state, world, id);
       const fx = effectsOf(world, s);
-      income += s.population * e.taxPerPersonMonth * prosperityMult(s) * (1 + fx.trade);
-      upkeep += s.garrison * e.garrisonPayMonth;
+      if (state.realms[owner]) {
+        purse[owner] = (purse[owner] ?? 0) + s.population * e.taxPerPersonMonth * prosperityMult(s) * (1 + fx.trade) - s.garrison * e.garrisonPayMonth;
+      }
       const food = s.buildings.filter((b) => world.buildings[b].effects.foodYield).length;
       const growth = e.growthPerMonth * prosperityMult(s) * (1 + food * e.foodBuildingGrowth);
       s.population = Math.max(0, Math.round(s.population * (1 + growth)));
       const base = { ...R(world).startByType[world.byId[id].type], ...(R(world).overrides[id] ?? {}) };
-      const target = clamp(base.prosperity + fx.prosperity * 1.5 + fx.trade * 10, 0, 100);
-      s.prosperity = clamp(s.prosperity + (target - s.prosperity) * e.prosperityDrift + (rng.next() - 0.5) * 1.2, 0, 100);
+      const aim = clamp(base.prosperity + fx.prosperity * 1.5 + fx.trade * 10, 0, 100);
+      s.prosperity = clamp(s.prosperity + (aim - s.prosperity) * e.prosperityDrift + (rng.next() - 0.5) * 1.2, 0, 100);
       const walls = s.buildings.includes('walls') ? e.wallsGarrison : 0;
-      s.garrison = Math.max(0, Math.round(s.garrison + (base.garrison * (1 + walls) - s.garrison) * e.garrisonDrift));
+      // An occupier keeps a lighter hold; no fresh men reach a town under siege.
+      const target = Math.max(0, base.garrison * (1 + walls) * (owner === rid ? 1 : 0.5) - (levied[id] ?? 0));
+      if (!besieged(state, id)) s.garrison = Math.max(0, Math.round(s.garrison + (target - s.garrison) * e.garrisonDrift));
       if (s.construction) {
         s.construction.daysLeft -= 30;
         if (s.construction.daysLeft <= 0) {
@@ -66,7 +73,17 @@ export function monthlyRealms(state, world, rng) {
         }
       }
     }
-    realm.treasury = Math.max(e.debtFloor, realm.treasury + income - upkeep);
+  }
+  for (const s of Object.values(state.settlements)) {
+    if (state.realms[s.occupier]) purse[s.occupier] = (purse[s.occupier] ?? 0) + Object.values(s.population).reduce((a, b) => a + b, 0) * e.taxPerPersonMonth * prosperityMult(s);
+  }
+  for (const t of state.tributes ?? []) {
+    if (t.until <= state.day) continue;
+    if (state.realms[t.from]) purse[t.from] = (purse[t.from] ?? 0) - t.monthly;
+    if (state.realms[t.to]) purse[t.to] = (purse[t.to] ?? 0) + t.monthly;
+  }
+  for (const [rid, realm] of Object.entries(state.realms)) {
+    realm.treasury = Math.max(e.debtFloor, realm.treasury + (purse[rid] ?? 0));
     aiBuild(state, world, rng, rid, realm);
     incident(state, world, rng, rid, realm);
   }
@@ -82,7 +99,7 @@ function aiBuild(state, world, rng, rid, realm) {
     const cost = def.cost.coin ?? 0;
     if (realm.treasury < cost * R(world).economy.buildMargin) return;
     const fits = Object.entries(realm.settlements)
-      .filter(([id, s]) => def.types.includes(world.byId[id].type) && !s.buildings.includes(b) && !def.needs && !def.needsBorder)
+      .filter(([id, s]) => ownerOf(state, world, id) === rid && def.types.includes(world.byId[id].type) && !s.buildings.includes(b) && !def.needs && !def.needsBorder)
       .sort((a, c) => c[1].population - a[1].population);
     if (!fits.length) continue;
     const [, s] = fits[0];
@@ -98,7 +115,7 @@ function incident(state, world, rng, rid, realm) {
   const kinds = Object.entries(inc.kinds);
   let roll = rng.next() * kinds.reduce((a, [, k]) => a + k.weight, 0);
   const [, kind] = kinds.find(([, k]) => (roll -= k.weight) < 0) ?? kinds[0];
-  const places = Object.keys(realm.settlements).filter((id) => kind.types.includes(world.byId[id].type));
+  const places = Object.keys(realm.settlements).filter((id) => ownerOf(state, world, id) === rid && kind.types.includes(world.byId[id].type));
   if (!places.length) return;
   const id = rng.pick(places);
   const s = realm.settlements[id];

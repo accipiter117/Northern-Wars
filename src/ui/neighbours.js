@@ -1,6 +1,8 @@
 import { relationTarget, foreignTrade, canSetStance, envoyText, formatDate, canOpenEmbassy, canSendSpy } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { decisionHtml } from './faith.js';
+import { realmWarHtml, siegeNote } from './war.js';
+import { sideName } from '../sim/index.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 const back = (action, label) => `<div class="menu-list"><button type="button" data-action="${action}">${label}</button></div>`;
@@ -70,6 +72,7 @@ export function realmCardHtml(world, state, id) {
     </div>
     <div data-part="cares">${cares ? `<h3>What they care about</h3><ul class="cares">${cares}</ul>` : ''}</div>
     <div data-part="stance"><h3>Our stance</h3><div class="build-list">${stances}</div></div>
+    ${world.war ? `<div data-part="war">${realmWarHtml(world, state, id)}</div>` : ''}
     ${world.realms ? `<div data-part="intel">${intelligenceHtml(world, state, id)}</div>` : ''}
   `;
 }
@@ -102,6 +105,8 @@ export function foreignCardHtml(world, state, id, view) {
     <div data-part="head">
       <h2>${escapeHtml(st.name)}</h2>
       <p class="sub">${TYPE_NAMES[st.type]}${capital ? `, seat of the crown of ${escapeHtml(realm)}` : ` in ${escapeHtml(realm)}`}. ${status}</p>
+      ${view.owner && view.owner !== st.realm ? `<p class="warn">Held by ${escapeHtml(sideName(world, view.owner))}.</p>` : ''}
+      ${view.visible && world.war ? siegeNote(world, state, id) : ''}
       <div class="menu-list"><button type="button" data-realm="${st.realm}">${escapeHtml(realm)}</button></div>
     </div>
     <div data-part="stats">
