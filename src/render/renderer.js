@@ -62,23 +62,48 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   const cache = document.createElement('canvas');
   const cctx = cache.getContext('2d');
   // One pixel per grid cell of explored ground, scaled up softly as the fog.
+  // The three layers are canvases of their own behind the map canvas. A pan
+  // slides them with a CSS transform, which the browser does on the
+  // graphics chip; the map canvas on top holds only what moves.
+  for (const layer of [base, fog, cache]) {
+    layer.className = 'map-backdrop';
+    layer.setAttribute('aria-hidden', 'true');
+    canvas.parentNode?.insertBefore(layer, canvas);
+  }
   const mask = document.createElement('canvas');
   const mctx = mask.getContext('2d');
   let baseDirty = true;
   let fogDirty = true;
-  const stats = { base: 0, overlay: 0, fog: 0 };
+  let fogPending = false;
+  let lastFog = 0;
+  const FOG_EVERY_MS = 400;
+  const FOG_RES = 0.5;
+  const stats = { base: 0, overlay: 0, fog: 0, relayer: 0 };
   const foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
   let dpr = 1;
   let dirty = true;
   let lastSelected = null;
   const ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
 
+  // The cached layers are drawn a margin larger than the screen, so a pan
+  // only slides them; they are redrawn when the zoom changes or the pan
+  // runs past the margin. `lc` is the camera they were drawn from.
+  let margin = 0;
+  let lc = null;
   function resize(w, h) {
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    for (const c of [canvas, base, fog, cache]) {
-      c.width = Math.round(w * dpr);
-      c.height = Math.round(h * dpr);
+    margin = Math.round(Math.max(w, h) * 0.25);
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    for (const c of [base, fog, cache]) {
+      // The fog is soft, so it is drawn at half the resolution.
+      const res = c === fog ? dpr * FOG_RES : dpr;
+      c.width = Math.round((w + margin * 2) * res);
+      c.height = Math.round((h + margin * 2) * res);
+      c.style.width = `${w + margin * 2}px`;
+      c.style.height = `${h + margin * 2}px`;
     }
+    lc = null;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     dirty = true;
@@ -121,7 +146,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   function updateVision(state) {
     if (!world.grid || !state.realms) return;
     vision = visionOf(state, world, travellerPositions(state, world));
-    fogDirty = true;
+    // Watchers move a little each day; the fog follows them a few times a
+    // second at most, which the eye cannot tell from every day.
+    fogPending = true;
     const explored = state.ambient.intel?.explored ?? [];
     const key = explored.join(',');
     if (key !== maskKey) {
@@ -146,9 +173,14 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     fctx.clearRect(0, 0, fog.width, fog.height);
     fogDirty = false;
     if (!vision) return;
+    // Nothing to fog when no foreign land is in reach of the layer.
+    const half = { x: (cam.viewW / 2 + margin) / cam.scale, y: (cam.viewH / 2 + margin) / cam.scale };
+    const view = { x0: cam.x - half.x, x1: cam.x + half.x, y0: cam.y - half.y, y1: cam.y + half.y };
+    if (!prep.neighbours.some((n) => n.boxes.some((b) => b.x1 > view.x0 && b.x0 < view.x1 && b.y1 > view.y0 && b.y0 < view.y1))) return;
     stats.fog += 1;
-    const s = cam.scale * dpr;
-    fctx.setTransform(s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale));
+    const fd = dpr * FOG_RES;
+    const s = cam.scale * fd;
+    fctx.setTransform(s, 0, 0, s, fd * (margin + cam.viewW / 2 - cam.x * cam.scale), fd * (margin + cam.viewH / 2 - cam.y * cam.scale));
     const g = world.grid;
     // Fog lies only over land: the sea is no secret.
     fctx.save();
@@ -161,6 +193,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // Lift the fog wherever someone of ours is watching, softly at the edges.
     fctx.globalCompositeOperation = 'destination-out';
     for (const c of vision.circles) {
+      if (c.x + c.r < view.x0 || c.x - c.r > view.x1 || c.y + c.r < view.y0 || c.y - c.r > view.y1) continue;
       const grad = fctx.createRadialGradient(c.x, c.y, c.r * 0.6, c.x, c.y, c.r);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -352,7 +385,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 
   function drawStatic(selectedId) {
     const s = cam.scale * dpr;
-    const worldTransform = [s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale)];
+    const worldTransform = [s, 0, 0, s, dpr * (margin + cam.viewW / 2 - cam.x * cam.scale), dpr * (margin + cam.viewH / 2 - cam.y * cam.scale)];
     if (baseDirty) {
       bctx.setTransform(1, 0, 0, 1, 0, 0);
       bctx.clearRect(0, 0, base.width, base.height);
@@ -369,7 +402,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     drawPatrols(cctx);
     drawRoutes(cctx);
 
-    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cctx.setTransform(dpr, 0, 0, dpr, dpr * margin, dpr * margin);
     drawRegionLabels(cctx);
     const z = zoomRel();
     const shown = (st) => z >= LABEL_ZOOM[st.type] || st.id === selectedId;
@@ -378,7 +411,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     for (const st of ordered.slice().reverse()) {
       const p = toScreen(cam, st.x, st.y);
       const s = infraState?.settlements[st.id];
-      const onScreen = p.x > -160 && p.y > -160 && p.x < cam.viewW + 160 && p.y < cam.viewH + 160;
+      const onScreen = p.x > -160 - margin && p.y > -160 - margin && p.x < cam.viewW + 160 + margin && p.y < cam.viewH + 160 + margin;
       let reach = iconSize(st.type) / 2;
       // Houses, buildings and fields round the settlement: the whole layout
       // when close, a compact cluster round its marker when far.
@@ -402,7 +435,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const f = foreignView[st.id];
       if (!f) continue;
       const p = toScreen(cam, st.x, st.y);
-      if (p.x < -60 || p.y < -60 || p.x > cam.viewW + 60 || p.y > cam.viewH + 60) continue;
+      if (p.x < -60 - margin || p.y < -60 - margin || p.x > cam.viewW + 60 + margin || p.y > cam.viewH + 60 + margin) continue;
       // Remembered places are drawn faded: this is how they were, not how they are.
       c.globalAlpha = f.visible ? 1 : 0.55;
       const full = cam.scale >= layoutCfg.zoom.full;
@@ -476,7 +509,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       // Pulled right back, only capitals keep their names.
       if (z < 0.8 && !capitals.has(st.id) && st.id !== selectedId) continue;
       const p = toScreen(cam, st.x, st.y);
-      if (p.x < -80 || p.y < -40 || p.x > cam.viewW + 80 || p.y > cam.viewH + 40) continue;
+      if (p.x < -80 - margin || p.y < -40 - margin || p.x > cam.viewW + 80 + margin || p.y > cam.viewH + 40 + margin) continue;
       c.font = `${LABEL_FONT[st.type]} ${SERIF}`;
       const w = c.measureText(st.name).width;
       const y = p.y + Math.max(iconSize(st.type) / 2, (footprint[st.id] ?? 0) * 1.08) + 2;
@@ -499,20 +532,42 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     const selectedId = selection?.settlement ?? null;
     updateTints(state);
     updateInfra(state);
-    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, selectedId };
-    if (!dirty && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
-      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army) return;
+    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
+    if (!dirty && !baseDirty && !fogDirty && !fogPending && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
+      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army
+      && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale) return;
     lastFrame = frame;
-    if (dirty || selectedId !== lastSelected) {
-      drawStatic(selectedId);
-      dirty = false;
-      lastSelected = selectedId;
+    // A new zoom, or a pan past the margin, redraws every layer from here.
+    if (fogPending && performance.now() - lastFog > FOG_EVERY_MS) {
+      fogPending = false;
+      fogDirty = true;
     }
-    if (fogDirty) drawFog();
+    if (!lc || lc.scale !== cam.scale || Math.abs(lc.x - cam.x) * cam.scale > margin * 0.9 || Math.abs(lc.y - cam.y) * cam.scale > margin * 0.9) {
+      lc = { x: cam.x, y: cam.y, scale: cam.scale };
+      stats.relayer += 1;
+      dirty = true;
+      baseDirty = true;
+      fogDirty = true;
+    }
+    withLayerCam(() => {
+      if (dirty || selectedId !== lastSelected) {
+        drawStatic(selectedId);
+        dirty = false;
+        lastSelected = selectedId;
+      }
+      if (fogDirty) {
+        drawFog();
+        lastFog = performance.now();
+      }
+    });
+    // Slide the backdrop by however far the camera has panned since, to the
+    // nearest device pixel.
+    const ox = Math.round((lc.x - cam.x) * cam.scale * dpr) / dpr - margin;
+    const oy = Math.round((lc.y - cam.y) * cam.scale * dpr) / dpr - margin;
+    const shift = `translate(${ox}px, ${oy}px)`;
+    if (base.style.transform !== shift) for (const layer of [base, fog, cache]) layer.style.transform = shift;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(base, 0, 0);
-    ctx.drawImage(fog, 0, 0);
-    ctx.drawImage(cache, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     drawLifeLayer(state, frac);
@@ -534,6 +589,19 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
     drawWar(state, frac, selection);
+  }
+
+  // The layers are drawn as seen from the camera they were started from.
+  function withLayerCam(fn) {
+    const { x, y } = cam;
+    cam.x = lc.x;
+    cam.y = lc.y;
+    try {
+      fn();
+    } finally {
+      cam.x = x;
+      cam.y = y;
+    }
   }
 
   // Smoke, workers, beasts and boats round the settlements in view, only

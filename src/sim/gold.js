@@ -48,7 +48,7 @@ export function goldYield(state, world, depositId) {
   const g = G(world);
   const left = state.gold.deposits[depositId].remaining;
   const frac = left / g.deposits[depositId].gold;
-  return Math.min(left, g.yield * Math.min(1, frac / g.taper));
+  return Math.min(left, g.yield * Math.max(g.minShare, Math.min(1, frac / g.taper)));
 }
 
 export function goldLedger(state, world, income) {
@@ -112,12 +112,25 @@ export function mahakamGrudge(state, world) {
 
 // ---- Prospecting ----
 
+const hilly = new WeakMap();
+// Places with hill or mountain country within a prospector's walk.
+export function prospectable(world, id) {
+  let set = hilly.get(world);
+  if (!set) {
+    const p = G(world).prospect;
+    const zones = p.terrain.flatMap((t) => (world.geography.terrain[t] ?? []).filter((z) => !z.realm).map((z) => z.shape));
+    set = new Set(world.geography.settlements.filter((s) => zones.some((sh) => distanceToPolygon(s.x, s.y, sh) < p.reach)).map((s) => s.id));
+    hilly.set(world, set);
+  }
+  return set.has(id);
+}
+
 export function canProspect(state, world, id) {
   const g = G(world);
   const s = state.settlements[id];
   if (!g || !s) return { ok: false, reason: 'Unknown place.' };
   if (s.occupier) return { ok: false, reason: 'The enemy holds it.' };
-  if (!g.prospect.terrain.some((t) => world.wildOf[id]?.[t])) return { ok: false, reason: 'No hills or mountains near enough to prospect.', hidden: true };
+  if (!prospectable(world, id)) return { ok: false, reason: 'No hills or mountains near enough to prospect.', hidden: true };
   if (depositAt(state, world, id)) return { ok: false, reason: 'Gold is already known here.', hidden: true };
   if (state.gold.prospected[id]) return { ok: false, reason: 'Prospectors have searched here and found nothing.' };
   if (state.gold.prospects.some((p) => p.settlement === id)) return { ok: false, reason: 'Prospectors are already at work here.' };

@@ -614,7 +614,8 @@ async function boot() {
     }
   }
 
-  attachMapInput(canvas, cam, world, { onTap, onChange: () => renderer.invalidate() });
+  // The renderer notices the camera moving by itself; a pan only slides its layers.
+  attachMapInput(canvas, cam, world, { onTap, onChange: () => {} });
 
   let firstSize = true;
   function layout() {
@@ -643,7 +644,11 @@ async function boot() {
   let last = performance.now();
   let lastSheetRefresh = 0;
   let lastHintCheck = 0;
+  // How long each frame's own work takes (the realm's days and the drawing),
+  // for the performance test: it must fit well inside a sixtieth of a second.
+  const frameStats = { frames: 0, ms: 0, max: 0, recent: [] };
   function frame(now) {
+    const work = performance.now();
     const dt = Math.min(0.25, (now - last) / 1000);
     last = now;
     if (speed > 0) {
@@ -677,8 +682,14 @@ async function boot() {
     renderer.draw(state, frac, selection);
     if (now - lastHintCheck > 1000) {
       lastHintCheck = now;
-      hints.check(state);
+      hints.check(state, world);
     }
+    const took = performance.now() - work;
+    frameStats.frames += 1;
+    frameStats.ms += took;
+    frameStats.max = Math.max(frameStats.max, took);
+    frameStats.recent.push(took);
+    if (frameStats.recent.length > 600) frameStats.recent.shift();
     requestAnimationFrame(frame);
   }
 
@@ -716,6 +727,12 @@ async function boot() {
     get speed() { return speed; },
     get renderStats() { return renderer.stats; },
     get artStats() { return renderer.artStats; },
+    get frameStats() {
+      const sorted = [...frameStats.recent].sort((a, b) => a - b);
+      return { frames: frameStats.frames, mean: frameStats.ms / Math.max(1, frameStats.frames), max: frameStats.max, p95: sorted[Math.floor(sorted.length * 0.95)] ?? 0 };
+    },
+    resetFrameStats() { Object.assign(frameStats, { frames: 0, ms: 0, max: 0, recent: [] }); },
+    planOf: (id) => renderer.planOf(id),
     // What a tap at these page coordinates would pick, for browser tests.
     pickAt(x, y) {
       const r = canvas.getBoundingClientRect();

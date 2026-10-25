@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   loadWorld, createState, step, applyAction, canBuild, canDecree, totalPopulation, ledgerNet, realmFaith,
-  threatLevel, patrolCapacity, holdingsOf, warsOf, peaceTerms, crownArmies,
+  threatLevel, patrolCapacity, holdingsOf, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue,
 } from '../src/sim/index.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -52,7 +52,7 @@ function warPolicy(s) {
   return s;
 }
 
-const BUILD_ORDER = ['fields', 'mill', 'granary', 'market', 'walls', 'workshop', 'shrine', 'lumber', 'quarry', 'mine'];
+const BUILD_ORDER = ['fields', 'mill', 'granary', 'goldmine', 'market', 'harbour', 'brewery', 'tannery', 'inn', 'walls', 'workshop', 'guildhall', 'shrine', 'hospice', 'lumber', 'quarry', 'mine'];
 
 function steward(s, month, spend) {
   s = answer(s, true);
@@ -82,6 +82,17 @@ function steward(s, month, spend) {
       if (near) s = act(s, { type: 'patrol', from: id, to: near });
     }
   }
+  // Open the most lucrative trade route the crown can, once a year.
+  if (month % 12 === 7 && s.treasury > 1500) {
+    const ends = world.geography.settlements.filter((x) => x.type === 'town' || x.type === 'city').map((x) => x.id);
+    let best = null;
+    for (const a of ends) for (const b of ends) {
+      if (a >= b || !canOpenRoute(s, world, a, b).ok) continue;
+      const v = routeValue(s, world, { from: a, to: b }).value;
+      if (!best || v > best.v) best = { a, b, v };
+    }
+    if (best) s = act(s, { type: 'route', from: best.a, to: best.b });
+  }
   // Keep the lords sweet.
   for (const id of Object.keys(s.houses)) {
     if (s.houses[id].loyalty < 35) s = act(s, { type: 'house', house: id, kind: 'honours' });
@@ -106,7 +117,7 @@ function report(s, label, totals) {
   const last = s.ledger.history.at(-1);
   console.log(`${label.padEnd(10)} pop ${String(pop).padStart(6)} treasury ${String(Math.round(s.treasury)).padStart(7)} net ${String(last ? ledgerNet(last).net : 0).padStart(5)}`
     + ` auth ${s.authority.toFixed(0).padStart(3)} stab ${s.stability.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
-    + ` wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`
+    + ` routes ${s.routes.length} gold ${Math.round(last?.income.gold ?? 0)} wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`
     + ` faith F/M/O ${f.eternal_fire.toFixed(0)}/${f.melitele.toFixed(0)}/${f.old_ways.toFixed(0)} built ${totals.built} riots ${totals.riots} raids ${totals.raids} rebellions ${totals.rebels} deposed ${s.depositions.length}`);
 }
 

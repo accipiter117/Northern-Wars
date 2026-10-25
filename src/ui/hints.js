@@ -49,7 +49,7 @@ export function createHints(data, { disabled = false } = {}) {
     flags.add(trigger);
   }
 
-  function check(state) {
+  function check(state, world = null) {
     if (disabled || prefs.off || showing) return;
     const fired = (t) => {
       switch (t) {
@@ -61,6 +61,10 @@ export function createHints(data, { disabled = false } = {}) {
         case 'day120': return state.day - state.reign.since > 120;
         case 'raid': return Object.values(state.settlements).some((s) => (s.raided ?? 0) > state.day);
         case 'lowAuthority': return state.authority < 20;
+        case 'day45': return state.day - state.reign.since > 45;
+        case 'day150NoRoutes': return state.day - state.reign.since > 150 && !(state.routes ?? []).length;
+        case 'goldWaiting': return state.day - state.reign.since > 240 && !Object.values(state.settlements).some((s) => s.buildings.includes('goldmine'));
+        case 'placeFull': return !!world && Object.entries(state.settlements).some(([id, s]) => s.buildings.length >= (world.buildingSlots[world.byId[id].type] ?? 99));
         case 'atWar': return (state.wars ?? []).some((w) => w.sides.flat().includes('temeria'));
         case 'warDrums': return (state.musters ?? []).length > 0;
         case 'townLost': return Object.values(state.settlements).some((s) => s.occupier);

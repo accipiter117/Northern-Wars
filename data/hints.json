@@ -1,33 +1,113 @@
 {
   "note": "Tutorial hints, shown once each, in the order their moment comes. Triggers are checked by src/ui/hints.js.",
   "hints": [
-    { "id": "welcome", "trigger": "start", "title": "The crown of Temeria",
-      "text": "The realm lives on its own: carts on the roads, harvests, tempers. You steer it. Pause, 1x, 2x and 4x are at the top; drag to pan and pinch to zoom. Tap any town to see how it fares." },
-    { "id": "town", "trigger": "townOpened", "title": "A town's card",
-      "text": "Each card shows how long a place's food will last, what it grows and eats, its mood and its dangers. Raise buildings here: fields and mills feed people, markets bring coin, walls and shrines calm them." },
-    { "id": "decision", "trigger": "decision", "title": "A decision",
-      "text": "Envoys, petitions, lords' demands and news from the realm pause the game until you answer. Close one unanswered and the cautious choice is made for you after twenty days." },
-    { "id": "ledger", "trigger": "firstLedger", "title": "The first ledger",
-      "text": "On the first of every month the accounts are drawn up. The menu's Ledger shows what came in and went out. A purse that runs dry can borrow from the dwarven banks, at a price in Authority." },
-    { "id": "laws", "trigger": "noDecreeAfter60", "title": "Your strongest lever",
-      "text": "Laws and edicts in the menu change taxes, order, faith and more. Every decree costs Authority and pleases some groups while angering others. Watch the realm's mood before you choose." },
-    { "id": "hunger", "trigger": "hunger", "title": "Hunger",
-      "text": "Somewhere the stores are empty. Grain moves from full barns to empty ones by itself, but cities cannot feed themselves. Fields, watermills and granaries in the villages are the cure." },
-    { "id": "debt", "trigger": "debt", "title": "In debt",
-      "text": "The treasury is below zero. Interest is charged every month and the lords' respect for the crown drains away. Past the bankers' limit, soldiers go unpaid and desert." },
-    { "id": "houses", "trigger": "day120", "title": "The great houses",
-      "text": "Five houses hold land of the crown and keep their own soldiers. Their loyalty rises with favours and falls with grievances. Let it collapse with your Authority and they will depose you." },
-    { "id": "raid", "trigger": "raid", "title": "Raiders",
-      "text": "Bandits or beasts have struck. A stronger garrison, walls and a patrol on the road protect a place; Military and threats in the menu shows where danger is gathering." },
-    { "id": "authority", "trigger": "lowAuthority", "title": "Authority is slipping",
-      "text": "With little Authority you cannot pass laws or bend the lords. It recovers each month, faster when the houses are content and the court impresses them." },
-    { "id": "drums", "trigger": "warDrums", "title": "War drums",
-      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a strong Authority, or an army of your own may change their minds." },
-    { "id": "war", "trigger": "atWar", "title": "At war",
-      "text": "War in the menu raises armies: a levy from crown garrisons, the lords' men, and hired companies. Give each army an order and a stance and its marshal does the marching. Tap an army on the map for its card." },
-    { "id": "army", "trigger": "armyRaised", "title": "Your army",
-      "text": "Hold a place and the army meets any enemy that comes near. Besiege a town and it starves or storms it, then holds it. Raid a realm and it plunders unwalled places, then comes home. Levied men leave garrisons thin." },
-    { "id": "lost", "trigger": "townLost", "title": "A town lost",
-      "text": "An enemy holds a Temerian town: it pays the crown nothing and its lord is furious. Retake it by siege, or make peace. A peace where each keeps what it holds gives it away for good, but it remains a just cause for a later war." }
+    {
+      "id": "welcome",
+      "trigger": "start",
+      "title": "The crown of Temeria",
+      "text": "The realm lives on its own: carts on the roads, harvests, tempers. You steer it. Pause, 1x, 2x and 4x are at the top; drag to pan and pinch to zoom. Tap any town to see how it fares."
+    },
+    {
+      "id": "town",
+      "trigger": "townOpened",
+      "title": "A town's card",
+      "text": "Each card shows how long a place's food will last, what it grows and eats, its mood and its dangers. Raise buildings here: fields and mills feed people, markets bring coin, walls and shrines calm them."
+    },
+    {
+      "id": "decision",
+      "trigger": "decision",
+      "title": "A decision",
+      "text": "Envoys, petitions, lords' demands and news from the realm pause the game until you answer. Close one unanswered and the cautious choice is made for you after twenty days."
+    },
+    {
+      "id": "ledger",
+      "trigger": "firstLedger",
+      "title": "The first ledger",
+      "text": "On the first of every month the accounts are drawn up. The menu's Ledger shows what came in and went out. A purse that runs dry can borrow from the dwarven banks, at a price in Authority."
+    },
+    {
+      "id": "laws",
+      "trigger": "noDecreeAfter60",
+      "title": "Your strongest lever",
+      "text": "Laws and edicts in the menu change taxes, order, faith and more. Every decree costs Authority and pleases some groups while angering others. Watch the realm's mood before you choose."
+    },
+    {
+      "id": "hunger",
+      "trigger": "hunger",
+      "title": "Hunger",
+      "text": "Somewhere the stores are empty. Grain moves from full barns to empty ones by itself, but cities cannot feed themselves. Fields, watermills and granaries in the villages are the cure."
+    },
+    {
+      "id": "debt",
+      "trigger": "debt",
+      "title": "In debt",
+      "text": "The treasury is below zero. Interest is charged every month and the lords' respect for the crown drains away. Past the bankers' limit, soldiers go unpaid and desert."
+    },
+    {
+      "id": "houses",
+      "trigger": "day120",
+      "title": "The great houses",
+      "text": "Five houses hold land of the crown and keep their own soldiers. Their loyalty rises with favours and falls with grievances. Let it collapse with your Authority and they will depose you."
+    },
+    {
+      "id": "raid",
+      "trigger": "raid",
+      "title": "Raiders",
+      "text": "Bandits or beasts have struck. A stronger garrison, walls and a patrol on the road protect a place; Military and threats in the menu shows where danger is gathering."
+    },
+    {
+      "id": "authority",
+      "trigger": "lowAuthority",
+      "title": "Authority is slipping",
+      "text": "With little Authority you cannot pass laws or bend the lords. It recovers each month, faster when the houses are content and the court impresses them."
+    },
+    {
+      "id": "drums",
+      "trigger": "warDrums",
+      "title": "War drums",
+      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a strong Authority, or an army of your own may change their minds."
+    },
+    {
+      "id": "war",
+      "trigger": "atWar",
+      "title": "At war",
+      "text": "War in the menu raises armies: a levy from crown garrisons, the lords' men, and hired companies. Give each army an order and a stance and its marshal does the marching. Tap an army on the map for its card."
+    },
+    {
+      "id": "army",
+      "trigger": "armyRaised",
+      "title": "Your army",
+      "text": "Hold a place and the army meets any enemy that comes near. Besiege a town and it starves or storms it, then holds it. Raid a realm and it plunders unwalled places, then comes home. Levied men leave garrisons thin."
+    },
+    {
+      "id": "lost",
+      "trigger": "townLost",
+      "title": "A town lost",
+      "text": "An enemy holds a Temerian town: it pays the crown nothing and its lord is furious. Retake it by siege, or make peace. A peace where each keeps what it holds gives it away for good, but it remains a just cause for a later war."
+    },
+    {
+      "id": "zoom",
+      "trigger": "day45",
+      "title": "Look closer",
+      "text": "Pinch to zoom in on a town. Up close you see its houses, workshops, fields and walls, with smoke rising and workers going out to the fields. Every building you raise appears in its place, and the town spreads as it grows."
+    },
+    {
+      "id": "trade",
+      "trigger": "day150NoRoutes",
+      "title": "Trade routes",
+      "text": "Trade and gold in the menu opens crown trade routes between towns and cities, at home or in a friendly neighbour. A route earns each month from both towns' size and fortunes, the length of the haul and safe roads; patrols protect it and war closes it. Market halls and guildhalls let you run more."
+    },
+    {
+      "id": "gold",
+      "trigger": "goldWaiting",
+      "title": "Gold in the hills",
+      "text": "Gold seams are known near Carreras, Zavada, Razwan, Petrelsteyn and Rissberg; a Gold mine on one pays the treasury every month until it runs out. Others may hide elsewhere in the hills: send prospectors from a hill town's card. Gold draws miners and dwarves, but also bandits, greedy neighbours and Mahakam's frown."
+    },
+    {
+      "id": "slots",
+      "trigger": "placeFull",
+      "title": "No more room",
+      "text": "Each kind of place holds only so many buildings: a village five, a town eight, a city twelve. Choose what each place is for."
+    }
   ]
 }

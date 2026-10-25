@@ -28,7 +28,11 @@ export function prepareMap(world) {
   const temeria = g.temeria;
   const neighbours = Object.entries(g.neighbours).map(([id, n]) => {
     const biggest = n.shapes.reduce((a, b) => (area(b) > area(a) ? b : a));
-    return { id, name: n.name, paths: n.shapes.map(pathOf), label: labelSpot(biggest) };
+    const boxes = n.shapes.map((sh) => {
+      const b = bounds(sh);
+      return { x0: b.minX, y0: b.minY, x1: b.maxX, y1: b.maxY };
+    });
+    return { id, name: n.name, paths: n.shapes.map(pathOf), label: labelSpot(biggest), boxes };
   });
 
   const terrain = [];

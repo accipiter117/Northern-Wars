@@ -131,7 +131,8 @@
       "upkeep": 5,
       "effects": {
         "trade": 0.4,
-        "prosperity": 5
+        "prosperity": 5,
+        "craft": 8
       },
       "blurb": "Draws merchants and their tolls."
     },
@@ -150,7 +151,8 @@
       "upkeep": 5,
       "effects": {
         "trade": 0.25,
-        "prosperity": 3
+        "prosperity": 3,
+        "craft": 10
       },
       "blurb": "Smiths, coopers and weavers working for coin."
     },
@@ -227,9 +229,9 @@
       "upkeep": 5,
       "effects": {
         "foodYield": 0.12,
-        "trade": 0.15,
-        "craft": 10,
-        "customs": 22,
+        "trade": 0.1,
+        "craft": 6,
+        "customs": 12,
         "routes": 1,
         "routeValue": 0.15
       },
@@ -314,7 +316,7 @@
       "days": 35,
       "upkeep": 2,
       "effects": {
-        "craft": 20,
+        "craft": 11,
         "unrest": 2
       },
       "blurb": "Hides into leather for coin. The stink carries."
@@ -334,7 +336,7 @@
       "days": 45,
       "upkeep": 3,
       "effects": {
-        "craft": 18,
+        "craft": 12,
         "prosperity": 1,
         "unrest": 1
       },
@@ -355,8 +357,8 @@
       "days": 40,
       "upkeep": 2,
       "effects": {
-        "craft": 12,
-        "trade": 0.1,
+        "craft": 10,
+        "trade": 0.05,
         "vision": 30,
         "traffic": 0.15
       },
