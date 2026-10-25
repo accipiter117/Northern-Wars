@@ -3,14 +3,28 @@
 How the realm behaves over a long reign, and the dials that shape it. Every number lives in `data/`; nothing here needs code changed.
 
 ## Thirty years, four crowns
-From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded. Since M12.
+From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded. Since M13.
 
-| Crown | What it does | People after 30 years | Treasury | Authority | Rebellions | Depositions | Wars |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Idle | Nothing; every decision left to its default | about 53,500 (from 54,240) | about 40,200, levelled off (M11: 42,200) | about 60 | 2 | 0 | 3 |
-| Steward | Builds within its means, an earner and a food building in turn (gold and silver mines, toll bridges, merchants' quarters, markets and the new chains first among the earners), opens the best trade route it can twice a year, answers generously, keeps six patrols on the worst roads, honours sulking lords, grants an equal charter, hires witchers; at war raises one army to hold Vizima and takes any peace offered | about 79,600 (+47%; M11: 74,400) | about 241,000, held there by the cost of a hoarding court | about 89 | 1 | 0 | 1 |
-| Spendthrift | As the steward but borrows to the bankers' limit to build faster | about 72,300 | at the bankers' limit for a decade, then rich | about 80 at the end, near 0 for years before | 1 | about 5 (4 to 5) | 3 |
-| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court | about 49,900 | about 28,200 | about 7 | 33 | 3 | 7 |
+| Crown | What it does | People after 30 years | Treasury | Raids suffered | Depositions | Wars |
+| --- | --- | --- | --- | --- | --- | --- |
+| Idle | Nothing; every decision left to its default; no companies | about 52,300 (from 54,240) | about 37,600, levelled off (M12: 40,200) | about 1,050 | 0 | 1 to 2 |
+| Steward | As in M12 (builds an earner and a food building in turn, opens routes, answers generously, honours sulking lords, grants an equal charter, hires witchers), and keeps a standing army that grows with its income: light horse riding the two worst roads, foot and archers standing ready (Respond, 150 miles) in the towns nearest danger, sighted camps and lairs hunted when the odds are Favourable or better, witchers hired for the rest | about 79,600 (+47%) | about 185,000 | about 140 | 0 | 2 to 3 |
+| Spendthrift | As the steward but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 71,000 | at the limit for a decade, then rich | about 380 | about 3 | 0 to 4 |
+| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies | about 46,300 | about 25,800 | about 1,220 | about 6 | 3 to 8 |
+
+## A realm under arms (M13)
+Ten years, from `node tools/longrun.mjs 10 <crown> 1,2,3`:
+
+| | Raids on villages | Dead in raids | Days bands held a road | Camps and lairs cleared | Companies | Their pay |
+| --- | --- | --- | --- | --- | --- | --- |
+| Idle | about 300 (M12: about 115) | about 525 | about 2,450 | 0 | 0 | 0 |
+| Steward | about 120 | about 160 | about 1,070 | about 15 | 8 to 9 | about 520 a month, 15% of its income (14.6%, 15.7% and 14.6%) |
+
+- **The idle crown feels it.** Raids come more than twice as often as before M13, because nothing stops a camp from growing and nothing clears it. Over thirty years the untended realm shrinks a little and loses about 1,600 people to raiders and beasts.
+- **A modest standing army pays for itself.** The steward's eight or nine companies cut raids by three fifths and deaths by more than two thirds. They clear about fifteen camps and lairs in ten years and halve the days bands hold the roads. Their pay, about 520 a month, is 15% of a developed realm's income, the bottom of the 15 to 25% the brief set.
+- **Threats never vanish.** A steward still suffers a raid or so a month somewhere: camps reappear where the country is poor and wild once the 120 quiet days after a clearing are over, and Scoia'tael and war parties come regardless.
+- **The tyrant fares worst.** Martial law does not clear a single camp; with Scoia'tael sympathy at 60 and more, commandos join the bandits, and its realm loses a seventh of its people in thirty years (M12: about a twelfth).
+- **The steward's income still triples** (year 1 about 1,150, year 10 about 3,480, 3.0 times), after paying for its companies.
 
 ## The economy at work (M12)
 The crown's month, averaged over its year, from `node tools/longrun.mjs 10 <crown> 1,2,3 ledger`:
@@ -83,11 +97,13 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
 | --- | --- | --- | --- |
 | The court's monthly cost | economy.json `upkeep.courtMonth` | 420 | Less spare coin; slower building |
 | Hoard drain | economy.json `upkeep.hoardPerMonth` | 1% a month above 5,000 | A full treasury levels off sooner |
+| Company pay | forces.json `companies.*.upkeep` | militia 0.3 to knights 2.2 a man a month | A standing army costs more |
+| Threats breeding | forces.json `threats.bandits.spawnAt`, `spawnChance`, `growth`, `max`; `threats.monsters` likewise | bandits from level 35, up to 7 camps; beasts from 30, up to 6 lairs | More, bigger camps and lairs |
+| Fights | forces.json `fight.power`, `loserLoss`, `winnerLoss`, `suits` | strength cubed; a quarter to half the loser, 4 to 12% the winner | Fights decided more surely, and bloodier |
+| Witchers | forces.json `threats.monsters.witcher` | 150 + 2.5 x strength; nine in ten succeed | Witchers cost more or fail more |
 | Taxes per person | economy.json `taxes.perPersonMonth`, `prosperityBase`, `perProsperity` | city 0.009, town 0.008, village 0.006 a head, times 0.3 + 0.014 x prosperity | More coin from a big, thriving population |
 | Debt | economy.json `debt.interestPerMonth`, `debtUnrest` | 1% a month; up to +10 unrest at the bankers' limit | Debt bites harder |
-| Patrols | military.json `patrol.cost`, `perLength` | 6 plus 0.22 a unit of road (about 20 to 50) | Patrols cost more |
 | Authority regrowth | groups.json `effects.authorityRegen`, `authorityRegenBelow` | +1 a month while under 75 | Laws and actions come round faster |
-| Raid frequency | military.json `incidentChance` | 8% x threat | More raids; garrisons and patrols matter more |
 | Plague spread | military.json `plague.spread` | 15% a month to each road neighbour | Wider outbreaks |
 | Envoys, petitions, demands, events | `envoyChance`, `petitionChance`, `demandChance`, `eventChance` | 35%, 30%, 25%, 30% a month | More interruptions; about one decision a month in all |
 | Rebellion threshold | houses.json `rebellion.below` | loyalty 15 | Houses rise sooner |
@@ -110,7 +126,7 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
 | Armies' pay | war.json `raise.fieldPayPerSoldier`, `companyCoin`, `companyMonthly` | 0.15 a man a month; 250 and 60 a company | War drains the treasury faster |
 
 ## Tools
-- `node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds] [ledger]` for the tables above; `ledger` prints each year's month, line by line. The crowns themselves live in `tools/crowns.mjs`.
+- `node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds] [ledger]` for the tables above (it counts raids, deaths, road-days held, camps cleared, fights and companies); `ledger` prints each year's month, line by line. The crowns themselves live in `tools/crowns.mjs`.
 - `node tools/lawbalance.mjs [years]` compares every law option with doing nothing.
 - `node tools/balance.mjs [years] [idle|builder|borrower]` for the economy alone.
 - `node tools/payback.mjs [years] [seed]` for how long each building takes to pay back.

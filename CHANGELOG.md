@@ -1,5 +1,14 @@
 # Changelog
 
+## M13 A realm under arms
+- Threats are things on the map. Bandit camps grow in the forests, marshes and hills near poor and restless places and send bands to hold the roads (caravans stop, crown routes and market trade are robbed) and fall on weak villages. Monster lairs hold drowners, wolves, harpies and wyverns, or something far worse. Scoia'tael commandos come out of the woods when the elves are angry; hostile neighbours send war parties over the border.
+- What the crown's eyes reach it sees clearly; beyond them, rumours. A short alert names each sighting, and Help can pause the game on sightings.
+- Standing companies: militia, archers, men-at-arms, crossbowmen, light cavalry and knights, recruited from a town's card. They draw on the town's people, the crown's stores of arms and horses, and the treasury every month; they have morale, wounds and experience, and desert when unpaid.
+- Standing orders: hold a place, patrol a road, guard a trade route, hunt a sighted threat or enemy army, or stand ready to answer anything sighted nearby. Odds in plain words before a hunt; fights settle themselves, with a marker on the map and a report in the Chronicle. Witchers can be hired for the worst beasts.
+- Field armies can take standing companies along, and fight better for them.
+- Banner tokens for every force, sized by strength, with men and morale close up; camps and lairs drawn in the terrain; lines to where forces are going; a Forces screen with every company and threat and a button to send the nearest company.
+- Old patrols become companies of light horse on the same roads. Save version 12.
+
 ## M12 A working economy
 - A rescaled economy: a well-run crown now prospers instead of living in debt. Taxes depend on the kind of place and grow with prosperity and with market halls, guildhalls and merchants' quarters. Crafts earn several times more, by the size and fortunes of their place (a little less each the more of one trade the realm has). Gold mines yield about 150 a month at their peak. Patrols cost by the length of their road. Debt interest is 1% a month, but deep debt now stirs unrest.
 - Production chains: sheep pastures and weavers' halls (wool to cloth), rye distilleries (spare grain to rye spirit), charcoal burners and weaponsmiths (timber and iron to arms, dearest while the realms around are at war), salt pans on the Velen coast (salt, and stores that keep longer), and horse studs on the southern farmland (horses, and cheaper patrols). Finished goods ride the crown's routes at a premium where the far end lacks them, most of all abroad, and the rest sells at home. Carts carry them along the roads.

@@ -14,6 +14,7 @@
 | M9 War with neighbours | Armies raised from levies, lords and hired companies; marshals, orders and stances; battles, sieges, raids; towns that change hands; invasions, wars between neighbours, calls to arms; peace, tribute and truces | Done |
 | M11 Trade, gold and a busier realm | Crown trade routes at home and abroad, gold deposits and prospecting, sixteen new buildings with limits per place, and settlements laid out as living places on the map (houses, fields, workshops, walls, smoke and workers) | Done |
 | M12 A working economy | The economy rescaled so a well-run crown prospers: taxes that grow with development, earning buildings that earn, patrols by road length, cheaper debt; production chains (wool to cloth, grain to rye spirit, timber to charcoal to arms, salt, horses), silver, toll bridges, merchants' quarters, the pilgrims' hostel, the shipyard, the alchemist and the hunters' lodge; and the Treasury, with every line and every place's account | Done |
+| M13 A realm under arms | Bandit camps, monster lairs, Scoia'tael commandos and foreign raiders as things on the map, seen or rumoured; standing companies of six troop types with morale, wounds, experience and pay, on standing orders (station, patrol, escort, hunt, respond); fights with odds in words; field armies raised from the companies; banner tokens, camps and lairs, and a Forces screen | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -23,6 +24,15 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M13 acceptance criteria
+- Dice-roll raids are gone: the monthly threat levels decide where bandit camps and monster lairs appear and grow. Camps send bands that hold roads (stopping real crown caravans and ambient carts on the map, robbing routes, trade and goods) and fall on weak villages; lairs hold beasts suited to their country, rarer and stronger kinds among them; witchers clear them with no losses, troops at a cost in men. Scoia'tael commandos come out of the woods when sympathy is high, strike and vanish; hostile neighbours send raiders over the border; enemy armies march visibly.
+- Threats in sight show clearly with their size; beyond sight a rumour marker covers a rough area and firms up as sight reaches it. A short alert on each new sighting, and a Help option to pause on sightings.
+- Standing companies of militia, men-at-arms, archers, crossbowmen, light cavalry and knights, each with strength, morale, experience and upkeep, suiting some foes better than others; recruited from a town's people, needing barracks, arms and horses as fits; unpaid companies lose morale and desert; they heal and recover at their station. Garrisons stay as local defence; field armies are raised from the companies plus levies and hired companies.
+- Standing orders (Station, Patrol, Escort, Hunt, Respond); companies follow roads, slower in rough country and winter, and return to their station after a hunt; odds in plain words before a Hunt; fights resolve automatically with a battle marker and a Chronicle report.
+- Banner tokens for every force (crown, lords, foreign, bandits, Scoia'tael, beasts) sized by strength, with men and morale close up; camps and lairs as sprites that grow; destination lines; a chosen company's road, route or radius; a Forces screen with a button to send the nearest suitable company.
+- Balance: over ten years the steward with a modest standing army suffers far fewer losses than the idle crown, which feels threats more than before; a sensible peacetime force costs 15 to 25% of a developed realm's income (tools/longrun.mjs, docs/BALANCE.md).
+- Tests for threats appearing and growing, bands stopping caravans, companies clearing camps and lairs, odds matching outcomes, desertion, sight and rumour, and the save upgrade; the frame-budget test with many tokens on screen; save version 12.
 
 ## M12 acceptance criteria
 - Taxes depend on the kind of place and rise with prosperity and with market halls, guildhalls and merchants' quarters.

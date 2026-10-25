@@ -150,7 +150,7 @@ export function orderCompany(state, world, c, order) {
     c.way = [];
     c.replan = 0;
     const target = order.threat ? state.threats.list.find((x) => x.id === order.threat) : state.armies.find((x) => x.id === order.army);
-    say(state, `${c.name} rides out to hunt ${order.threat ? threatName(world, target).toLowerCase() : target.name}.`);
+    say(state, `Orders for ${c.name}: hunt down ${order.threat ? threatName(world, target).toLowerCase() : target.name}.`);
     return;
   }
   if (order.kind === 'station') c.station = order.place;
@@ -299,7 +299,7 @@ function think(state, world, c) {
     if (best) {
       c.task = { threat: best.t.id };
       c.replan = 0;
-      say(state, `${c.name} rides out from ${home.name} to answer ${threatName(world, best.t).toLowerCase()}.`);
+      say(state, `From ${home.name}, ${c.name} ride out to answer ${threatName(world, best.t).toLowerCase()}.`);
       return;
     }
   }
