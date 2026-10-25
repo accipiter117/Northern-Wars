@@ -183,7 +183,7 @@ registerPlaceholder('unit', 'foreign', (ctx, x, y, size, opts = {}) => {
   ctx.lineTo(x + r * 0.2, y - r * 1.0);
   ctx.lineTo(x - r * 0.6, y - r * 0.8);
   ctx.closePath();
-  ctx.fillStyle = '#a3322a';
+  ctx.fillStyle = opts.colours?.[0] ?? '#a3322a';
   ctx.fill();
 });
 
@@ -274,7 +274,7 @@ registerPlaceholder('unit', 'patrol', (ctx, x, y, size, opts = {}) => {
   ctx.lineTo(x + r * 0.15, y - r * 0.55);
   ctx.lineTo(x + r * 0.2, y);
   ctx.closePath();
-  ctx.fillStyle = '#23365e';
+  ctx.fillStyle = opts.colours?.[0] ?? '#23365e';
   ctx.fill();
   stroke(ctx, 0.7);
   ctx.beginPath();

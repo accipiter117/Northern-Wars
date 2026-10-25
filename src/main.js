@@ -537,6 +537,11 @@ async function boot() {
     get state() { return state; },
     get speed() { return speed; },
     get renderStats() { return renderer.stats; },
+    // What a tap at these page coordinates would pick, for browser tests.
+    pickAt(x, y) {
+      const r = canvas.getBoundingClientRect();
+      return renderer.pick(x - r.left, y - r.top, state, frac);
+    },
     setSpeed,
     screenOf(id) {
       const st = world.byId[id];

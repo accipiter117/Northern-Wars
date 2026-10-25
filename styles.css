@@ -144,6 +144,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   transform: translateX(-50%);
   background: var(--panel-2); border: 1px solid var(--gold); border-radius: 8px;
   padding: 10px 16px; max-width: 90vw; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  /* A notice, not a control: taps pass through to the map beneath. */
+  pointer-events: none;
 }
 .toast[hidden] { display: none; }
 

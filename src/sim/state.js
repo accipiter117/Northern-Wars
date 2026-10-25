@@ -6,6 +6,7 @@ import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
+import { newIntel, updateIntel, visionOf } from './vision.js';
 
 export const STATE_VERSION = 8;
 
@@ -56,6 +57,10 @@ export function createState(world, seed = 1) {
     chronicle: [],
   };
   applyHoldings(state, world);
+  if (world.grid) {
+    state.ambient.intel = newIntel(world);
+    updateIntel(state, world, visionOf(state, world));
+  }
   state.reign = newReign(state, day);
   for (const id of Object.keys(settlements)) settlements[id].tension = tensionTarget(state, world, id);
   state.stability = computeStability(state);

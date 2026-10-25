@@ -8,6 +8,8 @@ import { toScreen, toWorld } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
 import { threatLevel, patrolledSet, patrolRoute, plagueActive } from '../sim/military.js';
+import { visionOf, canSee, hasBit } from '../sim/vision.js';
+import { travellerPositions } from '../sim/ambient.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
 const LABEL_FONT = {
@@ -35,15 +37,24 @@ const DANGER = 50;
 export function createRenderer(canvas, world, cam) {
   const prep = prepareMap(world);
   const ctx = canvas.getContext('2d');
-  // Two cached layers: the painted map (redrawn only when the camera moves or
-  // a neighbour's colour changes) and the settlements, dressing and labels on
-  // top of it (redrawn when what stands in a settlement changes).
+  // Three cached layers, laid one on another each frame: the painted map
+  // (redrawn only when the camera moves or a neighbour's colour changes),
+  // the fog of war over foreign lands (redrawn each day as watchers move),
+  // and the settlements, dressing and labels on top (redrawn when what
+  // stands in a settlement, or what can be seen of one, changes).
   const base = document.createElement('canvas');
   const bctx = base.getContext('2d');
+  const fog = document.createElement('canvas');
+  const fctx = fog.getContext('2d');
   const cache = document.createElement('canvas');
   const cctx = cache.getContext('2d');
+  // One pixel per grid cell of explored ground, scaled up softly as the fog.
+  const mask = document.createElement('canvas');
+  const mctx = mask.getContext('2d');
   let baseDirty = true;
-  const stats = { base: 0, overlay: 0 };
+  let fogDirty = true;
+  const stats = { base: 0, overlay: 0, fog: 0 };
+  const foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
   let dpr = 1;
   let dirty = true;
   let lastSelected = null;
@@ -51,7 +62,7 @@ export function createRenderer(canvas, world, cam) {
 
   function resize(w, h) {
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    for (const c of [canvas, base, cache]) {
+    for (const c of [canvas, base, fog, cache]) {
       c.width = Math.round(w * dpr);
       c.height = Math.round(h * dpr);
     }
@@ -59,6 +70,7 @@ export function createRenderer(canvas, world, cam) {
     canvas.style.height = `${h}px`;
     dirty = true;
     baseDirty = true;
+    fogDirty = true;
   }
 
   const zoomRel = () => cam.scale / cam.contain;
@@ -88,9 +100,95 @@ export function createRenderer(canvas, world, cam) {
   let infraThreats = {};
   let infraKey = '';
   let threatKey = '';
+  // What the crown can see today, worked out once per day of the realm.
+  let vision = null;
+  let maskKey = '';
+  function updateVision(state) {
+    if (!world.grid || !state.realms) return;
+    vision = visionOf(state, world, travellerPositions(state, world));
+    fogDirty = true;
+    const explored = state.ambient.intel?.explored ?? [];
+    const key = explored.join(',');
+    if (key !== maskKey) {
+      maskKey = key;
+      const g = world.grid;
+      mask.width = g.cols;
+      mask.height = g.rows;
+      const img = mctx.createImageData(g.cols, g.rows);
+      for (let i = 0; i < g.cols * g.rows; i++) {
+        const seen = hasBit(explored, i);
+        img.data[i * 4] = seen ? 48 : 26;
+        img.data[i * 4 + 1] = seen ? 41 : 21;
+        img.data[i * 4 + 2] = seen ? 33 : 15;
+        img.data[i * 4 + 3] = seen ? 120 : 242;
+      }
+      mctx.putImageData(img, 0, 0);
+    }
+  }
+
+  function drawFog() {
+    fctx.setTransform(1, 0, 0, 1, 0, 0);
+    fctx.clearRect(0, 0, fog.width, fog.height);
+    fogDirty = false;
+    if (!vision) return;
+    stats.fog += 1;
+    const s = cam.scale * dpr;
+    fctx.setTransform(s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale));
+    const g = world.grid;
+    fctx.imageSmoothingEnabled = true;
+    fctx.drawImage(mask, g.x0, g.y0, g.cols * g.cell, g.rows * g.cell);
+    // Lift the fog wherever someone of ours is watching, softly at the edges.
+    fctx.globalCompositeOperation = 'destination-out';
+    for (const c of vision.circles) {
+      const grad = fctx.createRadialGradient(c.x, c.y, c.r * 0.6, c.x, c.y, c.r);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      fctx.fillStyle = grad;
+      fctx.beginPath();
+      fctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      fctx.fill();
+    }
+    fctx.fillStyle = '#000';
+    for (const rid of vision.realms) for (const p of prep.neighbours.find((n) => n.id === rid)?.paths ?? []) fctx.fill(p);
+    fctx.fill(prep.temeria);
+    fctx.globalCompositeOperation = 'source-over';
+  }
+
+  function exploredAt(x, y) {
+    const g = world.grid;
+    const bits = infraState?.ambient?.intel?.explored;
+    if (!g || !bits) return true;
+    const col = Math.floor((x - g.x0) / g.cell);
+    const row = Math.floor((y - g.y0) / g.cell);
+    return col >= 0 && row >= 0 && col < g.cols && row < g.rows && hasBit(bits, row * g.cols + col);
+  }
+
+  // Foreign settlements as the crown knows them: live when in sight, as last
+  // seen when fogged, and not at all when never seen.
+  let foreignView = {};
+  function updateForeign(state) {
+    foreignView = {};
+    if (!vision) return '';
+    const intel = state.ambient.intel;
+    const parts = [];
+    for (const st of foreignOrdered) {
+      const live = state.realms[st.realm]?.settlements[st.id];
+      const visible = canSee(world, vision, st.x, st.y);
+      const snap = visible && live
+        ? { population: live.population, garrison: live.garrison, buildings: live.buildings, construction: live.construction?.building ?? null, prosperity: live.prosperity }
+        : intel?.seen[st.id];
+      if (!snap) continue;
+      foreignView[st.id] = { visible, ...snap };
+      parts.push(`${st.id}:${visible ? 1 : 0}:${snap.buildings.join('+')}:${snap.construction ?? ''}:${figures(snap.garrison)}`);
+    }
+    return parts.join('|');
+  }
+
   function updateInfra(state) {
     if (state === infraState) return;
     infraState = state;
+    updateVision(state);
+    const foreignKey = updateForeign(state);
     // Danger marks are reckoned once a month (or when patrols change), so a
     // threat hovering near the line does not make the map flicker and redraw.
     const tk = `${Math.floor(state.day / 30)}|${(state.patrols ?? []).map((p) => p.id).join()}|${JSON.stringify(state.laws?.bounties ?? '')}`;
@@ -108,7 +206,7 @@ export function createRenderer(canvas, world, cam) {
     const marks = (id, s) => `${infraThreats[id]?.bandits ? 'b' : ''}${infraThreats[id]?.monsters ? 'm' : ''}${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
     const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + Object.entries(state.settlements)
       .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
-      .join('|') + (state.unpaid ? '!' : '');
+      .join('|') + (state.unpaid ? '!' : '') + foreignKey;
     if (key !== infraKey) {
       infraKey = key;
       dirty = true;
@@ -117,6 +215,7 @@ export function createRenderer(canvas, world, cam) {
 
   // A lord's lands fly his colours; a rebel's banner is slashed in red.
   function bannerFor(s) {
+    if (s.banner) return s.banner;
     const house = world.houses?.houses[s.holder];
     if (!house) return {};
     return { colours: house.colours, rebel: !!infraState.houses?.[s.holder]?.rebel };
@@ -191,7 +290,7 @@ export function createRenderer(canvas, world, cam) {
     }
     stats.overlay += 1;
     cctx.setTransform(1, 0, 0, 1, 0, 0);
-    cctx.drawImage(base, 0, 0);
+    cctx.clearRect(0, 0, cache.width, cache.height);
     cctx.setTransform(...worldTransform);
     drawPatrols(cctx);
 
@@ -209,7 +308,29 @@ export function createRenderer(canvas, world, cam) {
       // Trouble shows at every zoom: it is news the crown should not miss.
       if (infraState) drawMarkers(cctx, st, infraState.settlements[st.id], p, iconSize(st.type) / 2);
     }
+    drawForeign(cctx, z);
     drawSettlementLabels(cctx, selectedId);
+  }
+
+  function drawForeign(c, z) {
+    for (const st of foreignOrdered.slice().reverse()) {
+      const f = foreignView[st.id];
+      if (!f) continue;
+      const p = toScreen(cam, st.x, st.y);
+      if (p.x < -60 || p.y < -60 || p.x > cam.viewW + 60 || p.y > cam.viewH + 60) continue;
+      // Remembered places are drawn faded: this is how they were, not how they are.
+      c.globalAlpha = f.visible ? 1 : 0.55;
+      if (z >= LABEL_ZOOM[st.type] && f.buildings.includes('walls')) getSprite('building', 'walls').draw(c, p.x, p.y, iconSize(st.type) + 6);
+      getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });
+      if (z >= LABEL_ZOOM[st.type]) {
+        const colours = world.realms?.realms[st.realm]?.colours;
+        drawInfrastructure(c, st, {
+          buildings: f.buildings, construction: f.construction ? { building: f.construction } : null,
+          garrison: f.garrison, holder: 'foreign', banner: colours ? { colours } : {},
+        }, false);
+      }
+      c.globalAlpha = 1;
+    }
   }
 
   function drawRegionLabels(c) {
@@ -219,13 +340,16 @@ export function createRenderer(canvas, world, cam) {
     for (const n of prep.neighbours) {
       const p = toScreen(cam, n.label.x, n.label.y);
       c.font = `600 ${Math.round(12 + Math.min(6, z * 1.5))}px ${SERIF}`;
-      c.fillStyle = 'rgba(52, 40, 28, 0.6)';
-      spaced(c, n.name.toUpperCase(), p.x, p.y, 3);
+      // A pale halo keeps realm names readable over parchment and fog alike.
+      c.fillStyle = 'rgba(52, 40, 28, 0.75)';
+      spaced(c, n.name.toUpperCase(), p.x, p.y, 3, 'rgba(236, 224, 194, 0.55)');
     }
     if (z >= 1.8) {
       c.font = `italic 12px ${SERIF}`;
       c.fillStyle = 'rgba(43, 33, 22, 0.7)';
       for (const t of prep.terrain) {
+        // Foreign country is only named once someone has seen it.
+        if (t.realm && !exploredAt(t.label.x, t.label.y)) continue;
         const p = toScreen(cam, t.label.x, t.label.y);
         haloText(c, t.name, p.x, p.y + 16);
       }
@@ -256,7 +380,8 @@ export function createRenderer(canvas, world, cam) {
     c.textAlign = 'center';
     c.textBaseline = 'top';
     c.lineJoin = 'round';
-    for (const st of ordered) {
+    const known = foreignOrdered.filter((st) => foreignView[st.id]);
+    for (const st of [...ordered, ...known]) {
       if (z < LABEL_ZOOM[st.type] && st.id !== selectedId) continue;
       const p = toScreen(cam, st.x, st.y);
       if (p.x < -80 || p.y < -40 || p.x > cam.viewW + 80 || p.y > cam.viewH + 40) continue;
@@ -269,7 +394,8 @@ export function createRenderer(canvas, world, cam) {
       c.strokeStyle = 'rgba(236, 224, 194, 0.9)';
       c.lineWidth = 3.5;
       c.strokeText(st.name, p.x, y);
-      c.fillStyle = st.id === world.kingdom.capital ? COLOURS.border : COLOURS.ink;
+      const remembered = foreignView[st.id] && !foreignView[st.id].visible;
+      c.fillStyle = st.id === world.kingdom.capital ? COLOURS.border : remembered ? 'rgba(43, 33, 22, 0.55)' : COLOURS.ink;
       c.fillText(st.name, p.x, y);
     }
   }
@@ -290,7 +416,10 @@ export function createRenderer(canvas, world, cam) {
       dirty = false;
       lastSelected = selectedId;
     }
+    if (fogDirty) drawFog();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(base, 0, 0);
+    ctx.drawImage(fog, 0, 0);
     ctx.drawImage(cache, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -304,10 +433,18 @@ export function createRenderer(canvas, world, cam) {
       const w = unitPosition(world, u, u.pos + u.speed * frac);
       const p = toScreen(cam, w.x, w.y);
       if (p.x < -20 || p.y < -20 || p.x > cam.viewW + 20 || p.y > cam.viewH + 20) continue;
+      if (!unitInSight(w)) continue;
       const facing = Math.cos(w.angle) >= 0 ? 1 : -1;
-      getSprite('unit', u.kind, u.kind).draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing });
+      const colours = u.realm && u.kind !== 'export' ? world.realms?.realms[u.realm]?.colours : null;
+      getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' ? 'caravan' : u.kind)
+        .draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing, colours });
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
+  }
+
+  // Traffic abroad shows only where the crown can see it.
+  function unitInSight(w) {
+    return !vision || canSee(world, vision, w.x, w.y);
   }
 
   // Nearest thing under the finger wins, with settlements favoured: carts
@@ -316,6 +453,7 @@ export function createRenderer(canvas, world, cam) {
     let best = null;
     for (const u of state.ambient.units) {
       const w = unitPosition(world, u, u.pos + u.speed * frac);
+      if (!unitInSight(w)) continue;
       const p = toScreen(cam, w.x, w.y);
       const d = Math.hypot(p.x - sx, p.y - 4 - sy);
       if (d < 20 && (!best || d < best.d)) best = { d, hit: { unit: u.id } };
@@ -329,6 +467,13 @@ export function createRenderer(canvas, world, cam) {
       const reach = Math.max(22, iconSize(st.type) / 2 + 8) + (dressed ? 20 : 0);
       const score = d * 0.5;
       if (d < reach && (!best || score < best.d)) best = { d: score, hit: { settlement: st.id } };
+    }
+    for (const st of foreignOrdered) {
+      if (!foreignView[st.id]) continue;
+      const p = toScreen(cam, st.x, st.y);
+      const d = Math.hypot(p.x - sx, p.y - sy);
+      const score = d * 0.5;
+      if (d < Math.max(22, iconSize(st.type) / 2 + 8) && (!best || score < best.d)) best = { d: score, hit: { foreign: st.id } };
     }
     if (best) return best.hit;
     // Nothing close: perhaps a tap on a neighbouring land.
@@ -344,12 +489,15 @@ export function createRenderer(canvas, world, cam) {
     const u = state.ambient.units.find((x) => x.id === id);
     if (!u) return null;
     const w = unitPosition(world, u, u.pos + u.speed * frac);
+    // A unit that has passed into the fog is, as far as the crown knows, gone.
+    if (!unitInSight(w)) return null;
     return toScreen(cam, w.x, w.y);
   }
 
   return {
     resize, draw, pick, unitScreen, stats,
-    invalidate: () => { dirty = true; baseDirty = true; },
+    invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
+    canSeePoint: (x, y) => !vision || canSee(world, vision, x, y),
   };
 }
 
@@ -379,13 +527,19 @@ function haloText(c, text, x, y) {
   c.fillText(text, x, y);
 }
 
-function spaced(c, text, x, y, gap) {
+function spaced(c, text, x, y, gap, halo = null) {
   const widths = [...text].map((ch) => c.measureText(ch).width);
   const total = widths.reduce((a, b) => a + b, 0) + gap * (text.length - 1);
   let cx = x - total / 2;
   const align = c.textAlign;
   c.textAlign = 'left';
   [...text].forEach((ch, i) => {
+    if (halo) {
+      c.strokeStyle = halo;
+      c.lineWidth = 3;
+      c.lineJoin = 'round';
+      c.strokeText(ch, cx, y);
+    }
     c.fillText(ch, cx, y);
     cx += widths[i] + gap;
   });

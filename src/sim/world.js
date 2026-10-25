@@ -2,6 +2,7 @@
 // and the derived road and river networks. It is built once from JSON and
 // never saved; the state only refers to it by ids.
 import { distanceToPolygon } from './geometry.js';
+import { buildGrid } from './vision.js';
 
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
@@ -81,7 +82,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     }
   }
 
-  return {
+  const world = {
     kingdom,
     foreign,
     realmOf,
@@ -112,6 +113,8 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     rivers,
     pathCache: new Map(),
   };
+  if (realms) world.grid = buildGrid(world);
+  return world;
 }
 
 export function dist(a, b) {

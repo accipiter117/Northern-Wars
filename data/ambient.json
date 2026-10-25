@@ -55,6 +55,25 @@
       "speed": 14,
       "max": 10,
       "spawnPerDay": 0.8
+    },
+    "abroad": {
+      "name": "Caravan",
+      "speed": 26,
+      "max": 18,
+      "spawnPerDay": 1.2
+    },
+    "abroad_patrol": {
+      "name": "Riders",
+      "speed": 32,
+      "max": 12,
+      "spawnPerDay": 0.8,
+      "reach": 2
+    },
+    "export": {
+      "name": "Temerian merchants",
+      "speed": 24,
+      "max": 6,
+      "spawnPerDay": 0.5
     }
   }
 }

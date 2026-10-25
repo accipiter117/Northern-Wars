@@ -98,11 +98,11 @@ for (const vp of VIEWPORTS) {
         const p = nw.unitScreenOf(u.id);
         if (!p) continue;
         // Towns win taps close to them, so pick a unit out on the open road.
-        const clear = nw.world.geography.settlements.every((st) => {
+        const clear = [...nw.world.geography.settlements, ...nw.world.foreign].every((st) => {
           const q = nw.screenOf(st.id);
           return Math.hypot(q.x - p.x, q.y - p.y) > 50;
         });
-        if (clear && p.x > 30 && p.x < innerWidth - 30 && p.y > 160 && p.y < innerHeight - 30) return p;
+        if (clear && p.x > 30 && p.x < innerWidth - 30 && p.y > 160 && p.y < innerHeight - 120) return p;
       }
       return null;
     });

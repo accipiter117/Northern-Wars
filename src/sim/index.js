@@ -14,5 +14,7 @@ export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } 
 export { petitionText } from './petitions.js';
 export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, demandText } from './houses.js';
 export { informed, realmProsperity, canOpenEmbassy, canSendSpy } from './realms.js';
+export { visionOf, canSee, hasBit } from './vision.js';
+export { travellerPositions } from './ambient.js';
 export { threatLevel, localStrength, patrolledSet, patrolRoute, patrolCapacity, crownSoldiers, canSetGarrison, canAddPatrol, eventText, plagueActive, quarantined } from './military.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects } from './economy.js';

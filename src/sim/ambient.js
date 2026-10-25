@@ -7,6 +7,7 @@ import { dist, nearby, roadPath, polylineLength } from './world.js';
 import { totalPopulation } from './state.js';
 import { foreignTrade } from './neighbours.js';
 import { realmFaith } from './culture.js';
+import { visionOf, updateIntel } from './vision.js';
 
 export function stepAmbientDay(state, world, rng) {
   const cfg = world.ambient;
@@ -35,6 +36,18 @@ export function stepAmbientDay(state, world, rng) {
     unit.speed = k.speed * seasonSpeed;
     kept.push(unit);
   }
+  if (world.grid && state.realms) updateIntel(state, world, visionOf(state, world, travellerPositions(state, world)));
+}
+
+// Temerian units whose eyes count abroad: merchants and patrols.
+export function travellerPositions(state, world, frac = 0) {
+  const out = [];
+  for (const u of state.ambient.units) {
+    if (u.kind !== 'export' && u.kind !== 'patrol') continue;
+    const p = unitPosition(world, u, u.pos + (u.speed ?? 0) * frac);
+    out.push({ kind: u.kind, x: p.x, y: p.y });
+  }
+  return out;
 }
 
 // How busy each kind of traffic is, read from the real economy.
@@ -62,7 +75,56 @@ const RATE = {
   },
 };
 
+// Places of one realm, weighted by how many live there.
+function realmPick(state, world, rng, rid, filter = () => true) {
+  const ids = (world.foreignByRealm[rid] ?? []).filter(filter);
+  if (!ids.length) return null;
+  return weightedPick(rng, ids, (id) => Math.sqrt(state.realms[rid].settlements[id].population) + 1);
+}
+
+function livelyRealms(state, world) {
+  return Object.keys(state.realms ?? {}).filter((rid) => (world.foreignByRealm[rid] ?? []).length > 1 && world.realms.realms[rid]?.builds.length);
+}
+
 const SPAWNERS = {
+  // A realm's own caravans, between its own towns.
+  abroad(state, world, rng) {
+    const realms = livelyRealms(state, world);
+    if (!realms.length) return null;
+    const rid = weightedPick(rng, realms, (r) => Object.values(state.realms[r].settlements).reduce((a, s) => a + s.population, 0));
+    const from = realmPick(state, world, rng, rid);
+    const to = realmPick(state, world, rng, rid, (id) => id !== from);
+    const route = from && to ? roadPath(world, from, to, true) : null;
+    return route && route.length > 1 && route.every((id) => world.realmOf[id] === rid) ? { route, realm: rid } : null;
+  },
+
+  // A realm's riders, out from a stronghold and back.
+  abroad_patrol(state, world, rng) {
+    const realms = livelyRealms(state, world);
+    if (!realms.length) return null;
+    const rid = rng.pick(realms);
+    const from = realmPick(state, world, rng, rid, (id) => state.realms[rid].settlements[id].garrison >= 100);
+    if (!from) return null;
+    const near = world.fullAdjacency[from].map((e) => e.to).filter((id) => world.realmOf[id] === rid);
+    if (!near.length) return null;
+    const out = [from, rng.pick(near)];
+    return { route: [...out, from], realm: rid };
+  },
+
+  // Temerian merchants carry goods into realms that trade with the crown,
+  // and see the country as they go.
+  export(state, world, rng) {
+    const trade = foreignTrade(state, world).by;
+    const realms = Object.keys(trade).filter((r) => trade[r] > 0 && world.foreignByRealm[r]);
+    if (!realms.length) return null;
+    const rid = weightedPick(rng, realms, (r) => trade[r]);
+    const homes = world.geography.settlements.filter((s) => s.type === 'city' || s.type === 'town').map((s) => s.id);
+    const from = rng.pick(homes);
+    const to = realmPick(state, world, rng, rid);
+    const route = to ? roadPath(world, from, to, true) : null;
+    return route && route.length > 1 ? { route, realm: rid } : null;
+  },
+
   // Pilgrims set out for the Temple of Melitele from wherever her faithful are.
   pilgrim(state, world, rng) {
     const shrine = world.ambient.kinds.pilgrim.shrine;
@@ -228,6 +290,14 @@ export function describeUnit(world, u) {
     const { pts } = unitPoints(world, u);
     const east = pts[pts.length - 1].x > pts[0].x;
     return `${kind} on the ${world.rivers[u.river].name}, heading ${east ? 'east' : 'west'}`;
+  }
+  if (u.kind === 'abroad' || u.kind === 'abroad_patrol') {
+    const realm = world.geography.neighbours[u.realm].name;
+    if (u.kind === 'abroad_patrol') return `Riders of ${realm} out of ${world.byId[u.route[0]].name}`;
+    return `A caravan of ${realm} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
+  }
+  if (u.kind === 'export') {
+    return `${kind} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name} in ${world.geography.neighbours[u.realm].name}`;
   }
   if (u.entry) {
     return `${kind} from ${world.geography.neighbours[u.entry].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
