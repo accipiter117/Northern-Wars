@@ -128,15 +128,16 @@ export function warHtml(world, state, form) {
   `;
 }
 
-// Where an army could be sent: our own places to hold, enemy places we
-// know of to besiege, enemy realms to raid.
+// Where an army could be sent: our own places to hold, enemy places to
+// besiege (every map names them, though the fog hides how they stand), and
+// enemy realms to raid.
 function targets(world, state, a) {
   const from = armyPosition(world, a);
   const near = (id) => Math.hypot(world.byId[id].x - from.x, world.byId[id].y - from.y);
   const hold = musterPlaces(world, state).concat(placesHeldBy(state, world, TEMERIA).filter((id) => !musterPlaces(world, state).includes(id)))
     .sort((x, y) => near(x) - near(y));
   const siege = Object.keys(world.byId)
-    .filter((id) => hostile(state, TEMERIA, ownerOf(state, world, id)) && (state.settlements[id] || state.ambient.intel?.seen[id]))
+    .filter((id) => hostile(state, TEMERIA, ownerOf(state, world, id)))
     .sort((x, y) => near(x) - near(y));
   const raid = [...new Set(warsOf(state, TEMERIA).flatMap((w) => w.sides[1 - sideIndex(w, TEMERIA)]))];
   return { hold, siege, raid };
@@ -148,7 +149,7 @@ export function armyCardHtml(world, state, id, pick) {
   const w = world.war;
   const t = targets(world, state, a);
   const m = w.marshals[a.marshal];
-  const label = (sid) => `${world.byId[sid].name}${ownerOf(state, world, sid) !== TEMERIA ? ` (${sideName(world, ownerOf(state, world, sid))})` : ''}`;
+  const label = (sid) => `${world.byId[sid].name} (${sideName(world, ownerOf(state, world, sid))}${state.settlements[sid] || state.ambient.intel?.seen[sid] ? '' : ', unscouted'})`;
   const holdSel = select('hold', t.hold.map((sid) => [sid, world.byId[sid].name]), pick.hold ?? t.hold[0]);
   const siegeSel = t.siege.length ? select('siege', t.siege.map((sid) => [sid, label(sid)]), pick.siege ?? t.siege[0]) : '';
   const raidChips = t.raid.map((r) => `<button type="button" class="chip" data-raid="${r}">${escapeHtml(sideName(world, r))}</button>`).join(' ');

@@ -89,7 +89,8 @@
     "castleDefence": 1.4,
     "moraleRecoverPerDay": 0.5,
     "retreatBelowMorale": 25,
-    "routedDays": 8
+    "routedDays": 8,
+    "cityDefence": 1.5
   },
   "siege": {
     "starveDays": 70,
@@ -99,7 +100,8 @@
     "garrisonAttrition": 0.004,
     "occupyShare": 0.1,
     "occupyMin": 30,
-    "militiaPerPerson": 0.012
+    "militiaPerPerson": 0.03,
+    "citySlower": 2
   },
   "attrition": {
     "home": 0.0003,
@@ -149,7 +151,7 @@
     "burghers": -1.5
   },
   "ai": {
-    "declareChance": 0.03,
+    "declareChance": 0.01,
     "hostileBelow": -25,
     "weakAuthority": 25,
     "weakBonus": 25,
@@ -172,7 +174,15 @@
       "brugge": 0.2,
       "sodden": 0.3,
       "cintra": 0.5
-    }
+    },
+    "greed": {
+      "redania": 0.45,
+      "kaedwen": 0.6,
+      "cintra": 0.25,
+      "verden": 0.25
+    },
+    "reach": 260,
+    "atWarOpportunism": 1.2
   },
   "rivalries": [
     {
@@ -225,7 +235,10 @@
     "foreignMaxMonths": 36,
     "truceDays": 1095,
     "relationAfter": -30,
-    "offerDefaultDays": 30
+    "offerDefaultDays": 30,
+    "prizeAt": 45,
+    "tributeAt": 35,
+    "cityPrizeAt": 90
   },
   "declare": {
     "authorityBase": 5,

@@ -431,3 +431,98 @@ test('foreign realms under the fog of war', async () => {
   assert.deepEqual(errors, []);
   await context.close();
 });
+
+test('war: declare, raise an army, send it to besiege, and see an invasion on the map', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const { startWar } = await import('../../src/sim/war.js');
+  const { makeRng } = await import('../../src/sim/rng.js');
+  const world = await nodeWorld();
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('dialog', (d) => d.accept());
+  await page.goto(`${base}?seed=1262&fresh&paused&nohints`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+
+  // Declare war from Kaedwen's card; the war panel opens.
+  await page.click('#menu-button');
+  await page.click('[data-action="neighbours"]');
+  await page.click('[data-realm="kaedwen"]');
+  assert.match(await page.textContent('#sheet-body'), /Declare war[\s\S]*Authority/);
+  await page.click('[data-declare]');
+  assert.match(await page.textContent('#sheet-body'), /Against Kaedwen[\s\S]*Raise an army/);
+
+  // Raise an army at Ellander: half the crown levy and two free companies.
+  await page.selectOption('[data-pick="muster"]', 'ellander');
+  await page.click('[data-set="levy:half"]');
+  await page.click('[data-set="companies:2"]');
+  await page.click('[data-set="stance:bold"]');
+  await page.click('[data-raise]');
+  assert.match(await page.textContent('#sheet-body'), /The army of Ellander[\s\S]*Orders/);
+
+  // Send it against Ban Ard.
+  await page.selectOption('[data-pick="siege"]', 'ban_ard');
+  await page.click('[data-order="siege"]');
+  const army = await page.evaluate(() => window.northernWars.state.armies.find((a) => a.side === 'temeria'));
+  assert.equal(army.order, 'siege');
+  assert.equal(army.target, 'ban_ard');
+  assert.equal(army.stance, 'bold');
+  await page.screenshot({ path: join(OUT, 'army-card.png') });
+  await page.click('#sheet-close');
+
+  // A few days on, the army is on the map and a tap opens its card.
+  await page.click('[data-speed="4"]');
+  await page.waitForFunction(() => window.northernWars.state.armies.some((a) => a.side === 'temeria' && a.to), null, { timeout: 15000 });
+  await page.click('[data-speed="0"]');
+  await page.evaluate(() => {
+    const nw = window.northernWars;
+    const a = nw.state.armies.find((x) => x.side === 'temeria');
+    const p = nw.world.byId[a.at];
+    nw.lookAt(p.x, p.y);
+  });
+  await page.waitForTimeout(150);
+  const pos = await page.evaluate(() => window.northernWars.armyScreenOf(window.northernWars.state.armies.find((a) => a.side === 'temeria').id));
+  await page.mouse.click(pos.x, pos.y - 6);
+  await page.waitForSelector('[data-order]');
+  assert.match(await page.textContent('#sheet-body'), /marching on Ban Ard/);
+  assert.deepEqual(errors, []);
+  await context.close();
+
+  // An invasion: Redania besieges and takes Temerian towns.
+  let s = createState(world, 1262);
+  startWar(s, world, makeRng(5), 'redania', 'temeria', 'invasion');
+  let lost = false;
+  for (let d = 0; d < 300 && !lost; d += 5) {
+    s = step(s, 5, world);
+    lost = Object.values(s.settlements).some((x) => x.occupier) && s.armies.some((a) => a.siege);
+  }
+  assert.ok(lost, 'a town falls and another is besieged');
+  for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
+  const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const p2 = await ctx2.newPage();
+  p2.on('pageerror', (e) => errors.push(e.message));
+  p2.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  await p2.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await p2.goto(`${base}?paused&nohints`);
+  await p2.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  await p2.evaluate(() => {
+    const nw = window.northernWars;
+    const a = nw.state.armies.find((x) => x.siege);
+    const p = nw.world.byId[a.at];
+    nw.lookAt(p.x, p.y);
+  });
+  await p2.waitForTimeout(150);
+  await p2.screenshot({ path: join(OUT, 'invasion.png') });
+  // The occupied town's card says who holds it.
+  const occupied = await p2.evaluate(() => Object.keys(window.northernWars.state.settlements).find((id) => window.northernWars.state.settlements[id].occupier));
+  await p2.click('#menu-button');
+  await p2.click('[data-action="war"]');
+  assert.match(await p2.textContent('#sheet-body'), /Against Redania[\s\S]*They hold/);
+  await p2.screenshot({ path: join(OUT, 'war-panel.png') });
+  assert.ok(occupied);
+  assert.deepEqual(errors, []);
+  await ctx2.close();
+});

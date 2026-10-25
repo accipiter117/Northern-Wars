@@ -1,5 +1,15 @@
 # Changelog
 
+## M9 War with neighbours
+- War: declare it from a neighbour's card, be invaded by a neighbour who hates us or smells weakness (after war drums), be called to a true friend's side, and watch the neighbours fight one another.
+- Armies raised from the crown levy, the lords' men and free companies, each with a marshal and a bold or cautious stance; ordered to hold a place, besiege a town or raid a realm.
+- Battles, sieges (starved or stormed) and raids, with loot, sacked towns and refugees.
+- Towns change hands: occupied towns pay the enemy, conquered towns pay the crown, and the map shows the new master's colours round them.
+- Peace on four kinds of terms, enemy offers and demands, tribute, and three-year truces.
+- A War screen, army cards (tap an army on the map), war decisions, ledger lines for armies, conquests and tribute, and new hints.
+- Past the bankers' limit, unpaid bills no longer pile up without end.
+- Save version 9.
+
 ## M8 The wider North
 - A larger map: every neighbouring realm now reaches its real extent, with 35 towns, cities and castles of its own, roads, terrain and roads across the border.
 - Living neighbours: their towns grow, their rulers raise buildings and keep garrisons, and their own caravans and riders travel their roads in their colours.

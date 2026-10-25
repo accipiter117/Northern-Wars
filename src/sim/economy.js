@@ -206,6 +206,9 @@ export function monthlyLedger(state, world) {
   const totalIn = net.in;
   const totalOut = net.out;
   state.treasury += totalIn - totalOut;
+  // Past the bankers' limit the bills simply go unpaid, so the debt stops
+  // growing a little beyond it (and the soldiers desert, below).
+  state.treasury = Math.max(state.treasury, -debtCfg.creditLimit * 1.25);
 
   // Debt costs the crown its grip on the lords. Past the bankers' limit the
   // soldiers go unpaid, grumble and slip away.

@@ -208,7 +208,8 @@ function placeDefence(state, world, id) {
   const b = W(world).battle;
   const p = placeOf(state, world, id);
   const militia = peopleAt(state, world, id) * W(world).siege.militiaPerPerson;
-  return (p.garrison + militia) * (hasWalls(state, world, id) ? b.wallsDefence : 1) * (world.byId[id].type === 'castle' ? b.castleDefence : 1);
+  const type = world.byId[id].type;
+  return (p.garrison + militia) * (hasWalls(state, world, id) ? b.wallsDefence : 1) * (type === 'castle' ? b.castleDefence : type === 'city' ? b.cityDefence : 1);
 }
 
 // ---- The day ----
@@ -367,15 +368,20 @@ function thinkForeign(state, world, a) {
 
 // Where a foreign captain strikes: the richest prize near at hand that his
 // army can hope to take, and his own lost towns above all.
+// Captains fight border wars: they strike places near their own lands, and
+// the towns they have lost, rather than marching to the far side of a realm.
 function pickTarget(state, world, a, pos) {
   let best = null;
   const mine = a.soldiers * marshalSkill(world, a);
+  const own = Object.keys(world.byId).filter((id) => ownerOf(state, world, id) === a.side).map((id) => world.byId[id]);
+  const reach = W(world).ai.reach;
   for (const id of Object.keys(world.byId)) {
     const owner = ownerOf(state, world, id);
     if (!hostile(state, a.side, owner)) continue;
     const p = world.byId[id];
     const d = Math.hypot(p.x - pos.x, p.y - pos.y);
     if (d > 900) continue;
+    if (originOf(world, id) !== a.side && !own.some((o) => Math.hypot(o.x - p.x, o.y - p.y) <= reach)) continue;
     const feasible = mine >= placeDefence(state, world, id) ? 1 : 0.2;
     const score = valueOf(state, world, id) * (originOf(world, id) === a.side ? 2 : 1) * feasible / (d + 100) ** 1.5;
     if ((!best || score > best.score) && roadPath(world, a.to ?? a.at, id, true)) best = { id, score };
@@ -519,7 +525,8 @@ function siegeTick(state, world, rng, a, owner) {
     return capture(state, world, a, a.at, owner, 'storm');
   }
   a.siege.days += 1;
-  const slower = (hasWalls(state, world, a.at) ? sg.wallsSlower : 1) * (world.byId[a.at].type === 'castle' ? sg.castleSlower : 1);
+  const type = world.byId[a.at].type;
+  const slower = (hasWalls(state, world, a.at) ? sg.wallsSlower : 1) * (type === 'castle' ? sg.castleSlower : type === 'city' ? sg.citySlower : 1);
   a.siege.progress += (100 / (sg.starveDays * slower)) * clamp(mine / Math.max(1, defence * 1.5), 0.3, 1.5);
   p.garrison = Math.max(0, p.garrison - Math.max(1, p.garrison * sg.garrisonAttrition));
   a.soldiers -= a.soldiers * sg.besiegerAttrition;
