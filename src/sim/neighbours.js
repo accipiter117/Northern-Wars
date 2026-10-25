@@ -4,6 +4,7 @@
 import { addDispatch, clamp } from './realm.js';
 import { realmProsperity } from './realms.js';
 import { totalPopulation } from './state.js';
+import { TEMERIA, hostile, placesHeldBy, originOf } from './conflict.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 
@@ -15,11 +16,14 @@ export function defaultNeighbours(world) {
 
 export function relationTarget(state, world, id) {
   const r = world.neighbours.realms[id];
+  // At war, nothing warms them; towns of theirs we hold rankle long after.
+  if (world.war && hostile(state, TEMERIA, id)) return world.war.atWarRelation;
   let t = r.relation + world.neighbours.stances[state.neighbours[id].stance].relation;
   for (const [key, v] of Object.entries(r.cares)) {
     const [law, option] = key.split(':');
     if (state.laws[law]?.option === option) t += v;
   }
+  if (world.war && state.wars) t += world.war.claimRelation * placesHeldBy(state, world, TEMERIA).filter((pid) => originOf(world, pid) === id).length;
   return clamp(t, -100, 100);
 }
 
@@ -92,6 +96,7 @@ export function monthlyEnvoy(state, world, rng) {
       if (e.needsTrade && !r.trade) continue;
       if (e.minRelation !== undefined && state.neighbours[rid].relation < e.minRelation) continue;
       if (state.envoys.some((p) => p.realm === rid)) continue;
+      if (world.war && hostile(state, TEMERIA, rid)) continue;
       options.push({ eid, rid, w: e.weight });
     }
   }

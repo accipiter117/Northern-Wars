@@ -10,6 +10,9 @@ import { stepPetitionsDay, monthlyPetition } from './petitions.js';
 import { stepHousesDay, monthlyHouses, holderUnrest } from './houses.js';
 import { monthlyThreats, monthlyEvent, stepEventsDay, plagueActive } from './military.js';
 import { monthlyRealms } from './realms.js';
+import { stepArmiesDay } from './armies.js';
+import { monthlyWar, stepWarDecisionsDay, warMonths } from './war.js';
+import { leviedMap } from './conflict.js';
 
 const CHRONICLE_LIMIT = 400;
 
@@ -24,7 +27,8 @@ export function computeStability(state) {
   let people = 0;
   let weighted = 0;
   let sum = 0;
-  const all = Object.values(state.settlements);
+  // Towns under an enemy's flag are not the crown's to keep in order.
+  const all = Object.values(state.settlements).filter((s) => !s.occupier);
   for (const s of all) {
     const pop = popOf(s);
     people += pop;
@@ -48,8 +52,15 @@ export function stepRealmDay(state, world, rng) {
   stepPetitionsDay(state, world);
   stepHousesDay(state, world);
   stepEventsDay(state, world, rng);
+  if (state.wars) {
+    stepArmiesDay(state, world, rng);
+    stepWarDecisionsDay(state, world);
+  }
   const law = lawEffects(state, world);
   const m = world.economy.mood;
+  const wr = world.war?.weariness;
+  const weary = wr ? Math.min(wr.maxUnrest, warMonths(state) * wr.unrestPerMonth) : 0;
+  const levied = leviedMap(state);
   for (const [id, s] of Object.entries(state.settlements)) {
     const start = world.settlementData[id];
     const fx = buildingEffects(world, s);
@@ -61,10 +72,13 @@ export function stepRealmDay(state, world, rng) {
     let unrestTarget = start.unrest + fx.unrest + s.hunger * m.hungerUnrest + law.unrest[type] + opinionUnrest(state, world, id, s) + tensionUnrest(world, s) + holderUnrest(state, world, s)
       + (plagueActive(state, s) ? world.military.plague.unrest : 0);
     if (date.season === 'winter') unrestTarget += m.winterUnrest;
+    // A long war, an occupier's yoke, and sons marched off with the levy.
+    unrestTarget += s.occupier ? 30 : weary;
     if (state.unpaid && s.garrison > 0) unrestTarget += world.economy.debt.unpaidUnrest;
     unrestTarget -= Math.max(0, s.prosperity - 50) * m.prosperityCalm;
     let prosperityTarget = start.prosperity + fx.prosperity + law.prosperity[type] - s.hunger * m.hungerProsperity;
     if (wellFed) prosperityTarget += m.wellFedProsperity;
+    if (levied[id]) prosperityTarget -= world.war.raise.levyProsperity * Math.min(1, levied[id] / Math.max(1, levied[id] + s.garrison));
     prosperityTarget -= Math.max(0, s.unrest - 50) * m.unrestBlight;
 
     s.unrest = clamp(s.unrest + (clamp(unrestTarget, 0, 100) - s.unrest) * m.drift + (rng.next() - 0.5) * 0.8, 0, 100);
@@ -82,6 +96,7 @@ export function stepRealmDay(state, world, rng) {
     monthlyThreats(state, world, rng);
     monthlyEvent(state, world, rng, date.season);
     monthlyRealms(state, world, rng);
+    if (state.wars) monthlyWar(state, world, rng);
   }
 }
 

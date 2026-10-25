@@ -23,7 +23,7 @@ export function monthlyPetition(state, world, rng) {
   const options = [];
   for (const [pid, p] of Object.entries(world.petitions.petitions)) {
     for (const st of world.geography.settlements) {
-      if (state.petitions.some((q) => q.place === st.id)) continue;
+      if (state.petitions.some((q) => q.place === st.id) || state.settlements[st.id].occupier) continue;
       if (fits(state, world, p, st.id)) options.push({ pid, place: st.id, w: p.weight * Math.sqrt(totalPopulation(state.settlements[st.id])) });
     }
   }

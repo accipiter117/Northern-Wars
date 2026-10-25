@@ -1,0 +1,240 @@
+{
+  "note": "War between realms. Speeds are map units a day; Temeria is about 1000 units across. Strength is soldiers, multiplied by stance, marshal, morale and walls. Town values count towards who is winning a war and what a peace costs.",
+  "noWar": [
+    "brokilon"
+  ],
+  "speed": 14,
+  "seasonSpeed": {
+    "spring": 1,
+    "summer": 1.1,
+    "autumn": 0.9,
+    "winter": 0.55
+  },
+  "engageRange": 16,
+  "watchRange": 150,
+  "minArmy": 80,
+  "raise": {
+    "levy": {
+      "third": 0.33,
+      "half": 0.5
+    },
+    "levyProsperity": 8,
+    "nobleShare": 0.4,
+    "nobleRefuseBelow": 30,
+    "nobleGrievance": 8,
+    "company": 200,
+    "companyCoin": 250,
+    "companyMonthly": 60,
+    "maxCompanies": 5,
+    "fieldPayPerSoldier": 0.15
+  },
+  "marshals": {
+    "vestibor": {
+      "name": "Lord Marshal Vestibor",
+      "skill": 1.1,
+      "blurb": "An old soldier of the crown. Steady, and liked by the men.",
+      "short": "Vestibor"
+    },
+    "dravnik": {
+      "name": "Ser Konrad Dravnik",
+      "skill": 1.2,
+      "house": "dravnik",
+      "blurb": "Of House Dravnik. Brave to a fault, and his house shares in any glory.",
+      "short": "Dravnik"
+    },
+    "brodowin": {
+      "name": "Ser Albrecht Brodowin",
+      "skill": 1.05,
+      "house": "brodowin",
+      "blurb": "Of House Brodowin. Loyal and careful with the lives of his men.",
+      "short": "Brodowin"
+    },
+    "captain": {
+      "name": "Captain Ortolan of the Free Companies",
+      "skill": 1.0,
+      "blurb": "A hired captain. No house to please, no glory to share.",
+      "short": "Ortolan"
+    }
+  },
+  "stances": {
+    "bold": {
+      "name": "Bold",
+      "blurb": "Seeks battle, storms walls early. Wins more, bleeds more.",
+      "attack": 1.12,
+      "defence": 1,
+      "engageAt": 0.8,
+      "assaultAt": 3
+    },
+    "cautious": {
+      "name": "Cautious",
+      "blurb": "Fights only with the odds, starves towns out.",
+      "attack": 1,
+      "defence": 1.15,
+      "engageAt": 1.2,
+      "assaultAt": 5
+    }
+  },
+  "battle": {
+    "loserLoss": [
+      0.25,
+      0.45
+    ],
+    "winnerLoss": [
+      0.06,
+      0.16
+    ],
+    "moraleWin": 10,
+    "moraleLoss": 30,
+    "wallsDefence": 1.6,
+    "castleDefence": 1.4,
+    "moraleRecoverPerDay": 0.5,
+    "retreatBelowMorale": 25,
+    "routedDays": 8
+  },
+  "siege": {
+    "starveDays": 70,
+    "wallsSlower": 1.6,
+    "castleSlower": 1.5,
+    "besiegerAttrition": 0.0015,
+    "garrisonAttrition": 0.004,
+    "occupyShare": 0.1,
+    "occupyMin": 30,
+    "militiaPerPerson": 0.012
+  },
+  "attrition": {
+    "home": 0.0003,
+    "enemy": 0.0015,
+    "winter": 0.001
+  },
+  "forage": {
+    "food": 0.02,
+    "prosperity": 0.3
+  },
+  "capture": {
+    "prosperity": 15,
+    "people": 0.04,
+    "lootPerPerson": 0.03,
+    "unrest": 20,
+    "sackedDays": 60
+  },
+  "raid": {
+    "days": 4,
+    "prosperity": 12,
+    "food": 0.3,
+    "unrest": 10,
+    "lootPerPerson": 0.04,
+    "count": 4
+  },
+  "values": {
+    "city": 25,
+    "town": 12,
+    "castle": 10,
+    "village": 4,
+    "temple": 2,
+    "capital": 2
+  },
+  "glory": {
+    "battleWon": 3,
+    "battleLost": -4,
+    "townTaken": 3,
+    "townLost": -5,
+    "capitalLost": -30,
+    "nobles": 3,
+    "houseFavour": 8,
+    "holdingLostGrievance": 20
+  },
+  "weariness": {
+    "unrestPerMonth": 0.6,
+    "maxUnrest": 10,
+    "burghers": -1.5
+  },
+  "ai": {
+    "declareChance": 0.03,
+    "hostileBelow": -25,
+    "weakAuthority": 25,
+    "weakBonus": 25,
+    "claimHostility": 12,
+    "musterDays": 45,
+    "armyShare": 0.45,
+    "levyPerPeople": 0.006,
+    "maxArmies": 2,
+    "bigRealm": 40000,
+    "allyJoin": 0.7,
+    "callChance": 0.5,
+    "aggression": {
+      "redania": 0.6,
+      "kaedwen": 0.9,
+      "aedirn": 0.4,
+      "mahakam": 0.1,
+      "cidaris": 0.2,
+      "kerack": 0.3,
+      "verden": 0.4,
+      "brugge": 0.2,
+      "sodden": 0.3,
+      "cintra": 0.5
+    }
+  },
+  "rivalries": [
+    {
+      "a": "kaedwen",
+      "b": "aedirn",
+      "chance": 0.006
+    },
+    {
+      "a": "redania",
+      "b": "kaedwen",
+      "chance": 0.003
+    },
+    {
+      "a": "verden",
+      "b": "cintra",
+      "chance": 0.004
+    },
+    {
+      "a": "kerack",
+      "b": "cidaris",
+      "chance": 0.004
+    },
+    {
+      "a": "brugge",
+      "b": "verden",
+      "chance": 0.003
+    },
+    {
+      "a": "sodden",
+      "b": "brugge",
+      "chance": 0.002
+    },
+    {
+      "a": "aedirn",
+      "b": "mahakam",
+      "chance": 0.001
+    }
+  ],
+  "peace": {
+    "minMonths": 3,
+    "exhaustionPerMonth": 2,
+    "exhaustionPerLoss": 40,
+    "exhaustionPerValue": 1,
+    "acceptMargin": 10,
+    "tributeMonths": 24,
+    "tributeCost": 20,
+    "aiSeeksAt": 55,
+    "aiDemandsAt": 30,
+    "foreignEndsAt": 70,
+    "foreignMaxMonths": 36,
+    "truceDays": 1095,
+    "relationAfter": -30,
+    "offerDefaultDays": 30
+  },
+  "declare": {
+    "authorityBase": 5,
+    "authorityPerRelation": 0.25,
+    "warlikeFavour": 6,
+    "cautiousGrievance": 6,
+    "burghers": -8
+  },
+  "atWarRelation": -80,
+  "claimRelation": -10,
+  "callRelation": -25
+}

@@ -1,6 +1,7 @@
 import { totalPopulation, foodNeed, foodYield, goodsYield, foodCapacity, canBuild, seasonOf, dateOf, tensionWeight } from '../sim/index.js';
 import { mixHtml as mix, gaugeHtml, FAITH_COLOURS, PEOPLE_COLOURS, TENSION_WORDS } from './faith.js';
 import { defenceHtml } from './military.js';
+import { occupationHtml, siegeNote } from './war.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 
 const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Castle', temple: 'Temple' };
@@ -24,6 +25,7 @@ export function settlementCardHtml(world, state, id, data) {
     <div data-part="head">
       <h2>${escapeHtml(geo.name)}</h2>
       <p class="sub">${sub}</p>
+      ${world.war ? occupationHtml(world, state, id) + siegeNote(world, state, id) : ''}
     </div>
     <div data-part="stats">
       <dl class="stats">

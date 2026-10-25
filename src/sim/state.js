@@ -8,7 +8,15 @@ import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { newIntel, updateIntel, visionOf } from './vision.js';
 
-export const STATE_VERSION = 8;
+// Wars, armies and what they leave behind; empty in a realm at peace.
+export function defaultWar() {
+  return {
+    wars: [], nextWarId: 1, armies: [], nextArmyId: 1, musters: [], battles: [], truces: {}, tributes: [],
+    warDecisions: [], nextWarDecisionId: 1, warHistory: [],
+  };
+}
+
+export const STATE_VERSION = 9;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -52,6 +60,7 @@ export function createState(world, seed = 1) {
     realms: defaultRealms(world),
     embassies: {},
     spies: {},
+    ...defaultWar(),
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],

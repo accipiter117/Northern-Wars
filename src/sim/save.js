@@ -1,4 +1,4 @@
-import { STATE_VERSION, newSettlement } from './state.js';
+import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
@@ -92,6 +92,12 @@ const MIGRATIONS = {
     state.embassies = {};
     state.spies = {};
     state.version = 8;
+    return state;
+  },
+  // v9 adds war: armies, wars, truces and tribute, and towns that change hands.
+  8(state) {
+    Object.assign(state, defaultWar());
+    state.version = 9;
     return state;
   },
 };

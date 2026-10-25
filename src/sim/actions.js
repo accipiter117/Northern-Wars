@@ -9,6 +9,9 @@ import { canHouseAction, houseAction, resolveDemand } from './houses.js';
 import { canSetGarrison, canAddPatrol, addPatrol, resolveEvent } from './military.js';
 import { canOpenEmbassy, openEmbassy, closeEmbassy, canSendSpy, sendSpy } from './realms.js';
 import { makeRng } from './rng.js';
+import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy } from './armies.js';
+import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision } from './war.js';
+import { TEMERIA, sideIndex } from './conflict.js';
 import { addDispatch as note } from './realm.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -21,6 +24,7 @@ export function canBuild(state, world, settlementId, buildingId) {
   const s = state.settlements[settlementId];
   const type = world.byId[settlementId]?.type;
   if (!b || !s) return { ok: false, reason: 'Unknown building.' };
+  if (s.occupier) return { ok: false, reason: 'The enemy holds it.' };
   if (!b.types.includes(type)) return { ok: false, reason: `Not for a ${type}.`, hidden: true };
   if (b.needs && s.production !== b.needs) return { ok: false, reason: `Only where ${b.needs} is worked.`, hidden: true };
   if (b.needsBorder && !world.borderland[settlementId]) return { ok: false, reason: 'Only near a border.', hidden: true };
@@ -128,7 +132,43 @@ export function applyAction(state, world, action) {
     if (!resolveEvent(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
     return { state: next };
   }
+  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision'].includes(action.type)) return warAction(state, world, action);
   return { state, error: `Unknown action ${action.type}.` };
+}
+
+// The crown's war: declaring it, raising and ordering armies, and ending it.
+function warAction(state, world, action) {
+  const next = structuredClone(state);
+  const army = next.armies.find((a) => a.id === action.army);
+  if (action.type === 'declare') {
+    const check = canDeclare(state, world, action.realm);
+    if (!check.ok) return { state, error: check.reason };
+    const rng = makeRng(next.rng.game);
+    declareWar(next, world, rng, action.realm);
+    next.rng.game = rng.seed;
+  } else if (action.type === 'raise') {
+    const check = canRaise(state, world, action);
+    if (!check.ok) return { state, error: check.reason };
+    raiseArmy(next, world, action);
+  } else if (action.type === 'army') {
+    const check = canOrder(next, world, army, action.order, action.target);
+    if (!check.ok) return { state, error: check.reason };
+    orderArmy(next, world, army, action.order, action.target, action.stance);
+  } else if (action.type === 'disband') {
+    if (!army || army.side !== TEMERIA) return { state, error: 'No such army.' };
+    disbandArmy(next, world, army);
+  } else if (action.type === 'peace') {
+    const check = canMakePeace(state, world, action.war, action.terms);
+    if (!check.ok) return { state, error: check.reason };
+    offerPeace(next, world, action.war, action.terms);
+  } else if (action.type === 'withdraw') {
+    const war = state.wars.find((w) => w.id === action.war);
+    if (!war || sideIndex(war, TEMERIA) < 0 || war.sides[sideIndex(war, TEMERIA)][0] === TEMERIA) return { state, error: 'We lead this war; make peace instead.' };
+    withdraw(next, world, action.war);
+  } else if (action.type === 'warDecision') {
+    if (!resolveWarDecision(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
+  }
+  return { state: next };
 }
 
 function startBuilding(state, world, id, buildingId) {

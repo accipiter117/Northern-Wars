@@ -11,6 +11,7 @@ import { lawEffects } from './laws.js';
 import { foreignTrade, stanceCost } from './neighbours.js';
 import { crownShare } from './houses.js';
 import { garrisonFactor, quarantined } from './military.js';
+import { TEMERIA, ownerOf, leviedMap, besieged } from './conflict.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -66,8 +67,9 @@ export function goodsYield(world, id, s) {
 // Money in and out for one month's ledger. Construction and decrees are paid
 // when ordered, so they are listed but not counted here.
 export function ledgerNet({ income, expenses }) {
-  const i = income.taxes + income.trade + income.sales + (income.foreign ?? 0);
-  const o = expenses.garrisons + expenses.upkeep + expenses.court + (expenses.edicts ?? 0) + (expenses.gifts ?? 0) + (expenses.patrols ?? 0) + (expenses.embassies ?? 0) + expenses.interest;
+  const i = income.taxes + income.trade + income.sales + (income.foreign ?? 0) + (income.conquests ?? 0) + (income.tribute ?? 0);
+  const o = expenses.garrisons + expenses.upkeep + expenses.court + (expenses.edicts ?? 0) + (expenses.gifts ?? 0) + (expenses.patrols ?? 0) + (expenses.embassies ?? 0)
+    + (expenses.armies ?? 0) + (expenses.occupation ?? 0) + (expenses.tribute ?? 0) + expenses.interest;
   return { in: i, out: o, net: i - o };
 }
 
@@ -108,7 +110,7 @@ function shipFood(state, world, season) {
   let want = 0;
   for (const [id, s] of Object.entries(state.settlements)) {
     const need = foodNeed(world, s, season);
-    if (need <= 0) continue;
+    if (need <= 0 || s.occupier) continue;
     const excess = s.stock.food - f.reserveHigh * need;
     const lack = f.reserveLow * need - s.stock.food;
     if (excess > 0) { sources.push([id, excess]); offer += excess; }
@@ -135,7 +137,8 @@ function shipFood(state, world, season) {
 
 function advanceConstruction(state, world) {
   for (const [id, s] of Object.entries(state.settlements)) {
-    if (!s.construction) continue;
+    // Work stops in a town under an enemy's flag.
+    if (!s.construction || s.occupier) continue;
     s.construction.daysLeft -= 1;
     if (s.construction.daysLeft <= 0) {
       const b = s.construction.building;
@@ -154,7 +157,7 @@ export function monthlyLedger(state, world) {
   const law = lawEffects(state, world);
   const g = world.groups.effects;
   const tradeMult = Math.max(0, 1 + law.trade + (state.opinion.burghers - 50) * g.burgherTrade);
-  const income = { taxes: 0, trade: 0, sales: 0, foreign: foreignTrade(state, world).total };
+  const income = { taxes: 0, trade: 0, sales: 0, foreign: foreignTrade(state, world).total, conquests: 0, tribute: 0 };
   const expenses = {
     garrisons: 0,
     upkeep: 0,
@@ -165,12 +168,17 @@ export function monthlyLedger(state, world) {
     gifts: stanceCost(state, world),
     patrols: state.patrols.length * world.military.patrol.cost,
     embassies: Object.keys(state.embassies ?? {}).length * (world.realms?.intelligence.embassy.monthly ?? 0),
+    armies: 0,
+    occupation: 0,
+    tribute: 0,
     interest: 0,
     construction: state.ledger.construction,
     decrees: state.ledger.decrees ?? 0,
   };
 
   for (const [id, s] of Object.entries(state.settlements)) {
+    // An occupied town pays its occupier, not the crown.
+    if (s.occupier) continue;
     const pop = totalPopulation(s);
     const mult = prosperityMult(world, s);
     const fx = buildingEffects(world, s);
@@ -189,6 +197,7 @@ export function monthlyLedger(state, world) {
     if (s.holder === 'crown') expenses.garrisons += s.garrison * e.upkeep.garrisonPerSoldierMonth * (1 + law.garrisonUpkeep);
     for (const b of s.buildings) expenses.upkeep += world.buildings[b].upkeep;
   }
+  warLedger(state, world, income, expenses, law);
   if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth;
 
   for (const k of Object.keys(income)) income[k] = Math.round(income[k]);
@@ -210,12 +219,16 @@ export function monthlyLedger(state, world) {
   if (debt > 0) state.authority -= (debt / 1000) * debtCfg.authorityPerThousand;
   state.authority = Math.max(0, Math.min(100, state.authority));
   state.unpaid = debt > debtCfg.creditLimit;
+  const levied = leviedMap(state);
   for (const [id, s] of Object.entries(state.settlements)) {
+    // An occupier keeps his own garrison, and a town under siege gets no fresh men.
+    if (s.occupier || besieged(state, id)) continue;
     if (state.unpaid) s.garrison = Math.floor(s.garrison * (1 - debtCfg.desertionPerMonth));
     else {
-      // Garrisons drift towards what the conscription law calls for.
+      // Garrisons drift towards what the conscription law calls for, less
+      // the men away with the army.
       const level = s.holder === 'crown' ? garrisonFactor(state, world, id) : 1;
-      const target = world.settlementData[id].garrison * Math.max(0, 1 + law.garrison) * level;
+      const target = Math.max(0, world.settlementData[id].garrison * Math.max(0, 1 + law.garrison) * level - (levied[id] ?? 0));
       s.garrison = Math.max(0, Math.round(s.garrison + (target - s.garrison) * 0.1));
     }
   }
@@ -232,4 +245,29 @@ export function monthlyLedger(state, world) {
     : `The crown owes ${debtCfg.lender} ${number(debt)} crowns${expenses.interest ? `, and paid ${number(expenses.interest)} in interest` : ''}.`;
   if (state.unpaid) text += ' The bankers will lend no more. The garrisons go unpaid and men are deserting.';
   say(state, text);
+}
+
+// War's share of the ledger: the armies' pay, what conquered towns yield and
+// cost to hold, and tribute paid or received.
+function warLedger(state, world, income, expenses, law) {
+  if (!world.war || !state.armies) return;
+  const r = world.war.raise;
+  for (const a of state.armies) {
+    if (a.side !== TEMERIA) continue;
+    const hired = Math.min(a.soldiers, a.companies * r.company);
+    expenses.armies += (a.soldiers - hired) * r.fieldPayPerSoldier + a.companies * r.companyMonthly;
+  }
+  const re = world.realms.economy;
+  for (const [rid, realm] of Object.entries(state.realms ?? {})) {
+    for (const [id, s] of Object.entries(realm.settlements)) {
+      if (ownerOf(state, world, id) !== TEMERIA) continue;
+      income.conquests += s.population * re.taxPerPersonMonth * (0.6 + 0.008 * s.prosperity) * Math.max(0, 1 + law.tax);
+      expenses.occupation += s.garrison * world.economy.upkeep.garrisonPerSoldierMonth * (1 + law.garrisonUpkeep);
+    }
+  }
+  for (const t of state.tributes ?? []) {
+    if (t.until <= state.day) continue;
+    if (t.to === TEMERIA) income.tribute += t.monthly;
+    if (t.from === TEMERIA) expenses.tribute += t.monthly;
+  }
 }
