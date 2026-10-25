@@ -1,4 +1,4 @@
-import { totalPopulation, foodNeed, foodYield, goodsYield, foodCapacity, canBuild, seasonOf, dateOf, tensionWeight } from '../sim/index.js';
+import { totalPopulation, foodNeed, foodYield, goodsYield, foodCapacity, canBuild, seasonOf, dateOf, tensionWeight, tollsAt, goodOf } from '../sim/index.js';
 import { mixHtml as mix, gaugeHtml, FAITH_COLOURS, PEOPLE_COLOURS, TENSION_WORDS } from './faith.js';
 import { defenceHtml } from './military.js';
 import { occupationHtml, siegeNote } from './war.js';
@@ -39,10 +39,11 @@ export function settlementCardHtml(world, state, id, data) {
       ${gaugeHtml('Unrest', s.unrest, describeLevel(s.unrest, UNREST_WORDS), true)}
       ${tensionWeight(world, s) > 0 ? gaugeHtml('Tension between peoples', s.tension, describeLevel(s.tension, TENSION_WORDS), true) : ''}
       ${s.troubled > 0 ? '<p class="warn">Riots or raiders have struck here lately. Some folk are leaving.</p>' : ''}
+      ${accountsHtml(state, id)}
     </div>
     <div data-part="stores">${storesHtml(world, state, id)}</div>
     <div data-part="defence">${defenceHtml(world, state, id)}</div>
-    <div data-part="works">${worksHtml(world, s)}</div>
+    <div data-part="works">${worksHtml(world, state, id)}</div>
     <div data-part="trade">${world.trade ? settlementTradeHtml(world, state, id) : ''}</div>
     <div data-part="build">${buildHtml(world, state, id)}</div>
     <div data-part="peoples">
@@ -80,8 +81,26 @@ function storesHtml(world, state, id) {
   `;
 }
 
-function worksHtml(world, s) {
-  const built = s.buildings.map((b) => `<li>${escapeHtml(world.buildings[b].name)}</li>`).join('');
+// What the place earned the crown last month (its taxes, trade, crafts,
+// goods and tolls) and what it cost (its garrison and upkeep).
+function accountsHtml(state, id) {
+  const p = state.ledger.places?.[id];
+  if (!p) return '';
+  const net = p.in - p.out;
+  return `<p class="sub accounts">Last month this place earned the crown ${number(p.in)} crowns and cost it ${number(p.out)}: <b class="${net < 0 ? 'neg' : 'pos'}">${net < 0 ? 'a loss of ' : 'a gain of '}${number(Math.abs(net))}</b>.</p>`;
+}
+
+function worksHtml(world, state, id) {
+  const s = state.settlements[id];
+  const note = (b) => {
+    if (b === 'tollbridge' && world.industry) {
+      const t = tollsAt(state, world, id);
+      return ` <small>about ${number(t.caravans)} caravans a month cross, paying ${number(t.value)}</small>`;
+    }
+    const g = goodOf(world, b);
+    return g ? ` <small>makes ${escapeHtml(world.industry.goods[g].name.toLowerCase())}</small>` : '';
+  };
+  const built = s.buildings.map((b) => `<li>${escapeHtml(world.buildings[b].name)}${note(b)}</li>`).join('');
   let doing = '';
   if (s.construction) {
     const b = world.buildings[s.construction.building];

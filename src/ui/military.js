@@ -1,4 +1,4 @@
-import { threatLevel, localStrength, patrolledSet, patrolRoute, patrolCapacity, crownSoldiers, canSetGarrison, eventText, plagueActive, quarantined } from '../sim/index.js';
+import { threatLevel, localStrength, patrolledSet, patrolRoute, patrolCapacity, patrolCost, crownSoldiers, canSetGarrison, eventText, plagueActive, quarantined } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { gaugeHtml, decisionHtml } from './faith.js';
 
@@ -11,7 +11,7 @@ export function militaryHtml(world, state, pick = {}) {
   const patrols = state.patrols.map((p) => {
     const route = patrolRoute(world, p).map((id) => world.byId[id].name).join(', ');
     return `<div class="law-option current"><span class="build-name">${escapeHtml(world.byId[p.from].name)} to ${escapeHtml(world.byId[p.to].name)}</span>
-      <span class="build-cost">Covers ${escapeHtml(route)}.</span>
+      <span class="build-cost">Covers ${escapeHtml(route)}. ${number(patrolCost(state, world, p))} crowns a month.</span>
       <button type="button" class="chip" data-unpatrol="${p.id}">Recall</button></div>`;
   }).join('');
   const options = world.geography.settlements.slice().sort((a, b) => a.name.localeCompare(b.name))
@@ -32,13 +32,14 @@ export function militaryHtml(world, state, pick = {}) {
         <div><dt>Crown soldiers</dt><dd>${number(crownSoldiers(state))}</dd></div>
         <div><dt>Their pay</dt><dd>${last ? `${number(last.expenses.garrisons)} a month` : 'Not yet reckoned'}</dd></div>
         <div><dt>Patrols</dt><dd>${state.patrols.length} of ${cap}</dd></div>
-        <div><dt>Patrol cost</dt><dd>${world.military.patrol.cost} each a month</dd></div>
+        <div><dt>Patrols cost</dt><dd>${number(state.patrols.reduce((a, p) => a + patrolCost(state, world, p), 0))} a month</dd></div>
       </dl>
-      <p class="sub">Set how strongly each crown settlement is held from its card. Every ${world.military.patrol.soldiersPer} crown soldiers can spare men for one patrol.</p>
+      <p class="sub">Set how strongly each crown settlement is held from its card. Every ${world.military.patrol.soldiersPer} crown soldiers can spare men for one patrol. A patrol costs by the length of road it rides; horse studs make it cheaper.</p>
     </div>
     <div data-part="patrols"><h3>Patrols on the roads</h3>${patrols || '<p class="sub">None yet.</p>'}
       <div class="patrol-order">${sel('from', pick.from ?? 'vizima')}<span>to</span>${sel('to', pick.to ?? 'gors_velen')}
-      <button type="button" class="build" data-order-patrol><span class="build-name">Order a patrol</span></button></div></div>
+      <button type="button" class="build" data-order-patrol><span class="build-name">Order a patrol</span>
+      <span class="build-cost">About ${number(patrolCost(state, world, { from: pick.from ?? 'vizima', to: pick.to ?? 'gors_velen' }))} crowns a month.</span></button></div></div>
     <div data-part="danger"><h3>Where danger lies</h3><div class="realm-list">${danger}</div></div>
   `;
 }

@@ -211,25 +211,30 @@ export function industryLedger(state, world, income, put, season) {
   const pool = {};
   for (const g of Object.keys(i.goods)) pool[g] = [];
   const flows = [];
+  const made = {};
+  const make = (good, id, qty) => {
+    pool[good].push({ id, qty });
+    made[good] = (made[good] ?? 0) + qty;
+  };
 
   // Makers.
   for (const [b, m] of Object.entries(i.makers)) {
-    for (const id of withBuilding(state, b)) pool[m.good].push({ id, qty: m.amount * prosperityMult(world, state.settlements[id]) });
+    for (const id of withBuilding(state, b)) make(m.good, id, m.amount * prosperityMult(world, state.settlements[id]));
   }
   // Workers, in order, so charcoal is burnt before the forges want it.
   for (const b of i.order) {
     const w = i.workers[b];
     for (const id of withBuilding(state, b)) {
       const s = state.settlements[id];
-      let make = w.amount * prosperityMult(world, s);
+      let qty = w.amount * prosperityMult(world, s);
       for (const [k, per] of Object.entries(w.uses)) {
         const have = pool[k] ? pool[k].reduce((a, e) => a + e.qty, 0)
           : k === 'grain' ? availableGrain(state, world, season) : stockOf(state, id, k);
-        make = Math.min(make, have / per);
+        qty = Math.min(qty, have / per);
       }
-      if (make <= 0) continue;
+      if (qty <= 0) continue;
       for (const [k, per] of Object.entries(w.uses)) {
-        const want = make * per;
+        const want = qty * per;
         if (pool[k]) {
           // Suppliers are paid the raw price out of the finished good's sale.
           for (const e of takePool(pool[k], want)) {
@@ -241,7 +246,7 @@ export function industryLedger(state, world, income, put, season) {
         } else if (k === 'grain') drawGrain(state, world, id, want, season);
         else if (MATERIALS.includes(k)) drawStock(state, id, k, want);
       }
-      pool[w.good].push({ id, qty: make });
+      make(w.good, id, qty);
     }
   }
 
@@ -249,6 +254,7 @@ export function industryLedger(state, world, income, put, season) {
   const carried = {};
   for (const r of state.routes ?? []) {
     r.goods = {};
+    r.premium = 0;
     if (r.closed) continue;
     let room = i.routes.carry;
     const abroad = !state.settlements[r.from] || !state.settlements[r.to];
@@ -264,6 +270,7 @@ export function industryLedger(state, world, income, put, season) {
       r.goods[g] = Math.round(q);
       const premium = q * goodPrice(state, world, g) * (abroad ? i.routes.abroad : i.routes.home);
       income.routes[routeKey(r)] = (income.routes[routeKey(r)] ?? 0) + premium;
+      r.premium += Math.round(premium);
       for (const end of [r.from, r.to]) if (state.settlements[end]) put(end, premium / (state.settlements[r.from] && state.settlements[r.to] ? 2 : 1));
       const maker = pool[g].find((e) => e.qty > 0);
       if (maker) flows.push({ from: maker.id, to: state.settlements[r.from] ? r.from : r.to, good: g, qty: q });
@@ -272,11 +279,9 @@ export function industryLedger(state, world, income, put, season) {
 
   // What is left sells at home, at half price beyond what the realm wants.
   const people = Object.values(state.settlements).reduce((a, s) => a + (s.occupier ? 0 : totalPopulation(s)), 0);
-  const made = {};
   for (const [g, def] of Object.entries(i.goods)) {
     const total = pool[g].reduce((a, e) => a + e.qty, 0);
     if (total <= 0) continue;
-    made[g] = total;
     const price = goodPrice(state, world, g);
     const exported = Math.min(total, carried[g] ?? 0);
     const home = total - exported;

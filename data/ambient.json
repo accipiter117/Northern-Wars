@@ -80,6 +80,12 @@
       "speed": 24,
       "max": 16,
       "spawnPerDay": 1
+    },
+    "goods": {
+      "name": "Goods cart",
+      "speed": 22,
+      "max": 12,
+      "spawnPerDay": 1
     }
   }
 }

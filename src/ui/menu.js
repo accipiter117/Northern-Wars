@@ -36,7 +36,7 @@ export function realmMenuHtml(world, state, hasSave) {
       <button type="button" data-action="nobles">The great houses<small>Loyalty, lands, demands and the crown's hand</small></button>
       <button type="button" data-action="faith">Faith and peoples<small>Faiths, tensions, the Scoia'tael and petitions</small></button>
       <button type="button" data-action="neighbours">Neighbouring realms<small>Relations, trade and envoys</small></button>
-      <button type="button" data-action="ledger">Ledger<small>Where the crowns come from and where they go</small></button>
+      <button type="button" data-action="ledger">Treasury<small>Every crown in and out, and what each place earns</small></button>
       <button type="button" data-action="chronicle">Chronicle<small>Dispatches from across the realm</small></button>
       <button type="button" data-action="help">Help<small>The hints again, and turning them on or off</small></button>
       <button type="button" data-action="save">Save now<small>Also saved at the start of every month</small></button>
@@ -48,29 +48,86 @@ export function realmMenuHtml(world, state, hasSave) {
   `;
 }
 
+// Labels for the money lines that are not one per building, good or route.
+const INCOME = [
+  ['taxes', 'Taxes'],
+  ['trade', 'Market trade in the towns'],
+  ['sales', 'Surplus timber, stone and iron'],
+  ['foreign', 'Trade over the borders'],
+  ['customs', 'River and sea customs'],
+  ['gold', 'Gold'],
+  ['silver', 'Silver'],
+  ['tolls', 'Bridge tolls'],
+  ['rents', "Rents (merchants' quarters)"],
+  ['donations', "Donations (pilgrims' hostel)"],
+  ['contracts', 'Shipyard contracts'],
+  ['conquests', 'Conquered towns'],
+  ['tribute', 'Tribute received'],
+];
+const EXPENSES = [
+  ['garrisons', 'Garrisons'],
+  ['upkeep', 'Building upkeep'],
+  ['court', 'The court'],
+  ['edicts', 'Edicts'],
+  ['gifts', 'Gifts to friendly realms'],
+  ['patrols', 'Patrols'],
+  ['embassies', 'Embassies abroad'],
+  ['armies', 'Armies in the field'],
+  ['occupation', 'Garrisons in conquered towns'],
+  ['tribute', 'Tribute paid'],
+  ['routes', 'Running trade routes'],
+  ['interest', 'Interest to the bankers'],
+];
+const ALWAYS = new Set(['taxes', 'trade', 'garrisons', 'upkeep', 'court', 'interest']);
+
+// The Treasury: last month's ledger, a line for every source of money and
+// every cost, the places that earned most, and the past year.
 export function ledgerHtml(world, state) {
   const back = '<div class="menu-list"><button type="button" data-action="back">Back to the realm</button></div>';
   const last = state.ledger.history.at(-1);
   if (!last) {
-    return `<h2>Ledger</h2>${back}<p class="sub">The first accounts are drawn up at the start of next month.</p>`;
+    return `<h2>Treasury</h2>${back}<p class="sub">The first accounts are drawn up at the start of next month.</p>`;
   }
   const i = last.income;
   const e = last.expenses;
-  const { in: totalIn, out: totalOut } = ledgerNet(last);
-  const row = (label, v) => `<div><dt>${label}</dt><dd>${signed(v)}</dd></div>`;
+  const { in: totalIn, out: totalOut, net } = ledgerNet(last);
+  const row = (label, v, total = false) => `<div${total ? ' class="total"' : ''}><dt>${label}</dt><dd>${signed(v)}</dd></div>`;
+  const lines = (list, from) => list.filter(([k]) => typeof from[k] === 'number' && (from[k] || ALWAYS.has(k))).map(([k, label]) => row(label, from[k])).join('');
+  const crafts = typeof i.crafts === 'number' ? (i.crafts ? row('Crafts', i.crafts) : '')
+    : Object.entries(i.crafts ?? {}).filter(([, v]) => v).sort((a, b) => b[1] - a[1])
+      .map(([b, v]) => row(escapeHtml(world.buildings[b]?.name ?? 'Crafts'), v)).join('');
+  const goods = Object.entries(i.goods ?? {}).filter(([, v]) => v).sort((a, b) => b[1] - a[1])
+    .map(([g, v]) => row(`${escapeHtml(world.industry?.goods[g]?.name ?? g)} sold`, v)).join('');
+  const routes = routeLedgerRows(world, last, row);
   const history = state.ledger.history.slice().reverse().map((h) => {
-    const { net } = ledgerNet(h);
-    return `<tr><td>${MONTHS[h.month - 1].name.slice(0, 3)} ${h.year}</td><td>${signed(net)}</td><td>${number(h.expenses.construction)}</td><td>${signed(h.treasury)}</td></tr>`;
+    const { net: n } = ledgerNet(h);
+    return `<tr><td>${MONTHS[h.month - 1].name.slice(0, 3)} ${h.year}</td><td>${signed(n)}</td><td>${number(h.expenses.construction)}</td><td>${signed(h.treasury)}</td></tr>`;
   }).join('');
+  const places = Object.entries(state.ledger.places ?? {}).filter(([id]) => world.byId[id])
+    .map(([id, p]) => ({ id, ...p, net: p.in - p.out })).sort((a, b) => b.net - a.net);
+  const placeRow = (p) => `<button type="button" class="place-row" data-place="${p.id}"><span>${escapeHtml(world.byId[p.id].name)}</span><span>${signed(p.in)} in, ${number(p.out)} out</span></button>`;
+  const top = places.slice(0, 6).map(placeRow).join('');
+  const worst = places.filter((p) => p.net < 0).slice(-3).reverse().map(placeRow).join('');
   return `
-    <h2>Ledger</h2>
+    <h2>Treasury</h2>
     ${back}
-    <h3>${MONTHS[last.month - 1].name} ${last.year}: income</h3>
-    <dl class="ledger">${row('Taxes', i.taxes)}${row('Trade and tolls', i.trade)}${row('Surplus goods sold', i.sales)}${row('Trade over the borders', i.foreign ?? 0)}${i.crafts ? row('Crafts (tanners, brewers, inns)', i.crafts) : ''}${i.customs ? row('River and sea customs', i.customs) : ''}${i.gold ? row('Gold', i.gold) : ''}${routeLedgerRows(world, last, row)}${i.conquests ? row('Conquered towns', i.conquests) : ''}${i.tribute ? row('Tribute received', i.tribute) : ''}${row('Total', totalIn)}</dl>
+    <dl class="stats">
+      <div><dt>${MONTHS[last.month - 1].name} ${last.year}</dt><dd>${signed(net)} <small>net</small></dd></div>
+      <div><dt>In the treasury</dt><dd>${signed(Math.round(state.treasury))}</dd></div>
+    </dl>
+    <h3>Income</h3>
+    <dl class="ledger">${lines(INCOME.slice(0, 5), i)}</dl>
+    ${crafts ? `<h4>Crafts</h4><dl class="ledger">${crafts}</dl>` : ''}
+    ${goods ? `<h4>Goods from the chains</h4><dl class="ledger">${goods}</dl>` : ''}
+    <dl class="ledger">${lines(INCOME.slice(5), i)}</dl>
+    ${routes ? `<h4>Crown trade routes</h4><dl class="ledger">${routes}</dl>` : ''}
+    <dl class="ledger">${row('Total income', totalIn, true)}</dl>
     <h3>Expenses</h3>
-    <dl class="ledger">${row('Garrisons', e.garrisons)}${row('Building upkeep', e.upkeep)}${row('The court', e.court)}${row('Edicts', e.edicts ?? 0)}${row('Gifts to friendly realms', e.gifts ?? 0)}${row('Patrols', e.patrols ?? 0)}${row('Embassies abroad', e.embassies ?? 0)}${e.armies ? row('Armies in the field', e.armies) : ''}${e.occupation ? row('Garrisons in conquered towns', e.occupation) : ''}${e.tribute ? row('Tribute paid', e.tribute) : ''}${e.routes ? row('Running trade routes', e.routes) : ''}${row('Interest to the bankers', e.interest)}${row('Total', totalOut)}</dl>
+    <dl class="ledger">${lines(EXPENSES, e)}${row('Total expenses', totalOut, true)}</dl>
     ${state.treasury > world.economy.upkeep.hoardFree ? '<p class="sub">A full treasury draws courtiers and hangers-on: the court costs more while the coffers stay this full.</p>' : ''}
     <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on building works, ${number(e.decrees ?? 0)} on decrees.</p>
+    ${top ? `<h3>Where the money came from</h3><div class="place-list">${top}</div>` : ''}
+    ${worst ? `<h3>Where it went</h3><p class="sub">Places that cost the crown more than they earned, mostly for their garrisons.</p><div class="place-list">${worst}</div>` : ''}
     <h3>The past year</h3>
     <table class="history"><thead><tr><th>Month</th><th>Net</th><th>Works</th><th>Treasury</th></tr></thead><tbody>${history}</tbody></table>
   `;

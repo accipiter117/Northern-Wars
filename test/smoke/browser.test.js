@@ -84,7 +84,8 @@ for (const vp of VIEWPORTS) {
     await page.click('[data-build="market"]');
     await page.waitForFunction(() => window.northernWars.state.settlements.vizima.construction, null, { timeout: 5000 });
     assert.match(await page.textContent('[data-part="works"]'), /Raising: Market hall/);
-    assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - 600);
+    const market = await page.evaluate(() => window.northernWars.world.buildings.market.cost.coin);
+    assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - market);
     assert.equal(await page.evaluate(() => window.northernWars.state.settlements.vizima.construction.building), 'market');
     await page.locator('[data-part="works"]').scrollIntoViewIfNeeded();
     await page.screenshot({ path: join(OUT, `${vp.name}-building.png`) });
@@ -623,6 +624,71 @@ test('a busy Vizima close up, within a sixtieth of a second a frame on a slowed 
       assert.ok(f.mean < 8, `${f.mean.toFixed(1)} ms a frame on average`);
       assert.ok(f.p95 < 1000 / 60, `${f.p95.toFixed(1)} ms for the slowest frames`);
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    }
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});
+
+// A working economy: the red-treasury hint leads to the Treasury, which
+// shows a line for every source of money and the places that earned most;
+// a town's card shows what it earned and cost; the new industries stand on
+// the map with their life about them.
+test('the Treasury, town accounts and the industries close up', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  let s = createState(world, 1262);
+  for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
+  s.settlements.vizima.buildings = ['market', 'quarter', 'fishery', 'weavers', 'brewery', 'alchemist', 'smithy', 'weaponsmith'];
+  s.settlements.white_orchard.buildings = ['pasture', 'fields'];
+  s.settlements.cleves.buildings = ['stud', 'fields'];
+  s.settlements.findetann.buildings = ['charcoal'];
+  s.settlements.la_valette.buildings = ['tollbridge'];
+  s.neighbours.redania.relation = 45;
+  s.routes = [{ id: 1, from: 'vizima', to: 'oxenfurt', since: s.day, last: 0, raided: false, closed: null }];
+  s.nextRouteId = 2;
+  s = step(s, 62, world, { ambient: false });
+  for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
+  s.treasury = -400;
+  const allButDebt = JSON.parse(await (await import('node:fs/promises')).readFile(new URL('../../data/hints.json', import.meta.url), 'utf8')).hints.map((h) => h.id).filter((id) => id !== 'debt');
+  for (const vp of VIEWPORTS) {
+    const context = await browser.newContext({ viewport: vp, hasTouch: true, isMobile: vp.width < vp.height, deviceScaleFactor: 2 });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    await page.addInitScript(([save, seen]) => {
+      localStorage.setItem('northern-wars.save', save);
+      localStorage.setItem('northern-wars.hints', JSON.stringify({ seen, off: false }));
+    }, [serialize(s), allButDebt]);
+    await page.goto(`${base}?paused`);
+    await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+    await page.waitForSelector('#hint:not([hidden])', { timeout: 5000 });
+    assert.match(await page.textContent('#hint'), /Into the red[\s\S]*Treasury/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-debt-hint.png`) });
+    await page.click('[data-hint="open"]');
+    await page.waitForSelector('#sheet:not([hidden])');
+    const text = await page.textContent('#sheet-body');
+    assert.match(text, /Treasury[\s\S]*Taxes[\s\S]*Crafts[\s\S]*Market hall[\s\S]*Goods from the chains[\s\S]*Cloth sold[\s\S]*Bridge tolls[\s\S]*Rents[\s\S]*Crown trade routes[\s\S]*Where the money came from/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-treasury.png`), fullPage: false });
+    await page.locator('.place-list').first().scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(OUT, `${vp.name}-treasury-places.png`) });
+    await page.click('.place-row[data-place="vizima"]');
+    await page.waitForSelector('.accounts');
+    assert.match(await page.textContent('.accounts'), /earned the crown [\d,]+ crowns and cost it [\d,]+/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-card-accounts.png`) });
+    await page.click('#sheet-close');
+    // The industries close up: Vizima's new trades, then the pastures and
+    // paddocks of the south.
+    for (let i = 0; i < 12; i++) { await page.mouse.move(vp.width / 2, vp.height / 2); await page.mouse.wheel(0, -600); await page.waitForTimeout(50); }
+    for (const [x, y, name] of [[523, 343, 'vizima'], [584, 398, 'orchard'], [595, 589, 'cleves']]) {
+      await page.evaluate(([a, b]) => window.northernWars.lookAt(a, b), [x, y]);
+      await page.evaluate(() => window.northernWars.setSpeed(1));
+      await page.waitForTimeout(400);
+      await page.evaluate(() => window.northernWars.setSpeed(0));
+      await page.waitForTimeout(150);
+      await page.screenshot({ path: join(OUT, `${vp.name}-industry-${name}.png`) });
     }
     assert.deepEqual(errors, []);
     await context.close();

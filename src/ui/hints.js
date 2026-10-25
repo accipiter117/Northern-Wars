@@ -17,7 +17,7 @@ function store(v) {
   try { localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* hints are a nicety */ }
 }
 
-export function createHints(data, { disabled = false } = {}) {
+export function createHints(data, { disabled = false, onOpen = () => {} } = {}) {
   const el = document.getElementById('hint');
   let prefs = load();
   let showing = null;
@@ -31,7 +31,7 @@ export function createHints(data, { disabled = false } = {}) {
   function show(h) {
     showing = h.id;
     el.innerHTML = `<p class="hint-title">${escapeHtml(h.title)}</p><p>${escapeHtml(h.text)}</p>
-      <div class="hint-buttons"><button type="button" data-hint="ok">Understood</button><button type="button" data-hint="off">No more hints</button></div>`;
+      <div class="hint-buttons">${h.open ? `<button type="button" data-hint="open">${escapeHtml(h.openLabel ?? 'Show me')}</button>` : ''}<button type="button" data-hint="ok">Understood</button><button type="button" data-hint="off">No more hints</button></div>`;
     el.hidden = false;
   }
 
@@ -41,7 +41,9 @@ export function createHints(data, { disabled = false } = {}) {
     if (showing && !prefs.seen.includes(showing)) prefs.seen.push(showing);
     if (b.dataset.hint === 'off') prefs.off = true;
     store(prefs);
+    const open = b.dataset.hint === 'open' ? data.hints.find((h) => h.id === showing)?.open : null;
     hide();
+    if (open) onOpen(open);
   });
 
   // Mark a moment the UI noticed (a town opened, a decision shown).

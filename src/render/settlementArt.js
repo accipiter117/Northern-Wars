@@ -154,6 +154,13 @@ export function createSettlementArt(world, cfg) {
         getSprite('life', 'sheep').draw(ctx, x + at(f.x + wob), y + at(f.y + (j - 1) * f.h * 0.25), unit * 0.9, { cow: (i + j) % 3 === 0, facing: wob > 0 ? 1 : -1 });
       }
     }
+    for (const [i, hd] of (plan.herds ?? []).entries()) {
+      if (look.snow) continue;
+      for (let j = 0; j < 3; j++) {
+        const wob = Math.sin(time * 0.35 + j * 2.3 + i) * hd.w * 0.3;
+        getSprite('life', 'sheep').draw(ctx, x + at(hd.x + (j - 1) * hd.w * 0.3 + wob * 0.3), y + at(hd.y + (j % 2) * hd.w * 0.15), unit * (hd.horses ? 1.1 : 0.9), { horse: hd.horses, facing: wob > 0 ? 1 : -1 });
+      }
+    }
     for (const [i, b] of plan.boats.entries()) {
       getSprite('life', 'boat').draw(ctx, x + at(b.x) + unit * 1.6, y + at(b.y) + unit * 0.8, unit * 1.4, { phase: (time * 0.5 + i * 0.3) % 1 });
     }

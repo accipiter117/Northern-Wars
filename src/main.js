@@ -29,7 +29,7 @@ async function readJson(path) {
 async function boot() {
   const world = await loadWorld(readJson);
   const [peoples, faiths, goods, hintData, layoutCfg] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json', 'data/hints.json', 'data/layout.json'].map(readJson));
-  const hints = createHints(hintData, { disabled: params.has('nohints') });
+  const hints = createHints(hintData, { disabled: params.has('nohints'), onOpen: (action) => menuAction(action) });
   const lookups = { peoples, faiths, goods };
 
   let state = startingState(world);
@@ -515,7 +515,11 @@ async function boot() {
 
   function openLedger() {
     const body = sheet.open('ledger', ledgerHtml(world, state));
-    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
+    body.onclick = (e) => {
+      const place = e.target.closest('[data-place]');
+      if (place) openSettlement(place.dataset.place);
+      else menuAction(e.target.closest('[data-action]')?.dataset.action);
+    };
   }
 
   let chronicleFilter = 'all';

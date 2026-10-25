@@ -31,7 +31,9 @@ function routeRow(world, state, r) {
   const status = v.closed
     ? `<span class="badge bad">Closed: ${escapeHtml(v.closed)}</span>`
     : r.raided ? '<span class="badge bad">Robbed last month</span>' : '';
-  const detail = v.closed ? '' : `About ${number(v.value)} crowns a month, ${SAFETY(v.parts.threat)}.`;
+  const carried = Object.entries(r.goods ?? {}).filter(([, q]) => q > 0)
+    .map(([g, q]) => `${number(q)} ${world.industry?.goods[g]?.name.toLowerCase() ?? g}`).join(', ');
+  const detail = v.closed ? '' : `About ${number(v.value)} crowns a month from trade, ${SAFETY(v.parts.threat)}.${carried ? ` Last month it carried ${escapeHtml(carried)}, for ${number(r.premium ?? 0)} more.` : ''}`;
   return `<div class="law-option current"><span class="build-name">${escapeHtml(placeName(world, state, r.from))} to ${escapeHtml(placeName(world, state, r.to))} ${status}</span>
     <span class="build-cost">${detail} Since ${formatDate(r.since)}; ${world.trade.upkeep} a month to run.</span>
     <button type="button" class="chip" data-close-route="${r.id}">Wind up</button></div>`;
@@ -75,11 +77,23 @@ export function tradeHtml(world, state, form) {
       <div class="form-row"><span>To</span>${toSel}</div>
       <button type="button" class="build" data-open-route ${check.ok ? '' : 'disabled'}><span class="build-name">Open the route${check.ok ? ` for ${number(check.cost)} crowns` : ''}</span>
         <span class="build-cost">${escapeHtml(check.ok ? estimate : check.reason)}</span></button></div>
+    ${goodsHtml(world, state)}
     <div data-part="gold"><h3>Gold</h3>
       ${mines ? `<ul class="cares">${mines}</ul>` : '<p class="sub">No gold mine is working.</p>'}
       ${known ? `<p class="sub">Known seams waiting for a mine:</p><div class="chips">${known}</div>` : ''}
       <p class="sub">Other hills may hide gold. Prospect from the card of a place near hills or mountains.</p></div>
   `;
+}
+
+// The realm's goods last month: how much each chain made and what it sold for.
+function goodsHtml(world, state) {
+  if (!world.industry) return '';
+  const last = state.ledger.history.at(-1);
+  const made = state.industry?.made ?? {};
+  const rows = Object.entries(world.industry.goods).filter(([g]) => made[g])
+    .map(([g, def]) => `<li>${escapeHtml(def.name)}: ${number(made[g])} made${last?.income.goods?.[g] ? `, sold for ${number(last.income.goods[g])} crowns` : ', all worked into other goods'}</li>`).join('');
+  return `<div data-part="goods"><h3>Goods</h3>${rows ? `<ul class="cares">${rows}</ul>` : '<p class="sub">No workshop or pasture of the crown makes goods yet.</p>'}
+    <p class="sub">Pastures, studs and salt pans make goods; weavers, distillers, charcoal burners and weaponsmiths work them into dearer ones. Crown routes carry finished goods at a premium where the far end lacks them, most of all abroad; the rest sells at home, cheaper once the home market is full.</p></div>`;
 }
 
 // A settlement card's trade, gold and room-to-build lines.

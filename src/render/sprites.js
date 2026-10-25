@@ -189,6 +189,24 @@ registerPlaceholder('unit', 'grain', (ctx, x, y, size) => {
   wheel(ctx, x + r * 0.5, y + r * 0.45, r * 0.2);
 });
 
+// A cart of the realm's own goods: bales, barrels or crates by what it carries.
+const GOODS_COLOUR = { wool: '#f0ece0', cloth: '#8b1e1e', charcoal: '#2b2b2b', arms: '#9aa0a8', spirit: '#a8743a', salt: '#f4f4f4', horses: '#7a5a3a' };
+registerPlaceholder('unit', 'goods', (ctx, x, y, size, opts = {}) => {
+  const r = size / 2;
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 0.8;
+  ctx.fillStyle = GOODS_COLOUR[opts.good] ?? '#c9a66b';
+  for (const dx of [-0.38, 0.12]) {
+    ctx.fillRect(x + dx * r, y - r * 0.5, r * 0.45, r * 0.5);
+    ctx.strokeRect(x + dx * r, y - r * 0.5, r * 0.45, r * 0.5);
+  }
+  ctx.fillStyle = '#7b5530';
+  ctx.fillRect(x - r * 0.75, y, r * 1.5, r * 0.3);
+  ctx.strokeRect(x - r * 0.75, y, r * 1.5, r * 0.3);
+  wheel(ctx, x - r * 0.45, y + r * 0.42, r * 0.2);
+  wheel(ctx, x + r * 0.45, y + r * 0.42, r * 0.2);
+});
+
 // A caravan from abroad flies a pennant so it reads as foreign at a glance.
 registerPlaceholder('unit', 'foreign', (ctx, x, y, size, opts = {}) => {
   getSprite('unit', 'caravan').draw(ctx, x, y, size, opts);
