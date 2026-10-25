@@ -1,13 +1,13 @@
 // The world is the static, read-only part of a game: geography, starting data
 // and the derived road and river networks. It is built once from JSON and
 // never saved; the state only refers to it by ids.
-import { distanceToPolygon } from './geometry.js';
+import { distanceToPolygon, pointInPolygon } from './geometry.js';
 import { buildGrid } from './vision.js';
 
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold }) {
   // byId knows every place on the map, at home and abroad; adjacency is
   // Temeria's own road network, which every domestic system walks.
   // fullAdjacency adds the foreign roads, for traffic that crosses borders.
@@ -82,7 +82,47 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     }
   }
 
+  // Water each Temerian settlement stands on: a river (and whether barges
+  // use it), Lake Vizima, or the sea; with the nearest water's edge, where
+  // a harbour or a mill would go.
+  const waterOf = {};
+  const navigable = new Set(kingdom.rivers?.navigable ?? []);
+  const onLand = (x, y) => pointInPolygon(x, y, geography.temeria)
+    || Object.values(geography.neighbours).some((n) => n.shapes.some((sh) => pointInPolygon(x, y, sh)));
+  for (const s of geography.settlements) {
+    let best = null;
+    for (const [name, pts] of Object.entries(geography.rivers)) {
+      for (let i = 1; i < pts.length; i++) {
+        const q = nearestOnSegment(s, { x: pts[i - 1][0], y: pts[i - 1][1] }, { x: pts[i][0], y: pts[i][1] });
+        const d = dist(s, q);
+        if (d < WATER_REACH && (!best || d < best.d)) best = { d, kind: 'river', river: name, navigable: navigable.has(name), x: q.x, y: q.y };
+      }
+    }
+    for (const l of geography.lakes ?? []) {
+      const a = Math.atan2((s.y - l.y) / l.ry, (s.x - l.x) / l.rx);
+      const q = { x: l.x + Math.cos(a) * l.rx, y: l.y + Math.sin(a) * l.ry };
+      const d = dist(s, q);
+      if (d < WATER_REACH && (!best || d < best.d)) best = { d, kind: 'lake', navigable: true, x: q.x, y: q.y };
+    }
+    // Ports named in the data look further for the sea: their harbours lie
+    // down an estuary or across the dunes.
+    const seaReach = trade?.ports?.includes(s.id) ? 130 : WATER_REACH;
+    for (let i = 0; i < 36; i++) {
+      const a = (i / 36) * Math.PI * 2;
+      for (let r = 8; r <= seaReach; r += 6) {
+        const x = s.x + Math.cos(a) * r;
+        const y = s.y + Math.sin(a) * r;
+        if (!onLand(x, y)) {
+          if (!best || best.kind !== 'sea' || r < best.d) best = { d: r, kind: 'sea', navigable: true, x, y };
+          break;
+        }
+      }
+    }
+    waterOf[s.id] = best;
+  }
+
   const world = {
+    waterOf,
     kingdom,
     foreign,
     realmOf,
@@ -95,12 +135,15 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     events,
     realms,
     war,
+    trade,
+    gold,
     culture,
     petitions,
     houses,
     demands,
     economy,
     buildings: buildings.buildings,
+    buildingSlots: buildings.slots ?? {},
     laws,
     groups,
     neighbours,
@@ -116,6 +159,17 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   };
   if (realms) world.grid = buildGrid(world);
   return world;
+}
+
+// How far from its centre a place may have its quays or its mill-race.
+const WATER_REACH = 40;
+
+export function nearestOnSegment(p, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len));
+  return { x: a.x + dx * t, y: a.y + dy * t };
 }
 
 export function dist(a, b) {

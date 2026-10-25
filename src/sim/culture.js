@@ -32,6 +32,8 @@ export function faithTarget(state, world, id) {
     if (patron && patron !== 'tolerance') m *= f === patron ? c.patron : c.rival;
     if (f === 'eternal_fire' && world.byId[id].type === 'city') m *= c.cityFire;
     for (const [key, pulls] of Object.entries(c.lawPulls)) if (lawActive(state, key) && pulls[f]) m *= pulls[f];
+    // A cathedral or a hospice draws the faithful of its own.
+    for (const b of state.settlements[id]?.buildings ?? []) m *= world.buildings[b].effects.faith?.[f] ?? 1;
     w[f] = v * m;
   }
   const total = Object.values(w).reduce((a, b) => a + b, 0) || 1;
@@ -44,6 +46,7 @@ export function tensionTarget(state, world, id) {
   const s = state.settlements[id];
   let v = t.base + s.faith.eternal_fire * t.perFirePercent + s.hunger * t.hunger + Math.max(0, 50 - s.prosperity) * t.povertyPerPoint;
   for (const [key, d] of Object.entries(t.laws)) if (lawActive(state, key)) v += d;
+  for (const b of s.buildings) v += world.buildings[b].effects.tension ?? 0;
   return clamp(v, 0, 100);
 }
 

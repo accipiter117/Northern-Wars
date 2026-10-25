@@ -2,6 +2,7 @@ import { totalPopulation, foodNeed, foodYield, goodsYield, foodCapacity, canBuil
 import { mixHtml as mix, gaugeHtml, FAITH_COLOURS, PEOPLE_COLOURS, TENSION_WORDS } from './faith.js';
 import { defenceHtml } from './military.js';
 import { occupationHtml, siegeNote } from './war.js';
+import { settlementTradeHtml } from './trade.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 
 const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Castle', temple: 'Temple' };
@@ -42,6 +43,7 @@ export function settlementCardHtml(world, state, id, data) {
     <div data-part="stores">${storesHtml(world, state, id)}</div>
     <div data-part="defence">${defenceHtml(world, state, id)}</div>
     <div data-part="works">${worksHtml(world, s)}</div>
+    <div data-part="trade">${world.trade ? settlementTradeHtml(world, state, id) : ''}</div>
     <div data-part="build">${buildHtml(world, state, id)}</div>
     <div data-part="peoples">
       <h3>Peoples</h3>

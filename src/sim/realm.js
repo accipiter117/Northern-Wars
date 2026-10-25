@@ -13,6 +13,7 @@ import { monthlyRealms } from './realms.js';
 import { stepArmiesDay } from './armies.js';
 import { monthlyWar, stepWarDecisionsDay, warMonths } from './war.js';
 import { leviedMap } from './conflict.js';
+import { monthlyGold, stepGoldDay } from './gold.js';
 
 const CHRONICLE_LIMIT = 400;
 
@@ -52,6 +53,7 @@ export function stepRealmDay(state, world, rng) {
   stepPetitionsDay(state, world);
   stepHousesDay(state, world);
   stepEventsDay(state, world, rng);
+  if (state.gold) stepGoldDay(state, world, rng);
   if (state.wars) {
     stepArmiesDay(state, world, rng);
     stepWarDecisionsDay(state, world);
@@ -87,7 +89,8 @@ export function stepRealmDay(state, world, rng) {
   state.stability = computeStability(state);
 
   if (date.day === 1) {
-    monthlyLedger(state, world);
+    monthlyLedger(state, world, rng);
+    if (state.gold) monthlyGold(state, world);
     monthlyPopulation(state, world, rng);
     monthlyEnvoy(state, world, rng);
     monthlyCulture(state, world, rng);

@@ -6,6 +6,7 @@
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import { roadPath } from './world.js';
+import { goldThreat } from './gold.js';
 
 const say = (state, text) => addDispatch(state, text, 'military');
 
@@ -46,13 +47,16 @@ export function threatLevel(state, world, id, kind, patrolled = patrolledSet(sta
   }
   if (kind === 'monsters' && state.laws.bounties?.option === 'witchers') v += t.bounties;
   if (patrolled.has(id)) v += t.patrolled;
+  // Gold draws thieves to the country round a working mine.
+  if (kind === 'bandits') v += goldThreat(state, world, id);
   if (s.cleared?.[kind] > state.day) v *= 1 - mil(world).clearedCut;
   return clamp(v, 0, 100);
 }
 
 export function localStrength(state, world, id, patrolled = patrolledSet(state, world)) {
   const s = state.settlements[id];
-  let v = s.garrison * (s.buildings.includes('walls') ? mil(world).walls : 1);
+  // An armoury's men fight harder.
+  let v = s.garrison * (s.buildings.includes('walls') ? mil(world).walls : 1) * (1 + localFx(world, s, 'soldierStrength'));
   if (patrolled.has(id)) v += mil(world).patrol.strength;
   return v;
 }
@@ -106,7 +110,7 @@ function plagueMonth(state, world, rng) {
   const spreadTo = [];
   for (const [id, s] of Object.entries(state.settlements)) {
     if (!plagueActive(state, s)) continue;
-    const care = s.priestesses || state.laws.patronage?.option === 'melitele' ? p.melitele : 1;
+    const care = (s.priestesses || state.laws.patronage?.option === 'melitele' ? p.melitele : 1) * Math.max(0.2, 1 + localFx(world, s, 'plagueDeaths'));
     let dead = 0;
     for (const k of Object.keys(s.population)) {
       const n = Math.round(s.population[k] * p.deathsPerMonth * care);
@@ -118,7 +122,9 @@ function plagueMonth(state, world, rng) {
     for (const { to } of world.adjacency[id]) {
       const t = state.settlements[to];
       // Those who came through it lately do not take it again.
-      if (!plagueActive(state, t) && (t.plagueImmune ?? 0) <= state.day && rng.chance(p.spread)) spreadTo.push(to);
+      // Baths, sewers and paved streets give the sickness less to feed on.
+      const spread = p.spread * Math.max(0.1, 1 + localFx(world, t, 'plagueSpread'));
+      if (!plagueActive(state, t) && (t.plagueImmune ?? 0) <= state.day && rng.chance(spread)) spreadTo.push(to);
     }
   }
   for (const id of new Set(spreadTo)) {
@@ -246,4 +252,10 @@ export function canAddPatrol(state, world, from, to) {
 export function addPatrol(state, world, from, to) {
   state.patrols.push({ id: state.nextPatrolId++, from, to });
   say(state, `A patrol now rides the road from ${world.byId[from].name} to ${world.byId[to].name}.`);
+}
+
+function localFx(world, s, key) {
+  let v = 0;
+  for (const b of s.buildings) v += world.buildings[b].effects[key] ?? 0;
+  return v;
 }

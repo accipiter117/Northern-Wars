@@ -2,7 +2,9 @@
 // invaded by a neighbour it has soured or that smells weakness, be called to
 // a friend's side, or watch its neighbours fight one another. Wars end in a
 // peace: towns handed back or kept, sometimes tribute, and a truce.
+import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
+import { goldGreed } from './gold.js';
 import { informed } from './realms.js';
 import { newArmy, disbandArmy, crownArmies } from './armies.js';
 import {
@@ -217,7 +219,8 @@ export function hostilityTo(state, world, rid) {
   const weak = state.authority < ai.weakAuthority || Object.values(state.houses ?? {}).some((h) => h.rebel);
   const rel = state.neighbours[rid].relation;
   const odds = clamp(realmPotential(state, world, rid) / Math.max(1, soldiersOf(state, world, TEMERIA) * 0.3), 0, 1.5);
-  const greed = (ai.greed[rid] ?? 0) * odds * (weak ? 2 : 1);
+  // Working gold mines whet the appetite of the greedy.
+  const greed = (ai.greed[rid] ?? 0) * odds * (weak ? 2 : 1) + (ai.greed[rid] ? goldGreed(state, world) : 0);
   return Math.max(0, ai.hostileBelow - rel) / 40 + (claimsAgainstTemeria(state, world, rid) * ai.claimHostility) / 40
     + (weak ? ai.weakBonus / 40 : 0) + greed - Math.max(0, rel) / 50;
 }
@@ -312,7 +315,7 @@ export function canMakePeace(state, world, warId, key) {
   if (!t) return { ok: false, reason: 'Unknown terms.' };
   if (!terms.ready) return { ok: false, reason: `Too soon: no one makes peace in the first ${W(world).peace.minMonths} months.` };
   if (!t.accept) return { ok: false, reason: 'They would refuse.' };
-  if (t.lump && state.treasury - t.lump < -world.economy.debt.creditLimit) return { ok: false, reason: 'The bankers will not lend that much.' };
+  if (t.lump && state.treasury - t.lump < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
   return { ok: true, terms: t };
 }
 
@@ -484,7 +487,7 @@ export function resolveWarDecision(state, world, id, choice, ignored = false) {
   const realm = sideName(world, d.realm);
   if (!war) return true;
   if (d.kind === 'declared') {
-    if (choice === 1 && state.treasury - d.price >= -world.economy.debt.creditLimit) {
+    if (choice === 1 && state.treasury - d.price >= -creditLimit(state, world)) {
       applyPeace(state, world, war, { towns: 'white', lump: { from: TEMERIA, to: d.realm, coin: d.price } });
     } else say(state, ignored ? `${realm} is at war with us, and Vizima has said nothing. The realm takes up arms.` : `The crown will meet ${realm} in the field.`);
   } else if (d.kind === 'call') {

@@ -5,6 +5,7 @@ import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { seasonOf } from './calendar.js';
+import { defaultGold } from './gold.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
 
@@ -98,6 +99,15 @@ const MIGRATIONS = {
   8(state) {
     Object.assign(state, defaultWar());
     state.version = 9;
+    return state;
+  },
+  // v10 adds crown trade routes and gold. Existing buildings stay where
+  // they are, even past the new limits on how many a place can hold.
+  9(state, world) {
+    state.routes = [];
+    state.nextRouteId = 1;
+    state.gold = defaultGold(world);
+    state.version = 10;
     return state;
   },
 };

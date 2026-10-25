@@ -4,6 +4,7 @@
 // about, favours granted and grievances nursed. Disloyal houses make their
 // lands restless; a house pushed too far rebels. A crown that loses both its
 // Authority and its order for half a year is deposed.
+import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 
@@ -209,7 +210,7 @@ export function canHouseAction(state, world, houseId, kind, settlementId) {
     return { ok: false, reason: `Too soon (${c.cooldownDays - (state.day - last)} days).` };
   }
   if (a.authority && state.authority < a.authority) return { ok: false, reason: `Needs ${a.authority} Authority.` };
-  if (a.coin && state.treasury - a.coin < -world.economy.debt.creditLimit) return { ok: false, reason: 'The bankers will not lend that much.' };
+  if (a.coin && state.treasury - a.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
   if (kind === 'grant') {
     const s = state.settlements[settlementId];
     if (!s || s.holder !== 'crown') return { ok: false, reason: 'Only crown land can be granted.' };

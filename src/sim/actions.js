@@ -1,6 +1,6 @@
 // Things the crown can order. Each action is checked, then applied to a copy
 // of the state, so the UI can ask "could I?" before it asks "do it".
-import { realmStock } from './economy.js';
+import { realmStock, creditLimit } from './economy.js';
 import { addDispatch } from './realm.js';
 import { canDecree, decree } from './laws.js';
 import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
@@ -9,6 +9,8 @@ import { canHouseAction, houseAction, resolveDemand } from './houses.js';
 import { canSetGarrison, canAddPatrol, addPatrol, resolveEvent } from './military.js';
 import { canOpenEmbassy, openEmbassy, closeEmbassy, canSendSpy, sendSpy } from './realms.js';
 import { makeRng } from './rng.js';
+import { depositAt, canProspect, startProspect } from './gold.js';
+import { canOpenRoute, openRoute, closeRoute } from './trade.js';
 import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy } from './armies.js';
 import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision } from './war.js';
 import { TEMERIA, sideIndex } from './conflict.js';
@@ -28,15 +30,27 @@ export function canBuild(state, world, settlementId, buildingId) {
   if (!b.types.includes(type)) return { ok: false, reason: `Not for a ${type}.`, hidden: true };
   if (b.needs && s.production !== b.needs) return { ok: false, reason: `Only where ${b.needs} is worked.`, hidden: true };
   if (b.needsBorder && !world.borderland[settlementId]) return { ok: false, reason: 'Only near a border.', hidden: true };
+  if (b.needsWater && !world.waterOf?.[settlementId]) return { ok: false, reason: 'Only on a river, a lake or the sea.', hidden: true };
+  if (b.needsRoad && world.adjacency[settlementId].length < b.needsRoad) return { ok: false, reason: 'Only at a crossroads.', hidden: true };
+  if (b.produces && !b.produces.includes(s.production)) return { ok: false, reason: 'Only where the land supplies it.', hidden: true };
+  if (b.needsDwarves && (s.population.dwarf ?? 0) < b.needsDwarves) return { ok: false, reason: `Needs a dwarven quarter (${b.needsDwarves} dwarves).` };
+  if (b.needsDeposit && !depositAt(state, world, settlementId)) return { ok: false, reason: 'Only on a known gold deposit.', hidden: true };
   if (s.buildings.includes(buildingId)) return { ok: false, reason: 'Already built.', hidden: true };
+  if (b.requires && !s.buildings.includes(b.requires)) return { ok: false, reason: `Needs a ${world.buildings[b.requires].name.toLowerCase()} first.` };
+  if (s.buildings.length >= slotsOf(world, settlementId)) return { ok: false, reason: `No room: a ${type} holds ${slotsOf(world, settlementId)} buildings.` };
   if (s.construction) return { ok: false, reason: 'Workers are busy on another project.' };
   const stock = realmStock(state);
   for (const m of MATERIALS) {
     if ((b.cost[m] ?? 0) > stock[m]) return { ok: false, reason: `The realm lacks ${m}.` };
   }
-  const limit = world.economy.debt.creditLimit;
+  const limit = creditLimit(state, world);
   if (state.treasury - (b.cost.coin ?? 0) < -limit) return { ok: false, reason: 'The bankers will not lend that much.' };
   return { ok: true, borrow: state.treasury - (b.cost.coin ?? 0) < 0 };
+}
+
+// How many buildings a kind of place can hold: cities most, villages least.
+export function slotsOf(world, id) {
+  return world.buildingSlots?.[world.byId[id].type] ?? 99;
 }
 
 export function applyAction(state, world, action) {
@@ -133,6 +147,26 @@ export function applyAction(state, world, action) {
     return { state: next };
   }
   if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision'].includes(action.type)) return warAction(state, world, action);
+  if (action.type === 'route') {
+    if (action.close) {
+      if (!state.routes.some((r) => r.id === action.id)) return { state, error: 'No such route.' };
+      const next = structuredClone(state);
+      closeRoute(next, world, action.id);
+      return { state: next };
+    }
+    const check = canOpenRoute(state, world, action.from, action.to);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    openRoute(next, world, action.from, action.to);
+    return { state: next };
+  }
+  if (action.type === 'prospect') {
+    const check = canProspect(state, world, action.settlement);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    startProspect(next, world, action.settlement);
+    return { state: next };
+  }
   return { state, error: `Unknown action ${action.type}.` };
 }
 

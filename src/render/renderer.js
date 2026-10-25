@@ -12,6 +12,7 @@ import { threatLevel, patrolledSet, patrolRoute, plagueActive } from '../sim/mil
 import { visionOf, canSee, hasBit } from '../sim/vision.js';
 import { travellerPositions } from '../sim/ambient.js';
 import { armyPosition } from '../sim/armies.js';
+import { roadPath } from '../sim/world.js';
 import { TEMERIA, ownerOf, originOf, sideColours } from '../sim/conflict.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
@@ -257,7 +258,7 @@ export function createRenderer(canvas, world, cam) {
       }
     }
     const marks = (id, s) => `${infraThreats[id]?.bandits ? 'b' : ''}${infraThreats[id]?.monsters ? 'm' : ''}${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
-    const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + Object.entries(state.settlements)
+    const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + (state.routes ?? []).map((r) => `${r.from}>${r.to}${r.closed ? 'x' : ''}`).join() + Object.entries(state.settlements)
       .map(([id, s]) => `${id}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${s.occupier ?? ''}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
       .join('|') + (state.unpaid ? '!' : '') + foreignKey;
     if (key !== infraKey) {
@@ -321,6 +322,25 @@ export function createRenderer(canvas, world, cam) {
     c.restore();
   }
 
+  // Crown trade routes: a faint gold thread along the road, grey while closed.
+  function drawRoutes(c) {
+    if (!infraState?.routes?.length) return;
+    c.save();
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.setLineDash([10 / cam.scale, 6 / cam.scale]);
+    for (const r of infraState.routes) {
+      const path = roadPath(world, r.from, r.to, true);
+      if (!path) continue;
+      c.beginPath();
+      path.forEach((id, i) => (i ? c.lineTo(world.byId[id].x, world.byId[id].y) : c.moveTo(world.byId[id].x, world.byId[id].y)));
+      c.strokeStyle = r.closed ? 'rgba(90, 80, 70, 0.4)' : 'rgba(196, 150, 40, 0.55)';
+      c.lineWidth = 4 / cam.scale;
+      c.stroke();
+    }
+    c.restore();
+  }
+
   function drawMarkers(c, st, s, p, r) {
     const marks = [];
     if (plagueActive(infraState, s)) marks.push('plague');
@@ -348,6 +368,7 @@ export function createRenderer(canvas, world, cam) {
     cctx.clearRect(0, 0, cache.width, cache.height);
     cctx.setTransform(...worldTransform);
     drawPatrols(cctx);
+    drawRoutes(cctx);
 
     cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawRegionLabels(cctx);

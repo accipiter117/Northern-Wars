@@ -4,6 +4,7 @@
 // their own captains. Armies march the roads a stretch a day, fight when
 // they meet an enemy, starve or storm the towns they besiege, and carry off
 // what they can.
+import { creditLimit, realmEffect } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { roadPath, dist } from './world.js';
 import { seasonOf } from './calendar.js';
@@ -62,7 +63,7 @@ export function canRaise(state, world, opts) {
   if (m?.house && (state.houses[m.house]?.rebel || state.houses[m.house]?.loyalty < w.raise.nobleRefuseBelow)) return { ok: false, reason: 'His house will not lend him to the crown.' };
   const p = musterPreview(state, world, opts);
   if (p.soldiers < w.minArmy * 2) return { ok: false, reason: 'Too few soldiers for an army.' };
-  if (state.treasury - p.coin < -world.economy.debt.creditLimit) return { ok: false, reason: 'The bankers will not lend that much.' };
+  if (state.treasury - p.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
   return { ok: true, preview: p };
 }
 
@@ -76,6 +77,8 @@ export function raiseArmy(state, world, opts) {
     companies: p.companies, marshal: opts.marshal ?? null, stance: opts.stance ?? 'cautious',
     name: `The army of ${world.byId[opts.muster].name}`,
   });
+  // The realm's armouries arm the levy.
+  a.arms = 1 + Math.min(0.3, realmEffect(state, world, 'armyArms'));
   const parts = [];
   if (Object.keys(p.levy).length) parts.push(p.houses.length ? `crown and noble levies (${p.houses.map((h) => world.houses.houses[h].name).join(', ')})` : 'the crown levy');
   if (p.companies) parts.push(`${p.companies} free compan${p.companies === 1 ? 'y' : 'ies'}`);
@@ -197,7 +200,7 @@ function marshalSkill(world, a) {
 
 export function armyStrength(state, world, a, defending = false) {
   const st = W(world).stances[a.stance] ?? W(world).stances.cautious;
-  let v = a.soldiers * marshalSkill(world, a) * (0.5 + a.morale / 100) * (defending ? st.defence : st.attack);
+  let v = a.soldiers * marshalSkill(world, a) * (0.5 + a.morale / 100) * (defending ? st.defence : st.attack) * (a.arms ?? 1);
   if (!a.to && ownerOf(state, world, a.at) === a.side && hasWalls(state, world, a.at)) v *= W(world).battle.wallsDefence;
   return v;
 }
@@ -209,7 +212,8 @@ function placeDefence(state, world, id) {
   const p = placeOf(state, world, id);
   const militia = peopleAt(state, world, id) * W(world).siege.militiaPerPerson;
   const type = world.byId[id].type;
-  return (p.garrison + militia) * (hasWalls(state, world, id) ? b.wallsDefence : 1) * (type === 'castle' ? b.castleDefence : type === 'city' ? b.cityDefence : 1);
+  const armed = 1 + p.buildings.reduce((v, b) => v + (world.buildings[b].effects.soldierStrength ?? 0), 0);
+  return (p.garrison * armed + militia) * (hasWalls(state, world, id) ? b.wallsDefence : 1) * (type === 'castle' ? b.castleDefence : type === 'city' ? b.cityDefence : 1);
 }
 
 // ---- The day ----
