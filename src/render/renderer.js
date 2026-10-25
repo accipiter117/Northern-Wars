@@ -74,7 +74,9 @@ export function createRenderer(canvas, world, cam) {
   }
 
   const zoomRel = () => cam.scale / cam.contain;
-  const iconSize = (type) => ICON_SIZE[type] * Math.min(1.5, Math.max(0.8, Math.sqrt(zoomRel() / 2)));
+  // Icons shrink as the view pulls back over the whole North, so the far view
+  // reads as a map rather than a heap of markers.
+  const iconSize = (type) => ICON_SIZE[type] * Math.min(1.5, Math.max(zoomRel() < 1 ? 0.45 : 0.8, Math.sqrt(zoomRel() / 2)));
 
   // Neighbouring lands warm to green or sour to red with their relation,
   // bucketed so the cached map only redraws when the colour visibly changes.
@@ -135,8 +137,14 @@ export function createRenderer(canvas, world, cam) {
     const s = cam.scale * dpr;
     fctx.setTransform(s, 0, 0, s, dpr * (cam.viewW / 2 - cam.x * cam.scale), dpr * (cam.viewH / 2 - cam.y * cam.scale));
     const g = world.grid;
+    // Fog lies only over land: the sea is no secret.
+    fctx.save();
+    const land = new Path2D();
+    for (const n of prep.neighbours) for (const p of n.paths) land.addPath(p);
+    fctx.clip(land);
     fctx.imageSmoothingEnabled = true;
     fctx.drawImage(mask, g.x0, g.y0, g.cols * g.cell, g.rows * g.cell);
+    fctx.restore();
     // Lift the fog wherever someone of ours is watching, softly at the edges.
     fctx.globalCompositeOperation = 'destination-out';
     for (const c of vision.circles) {
@@ -381,8 +389,11 @@ export function createRenderer(canvas, world, cam) {
     c.textBaseline = 'top';
     c.lineJoin = 'round';
     const known = foreignOrdered.filter((st) => foreignView[st.id]);
+    const capitals = new Set([world.kingdom.capital, ...Object.values(world.realms?.realms ?? {}).map((r) => r.capital)]);
     for (const st of [...ordered, ...known]) {
       if (z < LABEL_ZOOM[st.type] && st.id !== selectedId) continue;
+      // Pulled right back, only capitals keep their names.
+      if (z < 0.8 && !capitals.has(st.id) && st.id !== selectedId) continue;
       const p = toScreen(cam, st.x, st.y);
       if (p.x < -80 || p.y < -40 || p.x > cam.viewW + 80 || p.y > cam.viewH + 40) continue;
       c.font = `${LABEL_FONT[st.type]} ${SERIF}`;
@@ -498,6 +509,7 @@ export function createRenderer(canvas, world, cam) {
     resize, draw, pick, unitScreen, stats,
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     canSeePoint: (x, y) => !vision || canSee(world, vision, x, y),
+    foreignInfo: (id) => foreignView[id] ?? null,
   };
 }
 
