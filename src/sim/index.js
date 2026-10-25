@@ -13,5 +13,6 @@ export { ledgerNet } from './economy.js';
 export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
 export { petitionText } from './petitions.js';
 export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, demandText } from './houses.js';
+export { informed, realmProsperity, canOpenEmbassy, canSendSpy } from './realms.js';
 export { threatLevel, localStrength, patrolledSet, patrolRoute, patrolCapacity, crownSoldiers, canSetGarrison, canAddPatrol, eventText, plagueActive, quarantined } from './military.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects } from './economy.js';

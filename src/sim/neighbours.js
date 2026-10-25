@@ -2,6 +2,7 @@
 // towards where the crown's stance and laws put it; warmth brings trade over
 // the border, and now and then an envoy arrives wanting an answer.
 import { addDispatch, clamp } from './realm.js';
+import { realmProsperity } from './realms.js';
 import { totalPopulation } from './state.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
@@ -42,11 +43,13 @@ export function tradeFactor(world, relation) {
   return clamp(0.5 + relation / 100, 0, 1.5);
 }
 
+// A richer neighbour buys and sells more: its prosperity scales the trade.
 export function foreignTrade(state, world) {
   const by = {};
   let total = 0;
   for (const [id, r] of Object.entries(world.neighbours.realms)) {
-    by[id] = r.trade * tradeFactor(world, state.neighbours[id].relation);
+    const wealth = state.realms ? clamp(realmProsperity(state, id) / 55, 0.6, 1.5) : 1;
+    by[id] = r.trade * tradeFactor(world, state.neighbours[id].relation) * wealth;
     total += by[id];
   }
   return { total, by };

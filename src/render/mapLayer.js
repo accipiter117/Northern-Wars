@@ -7,7 +7,7 @@ import { pointInPolygon, centroid, bounds, pathOf, linePath } from './geometry.j
 export const COLOURS = {
   sea: '#4d6266',
   seaInk: 'rgba(225, 235, 230, 0.10)',
-  neighbour: '#a99d84',
+  neighbour: '#cdbf9b',
   neighbourInk: 'rgba(40, 30, 20, 0.45)',
   land: '#dccaa0',
   ink: '#2b2116',
@@ -41,28 +41,33 @@ export function prepareMap(world) {
         for (let x = b.minX; x <= b.maxX; x += s) {
           const px = x + (rng.next() - 0.5) * s * 0.8 + (Math.round(y / s) % 2) * s * 0.5;
           const py = y + (rng.next() - 0.5) * s * 0.6;
-          if (pointInPolygon(px, py, zone.shape) && pointInPolygon(px, py, temeria)) {
+          const home = zone.realm ? g.neighbours[zone.realm].shapes.some((sh) => pointInPolygon(px, py, sh)) : pointInPolygon(px, py, temeria);
+          if (pointInPolygon(px, py, zone.shape) && home) {
             marks.push({ x: px, y: py, r: 0.8 + rng.next() * 0.4 });
           }
         }
       }
       marks.sort((a, b2) => a.y - b2.y);
-      terrain.push({ kind, name: zone.name, path: pathOf(zone.shape), marks, label: labelSpot(zone.shape) });
+      terrain.push({
+        kind, name: zone.name, realm: zone.realm ?? null, path: pathOf(zone.shape), marks, label: labelSpot(zone.shape),
+        clip: zone.realm ? g.neighbours[zone.realm].shapes.map(pathOf) : null,
+      });
     }
   }
 
   const rivers = Object.entries(g.rivers).map(([name, pts]) => ({ name, path: linePath(pts), label: midPoint(pts) }));
   const roads = new Path2D();
-  for (const [a, b] of g.roads) {
+  for (const [a, b] of [...g.roads, ...(g.foreignRoads ?? [])]) {
     roads.moveTo(world.byId[a].x, world.byId[a].y);
     roads.lineTo(world.byId[b].x, world.byId[b].y);
   }
 
   // Faint wave strokes scattered over open water.
   const waves = [];
-  for (let i = 0; i < 260; i++) {
-    const x = rng.next() * g.width;
-    const y = rng.next() * g.height;
+  const [bx0, by0, bx1, by1] = g.bounds ?? [0, 0, g.width, g.height];
+  for (let i = 0; i < 900; i++) {
+    const x = bx0 + rng.next() * (bx1 - bx0);
+    const y = by0 + rng.next() * (by1 - by0);
     const onLand = pointInPolygon(x, y, temeria)
       || Object.values(g.neighbours).some((n) => n.shapes.some((sh) => pointInPolygon(x, y, sh)));
     if (!onLand) waves.push({ x, y });
@@ -100,7 +105,8 @@ function midPoint(pts) {
 export function drawMap(ctx, prep, world, px, tints = {}) {
   const g = world.geography;
   ctx.fillStyle = COLOURS.sea;
-  ctx.fillRect(-2000, -2000, g.width + 4000, g.height + 4000);
+  const [bx0, by0, bx1, by1] = g.bounds ?? [0, 0, g.width, g.height];
+  ctx.fillRect(bx0 - 3000, by0 - 3000, bx1 - bx0 + 6000, by1 - by0 + 6000);
 
   ctx.strokeStyle = COLOURS.seaInk;
   ctx.lineWidth = 1.2 * px;
@@ -129,10 +135,22 @@ export function drawMap(ctx, prep, world, px, tints = {}) {
   ctx.fillStyle = COLOURS.land;
   ctx.fill(prep.temeria);
 
-  // Terrain washes and marks, clipped to the realm.
+  // Terrain abroad, each zone clipped to its own realm.
+  for (const t of prep.terrain) {
+    if (!t.clip) continue;
+    ctx.save();
+    for (const c of t.clip) ctx.clip(c);
+    ctx.fillStyle = COLOURS[t.kind];
+    ctx.fill(t.path);
+    drawMarks(ctx, t, px);
+    ctx.restore();
+  }
+
+  // Terrain washes and marks at home, clipped to the realm.
   ctx.save();
   ctx.clip(prep.temeria);
   for (const t of prep.terrain) {
+    if (t.clip) continue;
     ctx.fillStyle = COLOURS[t.kind];
     ctx.fill(t.path);
     drawMarks(ctx, t, px);

@@ -109,7 +109,7 @@ for (const vp of VIEWPORTS) {
     if (target) {
       await page.touchscreen.tap(target.x, target.y - 4);
       await page.waitForSelector('#unit-label:not([hidden])');
-      assert.match(await page.textContent('#unit-label'), /caravan|Patrol|barge/i);
+      assert.match(await page.textContent('#unit-label'), /caravan|Patrol|barge|Pilgrims|Refugees|Grain cart|merchants/i);
       await page.screenshot({ path: join(OUT, `${vp.name}-unit.png`) });
     }
 

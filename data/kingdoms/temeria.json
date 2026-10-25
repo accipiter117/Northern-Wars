@@ -6,6 +6,7 @@
   "geography": "data/geography.json",
   "settlements": "data/settlements.json",
   "neighbours": "data/neighbours.json",
+  "realms": "data/realms.json",
   "houses": "data/houses.json",
   "military": "data/military.json",
   "start": {

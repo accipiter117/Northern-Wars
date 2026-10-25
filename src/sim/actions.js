@@ -7,6 +7,8 @@ import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
 import { resolvePetition } from './petitions.js';
 import { canHouseAction, houseAction, resolveDemand } from './houses.js';
 import { canSetGarrison, canAddPatrol, addPatrol, resolveEvent } from './military.js';
+import { canOpenEmbassy, openEmbassy, closeEmbassy, canSendSpy, sendSpy } from './realms.js';
+import { makeRng } from './rng.js';
 import { addDispatch as note } from './realm.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -21,6 +23,7 @@ export function canBuild(state, world, settlementId, buildingId) {
   if (!b || !s) return { ok: false, reason: 'Unknown building.' };
   if (!b.types.includes(type)) return { ok: false, reason: `Not for a ${type}.`, hidden: true };
   if (b.needs && s.production !== b.needs) return { ok: false, reason: `Only where ${b.needs} is worked.`, hidden: true };
+  if (b.needsBorder && !world.borderland[settlementId]) return { ok: false, reason: 'Only near a border.', hidden: true };
   if (s.buildings.includes(buildingId)) return { ok: false, reason: 'Already built.', hidden: true };
   if (s.construction) return { ok: false, reason: 'Workers are busy on another project.' };
   const stock = realmStock(state);
@@ -95,6 +98,29 @@ export function applyAction(state, world, action) {
     if (!state.patrols.some((p) => p.id === action.id)) return { state, error: 'No such patrol.' };
     const next = structuredClone(state);
     next.patrols = next.patrols.filter((p) => p.id !== action.id);
+    return { state: next };
+  }
+  if (action.type === 'embassy') {
+    if (action.close) {
+      if (!state.embassies[action.realm]) return { state, error: 'We keep no embassy there.' };
+      const next = structuredClone(state);
+      closeEmbassy(next, world, action.realm);
+      return { state: next };
+    }
+    const check = canOpenEmbassy(state, world, action.realm);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    openEmbassy(next, world, action.realm);
+    return { state: next };
+  }
+  if (action.type === 'spy') {
+    const check = canSendSpy(state, world, action.realm);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    // Whether the agent is caught is the game's own dice, so a save resumes it.
+    const rng = makeRng(next.rng.game);
+    sendSpy(next, world, rng, action.realm);
+    next.rng.game = rng.seed;
     return { state: next };
   }
   if (action.type === 'event') {

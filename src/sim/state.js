@@ -5,8 +5,9 @@ import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
+import { defaultRealms } from './realms.js';
 
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 8;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -47,6 +48,9 @@ export function createState(world, seed = 1) {
     nextPatrolId: 1,
     events: [],
     nextEventId: 1,
+    realms: defaultRealms(world),
+    embassies: {},
+    spies: {},
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],
