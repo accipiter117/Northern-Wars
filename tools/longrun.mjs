@@ -25,7 +25,7 @@ function report(s, label, totals) {
   console.log(`${label.padEnd(10)} pop ${String(pop).padStart(6)} treasury ${String(Math.round(s.treasury)).padStart(7)} net ${String(last ? ledgerNet(last).net : 0).padStart(5)}`
     + ` auth ${s.authority.toFixed(0).padStart(3)} stab ${s.stability.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
     + ` routes ${s.routes.length} gold ${Math.round(last?.income.gold ?? 0)} wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`
-    + ` faith F/M/O ${f.eternal_fire.toFixed(0)}/${f.melitele.toFixed(0)}/${f.old_ways.toFixed(0)} built ${totals.built} riots ${totals.riots} raids ${totals.raids} rebellions ${totals.rebels} deposed ${s.depositions.length}`);
+    + ` faith F/M/O ${f.eternal_fire.toFixed(0)}/${f.melitele.toFixed(0)}/${f.old_ways.toFixed(0)} built ${totals.built} riots ${totals.riots} raids ${totals.raids} dead ${s.threats.tally.dead} roaddays ${s.threats.tally.roadDays} cleared ${s.threats.tally.cleared} fights ${totals.fights} companies ${s.forces.companies.length} threats ${s.threats.list.length} rebellions ${totals.rebels} deposed ${s.depositions.length}`);
 }
 
 // The year's ledger, averaged per month, as `line value` pairs.
@@ -47,7 +47,7 @@ function ledgerLine(s, label) {
 
 for (const seed of seedList.split(',').map(Number)) {
   let s = createState(world, seed);
-  const totals = { built: 0, riots: 0, raids: 0, rebels: 0, wars: 0 };
+  const totals = { built: 0, riots: 0, raids: 0, rebels: 0, wars: 0, fights: 0 };
   let seenDay = s.day;
   console.log(`--- ${mode}, seed ${seed}`);
   report(s, 'start', totals);
@@ -61,7 +61,8 @@ for (const seed of seedList.split(',').map(Number)) {
     for (const d of s.chronicle.filter((x) => x.day > seenDay)) {
       if (/is finished/.test(d.text)) totals.built++;
       if (/^(Riot|Pogrom)/.test(d.text)) totals.riots++;
-      if (/^(Bandits fell|Something came|Scoia'tael on the road)/.test(d.text)) totals.raids++;
+      if (/^Bandits fell on|came out of the wilds by night at|^Scoia'tael struck|crossed the border and plundered/.test(d.text)) totals.raids++;
+      if (/^Fight near/.test(d.text)) totals.fights++;
       if (/risen in rebellion|joins the rising/.test(d.text)) totals.rebels++;
       if (/^(Temeria is at war with|.* is at war with Temeria)/.test(d.text)) totals.wars++;
     }

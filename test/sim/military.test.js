@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createState, step, applyAction, threatLevel, localStrength, patrolCapacity, patrolCost, eventText, plagueActive, serialize, deserialize, totalPopulation } from '../../src/sim/index.js';
+import { createState, step, applyAction, threatLevel, eventText, plagueActive, serialize, deserialize, totalPopulation, patrolledSet } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { nodeWorld } from '../helpers.js';
 
@@ -22,10 +22,13 @@ test('threats grow in wild country and fall with bounties, patrols and clearing'
   s.laws.bounties = { option: 'witchers', previous: 'none', since: s.day };
   assert.equal(threatLevel(s, world, 'anchor', 'monsters'), m - 15);
   const b = threatLevel(s, world, 'anchor', 'bandits');
-  s.patrols.push({ id: 1, from: 'gors_velen', to: 'dorian' });
-  assert.equal(threatLevel(s, world, 'anchor', 'bandits'), b - 20);
+  // A company riding the road keeps the bandits off it.
+  let p = act(s, { type: 'recruit', settlement: 'gors_velen', kind: 'lightcav' }).state;
+  p = act(p, { type: 'company', id: p.forces.companies[0].id, order: { kind: 'patrol', from: 'gors_velen', to: 'dorian' } }).state;
+  assert.ok(patrolledSet(p, world).has('anchor'));
+  assert.equal(threatLevel(p, world, 'anchor', 'bandits'), b - 20);
   s.settlements.anchor.cleared = { bandits: s.day + 10 };
-  assert.ok(threatLevel(s, world, 'anchor', 'bandits') < (b - 20) * 0.3);
+  assert.ok(threatLevel(s, world, 'anchor', 'bandits') < b * 0.3);
 });
 
 test('a stronger garrison costs more and stands taller; lords keep their own', () => {
@@ -37,21 +40,20 @@ test('a stronger garrison costs more and stands taller; lords keep their own', (
   assert.match(act(createState(world, 1), { type: 'garrison', settlement: 'mayena', level: 'strong' }).error, /lord keeps/);
 });
 
-test('patrols are limited by soldiers, cost crowns, and strengthen the places on their road', () => {
+test('a company is recruited from the people, paid each month, and stood down', () => {
   let s = createState(world, 1);
-  const cap = patrolCapacity(s, world);
-  assert.ok(cap >= 2);
-  const before = localStrength(s, world, 'anchor');
-  s = act(s, { type: 'patrol', from: 'gors_velen', to: 'dorian' }).state;
-  assert.equal(localStrength(s, world, 'anchor'), before + world.military.patrol.strength);
-  assert.match(act(s, { type: 'patrol', from: 'dorian', to: 'gors_velen' }).error, /Already/);
-  s = run(s, 35, true);
-  // A patrol costs by the length of its road.
-  assert.equal(s.ledger.history.at(-1).expenses.patrols, Math.round(patrolCost(s, world, s.patrols[0])));
-  assert.ok(patrolCost(s, world, s.patrols[0]) > world.military.patrol.cost);
-  const id = s.patrols[0].id;
-  s = act(s, { type: 'unpatrol', id }).state;
-  assert.equal(s.patrols.length, 0);
+  const people = s.settlements.maribor.population.human;
+  s = act(s, { type: 'recruit', settlement: 'maribor', kind: 'menatarms' }).state;
+  const c = s.forces.companies[0];
+  assert.equal(c.men, world.forces.companies.menatarms.men);
+  assert.equal(s.settlements.maribor.population.human, people - c.men);
+  assert.match(act(s, { type: 'recruit', settlement: 'maribor', kind: 'knights' }).error, /barracks/);
+  assert.match(act(s, { type: 'recruit', settlement: 'mayena', kind: 'militia' }).error, /lord/i);
+  s = run(s, 35);
+  assert.equal(s.ledger.history.at(-1).expenses.companies, Math.round(c.men * world.forces.companies.menatarms.upkeep));
+  s = act(s, { type: 'company', id: c.id, disband: true }).state;
+  assert.equal(s.forces.companies.length, 0);
+  assert.ok(s.settlements.maribor.population.human > people - c.men);
 });
 
 test('an undefended wild village is raided; a strong garrison holds', () => {
@@ -62,7 +64,7 @@ test('an undefended wild village is raided; a strong garrison holds', () => {
   let raided = false;
   for (let i = 0; i < 60 && !raided; i++) {
     weak = run(weak, 30);
-    raided = weak.chronicle.some((d) => /^(Bandits fell on Anchor|Something came out of the wilds by night at Anchor)/.test(d.text));
+    raided = weak.chronicle.some((d) => /^Bandits fell on Anchor|came out of the wilds by night at Anchor/.test(d.text));
     weak.settlements.anchor.garrison = 0;
   }
   assert.ok(raided);
@@ -71,7 +73,7 @@ test('an undefended wild village is raided; a strong garrison holds', () => {
     strong.settlements.anchor.garrison = 5000;
     strong = run(strong, 30);
   }
-  assert.ok(!strong.chronicle.some((d) => /^(Bandits fell on Anchor|Something came out of the wilds by night at Anchor)/.test(d.text)));
+  assert.ok(!strong.chronicle.some((d) => /^Bandits fell on Anchor|came out of the wilds by night at Anchor/.test(d.text)));
 });
 
 test('plague kills, spreads along the roads, ends, and leaves immunity; quarantine holds it', () => {
@@ -119,13 +121,14 @@ test('events arrive, can be answered, and take their default if ignored', () => 
   assert.ok(threatLevel(out, world, 'anchor', 'monsters') < before * 0.3);
 });
 
-test('a version 6 save gains patrols, threats and events', () => {
+test('a version 6 save gains garrison levels, threats and events', () => {
   const s = JSON.parse(serialize(createState(world, 1)));
   s.version = 6;
   for (const k of ['garrisonLevel', 'patrols', 'nextPatrolId', 'events', 'nextEventId']) delete s.state[k];
   for (const st of Object.values(s.state.settlements)) for (const k of ['plague', 'quarantine', 'priestesses', 'cleared', 'raided', 'raidKind']) delete st[k];
   const up = deserialize(JSON.stringify(s), world);
   assert.equal(up.version, STATE_VERSION);
-  assert.deepEqual(up.patrols, []);
+  assert.equal(up.patrols, undefined);
+  assert.deepEqual(up.forces.companies, []);
   assert.ok(Number.isFinite(run(up, 60).treasury));
 });

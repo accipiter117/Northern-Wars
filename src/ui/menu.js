@@ -32,7 +32,8 @@ export function realmMenuHtml(world, state, hasSave) {
       <button type="button" data-action="laws">Laws and edicts<small>Decree, and see how the realm feels about it</small></button>
       <button type="button" data-action="trade">Trade and gold<small>Crown trade routes, gold mines and prospecting</small></button>
       <button type="button" data-action="war">War${state.wars?.some((w) => w.sides.flat().includes('temeria')) ? ' <span class="badge bad">At war</span>' : ''}<small>Armies, marshals, sieges and peace</small></button>
-      <button type="button" data-action="military">Military and threats<small>Soldiers, patrols, bandits and monsters</small></button>
+      <button type="button" data-action="forces">Forces<small>The crown's companies, and every threat sighted</small></button>
+      <button type="button" data-action="military">Garrisons and danger<small>Town garrisons, and where bandits and beasts breed</small></button>
       <button type="button" data-action="nobles">The great houses<small>Loyalty, lands, demands and the crown's hand</small></button>
       <button type="button" data-action="faith">Faith and peoples<small>Faiths, tensions, the Scoia'tael and petitions</small></button>
       <button type="button" data-action="neighbours">Neighbouring realms<small>Relations, trade and envoys</small></button>
@@ -70,6 +71,7 @@ const EXPENSES = [
   ['court', 'The court'],
   ['edicts', 'Edicts'],
   ['gifts', 'Gifts to friendly realms'],
+  ['companies', 'Standing companies'],
   ['patrols', 'Patrols'],
   ['embassies', 'Embassies abroad'],
   ['armies', 'Armies in the field'],

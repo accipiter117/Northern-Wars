@@ -34,10 +34,6 @@
     "bonus": 1.25
   },
   "marketBonus": 0.25,
-  "raid": {
-    "chance": 0.3,
-    "monthsLost": 1
-  },
   "limit": {
     "base": 2,
     "perMarket": 0.5,

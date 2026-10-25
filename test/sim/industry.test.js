@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createState, step, ledgerNet, totalPopulation, canBuild, tollsAt, bridgeCrossings, patrolCost, serialize, deserialize, lodgeCut, saltStorage,
+  createState, step, ledgerNet, totalPopulation, canBuild, tollsAt, bridgeCrossings, serialize, deserialize, lodgeCut, saltStorage,
 } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { nodeWorld } from '../helpers.js';
@@ -59,6 +59,8 @@ test('each chain\'s goods flow and sell', () => {
     x.settlements.ellander.buildings.push('distillery');
     x.settlements.anchor.buildings.push('saltpans');
     x.settlements.cleves.buildings.push('stud');
+    // With the crown's stables and armouries full, everything goes to market.
+    x.forces.stores = { arms: 60, horses: 60 };
   });
   const goods = last(s).income.goods;
   for (const g of ['cloth', 'spirit', 'arms', 'salt', 'horses']) assert.ok(goods[g] > 20, `${g} sold for ${goods[g]}`);
@@ -143,14 +145,15 @@ test('a fully developed Vizima alone earns 600 or more a month', () => {
   assert.ok(p.in - p.out >= 600, `Vizima earned ${p.in} and cost ${p.out}`);
 });
 
-test('patrols cost by the length of their road, and studs make them cheaper', () => {
-  const s = createState(world, 1);
-  const short = patrolCost(s, world, { from: 'old_bottoms', to: 'brenna' });
-  const long = patrolCost(s, world, { from: 'vizima', to: 'gors_velen' });
-  assert.ok(short < world.military.patrol.cost + 20 && short < 40 * 0.75, `short patrol ${short}`);
-  assert.ok(long > short * 3);
-  s.settlements.cleves.buildings.push('stud');
-  assert.ok(patrolCost(s, world, { from: 'old_bottoms', to: 'brenna' }) < short);
+test('studs and weaponsmiths stock the crown\'s stables and armouries before the market', () => {
+  const s = month((x) => {
+    x.settlements.cleves.buildings.push('stud');
+    x.settlements.white_bridge.buildings.push('smithy', 'weaponsmith');
+    x.settlements.findetann.buildings.push('charcoal');
+    x.forces.stores = { arms: 0, horses: 0 };
+  });
+  assert.ok(s.forces.stores.horses > 5, `horses ${s.forces.stores.horses}`);
+  assert.ok(s.forces.stores.arms > 5, `arms ${s.forces.stores.arms}`);
 });
 
 test('debt costs about one per cent a month', () => {
@@ -203,7 +206,7 @@ test('the steward stays solvent over ten years, and earns far more by the end', 
   assert.ok(low > -world.economy.debt.creditLimit / 2, `lowest treasury ${low}`);
   assert.ok(s.treasury > 0);
   assert.ok(yearIn[9] >= yearIn[0] * 2.5, `year 1 ${yearIn[0]}, year 10 ${yearIn[9]}`);
-  assert.ok(s.patrols.length >= 4);
+  assert.ok(s.forces.companies.length >= 4, `${s.forces.companies.length} companies`);
   const net = s.ledger.history.reduce((a, h) => a + ledgerNet(h).net, 0) / s.ledger.history.length;
   assert.ok(net > 300, `monthly surplus ${net}`);
   const pop = Object.values(s.settlements).reduce((a, x) => a + totalPopulation(x), 0);

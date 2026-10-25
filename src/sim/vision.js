@@ -9,6 +9,7 @@
 import { pointInPolygon } from './geometry.js';
 import { patrolledSet } from './military.js';
 import { armyPosition } from './armies.js';
+import { companySightCircles } from './forces.js';
 import { TEMERIA, ownerOf } from './conflict.js';
 
 export function buildGrid(world) {
@@ -39,7 +40,7 @@ export function visionOf(state, world, positions = []) {
   const v = world.realms.vision;
   const circles = [];
   const realms = new Set();
-  const patrolled = state.patrols ? patrolledSet(state, world) : new Set();
+  const patrolled = state.forces ? patrolledSet(state, world) : new Set();
   for (const s of world.geography.settlements) {
     let r = v.home[s.type] ?? 40;
     if (state.settlements[s.id].buildings.includes('watchtower')) r = Math.max(r, v.watchtower);
@@ -55,6 +56,8 @@ export function visionOf(state, world, positions = []) {
     const p = armyPosition(world, a);
     circles.push({ x: p.x, y: p.y, r: v.army ?? 90 });
   }
+  // The crown's companies see the country round them.
+  if (state.forces) circles.push(...companySightCircles(state, world));
   for (const s of world.foreign) {
     if (state.realms?.[s.realm]?.settlements[s.id]?.owner === TEMERIA) circles.push({ x: s.x, y: s.y, r: v.home[s.type] ?? 40 });
   }

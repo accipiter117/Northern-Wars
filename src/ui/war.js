@@ -1,7 +1,7 @@
 // The war panel, army cards and the war's part of the realm and town cards.
 import {
   TEMERIA, formatDate, sideName, ownerOf, placesHeldBy, warsOf, warScore, exhaustion, heldValue, sideIndex, musterPreview,
-  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, warDecisionText, hostile, truceUntil, armyPosition,
+  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, warDecisionText, hostile, truceUntil, armyPosition, freeCompanies,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { decisionHtml } from './faith.js';
@@ -85,15 +85,21 @@ function raiseHtml(world, state, form) {
   if (busy.has(form.marshal)) form.marshal = marshals[0]?.[0] ?? null;
   const marshal = w.marshals[form.marshal];
   const parts = [];
-  if (Object.keys(p.levy).length) parts.push(`${number(p.soldiers - p.companies * w.raise.company)} levied men`);
+  if (Object.keys(p.levy).length) parts.push(`${number(p.soldiers - p.companies * w.raise.company - p.unitMen)} levied men`);
   if (p.companies) parts.push(`${p.companies * w.raise.company} hired swords (${number(p.coin)} crowns now, ${p.companies * w.raise.companyMonthly} a month)`);
   const refuse = p.refuse.map((h) => world.houses.houses[h].name);
+  const standing = freeCompanies(state).filter((c) => !c.task);
+  if (p.units.length) parts.push(`${p.units.length} standing compan${p.units.length === 1 ? 'y' : 'ies'} (${number(p.unitMen)} men)`);
   return `<h3>Raise an army</h3>
     <p class="sub">Levied men leave their garrisons thin and their fields untended. The lords resent sending theirs. Hired companies cost coin and nothing else.</p>
     <div class="form-row"><span>Muster at</span>${select('muster', musterPlaces(world, state).map((id) => [id, world.byId[id].name]), form.muster)}</div>
     <div class="form-row"><span>Crown levy</span>${chips('levy', Object.entries(LEVIES), form.levy)}</div>
     <div class="form-row"><span>The lords' men</span>${chips('nobles', [[true, 'Call them'], [false, 'Leave them']], form.nobles)}</div>
-    <div class="form-row"><span>Free companies</span>${chips('companies', [0, 1, 2, 3, 4, 5].map((n) => [n, String(n)]), form.companies)}</div>
+    <div class="form-row"><span>Hired companies</span>${chips('companies', [0, 1, 2, 3, 4, 5].map((n) => [n, String(n)]), form.companies)}</div>
+    ${standing.length ? `<div class="form-row"><span>Standing companies</span><div class="chips">${standing.map((c) => {
+      const on = (form.units ?? []).includes(c.id);
+      return `<button type="button" class="chip${on ? ' on' : ''}" data-unit="${c.id}" aria-pressed="${on}">${escapeHtml(c.name)} (${number(c.men)})</button>`;
+    }).join(' ')}</div></div>` : ''}
     <div class="form-row"><span>Marshal</span>${marshals.length ? chips('marshal', marshals.map(([id, m]) => [id, m.short]), form.marshal) : '<p class="sub">Every marshal is in the field.</p>'}</div>
     ${marshal ? `<p class="sub">${escapeHtml(marshal.name)}: ${escapeHtml(marshal.blurb)}</p>` : ''}
     <div class="form-row"><span>Stance</span>${chips('stance', Object.entries(w.stances).map(([id, s]) => [id, s.name]), form.stance)}</div>

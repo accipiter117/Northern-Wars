@@ -1,13 +1,14 @@
-// Soldiers, roads and the things that prey on them. Bandits grow where
-// people are poor and angry and the country is wild; monsters where marsh,
-// forest and mountain come close. Each month they may strike a settlement,
-// and the fight is settled by local strength: the garrison, its walls and
-// any patrol on the road. Plague, once loose, spreads along the roads.
+// Garrisons and the danger of the country round each settlement. Bandits
+// breed where people are poor and angry and the country is wild; monsters
+// where marsh, forest and mountain come close. Each month these threat
+// levels decide where camps and lairs appear and how they grow (threats.js);
+// the raids themselves are made by bands on the map. Plague, once loose,
+// spreads along the roads.
 import { addDispatch, clamp } from './realm.js';
-import { totalPopulation } from './state.js';
-import { roadPath, polylineLength } from './world.js';
 import { goldThreat } from './gold.js';
-import { patrolCostMult, lodgeCut } from './industry.js';
+import { lodgeCut } from './industry.js';
+import { patrolNodes } from './forces.js';
+import { monthlyThreatsSpawn } from './threats.js';
 
 const say = (state, text) => addDispatch(state, text, 'military');
 
@@ -24,26 +25,9 @@ export function crownSoldiers(state) {
   return n;
 }
 
-export function patrolCapacity(state, world) {
-  return Math.floor(crownSoldiers(state) / mil(world).patrol.soldiersPer);
-}
-
-export function patrolRoute(world, p) {
-  return roadPath(world, p.from, p.to) ?? [];
-}
-
-// A patrol costs by the length of road it rides, less with the studs' horses.
-export function patrolCost(state, world, p) {
-  const c = mil(world).patrol;
-  const path = patrolRoute(world, p);
-  const length = path.length > 1 ? polylineLength(path.map((id) => world.byId[id])) : 0;
-  return (c.cost + (c.perLength ?? 0) * length) * patrolCostMult(state, world);
-}
-
+// Places on roads the crown's companies patrol or guard.
 export function patrolledSet(state, world) {
-  const set = new Set();
-  for (const p of state.patrols) for (const id of patrolRoute(world, p)) set.add(id);
-  return set;
+  return state.forces ? patrolNodes(state, world) : new Set();
 }
 
 export function threatLevel(state, world, id, kind, patrolled = patrolledSet(state, world)) {
@@ -64,12 +48,10 @@ export function threatLevel(state, world, id, kind, patrolled = patrolledSet(sta
   return clamp(v, 0, 100);
 }
 
-export function localStrength(state, world, id, patrolled = patrolledSet(state, world)) {
+// The garrison's strength behind its walls; an armoury's men fight harder.
+export function localStrength(state, world, id) {
   const s = state.settlements[id];
-  // An armoury's men fight harder.
-  let v = s.garrison * (s.buildings.includes('walls') ? mil(world).walls : 1) * (1 + localFx(world, s, 'soldierStrength'));
-  if (patrolled.has(id)) v += mil(world).patrol.strength;
-  return v;
+  return s.garrison * (s.buildings.includes('walls') ? mil(world).walls : 1) * (1 + localFx(world, s, 'soldierStrength'));
 }
 
 export function plagueActive(state, s) {
@@ -81,39 +63,8 @@ export function quarantined(state, s) {
 }
 
 export function monthlyThreats(state, world, rng) {
-  const m = mil(world);
-  const patrolled = patrolledSet(state, world);
-  for (const [id, s] of Object.entries(state.settlements)) {
-    if (s.occupier) continue;
-    for (const kind of Object.keys(m.threats)) {
-      const level = threatLevel(state, world, id, kind, patrolled);
-      if (!rng.chance(m.incidentChance * (level / 100))) continue;
-      const attack = level * m.strengthPerThreat * (0.5 + rng.next());
-      if (localStrength(state, world, id, patrolled) >= attack) continue;
-      raid(state, world, id, s, kind);
-    }
-  }
+  monthlyThreatsSpawn(state, world, rng);
   plagueMonth(state, world, rng);
-}
-
-function raid(state, world, id, s, kind) {
-  const l = mil(world).losses[kind];
-  s.prosperity = clamp(s.prosperity - l.prosperity, 0, 100);
-  s.unrest = clamp(s.unrest + l.unrest, 0, 100);
-  s.stock.food *= 1 - l.food;
-  for (const g of ['timber', 'stone', 'iron']) s.stock[g] *= 1 - l.goods;
-  let dead = 0;
-  for (const p of Object.keys(s.population)) {
-    const n = Math.round(s.population[p] * l.people);
-    s.population[p] -= n;
-    dead += n;
-  }
-  s.raided = state.day + l.raidedDays;
-  s.raidKind = kind;
-  const name = world.byId[id].name;
-  say(state, kind === 'bandits'
-    ? `Bandits fell on ${name}: barns emptied, a carter hanged from his own shafts${dead ? `, ${dead} dead` : ''}. The garrison was too few to stop them.`
-    : `Something came out of the wilds by night at ${name}. ${dead || 'Several'} villagers taken; the rest bar their doors at dusk.`);
 }
 
 function plagueMonth(state, world, rng) {
@@ -250,19 +201,6 @@ export function canSetGarrison(state, world, id, level) {
   if ((state.garrisonLevel[id] ?? 'standard') === level) return { ok: false, reason: 'Already so.' };
   if (!world.settlementData[id].garrison) return { ok: false, reason: 'No garrison to speak of.' };
   return { ok: true };
-}
-
-export function canAddPatrol(state, world, from, to) {
-  if (from === to || !world.byId[from] || !world.byId[to]) return { ok: false, reason: 'Choose two different places.' };
-  if (state.patrols.length >= patrolCapacity(state, world)) return { ok: false, reason: `Too few soldiers for another patrol (one per ${mil(world).patrol.soldiersPer}).` };
-  if (state.patrols.some((p) => (p.from === from && p.to === to) || (p.from === to && p.to === from))) return { ok: false, reason: 'Already patrolled.' };
-  if (!roadPath(world, from, to)) return { ok: false, reason: 'No road joins them.' };
-  return { ok: true };
-}
-
-export function addPatrol(state, world, from, to) {
-  state.patrols.push({ id: state.nextPatrolId++, from, to });
-  say(state, `A patrol now rides the road from ${world.byId[from].name} to ${world.byId[to].name}.`);
 }
 
 function localFx(world, s, key) {

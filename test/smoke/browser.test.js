@@ -293,9 +293,9 @@ test('great houses, rebellion and deposition', async () => {
   await context.close();
 });
 
-// Military and threats: order a patrol, strengthen a garrison, see plague and
-// raids marked on the map, and answer an event when the clock runs.
-test('military screen, patrols, garrisons and events', async () => {
+// Garrisons and danger: recruit a company and set it patrolling, strengthen a
+// garrison, see plague and raids marked on the map, and answer an event.
+test('military screen, companies, garrisons and events', async () => {
   const { nodeWorld } = await import('../helpers.js');
   const { createState, step, serialize } = await import('../../src/sim/index.js');
   const world = await nodeWorld();
@@ -317,15 +317,24 @@ test('military screen, patrols, garrisons and events', async () => {
 
   await page.click('#menu-button');
   await page.click('[data-action="military"]');
-  assert.match(await page.textContent('#sheet-body'), /Military and threats[\s\S]*Crown soldiers[\s\S]*Where danger lies/);
-  await page.selectOption('[data-pick="from"]', 'vizima');
-  await page.selectOption('[data-pick="to"]', 'pontaria');
-  await page.click('[data-order-patrol]');
-  assert.equal(await page.evaluate(() => window.northernWars.state.patrols.length), 1);
+  assert.match(await page.textContent('#sheet-body'), /Garrisons and danger[\s\S]*Garrison soldiers[\s\S]*Where danger lies/);
   await page.screenshot({ path: join(OUT, 'military.png') });
   await page.click('#sheet-close');
 
+  // Recruit light horse at Vizima from its card, and set them riding a road.
   const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.touchscreen.tap(viz.x, viz.y);
+  await page.waitForSelector('[data-recruit="lightcav"]');
+  await page.click('[data-recruit="lightcav"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.forces.companies.length), 1);
+  await page.click('[data-part="companies"] [data-company]');
+  await page.waitForSelector('[data-order-kind="patrol"]');
+  await page.selectOption('[data-pick="from"]', 'vizima');
+  await page.selectOption('[data-pick="to"]', 'pontaria');
+  await page.click('[data-order-kind="patrol"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.forces.companies[0].order.kind), 'patrol');
+  await page.click('#sheet-close');
+
   await page.touchscreen.tap(viz.x, viz.y);
   await page.waitForSelector('[data-garrison="strong"]');
   await page.click('[data-garrison="strong"]');
@@ -580,6 +589,27 @@ test('a busy Vizima close up, within a sixtieth of a second a frame on a slowed 
   s.settlements.murky_waters.buildings = ['fields', 'granary'];
   s.routes = [{ id: 1, from: 'vizima', to: 'maribor', since: s.day, last: 40, raided: false, closed: null }];
   s.nextRouteId = 2;
+  // Many tokens on screen: a dozen companies at Vizima and on the roads
+  // round it, and camps, lairs and bands in sight.
+  const types = Object.keys(world.forces.companies);
+  const roads = [['vizima', 'murky_waters'], ['vizima', 'white_orchard'], ['vizima', 'la_valette'], ['vizima', 'pontaria']];
+  for (let i = 0; i < 12; i++) {
+    const type = types[i % types.length];
+    const t = world.forces.companies[type];
+    const [from, to] = roads[i % roads.length];
+    const v = world.byId.vizima;
+    s.forces.companies.push({
+      id: s.forces.nextId++, type, name: `Vizima ${t.name} ${i}`, home: 'vizima', station: 'vizima', men: t.men, max: t.men, wounded: 0, morale: 50 + i * 4, xp: 0,
+      order: i < 6 ? { kind: 'patrol', from, to } : { kind: 'station' }, task: null, x: v.x, y: v.y, node: 'vizima', way: [], army: null, wins: 0, fought: -1, routed: 0,
+    });
+  }
+  for (const [i, [x, y]] of [[470, 300], [560, 300], [500, 400], [580, 380], [450, 360], [540, 420]].entries()) {
+    s.threats.list.push({
+      id: s.threats.nextId++, kind: i % 2 ? 'monsters' : 'bandits', terrain: 'forest', species: 'wolves', x, y, near: 'vizima', men: 40 + i * 10, count: 6 + i,
+      morale: 70, born: s.day, band: i > 3 ? { men: 25, count: 4, x: x + 20, y: y - 10, way: [{ x: x + 60, y: y - 20 }], phase: 'out', seg: 'vizima|murky_waters', lurk: 30, until: 0 } : null,
+      sighted: true, campSeen: true, alerted: true, rumour: null,
+    });
+  }
   for (const vp of VIEWPORTS) {
     const context = await browser.newContext({ viewport: vp, deviceScaleFactor: 2 });
     const page = await context.newPage();
@@ -690,6 +720,81 @@ test('the Treasury, town accounts and the industries close up', async () => {
       await page.waitForTimeout(150);
       await page.screenshot({ path: join(OUT, `${vp.name}-industry-${name}.png`) });
     }
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});
+
+// A realm under arms: a bandit camp, a beasts' lair and a band on the road in
+// sight, a rumour beyond it, and the crown's companies on Hunt, Respond and
+// Patrol orders; the Forces screen with odds in words, a company's card and
+// a threat's card.
+test('threats and companies on the map, the Forces screen and a Hunt order', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const sim = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  let s = sim.step(sim.createState(world, 1262), 62, world);
+  for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
+  s.treasury = 8000;
+  const marsh = sim.wildSites(world, 'anchor').find((x) => x.terrain === 'marsh');
+  const forest = sim.wildSites(world, 'anchor').find((x) => x.terrain === 'forest');
+  const base0 = { morale: 70, born: s.day, band: null, sighted: false, alerted: true, rumour: null };
+  s.threats.list = [
+    { ...base0, id: 1, kind: 'bandits', terrain: 'marsh', x: marsh.x, y: marsh.y, near: 'anchor', men: 70 },
+    { ...base0, id: 2, kind: 'monsters', terrain: 'marsh', species: 'drowners', x: 222, y: 470, near: 'anchor', count: 9 },
+    { ...base0, id: 3, kind: 'monsters', terrain: 'forest', species: 'wolves', x: forest.x + 5, y: forest.y + 8, near: 'anchor', count: 12 },
+    { ...base0, id: 4, kind: 'bandits', terrain: 'forest', x: 260, y: 560, near: 'napeys', men: 40, band: { men: 30, x: 300, y: 520, way: [{ x: 330, y: 500 }], phase: 'out', seg: 'dorian|napeys', lurk: 8, until: 0 } },
+  ];
+  s.threats.nextId = 5;
+  const act = (a) => {
+    const out = sim.applyAction(s, world, a);
+    assert.equal(out.error, undefined, `${a.type}: ${out.error}`);
+    s = out.state;
+  };
+  act({ type: 'recruit', settlement: 'gors_velen', kind: 'menatarms' });
+  act({ type: 'recruit', settlement: 'gors_velen', kind: 'archers' });
+  act({ type: 'recruit', settlement: 'pontaria', kind: 'lightcav' });
+  s = sim.step(s, 1, world, { ambient: false });
+  assert.ok(s.threats.list.find((t) => t.id === 1).campSeen, 'the camp is in sight');
+  assert.ok(s.threats.list.find((t) => t.id === 3).rumour, 'the wolves further off are only a rumour');
+  act({ type: 'company', id: 1, order: { kind: 'hunt', threat: 1 } });
+  act({ type: 'company', id: 2, order: { kind: 'station', place: 'gors_velen' } });
+  act({ type: 'company', id: 3, order: { kind: 'patrol', from: 'pontaria', to: 'findetann' } });
+  s = sim.step(s, 2, world);
+  for (const vp of VIEWPORTS) {
+    const context = await browser.newContext({ viewport: vp, hasTouch: true, isMobile: vp.width < vp.height, deviceScaleFactor: 2 });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), sim.serialize(s));
+    await page.goto(`${base}?paused&nohints`);
+    await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+    for (let i = 0; i < 3; i++) { await page.mouse.move(vp.width / 2, vp.height / 2); await page.mouse.wheel(0, -600); await page.waitForTimeout(50); }
+    await page.evaluate(() => window.northernWars.lookAt(225, 470));
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: join(OUT, `${vp.name}-forces-map.png`) });
+    // The Forces screen lists the companies and every threat in sight.
+    await page.click('#menu-button');
+    await page.click('[data-action="forces"]');
+    const text = await page.textContent('#sheet-body');
+    assert.match(text, /Forces[\s\S]*Threats sighted[\s\S]*Bandit camp[\s\S]*Drowners[\s\S]*rumour[\s\S]*The crown's companies[\s\S]*Gors Velen Men-at-arms/);
+    assert.match(text, /(Overwhelming|Favourable|Even|Risky|Hopeless) for/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-forces.png`) });
+    // A company's card: its orders, and the odds of each hunt.
+    await page.click('[data-company="2"]');
+    await page.waitForSelector('[data-hunt]');
+    assert.match(await page.textContent('#sheet-body'), /Standing orders[\s\S]*Hunt: Drowners[\s\S]*(Overwhelming|Favourable|Even|Risky|Hopeless)/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-company.png`) });
+    await page.click('[data-hunt="2"]');
+    assert.equal(await page.evaluate(() => window.northernWars.state.forces.companies.find((c) => c.id === 2).order.kind), 'hunt');
+    await page.click('#sheet-close');
+    // A threat's card, from the map.
+    const lair = await page.evaluate(() => window.northernWars.screenOfPoint(222, 470));
+    await page.mouse.click(lair.x, lair.y);
+    await page.waitForSelector('#sheet:not([hidden])');
+    assert.match(await page.textContent('#sheet-body'), /Drowners[\s\S]*Hire a witcher/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-threat.png`) });
     assert.deepEqual(errors, []);
     await context.close();
   }

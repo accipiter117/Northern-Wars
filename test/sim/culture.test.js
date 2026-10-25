@@ -46,11 +46,15 @@ test('Fire patronage and expulsion raise tension; a charter lowers it', () => {
   assert.equal(tensionTarget(s, world, 'carreras'), base - 10);
 });
 
-test('persecution brings riots and Scoia\'tael ambushes, and drives elves to sympathy', () => {
+test('persecution brings riots and Scoia\'tael commandos, and drives elves to sympathy', () => {
   let s = decreeNow(decreeNow(createState(world, 1), 'patronage', 'eternal_fire'), 'nonhumans', 'expulsion');
-  s = run(s, 3650);
+  let commandos = 0;
+  for (let d = 0; d < 3650; d += 30) {
+    s = run(s, 30);
+    commandos = Math.max(commandos, s.threats.list.filter((t) => t.kind === 'scoiatael').length);
+  }
   assert.ok(s.chronicle.some((d) => /^Riot in/.test(d.text)));
-  assert.ok(s.chronicle.some((d) => /^Scoia'tael on the road/.test(d.text)));
+  assert.ok(commandos > 0, 'commandos came out of the woods');
   assert.ok(s.sympathy > 50);
 });
 

@@ -55,13 +55,6 @@ export function saltStorage(state, world) {
   return Math.min(c.storageMax, withBuilding(state, 'saltpans').length * c.storagePer);
 }
 
-// Horses from the studs make the crown's riders cheaper.
-export function patrolCostMult(state, world) {
-  const c = I(world)?.stud;
-  if (!c) return 1;
-  return Math.max(c.patrolMin, 1 - withBuilding(state, 'stud').length * c.patrolCut);
-}
-
 // Hunters thin out the beasts in the country round their lodge.
 export function lodgeCut(state, world, id) {
   const c = I(world)?.lodge;
@@ -250,6 +243,19 @@ export function industryLedger(state, world, income, put, season) {
     }
   }
 
+  // The crown keeps back arms and horses for its companies.
+  const stores = state.forces?.stores;
+  const caps = world.forces?.stores;
+  if (stores && caps) {
+    for (const g of ['arms', 'horses']) {
+      const want = Math.max(0, caps[g] - stores[g]);
+      for (const e of takePool(pool[g], want)) stores[g] += e.qty;
+    }
+  }
+
+  // Roads held by bandits cut what a place's goods fetch.
+  const robbed = (id) => 1 - (world.forces?.roads.tradeCut ?? 0) * Math.min(1, (state.threats?.robbed[id] ?? 0) / 30);
+
   // Crown routes carry finished goods to ends that lack them.
   const carried = {};
   for (const r of state.routes ?? []) {
@@ -289,7 +295,7 @@ export function industryLedger(state, world, income, put, season) {
     const value = exported * price + Math.min(home, want) * price + Math.max(0, home - want) * price * i.glut;
     const unit = value / total;
     for (const e of pool[g]) {
-      const v = e.qty * unit * share(e.id);
+      const v = e.qty * unit * share(e.id) * robbed(e.id);
       income.goods[g] = (income.goods[g] ?? 0) + v;
       put(e.id, v);
     }

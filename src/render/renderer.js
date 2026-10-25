@@ -12,7 +12,9 @@ import { houseCount } from './layout.js';
 import { toScreen, toWorld } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
-import { threatLevel, patrolledSet, patrolRoute, plagueActive } from '../sim/military.js';
+import { plagueActive } from '../sim/military.js';
+import { drawForces, pickForces } from './forces-layer.js';
+import './sprites-forces.js';
 import { visionOf, canSee, hasBit } from '../sim/vision.js';
 import { travellerPositions } from '../sim/ambient.js';
 import { armyPosition } from '../sim/armies.js';
@@ -35,8 +37,6 @@ const UNIT_SIZE = 14;
 const ARMY_SIZE = 26;
 const SOLDIERS_PER_FIGURE = 200;
 const MAX_FIGURES = 5;
-// Threat level at which a bandit camp or a monster's lair shows on the map.
-const DANGER = 50;
 
 export function createRenderer(canvas, world, cam, layoutCfg) {
   const prep = prepareMap(world);
@@ -137,9 +137,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // The cached map redraws when what stands in a settlement changes: its
   // buildings, works, the size of its garrison or whether it is paid.
   let infraState = null;
-  let infraThreats = {};
   let infraKey = '';
-  let threatKey = '';
   // What the crown can see today, worked out once per day of the realm.
   let vision = null;
   let maskKey = '';
@@ -284,22 +282,8 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     infraState = state;
     updateVision(state);
     const foreignKey = updateForeign(state);
-    // Danger marks are reckoned once a month (or when patrols change), so a
-    // threat hovering near the line does not make the map flicker and redraw.
-    const tk = `${Math.floor(state.day / 30)}|${(state.patrols ?? []).map((p) => p.id).join()}|${JSON.stringify(state.laws?.bounties ?? '')}`;
-    if (tk !== threatKey && state.patrols) {
-      threatKey = tk;
-      infraThreats = {};
-      const patrolled = patrolledSet(state, world);
-      for (const id of Object.keys(state.settlements)) {
-        infraThreats[id] = {
-          bandits: threatLevel(state, world, id, 'bandits', patrolled) >= DANGER,
-          monsters: threatLevel(state, world, id, 'monsters', patrolled) >= DANGER,
-        };
-      }
-    }
-    const marks = (id, s) => `${infraThreats[id]?.bandits ? 'b' : ''}${infraThreats[id]?.monsters ? 'm' : ''}${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
-    const key = (state.patrols ?? []).map((p) => `${p.from}>${p.to}`).join() + (state.routes ?? []).map((r) => `${r.from}>${r.to}${r.closed ? 'x' : ''}`).join() + Object.entries(state.settlements)
+    const marks = (id, s) => `${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
+    const key = (state.forces?.companies ?? []).filter((x) => !x.army && x.order.kind === 'patrol').map((x) => `${x.order.from}>${x.order.to}`).join() + (state.routes ?? []).map((r) => `${r.from}>${r.to}${r.closed ? 'x' : ''}`).join() + Object.entries(state.settlements)
       .map(([id, s]) => `${id}:${houseCount(layoutCfg, world.byId[id].type, totalPopulation(s))}:${s.buildings.join('+')}:${s.construction?.building ?? ''}:${figures(s.garrison)}:${s.troubled > 0 ? 1 : 0}:${s.holder}:${s.occupier ?? ''}:${state.houses?.[s.holder]?.rebel ? 'r' : ''}:${marks(id, s)}`)
       .join('|') + (state.unpaid ? '!' : '') + foreignKey + seasonLook(dateOf(state.day).month).season + seasonLook(dateOf(state.day).month).snow;
     if (key !== infraKey) {
@@ -337,14 +321,15 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
   }
 
-  // Ordered patrol routes: a band of crown blue along the road.
+  // Roads the crown's companies patrol: a band of crown blue along the road.
   function drawPatrols(c) {
-    if (!infraState?.patrols?.length) return;
+    const roads = (infraState?.forces?.companies ?? []).filter((x) => !x.army && x.order.kind === 'patrol');
+    if (!roads.length) return;
     c.save();
     c.lineCap = 'round';
     c.lineJoin = 'round';
-    for (const p of infraState.patrols) {
-      const route = patrolRoute(world, p);
+    for (const p of roads) {
+      const route = roadPath(world, p.order.from, p.order.to) ?? [];
       c.beginPath();
       route.forEach((id, i) => (i ? c.lineTo(world.byId[id].x, world.byId[id].y) : c.moveTo(world.byId[id].x, world.byId[id].y)));
       c.strokeStyle = 'rgba(35, 54, 94, 0.45)';
@@ -378,8 +363,6 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     if (plagueActive(infraState, s)) marks.push('plague');
     if ((s.raided ?? 0) > infraState.day) marks.push('raid');
     if (s.troubled > 0) marks.push('riot');
-    if (infraThreats[st.id]?.bandits) marks.push('bandits');
-    if (infraThreats[st.id]?.monsters) marks.push('monsters');
     marks.slice(0, 3).forEach((m, i) => getSprite('marker', m).draw(c, p.x + r * 0.7 + i * 16, p.y - r - 6, m === 'riot' ? 20 : 16));
   }
 
@@ -532,9 +515,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     const selectedId = selection?.settlement ?? null;
     updateTints(state);
     updateInfra(state);
-    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
+    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, company: selection?.company ?? null, threat: selection?.threat ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
     if (!dirty && !baseDirty && !fogDirty && !fogPending && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
-      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army
+      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army && lastFrame.company === frame.company && lastFrame.threat === frame.threat
       && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale) return;
     lastFrame = frame;
     // A new zoom, or a pan past the margin, redraws every layer from here.
@@ -577,6 +560,8 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       ring(ctx, p.x, p.y, Math.max(iconSize(st.type) / 2, footprint[selectedId] ?? 0) + 6);
     }
 
+    const forceView = { ctx, cam, world, zoom: zoomRel(), selection, frac };
+    drawForces(forceView, state, 'ground');
     for (const u of state.ambient.units) {
       const w = unitPosition(world, u, u.pos + u.speed * frac);
       const p = toScreen(cam, w.x, w.y);
@@ -586,9 +571,17 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const colours = u.realm && u.kind !== 'export' ? world.realms?.realms[u.realm]?.colours : null;
       getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' ? 'caravan' : u.kind)
         .draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing, colours, good: u.good });
+      // Stopped on the road where a band holds it.
+      if (u.held) {
+        ctx.beginPath();
+        ctx.arc(p.x + 6, p.y - 12, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#8b1e1e';
+        ctx.fill();
+      }
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
     drawWar(state, frac, selection);
+    drawForces(forceView, state, 'tokens');
   }
 
   // The layers are drawn as seen from the camera they were started from.
@@ -640,9 +633,24 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (p.x < -30 || p.y < -30 || p.x > cam.viewW + 30 || p.y > cam.viewH + 30) continue;
       const facing = Math.cos(w.angle) >= 0 ? 1 : -1;
       const size = ARMY_SIZE * Math.max(0.75, Math.min(1.2, Math.sqrt(zoomRel())));
+      // An army led by a lord's marshal marches under his house's colours.
+      const house = a.side === TEMERIA ? world.houses?.houses[world.war.marshals[a.marshal]?.house] : null;
+      if (a.to && a.dest && world.byId[a.dest]) {
+        const d = toScreen(cam, world.byId[a.dest].x, world.byId[a.dest].y);
+        ctx.save();
+        ctx.setLineDash([3, 5]);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(d.x, d.y);
+        ctx.strokeStyle = a.side === TEMERIA ? 'rgba(35, 54, 94, 0.5)' : 'rgba(110, 30, 20, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+      }
       getSprite('army', a.side, 'host').draw(ctx, p.x, p.y - 6, size, {
-        colours: sideColours(world, a.side), figures: Math.ceil(a.soldiers / 600), facing, dim: a.retreating,
+        colours: house?.colours ?? sideColours(world, a.side), figures: Math.min(5, Math.ceil(a.soldiers / 600)), facing, dim: a.retreating,
       });
+      if (zoomRel() >= 2.2) armyDetail(ctx, p.x, p.y + size * 0.35, a.soldiers, a.morale);
       if (selection?.army === a.id) ring(ctx, p.x, p.y - 6, size / 2 + 6);
     }
   }
@@ -674,6 +682,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // Nearest thing under the finger wins, with settlements favoured: carts
   // crowd the roads into towns, and a tap on a town means the town.
   function pick(sx, sy, state, frac) {
+    // The crown's companies and what they hunt are deliberate things to tap.
+    const force = pickForces({ ctx, cam, world, zoom: zoomRel(), frac }, state, sx, sy);
+    if (force) return force;
     let best = null;
     // An army is a deliberate thing to tap, so it wins over what lies under it.
     for (const a of state.armies ?? []) {
@@ -740,6 +751,22 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 function figures(garrison) {
   if (garrison < 50) return 0;
   return Math.min(MAX_FIGURES, Math.max(1, Math.round(garrison / SOLDIERS_PER_FIGURE)));
+}
+
+function armyDetail(ctx, x, y, men, morale) {
+  ctx.font = '600 10px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(236, 224, 194, 0.9)';
+  ctx.lineWidth = 3;
+  ctx.strokeText(String(Math.round(men)), x, y);
+  ctx.fillStyle = '#2b2116';
+  ctx.fillText(String(Math.round(men)), x, y);
+  ctx.fillStyle = 'rgba(43, 33, 22, 0.6)';
+  ctx.fillRect(x - 12, y + 12, 24, 3);
+  ctx.fillStyle = morale > 60 ? '#5f8f3a' : morale > 35 ? '#c9a03a' : '#9a3324';
+  ctx.fillRect(x - 12, y + 12, (24 * Math.max(0, Math.min(100, morale))) / 100, 3);
 }
 
 function ring(ctx, x, y, r) {

@@ -57,7 +57,7 @@
       "id": "raid",
       "trigger": "raid",
       "title": "Raiders",
-      "text": "Bandits or beasts have struck. A stronger garrison, walls and a patrol on the road protect a place; Military and threats in the menu shows where danger is gathering."
+      "text": "A village has been raided. Raids now come from things on the map: bandit camps and their bands on the roads, beasts from their lairs, Scoia'tael out of the woods and war parties over the border. Garrisons defend their own walls; to stop raids at the source, send companies to hunt the camps down, patrol the roads, or hire witchers for the beasts."
     },
     {
       "id": "authority",
@@ -112,6 +112,14 @@
       "trigger": "placeFull",
       "title": "No more room",
       "text": "Each kind of place holds only so many buildings: a village five, a town eight, a city twelve. Choose what each place is for."
+    },
+    {
+      "id": "sighted",
+      "trigger": "sighted",
+      "title": "Something in the wilds",
+      "text": "A threat has been sighted: a bandit camp, a beast's lair, a commando or a war party. Tap it on the map, or open Forces from the menu, to send the nearest company after it, with the odds in plain words. Beasts are best left to a witcher. Companies are recruited from a town's card; give them standing orders to patrol a road, guard a trade route or stand ready to answer whatever is sighted near them.",
+      "open": "forces",
+      "openLabel": "Open Forces"
     }
   ]
 }

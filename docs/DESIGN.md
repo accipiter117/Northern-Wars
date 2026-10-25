@@ -99,9 +99,9 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 
 #### As built in M6
 - Garrison levels: skeleton x0.5, standard x1, strong x1.5, fortress x2 of a crown settlement's normal garrison (times the conscription law).
-- Patrols: one per 400 crown soldiers, 40 crowns a month each; +60 strength and -20 bandit / -5 monster threat for every settlement on the road.
+- Patrols: one per 400 crown soldiers, 40 crowns a month each; +60 strength and -20 bandit / -5 monster threat for every settlement on the road. (Replaced in M13: patrols are companies on Patrol orders.)
 - Threat (0 to 100): bandits = 10 + 0.5 per point of prosperity below 50 + 0.3 x unrest + wild country within 60 units (forest or marsh +15, hills +10); monsters = 5 + marsh 30, forest 20, mountains 20, hills 10, minus 15 with witcher bounties. Cleared threats are cut by 80% for the time bought.
-- Each month every threat strikes with chance 8% x level/100; the raiders' strength is level x 4 x (0.5 to 1.5) against the garrison (x1.5 behind walls) plus any patrol.
+- Each month every threat strikes with chance 8% x level/100; the raiders' strength is level x 4 x (0.5 to 1.5) against the garrison (x1.5 behind walls) plus any patrol. (Replaced in M13: threat levels breed camps and lairs, whose bands make the raids.)
 - Plague: 2.5% deaths a month (halved by priestesses or Melitele patronage), 15% chance a month to spread to each road neighbour unless quarantined, lasts 90 to 150 days, then three years' immunity.
 - Events: about one month in three, one card from data/events.json fitting a settlement, season and threat. Decisions open gravest first: deposition, events, demands, envoys, petitions.
 
@@ -180,7 +180,7 @@ All numbers are in data/economy.json, data/industry.json, data/buildings.json an
 - Taxes a head a month by kind of place: city 0.009, town 0.008, village 0.006, castle 0.0055, temple 0.003, times a fortunes factor (0.3 + 0.014 x prosperity: 1.0 at 50, 1.2 at 65), times the tax law, plus 8% for a market hall, 10% for a guildhall and 10% for a merchants' quarter. Calibrated so the untended realm's taxes start where they did (about 500).
 - Crafts earn their value (market 30, workshop 35, tannery 30, brewery 34, inn 28, harbour 20, smithy 12, guildhall 22, fishery 30, alchemist 45, hunters' lodge 40) x 0.8 in a village, 1 in a town, 1.3 in a city, x the place's fortunes. Each further building of the same craft in the realm cuts every one's takings: 1 / (1 + 0.07 x (count - 1)) (choice: so that filling every slot with one trade is not a money machine).
 - Gold mines yield 150 a month at their peak; seams are two and a half times larger so they last as long as before. A gold mine costs 3,000.
-- Patrols cost 6 plus 0.22 a unit of road they ride (a short patrol about 20, a long one about 50), less 10% for each horse stud (to 70%).
+- Patrols cost 6 plus 0.22 a unit of road they ride (a short patrol about 20, a long one about 50), less 10% for each horse stud (to 70%). (Replaced in M13 by companies' own pay; studs now stock the crown's stables.)
 - Debt interest is 1% a month. Debt still drains Authority, and now also raises unrest in every crown town in proportion to how near the bankers' limit it is (up to +10 at the limit) (choice: with interest halved, debt alone no longer threatened a spendthrift crown).
 
 ### Production chains
@@ -189,7 +189,7 @@ All numbers are in data/economy.json, data/industry.json, data/buildings.json an
 - Goods are pooled realm-wide each month (choice: simplest that still makes carts run from maker to worker). Suppliers are credited the raw price of what the workers take.
 - Each crown route carries up to 30 units of finished goods (cloth, spirit, arms, salt, horses) that one end lacks: a home town lacks a good when it has no building making it; a foreign realm lacks what data/industry.json `abroadMakes` does not list for it. The route earns 30% of the goods' price on top at home, 60% abroad. The rest sells at home at full price up to the realm's demand (people x a per-good share), and at half price beyond it.
 - Prices: wool 0.6, charcoal 1.1, cloth 1.6, spirit 2.2, arms 4 (+25% for every neighbouring realm at war), salt 1.5, horses 5.
-- Salt pans let every store in the realm hold 6% more food each (up to 18%). Horse studs make patrols cheaper. Hunters' lodges cut monster threat by 12 within 90 units.
+- Salt pans let every store in the realm hold 6% more food each (up to 18%). Horse studs fill the crown's stables (since M13). Hunters' lodges cut monster threat by 12 within 90 units.
 
 ### The trades that pay directly
 - Silver mines (Vorune, Napeys, Razwan, Houtborg, Flotsam): 62 a month, for ever (choice: steadier and smaller than gold, with no seam to run out).
@@ -205,11 +205,54 @@ All numbers are in data/economy.json, data/industry.json, data/buildings.json an
 - The first time the treasury goes into the red, a hint explains the cost of debt with a button that opens the Treasury.
 - Goods carts on the map follow last month's flows, from pasture to weavers, from burners to forges, from workshop to the head of the route that carries the goods (cosmetic).
 
+## A realm under arms (M13)
+All numbers are in data/forces.json. Choices the brief left open are marked (choice).
+
+### Threats on the map
+- The monthly threat levels (bandits and monsters, as since M6) no longer roll raids. They decide where camps and lairs appear and how they grow.
+- Bandit camps appear in forest, marsh or hills within reach of a settlement whose bandit level is 35 or more (a monthly chance that grows with the level), no nearer than 110 to another camp, at most seven. They start with 15 to 30 men and grow 7% a month x level/50, up to 40 + 1.6 x level; they wither where the level falls below 20 (patrolled roads, prosperity) and break up below 8 men.
+- A camp of 25 or more sends a band of six in ten of its men to a nearby road (the busiest and nearest are likeliest). The band holds the road 6 to 12 days, then falls on a weak village nearby if it can (the garrison behind its walls and any company stationed there must be under nine tenths of the band's strength), then goes home with its loot.
+- A held road robs: a crown route over it loses the share of the month the road was held; the two towns at its ends lose up to half their market trade and the sale value of their goods in proportion. Ambient caravans and carts stop where a band stands (cosmetic).
+- Monster lairs appear in marsh, forest, hills or mountains where the monster level is 30 or more, at most six: drowners or a water hag in the marshes; wolves, a werewolf or a leshen in the forests; harpies or a griffin in the hills; wyverns or a forktail in the mountains. The rare kinds are few but dreadful. Lairs grow by one beast every three months and send packs to hunt the roads and villages near.
+- A witcher contract clears a sighted lair in 20 days for 150 + 2.5 x its strength (six tenths of that under Witcher contracts), nine times in ten, with no soldier lost (choice: the "existing contracts" are the bounty law, made cheaper).
+- Scoia'tael commandos come out of the woods near Brokilon and the elves of the realm when sympathy is over 40 (they replace M4's dice-roll ambushes): 20 to 50 elves, worth more in the forest. They hold a road for a few days, fall on any company that comes near, and vanish within a month.
+- Neighbours at -40 or worse (and any at war with us) send war parties of 40 to 120 over the border by road to a Temerian place near it, to plunder and go home. Enemy armies at war march visibly as since M9.
+- Raids on villages use M6's losses (prosperity, unrest, stores, people), and the garrison loses 15% of its men.
+
+### Sight
+- The crown sees what its towns (village 40 to castle 85, a watchtower 130, an inn +30), patrolled roads (+40), companies (70, mounted 95), armies (90), friends and spies see. The cosmetic traffic never counts (choice: so sighting can drive orders without breaking determinism).
+- A threat in sight shows clearly with its size. Out of sight but within 200 of a Temerian town, it shows as a rumour ring whose radius (25 to 90) shrinks as the crown's eyes come nearer.
+- A short alert names each new sighting; Help can set the game to pause on sightings.
+
+### Standing companies
+- Types: militia (150 men, worth 0.8 each, 0.3 a man a month), archers (100, 1.0, 0.55), men-at-arms (100, 1.4, 0.8, 15 arms), crossbowmen (80, 1.2, 0.8, 10 arms, barracks; x1.5 behind walls), light cavalry (60, 1.5, 1.1, 20 horses, fast), knights (50, 2.6, 2.2, 30 horses and 10 arms, barracks, cities and castles).
+- How well each suits a foe: light horse x1.25 against bandits (and x1.15 more in open country, x0.7 in forest or marsh); archers x1.2 against beasts; knights x1.5 against soldiers but x0.6 against beasts; militia weak against all.
+- Recruited in a crown town, city or castle (militia in villages too) from its people: the men leave the population, and come back when the company stands down. A village holds one company, a town or castle two, a city three, barracks two more.
+- Arms and horses: the crown's armouries keep up to 60 arms (smithies add 2 a month, armouries 4, weaponsmiths' output first) and its stables up to 60 horses (the studs' output first), before the rest goes to market. Short of arms, they are bought abroad at 8 to 10 crowns each; short of horses, light horse buy theirs at 22 each, knights cannot be raised (choice).
+- Pay by type each month, charged to the station's account. Unpaid (past the bankers' limit), morale falls 12 a month; under 35, a tenth of the men desert each month.
+- Wounds: four in ten of the fallen are wounded and come back, 15% a month at the station (30% with a hospice or barracks). Morale returns 6 a month at the station (12 with a hospice or barracks). Experience: +0.08 each victory, up to 1, each point worth +30%.
+- Garrisons stay as each town's own defence; companies stationed in a town also stand on its walls.
+- A field army may take standing companies along: their men join the army and their quality lifts its strength; when it stands down they go home with the survivors' share and the army's victories as experience. Levies and hired companies fill it out as before.
+
+### Orders
+- Station (hold a place), Patrol (ride a road end to end), Escort (ride a crown route end to end), Hunt (march on a sighted camp, lair, band, commando or enemy army and fight it, then take up the old order again), Respond (stay at the station; ride out to any sighted threat within 60, 100 or 150 when the odds are at least even, then come home).
+- Companies follow the roads, and leave them only for the last stretch to their quarry. Speed 18 a day x the troop (light horse 1.6, knights 1.3) x the ground (hills 0.8, forest 0.75, marsh and mountains 0.6) x the season (winter 0.6). No weather beyond the seasons (choice).
+- When a company comes within 14 of its quarry (or a patrol or guard meets a band on its road, or Scoia'tael meet any company), every free company within reach joins the fight.
+- Odds in words, from both sides' strength (men, worth, morale, experience, how the troop suits the foe, the ground): Overwhelming at a 90% chance of winning, Favourable 65%, Even 35%, Risky 10%, else Hopeless. The chance is strength cubed over the sum of both strengths cubed, as in battles between armies. The loser loses a quarter to half its men, the winner 4 to 12%, scaled by the strength between them.
+- A beaten threat is gone (a band's camp is weakened, a camp or lair attacked at home is broken and the country round it quiet for 120 days); a beaten company falls back to its station for 12 days. Each fight leaves a battle marker and a report in the Chronicle.
+
+### On the map
+- Banner tokens: Temerian colours for the crown's companies, a lord marshal's house colours for his army, the realm's colours for foreign raiders and armies, ragged dark banners for bandits, a long pennon with a squirrel's tail for the Scoia'tael, and silhouettes for beasts. One to five figures by strength; close up, the men and a morale bar.
+- Camps (tents, a palisade as they grow) and lairs (bog pools, dens, nests, caves, with more bones as they grow) stand in the terrain, through the sprite registry.
+- Moving forces draw a faint line to where they are going. A chosen company shows its patrol road, escort route or response radius.
+- Forces screen: every company and army (strength, morale, pay, orders, place) and every sighted threat (kind, size, distance to the nearest town) with a button to send the nearest suitable company.
+
 ## Ambient units
 Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG). Kinds and what drives their numbers:
 - Merchant caravans: trade volume between settlements.
 - Grain carts: harvest and food flows towards cities.
-- Patrols: garrison funding and patrol routes.
+- Patrols: garrison riders out of strongholds (the crown's patrolling companies are on the map in their own right).
+- Goods carts: last month's flows along the production chains, stopping where a band holds the road.
 - Tax collectors: monthly, from towns to Vizima.
 - Pilgrims: faith activity, travelling to the Temple of Melitele.
 - Refugees: unrest, famine or plague, moving away from trouble.
