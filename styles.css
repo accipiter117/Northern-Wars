@@ -180,7 +180,12 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .build-cost { font-size: 13px; color: var(--muted); }
 .ledger { margin: 0; }
 .ledger div { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--line); padding: 4px 0; }
-.ledger div:last-child { font-weight: 600; border-bottom: none; }
+.ledger div.total { font-weight: 600; border-bottom: none; }
+h4 { margin: 10px 0 2px; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.place-list { display: flex; flex-direction: column; gap: 4px; }
+.place-row { display: flex; justify-content: space-between; gap: 8px; min-height: 44px; align-items: center; padding: 6px 10px; text-align: left; font-variant-numeric: tabular-nums; }
+.accounts .pos { color: #a9c98a; }
+.accounts .neg { color: #e8a08e; }
 .ledger dd { margin: 0; font-variant-numeric: tabular-nums; }
 .history { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
 .history th { text-align: right; color: var(--muted); font-weight: 400; padding: 4px; }

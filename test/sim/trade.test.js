@@ -193,9 +193,11 @@ test('new buildings do what they promise', () => {
   banked.settlements.vizima.buildings.push('bank');
   assert.match(applyAction({ ...base, treasury: -7900 }, world, { type: 'prospect', settlement: 'vorune' }).error, /bankers/);
   assert.equal(applyAction({ ...banked, treasury: -7900 }, world, { type: 'prospect', settlement: 'vorune' }).error, undefined);
-  // Crafts pay whatever the size of the place.
+  // Crafts pay whatever the size of the place, each on its own line.
   const crafted = after((s) => s.settlements.white_orchard.buildings.push('brewery', 'tannery'));
-  assert.ok(crafted.ledger.history.at(-1).income.crafts > plain.ledger.history.at(-1).income.crafts + 10);
+  assert.ok(crafted.ledger.history.at(-1).income.crafts.brewery > 15);
+  assert.ok(crafted.ledger.history.at(-1).income.crafts.tannery > 15);
+  assert.equal(plain.ledger.history.at(-1).income.crafts.brewery, undefined);
   // A harbour on the Ismena collects customs.
   const quay = after((s) => s.settlements.vizima.buildings.push('harbour'));
   assert.ok(quay.ledger.history.at(-1).income.customs > 0);

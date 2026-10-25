@@ -173,6 +173,38 @@ All numbers are in data/trade.json, data/gold.json, data/buildings.json and data
 - Fields are green in spring, ripening in summer, gold at harvest and bare in winter, with snow on roofs and fields from December to February.
 - Each layout is drawn once into its own canvas, and again only when a building, the population step, the season or the zoom step changes. Everything is drawn through the sprite registry ('structure' and 'life'), ready for painted art.
 
+## A working economy (M12)
+All numbers are in data/economy.json, data/industry.json, data/buildings.json and data/military.json. Design choices not settled by the brief are marked (choice).
+
+### The scale of the crown's money
+- Taxes a head a month by kind of place: city 0.009, town 0.008, village 0.006, castle 0.0055, temple 0.003, times a fortunes factor (0.3 + 0.014 x prosperity: 1.0 at 50, 1.2 at 65), times the tax law, plus 8% for a market hall, 10% for a guildhall and 10% for a merchants' quarter. Calibrated so the untended realm's taxes start where they did (about 500).
+- Crafts earn their value (market 30, workshop 35, tannery 30, brewery 34, inn 28, harbour 20, smithy 12, guildhall 22, fishery 30, alchemist 45, hunters' lodge 40) x 0.8 in a village, 1 in a town, 1.3 in a city, x the place's fortunes. Each further building of the same craft in the realm cuts every one's takings: 1 / (1 + 0.07 x (count - 1)) (choice: so that filling every slot with one trade is not a money machine).
+- Gold mines yield 150 a month at their peak; seams are two and a half times larger so they last as long as before. A gold mine costs 3,000.
+- Patrols cost 6 plus 0.22 a unit of road they ride (a short patrol about 20, a long one about 50), less 10% for each horse stud (to 70%).
+- Debt interest is 1% a month. Debt still drains Authority, and now also raises unrest in every crown town in proportion to how near the bankers' limit it is (up to +10 at the limit) (choice: with interest halved, debt alone no longer threatened a spendthrift crown).
+
+### Production chains
+- Makers: sheep pastures (villages and towns on open land or hills) 55 wool; salt pans (Anchor, Acorn Bay, Gors Velen) 38 salt; horse studs (Cleves, Old Bottoms, Brenna, Carcano, Vidort, Mortara) 13 horses.
+- Workers, in order: charcoal burners (near forest, or where timber is cut) turn 45 timber into charcoal; weaponsmiths (on a smithy) turn 0.6 iron and 1 charcoal into each of 22 arms; weavers' halls (towns and cities) turn 60 wool into cloth; rye distilleries (food villages and towns) turn 2 measures of spare grain (beyond 60 days' stores, from anywhere in the realm) into each of 28 rye spirit. All amounts scale with the place's fortunes.
+- Goods are pooled realm-wide each month (choice: simplest that still makes carts run from maker to worker). Suppliers are credited the raw price of what the workers take.
+- Each crown route carries up to 30 units of finished goods (cloth, spirit, arms, salt, horses) that one end lacks: a home town lacks a good when it has no building making it; a foreign realm lacks what data/industry.json `abroadMakes` does not list for it. The route earns 30% of the goods' price on top at home, 60% abroad. The rest sells at home at full price up to the realm's demand (people x a per-good share), and at half price beyond it.
+- Prices: wool 0.6, charcoal 1.1, cloth 1.6, spirit 2.2, arms 4 (+25% for every neighbouring realm at war), salt 1.5, horses 5.
+- Salt pans let every store in the realm hold 6% more food each (up to 18%). Horse studs make patrols cheaper. Hunters' lodges cut monster threat by 12 within 90 units.
+
+### The trades that pay directly
+- Silver mines (Vorune, Napeys, Razwan, Houtborg, Flotsam): 62 a month, for ever (choice: steadier and smaller than gold, with no seam to run out).
+- Toll bridges (the White Bridge, and Devil's Ford at La Valette): road links that cross the Pontar are found from the map and given to the nearest toll site. Each month a bridge counts the caravans crossing: 5 local carts, 0.45 for every crown of trade with the realms beyond (Redania at Devil's Ford; Kaedwen and Aedirn at the White Bridge), and 0.12 for every crown a crown route earns if its road crosses there. Each pays 2.5.
+- Merchants' quarter (cities): rents of 0.0045 a head x fortunes, so they grow with the city.
+- Pilgrims' hostel (the Temple of Melitele): 30 + 100 x Melitele's share of the realm's faith.
+- Shipyard (Gors Velen): 70 a month in contracts, routes from Gors Velen worth 20% more, 20 more in customs.
+- Alchemist's workshop (towns and cities): potions sold as a craft; angers the Eternal Fire's clergy.
+
+### Showing the money
+- The Ledger is now the Treasury: a line for every source (taxes, market trade, surplus timber, stone and iron, border trade, customs, each craft by building, each good from the chains, gold, silver, tolls, rents, donations, shipyard contracts, each crown route, conquests, tribute) and every cost, the places that earned most and those that cost more than they earned.
+- Every place keeps last month's account: what it earned the crown (its taxes, trade, crafts, goods, tolls and the rest, after the lords' share) and what it cost (garrison, upkeep, its share of routes). Its card says so.
+- The first time the treasury goes into the red, a hint explains the cost of debt with a button that opens the Treasury.
+- Goods carts on the map follow last month's flows, from pasture to weavers, from burners to forges, from workshop to the head of the route that carries the goods (cosmetic).
+
 ## Ambient units
 Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG). Kinds and what drives their numbers:
 - Merchant caravans: trade volume between settlements.
@@ -182,6 +214,7 @@ Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG).
 - Pilgrims: faith activity, travelling to the Temple of Melitele.
 - Refugees: unrest, famine or plague, moving away from trouble.
 - River barges: on the Pontar and Ismena.
+- Goods carts: last month's flows along the production chains.
 Units move along the road network (or rivers for barges), at speeds affected by season. Tapping one shows a small label of what it is and where it's going.
 
 ## UI

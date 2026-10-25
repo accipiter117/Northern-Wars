@@ -30,8 +30,10 @@ test('at the start Temeria is mapped, its borders watched, and distant capitals 
 });
 
 test('a spy shows a whole realm; when he leaves, it is remembered as it was', () => {
-  // No trade with Mahakam, so no Temerian merchants see Carbon for themselves.
-  const quiet = { ...world, neighbours: { ...world.neighbours, realms: { ...world.neighbours.realms, mahakam: { ...world.neighbours.realms.mahakam, trade: 0 } } } };
+  // No foreign trade at all, so no Temerian merchants pass through Carbon
+  // and see it for themselves.
+  const realms = Object.fromEntries(Object.entries(world.neighbours.realms).map(([id, r]) => [id, { ...r, trade: 0 }]));
+  const quiet = { ...world, neighbours: { ...world.neighbours, realms } };
   const run = (x, days) => step(x, days, quiet, { ambient: true });
   let s = createState(quiet, 2);
   s.spies.mahakam = s.day + 30;

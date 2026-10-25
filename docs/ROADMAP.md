@@ -13,6 +13,7 @@
 | M8 The wider North | A larger world with living neighbouring realms (towns, roads, growth, buildings, garrisons, traffic) under a fog of war lifted by watchers, merchants, friends, embassies and spies | Done |
 | M9 War with neighbours | Armies raised from levies, lords and hired companies; marshals, orders and stances; battles, sieges, raids; towns that change hands; invasions, wars between neighbours, calls to arms; peace, tribute and truces | Done |
 | M11 Trade, gold and a busier realm | Crown trade routes at home and abroad, gold deposits and prospecting, sixteen new buildings with limits per place, and settlements laid out as living places on the map (houses, fields, workshops, walls, smoke and workers) | Done |
+| M12 A working economy | The economy rescaled so a well-run crown prospers: taxes that grow with development, earning buildings that earn, patrols by road length, cheaper debt; production chains (wool to cloth, grain to rye spirit, timber to charcoal to arms, salt, horses), silver, toll bridges, merchants' quarters, the pilgrims' hostel, the shipyard, the alchemist and the hunters' lodge; and the Treasury, with every line and every place's account | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -22,6 +23,15 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M12 acceptance criteria
+- Taxes depend on the kind of place and rise with prosperity and with market halls, guildhalls and merchants' quarters.
+- Earning buildings earn several times more: gold mines about 150 a month at their peak, tapering as the seam runs out; craft and trade buildings 25 to 80 a month in a good place; every one pays back in 2 to 6 years (docs/BALANCE.md).
+- Patrols cost by the length of their road, noticeably less for a short one; debt interest is about 1% a month and debt still costs Authority.
+- Measured with tools/longrun.mjs over three seeds: the idle crown roughly breaks even, no richer than before; the steward's income at year 10 is at least 2.5 times year 1, with six patrols, standard garrisons and a clear surplus; a fully developed Vizima earns 600 or more a month; the spendthrift is still deposed.
+- Sheep pastures and weavers, rye distilleries, charcoal burners, weaponsmiths (worth more while realms are at war), silver mines, salt pans, fisheries, toll bridges at the White Bridge and Devil's Ford, the shipyard at Gors Velen, horse studs, merchants' quarters, the pilgrims' hostel, the alchemist and the hunters' lodge, each only where the land suits it, each with art and life on the map. Finished goods sell at home and raise the value of the routes that carry them, most of all abroad. Carts carry the goods along each chain.
+- Every income and cost has its own ledger line; settlement cards show what each place earned and cost the crown last month; the first time the treasury goes into the red a hint points to the Treasury.
+- tools/payback.mjs covers every new building; BALANCE.md records the new long-run and payback tables; tests for taxes, each chain, toll bridges, the idle crown and the steward's solvency; save version 11 with an upgrade path.
 
 ## M11 acceptance criteria
 (Numbered M11 as asked; no M10 has been defined yet.)

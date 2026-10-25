@@ -1,7 +1,7 @@
 // The realm's day: the economy turns, moods drift, and on the first of each
 // month the ledger and the census are drawn up.
 import { dateOf } from './calendar.js';
-import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed } from './economy.js';
+import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed, creditLimit } from './economy.js';
 import { monthlyPopulation } from './population.js';
 import { lawEffects, stepOpinionDay, opinionUnrest } from './laws.js';
 import { stepNeighboursDay, monthlyEnvoy } from './neighbours.js';
@@ -63,6 +63,7 @@ export function stepRealmDay(state, world, rng) {
   const wr = world.war?.weariness;
   const weary = wr ? Math.min(wr.maxUnrest, warMonths(state) * wr.unrestPerMonth) : 0;
   const levied = leviedMap(state);
+  const debtShare = Math.min(1, Math.max(0, -state.treasury) / creditLimit(state, world));
   for (const [id, s] of Object.entries(state.settlements)) {
     const start = world.settlementData[id];
     const fx = buildingEffects(world, s);
@@ -77,6 +78,8 @@ export function stepRealmDay(state, world, rng) {
     // A long war, an occupier's yoke, and sons marched off with the levy.
     unrestTarget += s.occupier ? 30 : weary;
     if (state.unpaid && s.garrison > 0) unrestTarget += world.economy.debt.unpaidUnrest;
+    // Deep in debt, the crown's tax farmers squeeze harder for the bankers.
+    if (debtShare > 0) unrestTarget += world.economy.debt.debtUnrest * debtShare;
     unrestTarget -= Math.max(0, s.prosperity - 50) * m.prosperityCalm;
     let prosperityTarget = start.prosperity + fx.prosperity + law.prosperity[type] - s.hunger * m.hungerProsperity;
     if (wellFed) prosperityTarget += m.wellFedProsperity;

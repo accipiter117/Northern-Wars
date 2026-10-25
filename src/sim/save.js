@@ -1,3 +1,4 @@
+import { defaultIndustry } from './industry.js';
 import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
@@ -108,6 +109,19 @@ const MIGRATIONS = {
     state.nextRouteId = 1;
     state.gold = defaultGold(world);
     state.version = 10;
+    return state;
+  },
+  // v11 splits the ledger into a line per craft and per good, and keeps
+  // what each place earned and cost last month. Old months' craft dues,
+  // a single sum, are kept under one line.
+  10(state) {
+    for (const m of state.ledger.history) {
+      if (typeof m.income.crafts === 'number') m.income.crafts = m.income.crafts ? { crafts: m.income.crafts } : {};
+      m.income.goods ??= {};
+    }
+    state.ledger.places = {};
+    state.industry = defaultIndustry();
+    state.version = 11;
     return state;
   },
 };

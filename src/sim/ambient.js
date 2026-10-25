@@ -75,6 +75,13 @@ const RATE = {
     for (const r of state.routes ?? []) if (!r.closed) v += r.last;
     return Math.min(3, v * (world.trade?.caravansPerCrown ?? 0));
   },
+  // Carts of wool, charcoal and finished goods run as the chains flow.
+  goods(state, k, world) {
+    const c = world.industry?.carts;
+    if (!c) return 0;
+    const moved = (state.industry?.flows ?? []).reduce((a, f) => a + f.qty, 0);
+    return Math.min(c.max, moved * c.perUnit);
+  },
   grain(state, k) {
     const flowing = Object.values(state.flows.in).reduce((a, b) => a + b, 0);
     return Math.min(1, flowing / k.flowBaseline);
@@ -139,6 +146,16 @@ const SPAWNERS = {
     const path = roadPath(world, r.from, r.to, true);
     if (!path || path.length < 2) return null;
     return { route: rng.chance(0.5) ? [...path] : [...path].reverse(), crownRoute: r.id };
+  },
+
+  // A cart of goods from the place that made them to the one that works
+  // them, or to the head of the crown route that carries them.
+  goods(state, world, rng) {
+    const flows = (state.industry?.flows ?? []).filter((f) => f.from !== f.to && f.qty > 0);
+    if (!flows.length) return null;
+    const f = weightedPick(rng, flows, (x) => x.qty);
+    const route = roadPath(world, f.from, f.to);
+    return route && route.length > 1 ? { route, good: f.good } : null;
   },
 
   // Pilgrims set out for the Temple of Melitele from wherever her faithful are.
@@ -319,6 +336,10 @@ export function describeUnit(world, u) {
   }
   if (u.kind === 'route') {
     return `${kind} on the crown's route, from ${world.byId[u.route[0]].name} bound for ${world.byId[u.route[u.route.length - 1]].name}`;
+  }
+  if (u.kind === 'goods') {
+    const good = world.industry.goods[u.good]?.name.toLowerCase() ?? 'goods';
+    return `A cart of ${good} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
   }
   if (u.kind === 'export') {
     return `${kind} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name} in ${world.geography.neighbours[u.realm].name}`;

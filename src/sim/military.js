@@ -5,8 +5,9 @@
 // any patrol on the road. Plague, once loose, spreads along the roads.
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
-import { roadPath } from './world.js';
+import { roadPath, polylineLength } from './world.js';
 import { goldThreat } from './gold.js';
+import { patrolCostMult, lodgeCut } from './industry.js';
 
 const say = (state, text) => addDispatch(state, text, 'military');
 
@@ -31,6 +32,14 @@ export function patrolRoute(world, p) {
   return roadPath(world, p.from, p.to) ?? [];
 }
 
+// A patrol costs by the length of road it rides, less with the studs' horses.
+export function patrolCost(state, world, p) {
+  const c = mil(world).patrol;
+  const path = patrolRoute(world, p);
+  const length = path.length > 1 ? polylineLength(path.map((id) => world.byId[id])) : 0;
+  return (c.cost + (c.perLength ?? 0) * length) * patrolCostMult(state, world);
+}
+
 export function patrolledSet(state, world) {
   const set = new Set();
   for (const p of state.patrols) for (const id of patrolRoute(world, p)) set.add(id);
@@ -46,6 +55,8 @@ export function threatLevel(state, world, id, kind, patrolled = patrolledSet(sta
     v += Math.max(0, 50 - s.prosperity) * t.perPovertyPoint + s.unrest * t.perUnrestPoint;
   }
   if (kind === 'monsters' && state.laws.bounties?.option === 'witchers') v += t.bounties;
+  // Hunters' lodges thin out the beasts nearby.
+  if (kind === 'monsters') v -= lodgeCut(state, world, id);
   if (patrolled.has(id)) v += t.patrolled;
   // Gold draws thieves to the country round a working mine.
   if (kind === 'bandits') v += goldThreat(state, world, id);

@@ -224,14 +224,18 @@ export function planSettlement(world, cfg, place) {
     if (life.includes('smoke')) smoke.push({ x: it.x, y: it.y - it.w * 0.6, big: true });
     if (life.includes('steam')) smoke.push({ x: it.x, y: it.y - it.w * 0.5, big: true, steam: true });
   }
-  const boats = items.filter((it) => it.sprite === 'harbour' && it.kind === 'building').map((it) => ({ x: it.x, y: it.y }));
+  const lifeOf = (it) => (it.kind === 'building' ? cfg.buildings[it.sprite]?.life ?? [] : []);
+  const boats = items.filter((it) => lifeOf(it).includes('boats')).map((it) => ({ x: it.x, y: it.y }));
+  // Sheep on the downs by a pasture, horses in the paddocks by a stud.
+  const herds = items.filter((it) => lifeOf(it).includes('sheep') || lifeOf(it).includes('horses'))
+    .map((it) => ({ x: it.x, y: it.y + it.r * 0.6, w: it.w, horses: lifeOf(it).includes('horses') }));
 
   let extent = R;
   for (const it of [...items, ...fields]) extent = Math.max(extent, Math.hypot(it.x, it.y) + it.r + 1);
   // Draw back to front: what stands lower on the map overlaps what is behind it.
   items.sort((a, b) => a.y + a.r - (b.y + b.r) || a.x - b.x);
   return {
-    id, radius: R, extent, items, fields, sites, smoke, boats,
+    id, radius: R, extent, items, fields, sites, smoke, boats, herds,
     walls: walls ? { r: R + 0.6 } : null,
     lanes: roadAngles, paved,
   };

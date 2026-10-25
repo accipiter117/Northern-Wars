@@ -22,8 +22,10 @@
     {
       "id": "ledger",
       "trigger": "firstLedger",
-      "title": "The first ledger",
-      "text": "On the first of every month the accounts are drawn up. The menu's Ledger shows what came in and went out. A purse that runs dry can borrow from the dwarven banks, at a price in Authority."
+      "title": "The first accounts",
+      "text": "On the first of every month the accounts are drawn up. The menu's Treasury shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in Authority.",
+      "open": "ledger",
+      "openLabel": "Open the Treasury"
     },
     {
       "id": "laws",
@@ -40,8 +42,10 @@
     {
       "id": "debt",
       "trigger": "debt",
-      "title": "In debt",
-      "text": "The treasury is below zero. Interest is charged every month and the lords' respect for the crown drains away. Past the bankers' limit, soldiers go unpaid and desert."
+      "title": "Into the red",
+      "text": "The treasury has gone below zero. The bankers charge about one crown in a hundred each month, and the lords' respect for the crown drains while the debt stands; deep in debt, the tax farmers squeeze the towns and unrest rises. The Treasury shows every crown in and out, line by line, and what each place earned and cost: look there for what to cut and what to build.",
+      "open": "ledger",
+      "openLabel": "Open the Treasury"
     },
     {
       "id": "houses",

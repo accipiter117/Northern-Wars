@@ -35,6 +35,9 @@ export function canBuild(state, world, settlementId, buildingId) {
   if (b.produces && !b.produces.includes(s.production)) return { ok: false, reason: 'Only where the land supplies it.', hidden: true };
   if (b.needsDwarves && (s.population.dwarf ?? 0) < b.needsDwarves) return { ok: false, reason: `Needs a dwarven quarter (${b.needsDwarves} dwarves).` };
   if (b.needsDeposit && !depositAt(state, world, settlementId)) return { ok: false, reason: 'Only on a known gold deposit.', hidden: true };
+  if (b.sites && !b.sites.includes(settlementId)) return { ok: false, reason: 'Only where the land suits it.', hidden: true };
+  if (b.terrain && !b.terrain.includes(world.terrainOf[settlementId])) return { ok: false, reason: 'Only where the land suits it.', hidden: true };
+  if (b.wild && !b.wild.some((k) => world.wildOf[settlementId]?.[k]) && !b.orProduces?.includes(s.production)) return { ok: false, reason: 'Only near wild country.', hidden: true };
   if (s.buildings.includes(buildingId)) return { ok: false, reason: 'Already built.', hidden: true };
   if (b.requires && !s.buildings.includes(b.requires)) return { ok: false, reason: `Needs a ${world.buildings[b.requires].name.toLowerCase()} first.` };
   if (s.buildings.length >= slotsOf(world, settlementId)) return { ok: false, reason: `No room: a ${type} holds ${slotsOf(world, settlementId)} buildings.` };

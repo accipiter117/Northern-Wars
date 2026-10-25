@@ -366,6 +366,173 @@ B.barracks = (ctx, x, y, s, o) => {
   flag(ctx, x + s * 0.4, y - s * 0.3, s * 0.4);
 };
 
+// ---- Industries ----
+
+function fence(ctx, x, y, w, h) {
+  ctx.beginPath();
+  ctx.rect(x - w / 2, y - h, w, h);
+  ctx.strokeStyle = TIMBER;
+  ctx.lineWidth = Math.max(0.5, w * 0.03);
+  ctx.stroke();
+}
+function barrel(ctx, x, y, s, colour = TIMBER) {
+  ctx.beginPath();
+  ctx.ellipse(x, y - s * 0.12, s * 0.09, s * 0.12, 0, 0, Math.PI * 2);
+  ctx.fillStyle = colour;
+  ctx.fill();
+  line(ctx, 0.5);
+}
+B.pasture = (ctx, x, y, s, o) => {
+  // A fold and a shepherd's hut on the downs.
+  fence(ctx, x - s * 0.1, y, s * 0.7, s * 0.25);
+  house(ctx, x + s * 0.35, y, s * 0.28, s * 0.2, s * 0.16, WALL, '#7a5a3a', o);
+};
+B.weavers = (ctx, x, y, s, o) => {
+  house(ctx, x, y, s * 0.85, s * 0.42, s * 0.28, '#e0d2ae', '#9a5638', o);
+  // Bolts of red and blue cloth drying on a line.
+  ctx.fillStyle = '#8b1e1e';
+  ctx.fillRect(x - s * 0.55, y - s * 0.32, s * 0.08, s * 0.22);
+  ctx.fillStyle = '#23365e';
+  ctx.fillRect(x - s * 0.44, y - s * 0.32, s * 0.08, s * 0.22);
+};
+B.distillery = (ctx, x, y, s, o) => {
+  house(ctx, x, y, s * 0.6, s * 0.4, s * 0.25, STONE, '#7a5a3a', o);
+  // The copper still by the door, and barrels of rye.
+  ctx.beginPath();
+  ctx.arc(x + s * 0.45, y - s * 0.15, s * 0.12, 0, Math.PI * 2);
+  ctx.fillStyle = '#b8733a';
+  ctx.fill();
+  line(ctx, 0.5);
+  barrel(ctx, x - s * 0.42, y, s);
+  barrel(ctx, x - s * 0.52, y + s * 0.04, s);
+};
+B.charcoal = (ctx, x, y, s, o) => {
+  // Two smoking clamps of turf-covered wood.
+  for (const dx of [-0.22, 0.2]) {
+    ctx.beginPath();
+    ctx.ellipse(x + dx * s, y - s * 0.02, s * 0.2, s * 0.22, 0, Math.PI, 0);
+    ctx.fillStyle = o.snow ? '#e8e6e0' : '#4a3a2a';
+    ctx.fill();
+    line(ctx, 0.5);
+  }
+};
+B.weaponsmith = (ctx, x, y, s, o) => {
+  B.smithy(ctx, x, y, s, o);
+  // A rack of blades by the wall.
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    ctx.moveTo(x - s * 0.5 + i * s * 0.06, y);
+    ctx.lineTo(x - s * 0.5 + i * s * 0.06, y - s * 0.32);
+  }
+  ctx.strokeStyle = '#9aa0a8';
+  ctx.lineWidth = Math.max(0.6, s * 0.03);
+  ctx.stroke();
+};
+B.silvermine = (ctx, x, y, s, o) => {
+  B.mine(ctx, x, y, s, o);
+  ctx.beginPath();
+  ctx.arc(x + s * 0.3, y - s * 0.05, s * 0.08, 0, Math.PI * 2);
+  ctx.fillStyle = '#d8dde4';
+  ctx.fill();
+  line(ctx, 0.5);
+};
+B.saltpans = (ctx, x, y, s, o) => {
+  // Shallow square pans, white with salt, and a raking shed.
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = i === 1 ? '#f4f4f4' : '#b9cdd2';
+    ctx.fillRect(x - s * 0.55 + i * s * 0.3, y - s * 0.16, s * 0.26, s * 0.16);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(x - s * 0.55 + i * s * 0.3, y - s * 0.16, s * 0.26, s * 0.16);
+  }
+  house(ctx, x + s * 0.1, y - s * 0.18, s * 0.26, s * 0.16, s * 0.12, WALL, '#5d6066', o);
+};
+B.fishery = (ctx, x, y, s, o) => {
+  // A jetty, a smokehouse and nets on poles.
+  ctx.fillStyle = TIMBER;
+  ctx.fillRect(x - s * 0.1, y - s * 0.06, s * 0.6, s * 0.1);
+  house(ctx, x - s * 0.25, y, s * 0.38, s * 0.3, s * 0.2, '#c4a87a', '#5a4430', o);
+  ctx.beginPath();
+  ctx.moveTo(x + s * 0.2, y - s * 0.06);
+  ctx.lineTo(x + s * 0.2, y - s * 0.4);
+  ctx.lineTo(x + s * 0.42, y - s * 0.4);
+  ctx.lineTo(x + s * 0.42, y - s * 0.06);
+  line(ctx, 0.5);
+};
+B.tollbridge = (ctx, x, y, s, o) => {
+  // A stone span with a tollhouse and a striped bar.
+  ctx.beginPath();
+  ctx.moveTo(x - s * 0.6, y);
+  ctx.quadraticCurveTo(x, y - s * 0.35, x + s * 0.6, y);
+  ctx.lineTo(x + s * 0.6, y - s * 0.1);
+  ctx.quadraticCurveTo(x, y - s * 0.45, x - s * 0.6, y - s * 0.1);
+  ctx.closePath();
+  ctx.fillStyle = STONE;
+  ctx.fill();
+  line(ctx, 0.6);
+  tower(ctx, x - s * 0.45, y - s * 0.08, s * 0.2, s * 0.32, WALL, '#7a1f1a', o);
+  ctx.fillStyle = '#c9a03a';
+  ctx.fillRect(x - s * 0.3, y - s * 0.3, s * 0.3, s * 0.04);
+};
+B.shipyard = (ctx, x, y, s, o) => {
+  // A hull on the slipway and a timber crane.
+  ctx.beginPath();
+  ctx.moveTo(x - s * 0.5, y - s * 0.3);
+  ctx.lineTo(x + s * 0.3, y - s * 0.3);
+  ctx.lineTo(x + s * 0.15, y - s * 0.05);
+  ctx.lineTo(x - s * 0.38, y - s * 0.05);
+  ctx.closePath();
+  ctx.fillStyle = '#a07a4a';
+  ctx.fill();
+  line(ctx, 0.6);
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x - s * 0.4 + i * s * 0.2, y - s * 0.3);
+    ctx.lineTo(x - s * 0.35 + i * s * 0.2, y - s * 0.55);
+    line(ctx, 0.5);
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + s * 0.45, y);
+  ctx.lineTo(x + s * 0.45, y - s * 0.8);
+  ctx.lineTo(x + s * 0.15, y - s * 0.65);
+  line(ctx, Math.max(0.6, s * 0.04));
+};
+B.stud = (ctx, x, y, s, o) => {
+  fence(ctx, x - s * 0.15, y, s * 0.6, s * 0.22);
+  house(ctx, x + s * 0.35, y, s * 0.4, s * 0.25, s * 0.18, '#c4a87a', '#9a5638', o);
+};
+B.quarter = (ctx, x, y, s, o) => {
+  // Tall counting houses shoulder to shoulder.
+  house(ctx, x - s * 0.28, y, s * 0.32, s * 0.6, s * 0.2, '#e0cf9e', '#23365e', o);
+  house(ctx, x + s * 0.05, y, s * 0.32, s * 0.7, s * 0.2, '#d8c9a4', '#7a1f1a', o);
+  house(ctx, x + s * 0.38, y, s * 0.3, s * 0.55, s * 0.2, '#e4d6b4', '#5d6066', o);
+};
+B.hostel = (ctx, x, y, s, o) => {
+  house(ctx, x, y, s * 0.85, s * 0.35, s * 0.25, '#efe6cf', '#6e8a5a', o);
+  ctx.fillStyle = '#c9a03a';
+  ctx.fillRect(x + s * 0.3, y - s * 0.55, s * 0.05, s * 0.16);
+  ctx.fillRect(x + s * 0.26, y - s * 0.5, s * 0.13, s * 0.04);
+};
+B.alchemist = (ctx, x, y, s, o) => {
+  house(ctx, x, y, s * 0.5, s * 0.45, s * 0.3, '#cfc7b8', '#4a3a5a', o);
+  // A green glow in the window.
+  ctx.fillStyle = '#6fbf6a';
+  ctx.fillRect(x + s * 0.08, y - s * 0.35, s * 0.1, s * 0.1);
+};
+B.lodge = (ctx, x, y, s, o) => {
+  house(ctx, x, y, s * 0.6, s * 0.32, s * 0.28, TIMBER, '#5a4430', o);
+  // Antlers over the door.
+  ctx.beginPath();
+  ctx.moveTo(x - s * 0.12, y - s * 0.45);
+  ctx.lineTo(x, y - s * 0.38);
+  ctx.lineTo(x + s * 0.12, y - s * 0.45);
+  ctx.moveTo(x - s * 0.08, y - s * 0.5);
+  ctx.lineTo(x - s * 0.06, y - s * 0.42);
+  ctx.moveTo(x + s * 0.08, y - s * 0.5);
+  ctx.lineTo(x + s * 0.06, y - s * 0.42);
+  line(ctx, Math.max(0.5, s * 0.03));
+};
+
 for (const [id, draw] of Object.entries(B)) {
   registerPlaceholder('structure', id, (ctx, x, y, size, opts = {}) => draw(ctx, x, y, size, opts));
 }
@@ -511,9 +678,18 @@ registerPlaceholder('life', 'worker', (ctx, x, y, size, opts = {}) => {
 });
 
 registerPlaceholder('life', 'sheep', (ctx, x, y, size, opts = {}) => {
+  if (opts.horse) {
+    // Legs under a longer, darker body.
+    ctx.beginPath();
+    for (const dx of [-0.25, 0.25]) {
+      ctx.moveTo(x + dx * size, y - size * 0.3);
+      ctx.lineTo(x + dx * size, y);
+    }
+    line(ctx, Math.max(0.4, size * 0.06));
+  }
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.3, size * 0.4, size * 0.26, 0, 0, Math.PI * 2);
-  ctx.fillStyle = opts.cow ? '#7a5a3a' : '#f0ece0';
+  ctx.ellipse(x, y - size * (opts.horse ? 0.4 : 0.3), size * (opts.horse ? 0.45 : 0.4), size * (opts.horse ? 0.2 : 0.26), 0, 0, Math.PI * 2);
+  ctx.fillStyle = opts.horse ? '#6b4a2e' : opts.cow ? '#7a5a3a' : '#f0ece0';
   ctx.fill();
   line(ctx, 0.4);
   ctx.beginPath();

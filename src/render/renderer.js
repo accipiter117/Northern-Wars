@@ -585,7 +585,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const facing = Math.cos(w.angle) >= 0 ? 1 : -1;
       const colours = u.realm && u.kind !== 'export' ? world.realms?.realms[u.realm]?.colours : null;
       getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' ? 'caravan' : u.kind)
-        .draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing, colours });
+        .draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing, colours, good: u.good });
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
     drawWar(state, frac, selection);

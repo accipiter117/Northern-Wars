@@ -252,6 +252,124 @@
         "workers",
         "smoke"
       ]
+    },
+    "pasture": {
+      "place": "edge",
+      "size": 3.0,
+      "reach": 2.4,
+      "life": [
+        "workers",
+        "sheep"
+      ]
+    },
+    "weavers": {
+      "place": "core",
+      "size": 3.0,
+      "life": [
+        "workers"
+      ]
+    },
+    "distillery": {
+      "place": "core",
+      "size": 2.8,
+      "life": [
+        "smoke"
+      ]
+    },
+    "charcoal": {
+      "place": "forest",
+      "size": 2.6,
+      "reach": 2.6,
+      "life": [
+        "workers",
+        "smoke"
+      ]
+    },
+    "weaponsmith": {
+      "place": "core",
+      "size": 2.6,
+      "life": [
+        "smoke"
+      ]
+    },
+    "silvermine": {
+      "place": "hills",
+      "size": 2.8,
+      "reach": 2.8,
+      "life": [
+        "workers",
+        "smoke"
+      ]
+    },
+    "saltpans": {
+      "place": "water",
+      "size": 3.4,
+      "reach": 3.5,
+      "life": [
+        "workers"
+      ]
+    },
+    "fishery": {
+      "place": "water",
+      "size": 2.8,
+      "reach": 3.5,
+      "life": [
+        "boats",
+        "smoke"
+      ]
+    },
+    "tollbridge": {
+      "place": "river",
+      "size": 2.8,
+      "reach": 3,
+      "life": [
+        "workers"
+      ]
+    },
+    "shipyard": {
+      "place": "water",
+      "size": 3.6,
+      "reach": 3.5,
+      "life": [
+        "boats",
+        "workers"
+      ]
+    },
+    "stud": {
+      "place": "edge",
+      "size": 3.2,
+      "reach": 2.4,
+      "life": [
+        "workers",
+        "horses"
+      ]
+    },
+    "quarter": {
+      "place": "core",
+      "size": 3.4
+    },
+    "hostel": {
+      "place": "core",
+      "size": 2.8,
+      "life": [
+        "smoke"
+      ]
+    },
+    "alchemist": {
+      "place": "core",
+      "size": 2.4,
+      "life": [
+        "steam"
+      ]
+    },
+    "lodge": {
+      "place": "forest",
+      "size": 2.6,
+      "reach": 2.6,
+      "life": [
+        "workers",
+        "smoke"
+      ]
     }
   },
   "workersPerSite": 2

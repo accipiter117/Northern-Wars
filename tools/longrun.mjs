@@ -1,113 +1,20 @@
 // Long-run balance: plays a reign for many years with a choice of crowns and
 // prints how the realm stands each decade, to catch anything that runs away.
-// Usage: node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds]
+// Usage: node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds] [ledger]
 //   e.g. node tools/longrun.mjs 30 steward 1,2,3
+// With `ledger` it also prints each year's ledger, line by line, averaged
+// over the year (the last twelve months).
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  loadWorld, createState, step, applyAction, canBuild, canDecree, totalPopulation, ledgerNet, realmFaith,
-  threatLevel, patrolCapacity, holdingsOf, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue,
-} from '../src/sim/index.js';
+import { loadWorld, createState, step, totalPopulation, ledgerNet, realmFaith, holdingsOf } from '../src/sim/index.js';
+import { makeCrowns } from './crowns.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const [years = 30, mode = 'steward', seedList = '1,2,3'] = process.argv.slice(2);
+const [years = 30, mode = 'steward', seedList = '1,2,3', showLedger] = process.argv.slice(2);
 const world = await loadWorld(async (p) => JSON.parse(await readFile(join(ROOT, p), 'utf8')));
 
-const act = (s, a) => {
-  const out = applyAction(s, world, a);
-  return out.error ? s : out.state;
-};
-
-// Answers every waiting decision: the steward takes the first (usually the
-// generous) choice when it can afford it, otherwise the default.
-function answer(s, generous) {
-  for (const [list, type] of [['events', 'event'], ['demands', 'demand'], ['envoys', 'envoy'], ['petitions', 'petition']]) {
-    for (const p of [...s[list]]) {
-      const choice = generous && s.treasury > 1500 ? 0 : -1;
-      if (choice >= 0) s = act(s, { type, id: p.id, choice });
-    }
-  }
-  return s;
-}
-
-// A sensible crown at war: one army to hold the capital, peace on the best
-// terms the enemy will take, and no part in other people's wars.
-function warPolicy(s) {
-  for (const d of [...s.warDecisions]) {
-    const choice = d.kind === 'call' ? 1 : 0;
-    s = act(s, { type: 'warDecision', id: d.id, choice });
-  }
-  const wars = warsOf(s, 'temeria');
-  if (wars.length && !crownArmies(s).length) {
-    s = act(s, { type: 'raise', muster: 'vizima', levy: 'third', nobles: true, companies: 0, marshal: 'vestibor', stance: 'cautious' });
-  }
-  for (const w of wars) {
-    for (const key of ['tribute', 'keep', 'white']) {
-      const t = peaceTerms(s, world, w).list.find((x) => x.key === key);
-      if (t.accept) { s = act(s, { type: 'peace', war: w.id, terms: key }); break; }
-    }
-  }
-  if (!warsOf(s, 'temeria').length) for (const a of crownArmies(s)) s = act(s, { type: 'disband', army: a.id });
-  return s;
-}
-
-const BUILD_ORDER = ['fields', 'mill', 'granary', 'goldmine', 'market', 'harbour', 'brewery', 'tannery', 'inn', 'walls', 'workshop', 'guildhall', 'shrine', 'hospice', 'lumber', 'quarry', 'mine'];
-
-function steward(s, month, spend) {
-  s = answer(s, true);
-  s = warPolicy(s);
-  // Open the most lucrative trade route the crown can, before building.
-  if (month % 6 === 1 && s.treasury > 900) {
-    const ends = world.geography.settlements.filter((x) => x.type === 'town' || x.type === 'city').map((x) => x.id);
-    let best = null;
-    for (const a of ends) for (const b of ends) {
-      if (a >= b || !canOpenRoute(s, world, a, b).ok) continue;
-      const v = routeValue(s, world, { from: a, to: b }).value;
-      if (!best || v > best.v) best = { a, b, v };
-    }
-    if (best) s = act(s, { type: 'route', from: best.a, to: best.b });
-  }
-  for (let i = 0; i < (spend ? 3 : 1); i++) {
-    let built = false;
-    for (const b of BUILD_ORDER) {
-      for (const st of world.geography.settlements) {
-        const c = canBuild(s, world, st.id, b);
-        if (c.ok && (spend || (!c.borrow && s.treasury > 1200))) { s = act(s, { type: 'build', settlement: st.id, building: b }); built = true; break; }
-      }
-      if (built) break;
-    }
-  }
-  if (month === 2) {
-    s = act(s, { type: 'law', law: 'bounties', option: 'witchers' });
-  }
-  if (month === 6 && canDecree(s, world, 'nonhumans', 'charter').ok) s = act(s, { type: 'law', law: 'nonhumans', option: 'charter' });
-  // Patrol the most dangerous roads while soldiers allow.
-  if (month % 12 === 3) {
-    const worst = Object.keys(s.settlements)
-      .map((id) => ({ id, t: Math.max(threatLevel(s, world, id, 'bandits'), threatLevel(s, world, id, 'monsters')) }))
-      .sort((a, b) => b.t - a.t);
-    for (const { id } of worst.slice(0, 4)) {
-      if (s.patrols.length >= patrolCapacity(s, world)) break;
-      const near = world.adjacency[id][0]?.to;
-      if (near) s = act(s, { type: 'patrol', from: id, to: near });
-    }
-  }
-  // Keep the lords sweet.
-  for (const id of Object.keys(s.houses)) {
-    if (s.houses[id].loyalty < 35) s = act(s, { type: 'house', house: id, kind: 'honours' });
-  }
-  return s;
-}
-
-function tyrant(s, month) {
-  s = answer(s, false);
-  const laws = [['taxation', 'heavy'], ['noble_privilege', 'taxed'], ['public_order', 'martial'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
-  const [law, option] = laws[month % laws.length];
-  s = act(s, { type: 'law', law, option });
-  for (const id of Object.keys(s.houses)) if (month % 12 === 0) s = act(s, { type: 'house', house: id, kind: 'fine' });
-  return s;
-}
+const { answer, steward, tyrant } = makeCrowns(world);
 
 function report(s, label, totals) {
   const pop = Object.values(s.settlements).reduce((a, st) => a + totalPopulation(st), 0);
@@ -119,6 +26,23 @@ function report(s, label, totals) {
     + ` auth ${s.authority.toFixed(0).padStart(3)} stab ${s.stability.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
     + ` routes ${s.routes.length} gold ${Math.round(last?.income.gold ?? 0)} wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`
     + ` faith F/M/O ${f.eternal_fire.toFixed(0)}/${f.melitele.toFixed(0)}/${f.old_ways.toFixed(0)} built ${totals.built} riots ${totals.riots} raids ${totals.raids} rebellions ${totals.rebels} deposed ${s.depositions.length}`);
+}
+
+// The year's ledger, averaged per month, as `line value` pairs.
+function ledgerLine(s, label) {
+  const h = s.ledger.history;
+  const sum = {};
+  const add = (k, v) => { if (v) sum[k] = (sum[k] ?? 0) + v / h.length; };
+  for (const m of h) {
+    for (const [k, v] of Object.entries(m.income)) {
+      if (typeof v === 'number') add(`+${k}`, v);
+      else for (const x of Object.values(v)) add(`+${k}`, x);
+    }
+    for (const [k, v] of Object.entries(m.expenses)) if (k !== 'construction' && k !== 'decrees') add(`-${k}`, v);
+  }
+  const net = h.reduce((a, m) => a + ledgerNet(m).net, 0) / h.length;
+  const inc = h.reduce((a, m) => a + ledgerNet(m).in, 0) / h.length;
+  console.log(`  ${label} in ${Math.round(inc)} net ${Math.round(net)}: ${Object.entries(sum).map(([k, v]) => `${k} ${Math.round(v)}`).join(' ')}`);
 }
 
 for (const seed of seedList.split(',').map(Number)) {
@@ -142,6 +66,7 @@ for (const seed of seedList.split(',').map(Number)) {
       if (/^(Temeria is at war with|.* is at war with Temeria)/.test(d.text)) totals.wars++;
     }
     seenDay = s.day;
+    if (showLedger && (m + 1) % 12 === 0) ledgerLine(s, `y${(m + 1) / 12}`);
     if ((m + 1) % 120 === 0) report(s, `year ${(m + 1) / 12}`, totals);
   }
 }
