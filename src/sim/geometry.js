@@ -22,3 +22,12 @@ export function distanceToPolygon(x, y, poly) {
   }
   return best;
 }
+
+// Where segment ab crosses segment cd, or null.
+export function intersectSegments(a, b, c, d) {
+  const r = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+  if (!r) return null;
+  const t = ((c.x - a.x) * (d.y - c.y) - (c.y - a.y) * (d.x - c.x)) / r;
+  const u = ((c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)) / r;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) } : null;
+}

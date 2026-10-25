@@ -1,7 +1,9 @@
 // Long-run balance: plays a reign for many years with a choice of crowns and
 // prints how the realm stands each decade, to catch anything that runs away.
-// Usage: node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds]
+// Usage: node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds] [ledger]
 //   e.g. node tools/longrun.mjs 30 steward 1,2,3
+// With `ledger` it also prints each year's ledger, line by line, averaged
+// over the year (the last twelve months).
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +13,7 @@ import {
 } from '../src/sim/index.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const [years = 30, mode = 'steward', seedList = '1,2,3'] = process.argv.slice(2);
+const [years = 30, mode = 'steward', seedList = '1,2,3', showLedger] = process.argv.slice(2);
 const world = await loadWorld(async (p) => JSON.parse(await readFile(join(ROOT, p), 'utf8')));
 
 const act = (s, a) => {
@@ -52,7 +54,13 @@ function warPolicy(s) {
   return s;
 }
 
-const BUILD_ORDER = ['fields', 'mill', 'granary', 'goldmine', 'market', 'harbour', 'brewery', 'tannery', 'inn', 'walls', 'workshop', 'guildhall', 'shrine', 'hospice', 'lumber', 'quarry', 'mine'];
+// Earners first, the dearest and best first, then the buildings that feed,
+// guard and calm the realm.
+const BUILD_ORDER = [
+  'goldmine', 'tollbridge', 'quarter', 'market', 'silvermine', 'hostel', 'weavers', 'pasture', 'shipyard', 'alchemist', 'brewery',
+  'fishery', 'tannery', 'inn', 'workshop', 'saltpans', 'stud', 'distillery', 'charcoal', 'smithy', 'weaponsmith', 'lodge', 'harbour',
+  'fields', 'mill', 'granary', 'guildhall', 'walls', 'shrine', 'hospice', 'lumber', 'quarry', 'mine',
+];
 
 function steward(s, month, spend) {
   s = answer(s, true);
@@ -88,7 +96,7 @@ function steward(s, month, spend) {
       .map((id) => ({ id, t: Math.max(threatLevel(s, world, id, 'bandits'), threatLevel(s, world, id, 'monsters')) }))
       .sort((a, b) => b.t - a.t);
     for (const { id } of worst.slice(0, 4)) {
-      if (s.patrols.length >= patrolCapacity(s, world)) break;
+      if (s.patrols.length >= Math.min(6, patrolCapacity(s, world))) break;
       const near = world.adjacency[id][0]?.to;
       if (near) s = act(s, { type: 'patrol', from: id, to: near });
     }
@@ -121,6 +129,23 @@ function report(s, label, totals) {
     + ` faith F/M/O ${f.eternal_fire.toFixed(0)}/${f.melitele.toFixed(0)}/${f.old_ways.toFixed(0)} built ${totals.built} riots ${totals.riots} raids ${totals.raids} rebellions ${totals.rebels} deposed ${s.depositions.length}`);
 }
 
+// The year's ledger, averaged per month, as `line value` pairs.
+function ledgerLine(s, label) {
+  const h = s.ledger.history;
+  const sum = {};
+  const add = (k, v) => { if (v) sum[k] = (sum[k] ?? 0) + v / h.length; };
+  for (const m of h) {
+    for (const [k, v] of Object.entries(m.income)) {
+      if (typeof v === 'number') add(`+${k}`, v);
+      else for (const x of Object.values(v)) add(`+${k}`, x);
+    }
+    for (const [k, v] of Object.entries(m.expenses)) if (k !== 'construction' && k !== 'decrees') add(`-${k}`, v);
+  }
+  const net = h.reduce((a, m) => a + ledgerNet(m).net, 0) / h.length;
+  const inc = h.reduce((a, m) => a + ledgerNet(m).in, 0) / h.length;
+  console.log(`  ${label} in ${Math.round(inc)} net ${Math.round(net)}: ${Object.entries(sum).map(([k, v]) => `${k} ${Math.round(v)}`).join(' ')}`);
+}
+
 for (const seed of seedList.split(',').map(Number)) {
   let s = createState(world, seed);
   const totals = { built: 0, riots: 0, raids: 0, rebels: 0, wars: 0 };
@@ -142,6 +167,7 @@ for (const seed of seedList.split(',').map(Number)) {
       if (/^(Temeria is at war with|.* is at war with Temeria)/.test(d.text)) totals.wars++;
     }
     seenDay = s.day;
+    if (showLedger && (m + 1) % 12 === 0) ledgerLine(s, `y${(m + 1) / 12}`);
     if ((m + 1) % 120 === 0) report(s, `year ${(m + 1) / 12}`, totals);
   }
 }

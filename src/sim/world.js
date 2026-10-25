@@ -7,7 +7,7 @@ import { buildGrid } from './vision.js';
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry }) {
   // byId knows every place on the map, at home and abroad; adjacency is
   // Temeria's own road network, which every domestic system walks.
   // fullAdjacency adds the foreign roads, for traffic that crosses borders.
@@ -137,6 +137,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     war,
     trade,
     gold,
+    industry,
     culture,
     petitions,
     houses,

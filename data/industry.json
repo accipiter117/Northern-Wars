@@ -1,0 +1,194 @@
+{
+  "note": "Production chains. Raw goods (wool, charcoal) are made by one building and worked into finished goods (cloth, rye spirit, arms, salt, horses) by another. Each month the realm's goods are pooled: makers first, then the workshops that turn one good into another, then crown trade routes carry finished goods at a premium, and the rest sells at home. Amounts are units a month at a place of middling fortunes; prices are crowns a unit.",
+  "goods": {
+    "wool": {
+      "name": "Wool",
+      "price": 0.6,
+      "demand": 0.0004
+    },
+    "charcoal": {
+      "name": "Charcoal",
+      "price": 1.1,
+      "demand": 0.0008
+    },
+    "cloth": {
+      "name": "Cloth",
+      "price": 1.6,
+      "demand": 0.0016,
+      "finished": true
+    },
+    "spirit": {
+      "name": "Rye spirit",
+      "price": 2.2,
+      "demand": 0.0008,
+      "finished": true
+    },
+    "arms": {
+      "name": "Arms",
+      "price": 4,
+      "demand": 0.0003,
+      "finished": true,
+      "warBonus": 0.25
+    },
+    "salt": {
+      "name": "Salt",
+      "price": 1.5,
+      "demand": 0.0009,
+      "finished": true
+    },
+    "horses": {
+      "name": "Horses",
+      "price": 5,
+      "demand": 0.00025,
+      "finished": true
+    }
+  },
+  "glut": 0.5,
+  "makers": {
+    "pasture": {
+      "good": "wool",
+      "amount": 55
+    },
+    "saltpans": {
+      "good": "salt",
+      "amount": 38
+    },
+    "stud": {
+      "good": "horses",
+      "amount": 13
+    }
+  },
+  "workers": {
+    "charcoal": {
+      "good": "charcoal",
+      "amount": 45,
+      "uses": {
+        "timber": 1
+      }
+    },
+    "weaponsmith": {
+      "good": "arms",
+      "amount": 22,
+      "uses": {
+        "iron": 0.6,
+        "charcoal": 1
+      }
+    },
+    "weavers": {
+      "good": "cloth",
+      "amount": 60,
+      "uses": {
+        "wool": 1
+      }
+    },
+    "distillery": {
+      "good": "spirit",
+      "amount": 28,
+      "uses": {
+        "grain": 2
+      }
+    }
+  },
+  "order": [
+    "charcoal",
+    "weaponsmith",
+    "weavers",
+    "distillery"
+  ],
+  "grainReserveDays": 60,
+  "routes": {
+    "carry": 30,
+    "home": 0.3,
+    "abroad": 0.6
+  },
+  "abroadMakes": {
+    "redania": [
+      "cloth",
+      "spirit"
+    ],
+    "kaedwen": [
+      "arms",
+      "horses"
+    ],
+    "aedirn": [
+      "arms",
+      "cloth"
+    ],
+    "mahakam": [
+      "arms",
+      "spirit"
+    ],
+    "cidaris": [
+      "salt",
+      "cloth"
+    ],
+    "kerack": [
+      "salt"
+    ],
+    "verden": [
+      "salt"
+    ],
+    "brugge": [
+      "cloth"
+    ],
+    "sodden": [
+      "horses"
+    ],
+    "cintra": [
+      "horses",
+      "salt"
+    ]
+  },
+  "silver": {
+    "amount": 62
+  },
+  "salt": {
+    "storagePer": 0.06,
+    "storageMax": 0.18
+  },
+  "stud": {
+    "patrolCut": 0.1,
+    "patrolMin": 0.7
+  },
+  "quarter": {
+    "rentPerPerson": 0.0045
+  },
+  "hostel": {
+    "base": 30,
+    "perShare": 100
+  },
+  "shipyard": {
+    "contracts": 70
+  },
+  "lodge": {
+    "monsterCut": 12,
+    "reach": 90
+  },
+  "tolls": {
+    "perCaravan": 2.5,
+    "local": 5,
+    "routeCaravansPerCrown": 0.12,
+    "foreignCaravansPerCrown": 0.45,
+    "reach": 120,
+    "river": "Pontar",
+    "bridges": {
+      "white_bridge": {
+        "name": "the White Bridge",
+        "realms": [
+          "kaedwen",
+          "aedirn"
+        ]
+      },
+      "la_valette": {
+        "name": "Devil's Ford",
+        "realms": [
+          "redania"
+        ]
+      }
+    }
+  },
+  "carts": {
+    "perUnit": 0.04,
+    "max": 4
+  }
+}

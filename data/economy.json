@@ -75,7 +75,16 @@
     "perPoint": 0.008
   },
   "taxes": {
-    "perPersonMonth": 0.009
+    "perPersonMonth": {
+      "city": 0.009,
+      "town": 0.008,
+      "village": 0.006,
+      "castle": 0.0055,
+      "temple": 0.003
+    },
+    "prosperityBase": 0.3,
+    "perProsperity": 0.014,
+    "note": "Tax a head a month by kind of place, times a fortunes factor (prosperityBase + perProsperity x prosperity), times any tax bonus from market halls, guildhalls and merchants' quarters."
   },
   "trade": {
     "perPersonMonth": {
@@ -111,11 +120,23 @@
   },
   "debt": {
     "creditLimit": 8000,
-    "interestPerMonth": 0.02,
+    "interestPerMonth": 0.01,
     "authorityPerThousand": 0.25,
     "authorityRecovery": 0.5,
     "unpaidUnrest": 12,
     "desertionPerMonth": 0.03,
-    "lender": "the dwarven banking houses"
+    "lender": "the dwarven banking houses",
+    "debtUnrest": 10
+  },
+  "crafts": {
+    "placeScale": {
+      "city": 1.3,
+      "town": 1,
+      "village": 0.8,
+      "castle": 0.7,
+      "temple": 0.7
+    },
+    "crowding": 0.07,
+    "note": "A craft building earns its craft value x placeScale for the kind of place x the place's fortunes. Each further building of the same craft in the realm cuts every one's takings: 1 / (1 + crowding x (count - 1))."
   }
 }

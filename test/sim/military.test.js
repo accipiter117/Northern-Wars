@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createState, step, applyAction, threatLevel, localStrength, patrolCapacity, eventText, plagueActive, serialize, deserialize, totalPopulation } from '../../src/sim/index.js';
+import { createState, step, applyAction, threatLevel, localStrength, patrolCapacity, patrolCost, eventText, plagueActive, serialize, deserialize, totalPopulation } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { nodeWorld } from '../helpers.js';
 
@@ -46,7 +46,9 @@ test('patrols are limited by soldiers, cost crowns, and strengthen the places on
   assert.equal(localStrength(s, world, 'anchor'), before + world.military.patrol.strength);
   assert.match(act(s, { type: 'patrol', from: 'dorian', to: 'gors_velen' }).error, /Already/);
   s = run(s, 35, true);
-  assert.equal(s.ledger.history.at(-1).expenses.patrols, world.military.patrol.cost);
+  // A patrol costs by the length of its road.
+  assert.equal(s.ledger.history.at(-1).expenses.patrols, Math.round(patrolCost(s, world, s.patrols[0])));
+  assert.ok(patrolCost(s, world, s.patrols[0]) > world.military.patrol.cost);
   const id = s.patrols[0].id;
   s = act(s, { type: 'unpatrol', id }).state;
   assert.equal(s.patrols.length, 0);

@@ -19,9 +19,10 @@
     }
   },
   "patrol": {
-    "cost": 40,
+    "cost": 6,
     "soldiersPer": 400,
-    "strength": 60
+    "strength": 60,
+    "perLength": 0.22
   },
   "walls": 1.5,
   "threats": {

@@ -106,7 +106,7 @@
       ],
       "needs": "iron",
       "cost": {
-        "coin": 400,
+        "coin": 600,
         "timber": 40
       },
       "days": 60,
@@ -123,16 +123,17 @@
         "city"
       ],
       "cost": {
-        "coin": 600,
+        "coin": 1400,
         "timber": 40,
         "stone": 40
       },
       "days": 60,
-      "upkeep": 5,
+      "upkeep": 6,
       "effects": {
         "trade": 0.4,
         "prosperity": 5,
-        "craft": 5
+        "craft": 30,
+        "taxBonus": 0.08
       },
       "blurb": "Draws merchants and their tolls."
     },
@@ -143,7 +144,7 @@
         "city"
       ],
       "cost": {
-        "coin": 500,
+        "coin": 1300,
         "timber": 50,
         "iron": 20
       },
@@ -152,7 +153,7 @@
       "effects": {
         "trade": 0.25,
         "prosperity": 3,
-        "craft": 6
+        "craft": 35
       },
       "blurb": "Smiths, coopers and weavers working for coin."
     },
@@ -221,17 +222,17 @@
       ],
       "needsWater": true,
       "cost": {
-        "coin": 550,
+        "coin": 1600,
         "timber": 60,
         "stone": 30
       },
       "days": 70,
-      "upkeep": 5,
+      "upkeep": 6,
       "effects": {
         "foodYield": 0.12,
         "trade": 0.1,
-        "craft": 4,
-        "customs": 12,
+        "craft": 20,
+        "customs": 40,
         "routes": 1,
         "routeValue": 0.15
       },
@@ -265,16 +266,16 @@
         "castle"
       ],
       "cost": {
-        "coin": 300,
+        "coin": 500,
         "stone": 20,
         "iron": 20
       },
       "days": 40,
-      "upkeep": 2,
+      "upkeep": 3,
       "effects": {
         "garrisonUpkeep": -0.3,
         "ironUse": 5,
-        "craft": 3
+        "craft": 12
       },
       "blurb": "Mends mail and forges spearheads from the realm's iron. Soldiers here cost less to keep."
     },
@@ -310,13 +311,13 @@
         "food"
       ],
       "cost": {
-        "coin": 250,
+        "coin": 900,
         "timber": 20
       },
       "days": 35,
-      "upkeep": 2,
+      "upkeep": 3,
       "effects": {
-        "craft": 8,
+        "craft": 30,
         "unrest": 2
       },
       "blurb": "Hides into leather for coin. The stink carries."
@@ -329,14 +330,14 @@
         "city"
       ],
       "cost": {
-        "coin": 350,
+        "coin": 1000,
         "timber": 30,
         "stone": 10
       },
       "days": 45,
-      "upkeep": 3,
+      "upkeep": 4,
       "effects": {
-        "craft": 8,
+        "craft": 34,
         "prosperity": 1,
         "unrest": 1
       },
@@ -351,13 +352,13 @@
       ],
       "needsRoad": 3,
       "cost": {
-        "coin": 300,
+        "coin": 900,
         "timber": 40
       },
       "days": 40,
-      "upkeep": 2,
+      "upkeep": 3,
       "effects": {
-        "craft": 7,
+        "craft": 28,
         "trade": 0.05,
         "vision": 30,
         "traffic": 0.15
@@ -446,19 +447,21 @@
         "city"
       ],
       "cost": {
-        "coin": 700,
+        "coin": 1500,
         "stone": 40,
         "timber": 40
       },
       "days": 70,
-      "upkeep": 5,
+      "upkeep": 6,
       "effects": {
         "routes": 1,
         "trade": 0.1,
         "routeValue": 0.1,
         "opinion": {
           "burghers": 4
-        }
+        },
+        "taxBonus": 0.1,
+        "craft": 22
       },
       "blurb": "Where the guilds meet, and fund caravans. More trade routes, and the burghers are flattered.",
       "requires": "market"
@@ -552,16 +555,347 @@
       ],
       "needsDeposit": true,
       "cost": {
-        "coin": 700,
-        "timber": 60,
-        "iron": 30
+        "coin": 3000,
+        "timber": 80,
+        "iron": 40
       },
       "days": 90,
-      "upkeep": 8,
+      "upkeep": 20,
       "effects": {
         "gold": 1
       },
       "blurb": "Shafts into a gold seam. Coin straight to the treasury until the seam runs out, and miners, thieves and envious eyes with it."
+    },
+    "pasture": {
+      "name": "Sheep pastures",
+      "types": [
+        "village",
+        "town"
+      ],
+      "terrain": [
+        "open",
+        "hills"
+      ],
+      "cost": {
+        "coin": 600,
+        "timber": 30
+      },
+      "days": 40,
+      "upkeep": 3,
+      "effects": {
+        "prosperity": 1
+      },
+      "blurb": "Flocks on the open downs. Wool for the weavers, or for sale."
+    },
+    "weavers": {
+      "name": "Weavers' hall",
+      "types": [
+        "town",
+        "city"
+      ],
+      "cost": {
+        "coin": 1400,
+        "timber": 50,
+        "stone": 30
+      },
+      "days": 60,
+      "upkeep": 5,
+      "effects": {
+        "prosperity": 2
+      },
+      "blurb": "Looms by the dozen. The realm's wool into cloth, the best of it sold abroad."
+    },
+    "distillery": {
+      "name": "Rye distillery",
+      "types": [
+        "village",
+        "town"
+      ],
+      "produces": [
+        "food"
+      ],
+      "cost": {
+        "coin": 1300,
+        "timber": 40,
+        "stone": 20,
+        "iron": 10
+      },
+      "days": 55,
+      "upkeep": 4,
+      "effects": {
+        "unrest": 1
+      },
+      "blurb": "Copper stills and rye mash. Spare grain into Temerian rye spirit, which travels well and sells better."
+    },
+    "charcoal": {
+      "name": "Charcoal burners",
+      "types": [
+        "village",
+        "town",
+        "castle"
+      ],
+      "wild": [
+        "forest"
+      ],
+      "cost": {
+        "coin": 600,
+        "iron": 10
+      },
+      "days": 30,
+      "upkeep": 2,
+      "effects": {
+        "unrest": 1
+      },
+      "blurb": "Smoking clamps in the woods. Timber into charcoal for the forges.",
+      "orProduces": [
+        "timber"
+      ]
+    },
+    "weaponsmith": {
+      "name": "Weaponsmiths",
+      "types": [
+        "town",
+        "city",
+        "castle"
+      ],
+      "requires": "smithy",
+      "cost": {
+        "coin": 1500,
+        "stone": 40,
+        "iron": 40
+      },
+      "days": 60,
+      "upkeep": 5,
+      "effects": {
+        "armyArms": 0.03
+      },
+      "blurb": "The smithy turned to blades and mail. Iron and charcoal into arms, sold dearest to realms at war."
+    },
+    "silvermine": {
+      "name": "Silver mine",
+      "types": [
+        "village",
+        "castle"
+      ],
+      "sites": [
+        "vorune",
+        "napeys",
+        "razwan",
+        "houtborg",
+        "flotsam"
+      ],
+      "cost": {
+        "coin": 1600,
+        "timber": 50,
+        "iron": 20
+      },
+      "days": 80,
+      "upkeep": 5,
+      "effects": {
+        "silver": 1
+      },
+      "blurb": "Galleries after a silver lode. Less than gold, but steady for a lifetime."
+    },
+    "saltpans": {
+      "name": "Salt pans",
+      "types": [
+        "village",
+        "city"
+      ],
+      "sites": [
+        "anchor",
+        "acorn_bay",
+        "gors_velen"
+      ],
+      "cost": {
+        "coin": 1300,
+        "timber": 30,
+        "stone": 40
+      },
+      "days": 50,
+      "upkeep": 4,
+      "effects": {},
+      "blurb": "Shallow pans on the Velen shore. Salt to sell, and salted stores that keep through the winter across the realm."
+    },
+    "fishery": {
+      "name": "Fishery and smokehouse",
+      "types": [
+        "village",
+        "town",
+        "city"
+      ],
+      "sites": [
+        "vizima",
+        "murky_waters",
+        "anchor",
+        "acorn_bay",
+        "gors_velen",
+        "vidort"
+      ],
+      "cost": {
+        "coin": 900,
+        "timber": 50
+      },
+      "days": 45,
+      "upkeep": 3,
+      "effects": {
+        "foodYield": 0.12,
+        "craft": 30
+      },
+      "blurb": "Boats on the water and a smokehouse on the shore. Fish for the table and smoked fish for the market."
+    },
+    "tollbridge": {
+      "name": "Toll bridge",
+      "types": [
+        "town",
+        "castle"
+      ],
+      "sites": [
+        "white_bridge",
+        "la_valette"
+      ],
+      "cost": {
+        "coin": 1400,
+        "stone": 80,
+        "timber": 40
+      },
+      "days": 70,
+      "upkeep": 4,
+      "effects": {},
+      "blurb": "A tollhouse and a chain across the crossing of the Pontar. Every caravan that crosses pays."
+    },
+    "shipyard": {
+      "name": "Shipyard",
+      "types": [
+        "city"
+      ],
+      "sites": [
+        "gors_velen"
+      ],
+      "cost": {
+        "coin": 2200,
+        "timber": 120,
+        "iron": 30
+      },
+      "days": 100,
+      "upkeep": 8,
+      "effects": {
+        "routeValue": 0.2,
+        "customs": 20,
+        "prosperity": 2
+      },
+      "blurb": "Slipways and ropewalks. Contracts from Cidaris and Kerack, and better ships for the crown's trade by sea and river."
+    },
+    "stud": {
+      "name": "Horse stud",
+      "types": [
+        "village"
+      ],
+      "sites": [
+        "cleves",
+        "old_bottoms",
+        "brenna",
+        "carcano",
+        "vidort",
+        "mortara"
+      ],
+      "cost": {
+        "coin": 1400,
+        "timber": 40
+      },
+      "days": 60,
+      "upkeep": 4,
+      "effects": {
+        "prosperity": 1
+      },
+      "blurb": "Paddocks and stables on the southern farmland. Horses to sell, and cheaper mounts for the crown's riders."
+    },
+    "quarter": {
+      "name": "Merchants' quarter",
+      "types": [
+        "city"
+      ],
+      "cost": {
+        "coin": 1800,
+        "stone": 60,
+        "timber": 40
+      },
+      "days": 90,
+      "upkeep": 6,
+      "effects": {
+        "taxBonus": 0.1,
+        "prosperity": 2,
+        "opinion": {
+          "burghers": 2
+        }
+      },
+      "blurb": "Counting houses and rented stalls. Rents that grow with the city."
+    },
+    "hostel": {
+      "name": "Pilgrims' hostel",
+      "types": [
+        "temple"
+      ],
+      "sites": [
+        "temple_melitele"
+      ],
+      "cost": {
+        "coin": 1500,
+        "stone": 40,
+        "timber": 40
+      },
+      "days": 60,
+      "upkeep": 4,
+      "effects": {
+        "opinion": {
+          "melitele": 2
+        }
+      },
+      "blurb": "Beds and bread for the faithful. Donations that grow with Melitele's following."
+    },
+    "alchemist": {
+      "name": "Alchemist's workshop",
+      "types": [
+        "town",
+        "city"
+      ],
+      "cost": {
+        "coin": 1400,
+        "stone": 30,
+        "iron": 10
+      },
+      "days": 60,
+      "upkeep": 4,
+      "effects": {
+        "craft": 45,
+        "opinion": {
+          "eternal_fire": -4
+        }
+      },
+      "blurb": "Retorts, stills and a locked cellar. Potions sold to witchers and apothecaries. The Eternal Fire calls it sorcery."
+    },
+    "lodge": {
+      "name": "Hunters' lodge",
+      "types": [
+        "village",
+        "town",
+        "castle"
+      ],
+      "wild": [
+        "forest",
+        "marsh",
+        "mountains"
+      ],
+      "cost": {
+        "coin": 700,
+        "timber": 40
+      },
+      "days": 35,
+      "upkeep": 2,
+      "effects": {
+        "craft": 40
+      },
+      "blurb": "Trappers, hounds and trophy walls. Pelts and monster parts for sale, and fewer beasts on the roads nearby."
     }
   },
   "slots": {

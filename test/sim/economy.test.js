@@ -82,7 +82,8 @@ test('the crown can borrow up to the bankers\' limit, and debt costs Authority a
   assert.equal(canBuild(s, world, 'tegmond', 'shrine').ok, true);
   s = run(s, 31);
   const last = s.ledger.history.at(-1);
-  assert.ok(last.expenses.interest >= 130);
+  // About one per cent a month.
+  assert.ok(last.expenses.interest >= 65 && last.expenses.interest <= 90);
   assert.ok(s.authority < 60);
   assert.ok(s.chronicle.some((d) => d.text.includes('owes')));
 });

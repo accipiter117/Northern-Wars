@@ -51,12 +51,13 @@ export function goldYield(state, world, depositId) {
   return Math.min(left, g.yield * Math.max(g.minShare, Math.min(1, frac / g.taper)));
 }
 
-export function goldLedger(state, world, income) {
+export function goldLedger(state, world, income, put = () => {}) {
   if (!state.gold) return;
   for (const { id, settlement } of activeMines(state, world)) {
     const y = goldYield(state, world, id);
     state.gold.deposits[id].remaining -= y;
     income.gold += y * crownShare(state, world, state.settlements[settlement]);
+    put(settlement, y * crownShare(state, world, state.settlements[settlement]));
     if (state.gold.deposits[id].remaining < 1) {
       state.gold.deposits[id].remaining = 0;
       say(state, `${G(world).deposits[id].name} is worked out. The last cart of ore comes up from ${world.byId[settlement].name}, and the miners drift away.`);
