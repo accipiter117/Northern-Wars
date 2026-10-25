@@ -67,7 +67,7 @@
       ],
       "needs": "timber",
       "cost": {
-        "coin": 200,
+        "coin": 300,
         "iron": 10
       },
       "days": 30,
@@ -615,7 +615,7 @@
         "food"
       ],
       "cost": {
-        "coin": 1300,
+        "coin": 1500,
         "timber": 40,
         "stone": 20,
         "iron": 10
@@ -840,7 +840,7 @@
         "temple_melitele"
       ],
       "cost": {
-        "coin": 1500,
+        "coin": 1700,
         "stone": 40,
         "timber": 40
       },

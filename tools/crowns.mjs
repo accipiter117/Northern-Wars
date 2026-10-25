@@ -44,13 +44,15 @@ export function makeCrowns(world) {
     return s;
   }
 
-  // Earners first, the dearest and best first, then the buildings that feed,
-  // guard and calm the realm.
-  const BUILD_ORDER = [
+  // Earners, the dearest and best first, then the buildings that guard and
+  // calm the realm; and in turn with them, the fields, mills and granaries
+  // that feed it.
+  const EARNERS = [
     'goldmine', 'tollbridge', 'quarter', 'market', 'silvermine', 'hostel', 'weavers', 'pasture', 'shipyard', 'alchemist', 'brewery',
     'fishery', 'tannery', 'inn', 'workshop', 'saltpans', 'stud', 'distillery', 'charcoal', 'smithy', 'weaponsmith', 'lodge', 'harbour',
-    'fields', 'mill', 'granary', 'guildhall', 'walls', 'shrine', 'hospice', 'lumber', 'quarry', 'mine',
+    'guildhall', 'walls', 'shrine', 'hospice', 'lumber', 'quarry', 'mine',
   ];
+  const FOOD = ['fields', 'mill', 'granary'];
 
   function steward(s, month, spend) {
     s = answer(s, true);
@@ -68,7 +70,8 @@ export function makeCrowns(world) {
     }
     for (let i = 0; i < (spend ? 3 : 1); i++) {
       let built = false;
-      for (const b of BUILD_ORDER) {
+      const order = (month + i) % 2 ? [...FOOD, ...EARNERS] : [...EARNERS, ...FOOD];
+      for (const b of order) {
         for (const st of world.geography.settlements) {
           const c = canBuild(s, world, st.id, b);
           if (c.ok && (spend || (!c.borrow && s.treasury > 1200))) { s = act(s, { type: 'build', settlement: st.id, building: b }); built = true; break; }

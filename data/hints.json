@@ -22,8 +22,10 @@
     {
       "id": "ledger",
       "trigger": "firstLedger",
-      "title": "The first ledger",
-      "text": "On the first of every month the accounts are drawn up. The menu's Ledger shows what came in and went out. A purse that runs dry can borrow from the dwarven banks, at a price in Authority."
+      "title": "The first accounts",
+      "text": "On the first of every month the accounts are drawn up. The menu's Treasury shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in Authority.",
+      "open": "ledger",
+      "openLabel": "Open the Treasury"
     },
     {
       "id": "laws",

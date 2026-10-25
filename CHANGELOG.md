@@ -1,5 +1,14 @@
 # Changelog
 
+## M12 A working economy
+- A rescaled economy: a well-run crown now prospers instead of living in debt. Taxes depend on the kind of place and grow with prosperity and with market halls, guildhalls and merchants' quarters. Crafts earn several times more, by the size and fortunes of their place (a little less each the more of one trade the realm has). Gold mines yield about 150 a month at their peak. Patrols cost by the length of their road. Debt interest is 1% a month, but deep debt now stirs unrest.
+- Production chains: sheep pastures and weavers' halls (wool to cloth), rye distilleries (spare grain to rye spirit), charcoal burners and weaponsmiths (timber and iron to arms, dearest while the realms around are at war), salt pans on the Velen coast (salt, and stores that keep longer), and horse studs on the southern farmland (horses, and cheaper patrols). Finished goods ride the crown's routes at a premium where the far end lacks them, most of all abroad, and the rest sells at home. Carts carry them along the roads.
+- New trades: silver mines in the hills, toll bridges at the White Bridge and Devil's Ford that earn from every caravan crossing the Pontar, a shipyard at Gors Velen, a fishery and smokehouse, merchants' quarters in the cities, a pilgrims' hostel at the Temple of Melitele, an alchemist's workshop (the Eternal Fire disapproves) and a hunters' lodge that thins the beasts nearby. Each stands only where the land suits it, with sheep, horses, boats and smoke about it.
+- The Treasury (formerly the Ledger): a line for every crown in and out, and the places that earn and cost most. Every town's card says what it earned and cost the crown last month. The first time the treasury goes into the red, a hint explains debt and opens the Treasury.
+- The Trade screen shows the goods each route carries and what the chains made; patrols show their cost.
+- tools/longrun.mjs can print each year's ledger; the model crowns live in tools/crowns.mjs; tools/payback.mjs covers every new building.
+- Save version 11.
+
 ## M11 Trade, gold and a busier realm
 - Crown trade routes, from a town's card or the new Trade and gold screen: between our towns and cities, or into a friendly neighbour's. Each earns by the towns' size and fortunes, the haul, what each sells the other and how safe the road is; bandits rob them, patrols protect them, war closes them. Every route has its own ledger line, a gold thread on the map and crown caravans on the road.
 - Gold: known seams in the Mahakam foothills, the Pass of Klamat and the Tukaj Hills, and hidden ones for prospectors to find. A gold mine pays every month until the seam runs out, and brings miners, dwarves, bandits, envious neighbours and Mahakam's frown.
