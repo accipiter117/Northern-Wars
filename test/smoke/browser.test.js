@@ -98,18 +98,18 @@ for (const vp of VIEWPORTS) {
         const p = nw.unitScreenOf(u.id);
         if (!p) continue;
         // Towns win taps close to them, so pick a unit out on the open road.
-        const clear = nw.world.geography.settlements.every((st) => {
+        const clear = [...nw.world.geography.settlements, ...nw.world.foreign].every((st) => {
           const q = nw.screenOf(st.id);
           return Math.hypot(q.x - p.x, q.y - p.y) > 50;
         });
-        if (clear && p.x > 30 && p.x < innerWidth - 30 && p.y > 160 && p.y < innerHeight - 30) return p;
+        if (clear && p.x > 30 && p.x < innerWidth - 30 && p.y > 160 && p.y < innerHeight - 120) return p;
       }
       return null;
     });
     if (target) {
       await page.touchscreen.tap(target.x, target.y - 4);
       await page.waitForSelector('#unit-label:not([hidden])');
-      assert.match(await page.textContent('#unit-label'), /caravan|Patrol|barge/i);
+      assert.match(await page.textContent('#unit-label'), /caravan|Patrol|barge|Pilgrims|Refugees|Grain cart|merchants/i);
       await page.screenshot({ path: join(OUT, `${vp.name}-unit.png`) });
     }
 
@@ -383,5 +383,51 @@ test('steady play does not redraw the painted map', async () => {
   const after = await page.evaluate(() => ({ ...window.northernWars.renderStats, day: window.northernWars.state.day }));
   assert.equal(after.base - before.base, 0, 'painted map redrawn during play');
   assert.ok(after.overlay - before.overlay <= 3, `settlement layer redrawn ${after.overlay - before.overlay} times`);
+  await context.close();
+});
+
+// The wider North: a spy in Redania shows it on the map and the realm card,
+// a foreign town opens its own card, and an embassy can be opened.
+test('foreign realms under the fog of war', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  let s = createState(world, 1262);
+  s.spies.redania = s.day + 200;
+  s = step(s, 30, world);
+  for (const k of ['envoys', 'petitions', 'demands', 'events']) s[k] = [];
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('dialog', (d) => d.accept());
+  await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await page.goto(`${base}?paused&nohints`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+
+  // Pull back to see the whole North under its fog.
+  await page.mouse.move(195, 500);
+  for (let i = 0; i < 4; i++) { await page.mouse.wheel(0, 400); await page.waitForTimeout(50); }
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: join(OUT, 'north.png') });
+
+  await page.click('#menu-button');
+  await page.click('[data-action="neighbours"]');
+  await page.click('[data-realm="redania"]');
+  assert.match(await page.textContent('#sheet-body'), /What we see[\s\S]*through our agent[\s\S]*Places we know[\s\S]*Novigrad/);
+  await page.click('[data-foreign="novigrad"]');
+  assert.match(await page.textContent('#sheet-body'), /Novigrad[\s\S]*In sight now[\s\S]*People[\s\S]*about/);
+  await page.screenshot({ path: join(OUT, 'foreign-card.png') });
+
+  // Back to the realm list, and open an embassy in Kaedwen.
+  await page.click('[data-realm="redania"]');
+  await page.click('[data-action="neighbours"]');
+  await page.click('[data-realm="kaedwen"]');
+  const t = await page.evaluate(() => window.northernWars.state.treasury);
+  await page.click('[data-embassy="open"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.embassies.kaedwen), true);
+  assert.equal(await page.evaluate(() => window.northernWars.state.treasury), t - 250);
+  assert.deepEqual(errors, []);
   await context.close();
 });

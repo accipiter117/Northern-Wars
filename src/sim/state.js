@@ -5,8 +5,10 @@ import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
+import { defaultRealms } from './realms.js';
+import { newIntel, updateIntel, visionOf } from './vision.js';
 
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 8;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -47,11 +49,18 @@ export function createState(world, seed = 1) {
     nextPatrolId: 1,
     events: [],
     nextEventId: 1,
+    realms: defaultRealms(world),
+    embassies: {},
+    spies: {},
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],
   };
   applyHoldings(state, world);
+  if (world.grid) {
+    state.ambient.intel = newIntel(world);
+    updateIntel(state, world, visionOf(state, world));
+  }
   state.reign = newReign(state, day);
   for (const id of Object.keys(settlements)) settlements[id].tension = tensionTarget(state, world, id);
   state.stability = computeStability(state);

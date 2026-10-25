@@ -116,6 +116,13 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 - Envoys: about one month in three, one envoy card from a fitting realm (trade pacts, border disputes, refugees, marriages, loans, smugglers, Mahakam's smiths, dryad arrows, spies). Each has two or three choices touching relation, the treasury, Authority, group opinion, settlers or soldiers. The game pauses on arrival; ignored envoys default after 20 days. This is the seed of the M6 event system.
 - No armies, wars or treaties yet.
 
+## The wider North (M8)
+- The world (geography.bounds) reaches beyond Temeria to each neighbour's extent. Temeria keeps its own coordinates; foreign places, roads and terrain are tagged with their realm and never touch Temerian rules.
+- Living realms (data/realms.json) under lighter rules: each foreign settlement grows (0.12% a month, more with food buildings), pays taxes and garrisons, and its realm raises one building at a time in its own order of preference. Incidents (fire, raids, sickness, fairs, harvests) touch prosperity and people. A realm's prosperity scales its trade with Temeria (0.6x to 1.5x).
+- Fog of war, kept as cosmetic state in state.ambient (explored 20-unit grid cells, and each foreign settlement as last seen). Sight: Temerian towns (village 40 to castle 85, a Watchtower 130), +40 on patrolled roads, Temerian merchants abroad 45, an embassy 170 round a foreign capital, friendly realms (stance friendly, relation 40+) share 70 round their towns, true allies (75+) and a spy in place show the whole realm.
+- Embassy: 250 crowns and 20 a month, refused below relation -30 and by Brokilon. Spy: 200 crowns, 120 days, one in four caught (relation -15).
+- News of foreign incidents reaches the chronicle only through an embassy, a spy, a friend or open trade.
+
 ## Ambient units
 Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG). Kinds and what drives their numbers:
 - Merchant caravans: trade volume between settlements.

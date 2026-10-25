@@ -17,7 +17,7 @@ const say = (state, text) => addDispatch(state, text, 'treasury');
 const GOODS = ['timber', 'stone', 'iron'];
 
 export function buildingEffects(world, s) {
-  const fx = { foodYield: 0, goodsYield: 0, storage: 0, trade: 0, prosperity: 0, unrest: 0 };
+  const fx = { foodYield: 0, goodsYield: 0, storage: 0, trade: 0, prosperity: 0, unrest: 0, vision: 0 };
   for (const id of s.buildings) {
     for (const [k, v] of Object.entries(world.buildings[id].effects)) fx[k] += v;
   }
@@ -67,7 +67,7 @@ export function goodsYield(world, id, s) {
 // when ordered, so they are listed but not counted here.
 export function ledgerNet({ income, expenses }) {
   const i = income.taxes + income.trade + income.sales + (income.foreign ?? 0);
-  const o = expenses.garrisons + expenses.upkeep + expenses.court + (expenses.edicts ?? 0) + (expenses.gifts ?? 0) + (expenses.patrols ?? 0) + expenses.interest;
+  const o = expenses.garrisons + expenses.upkeep + expenses.court + (expenses.edicts ?? 0) + (expenses.gifts ?? 0) + (expenses.patrols ?? 0) + (expenses.embassies ?? 0) + expenses.interest;
   return { in: i, out: o, net: i - o };
 }
 
@@ -164,6 +164,7 @@ export function monthlyLedger(state, world) {
     edicts: law.monthly,
     gifts: stanceCost(state, world),
     patrols: state.patrols.length * world.military.patrol.cost,
+    embassies: Object.keys(state.embassies ?? {}).length * (world.realms?.intelligence.embassy.monthly ?? 0),
     interest: 0,
     construction: state.ledger.construction,
     decrees: state.ledger.decrees ?? 0,

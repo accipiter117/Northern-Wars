@@ -2,13 +2,25 @@
 // and the derived road and river networks. It is built once from JSON and
 // never saved; the state only refers to it by ids.
 import { distanceToPolygon } from './geometry.js';
+import { buildGrid } from './vision.js';
 
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms }) {
+  // byId knows every place on the map, at home and abroad; adjacency is
+  // Temeria's own road network, which every domestic system walks.
+  // fullAdjacency adds the foreign roads, for traffic that crosses borders.
+  const foreign = geography.foreignSettlements ?? [];
   const byId = {};
   for (const s of geography.settlements) byId[s.id] = s;
+  for (const s of foreign) byId[s.id] = s;
+  const realmOf = {};
+  const foreignByRealm = {};
+  for (const s of foreign) {
+    realmOf[s.id] = s.realm;
+    (foreignByRealm[s.realm] ??= []).push(s.id);
+  }
 
   const adjacency = {};
   for (const s of geography.settlements) adjacency[s.id] = [];
@@ -16,6 +28,20 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     const d = dist(byId[a], byId[b]);
     adjacency[a].push({ to: b, d });
     adjacency[b].push({ to: a, d });
+  }
+
+  const fullAdjacency = {};
+  for (const s of [...geography.settlements, ...foreign]) fullAdjacency[s.id] = [...(adjacency[s.id] ?? [])];
+  for (const [a, b] of geography.foreignRoads ?? []) {
+    const d = dist(byId[a], byId[b]);
+    fullAdjacency[a].push({ to: b, d });
+    fullAdjacency[b].push({ to: a, d });
+  }
+
+  // Temerian settlements near enough a border to keep watch over it.
+  const borderland = {};
+  for (const s of geography.settlements) {
+    borderland[s.id] = Object.values(geography.neighbours).some((n) => n.shapes.some((sh) => distanceToPolygon(s.x, s.y, sh) < 90));
   }
 
   const rivers = {};
@@ -31,6 +57,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     let best = { kind: 'open', d: WORKED_RADIUS };
     for (const [kind, zones] of Object.entries(geography.terrain)) {
       for (const z of zones) {
+        if (z.realm) continue;
         const d = distanceToPolygon(s.x, s.y, z.shape);
         if (d < best.d || (d === 0 && best.d === 0)) best = { kind, d };
       }
@@ -41,7 +68,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   // Settlements within reach of a forest, or of Brokilon itself, are where
   // Scoia'tael commandos strike.
   const forestNear = {};
-  const woods = [...(geography.terrain.forest ?? []).map((z) => z.shape), ...(geography.neighbours.brokilon?.shapes ?? [])];
+  const woods = [...(geography.terrain.forest ?? []).filter((z) => !z.realm).map((z) => z.shape), ...(geography.neighbours.brokilon?.shapes ?? [])];
   for (const s of geography.settlements) forestNear[s.id] = woods.some((sh) => distanceToPolygon(s.x, s.y, sh) < 60);
 
   // Which kinds of wild country lie within reach of each settlement: where
@@ -51,16 +78,22 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   for (const s of geography.settlements) {
     wildOf[s.id] = {};
     for (const [kind, zones] of Object.entries(geography.terrain)) {
-      if (zones.some((z) => distanceToPolygon(s.x, s.y, z.shape) < reach)) wildOf[s.id][kind] = true;
+      if (zones.some((z) => !z.realm && distanceToPolygon(s.x, s.y, z.shape) < reach)) wildOf[s.id][kind] = true;
     }
   }
 
-  return {
+  const world = {
     kingdom,
+    foreign,
+    realmOf,
+    foreignByRealm,
+    fullAdjacency,
+    borderland,
     forestNear,
     wildOf,
     military,
     events,
+    realms,
     culture,
     petitions,
     houses,
@@ -80,6 +113,8 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     rivers,
     pathCache: new Map(),
   };
+  if (realms) world.grid = buildGrid(world);
+  return world;
 }
 
 export function dist(a, b) {
@@ -93,8 +128,11 @@ export function polylineLength(pts) {
 }
 
 // Shortest road route between two settlements (Dijkstra; the graph is tiny).
-export function roadPath(world, from, to) {
-  const key = `${from}>${to}`;
+// Domestic routes stay on Temeria's roads; `full` lets them cross borders.
+export function roadPath(world, from, to, full = false) {
+  const graph = full ? world.fullAdjacency : world.adjacency;
+  if (!graph[from] || !graph[to]) return null;
+  const key = `${full ? '*' : ''}${from}>${to}`;
   if (world.pathCache.has(key)) return world.pathCache.get(key);
   const best = { [from]: 0 };
   const prev = {};
@@ -104,7 +142,7 @@ export function roadPath(world, from, to) {
     for (const id of open) if (cur === null || best[id] < best[cur]) cur = id;
     open.delete(cur);
     if (cur === to) break;
-    for (const { to: n, d } of world.adjacency[cur]) {
+    for (const { to: n, d } of graph[cur]) {
       const nd = best[cur] + d;
       if (best[n] === undefined || nd < best[n]) {
         best[n] = nd;

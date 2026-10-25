@@ -8,7 +8,7 @@ import { createSheet } from './ui/sheet.js';
 import { settlementCardHtml } from './ui/settlementCard.js';
 import { realmMenuHtml, chronicleHtml, ledgerHtml } from './ui/menu.js';
 import { lawsHtml } from './ui/laws.js';
-import { neighboursHtml, realmCardHtml, envoyHtml } from './ui/neighbours.js';
+import { neighboursHtml, realmCardHtml, envoyHtml, foreignCardHtml } from './ui/neighbours.js';
 import { faithHtml, petitionHtml } from './ui/faith.js';
 import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
 import { militaryHtml, eventHtml } from './ui/military.js';
@@ -149,9 +149,34 @@ async function boot() {
     hideUnitLabel();
     const body = sheet.open(`realm:${id}`, realmCardHtml(world, state, id));
     body.onclick = (e) => {
-      const st = e.target.closest('[data-stance]');
+      const t = e.target;
+      const st = t.closest('[data-stance]');
+      const emb = t.closest('[data-embassy]');
+      const spy = t.closest('[data-spy]');
+      const place = t.closest('[data-foreign]');
       if (st && !st.disabled) order({ type: 'stance', realm: id, stance: st.dataset.stance });
-      else menuAction(e.target.closest('[data-action]')?.dataset.action);
+      else if (emb && !emb.disabled) order({ type: 'embassy', realm: id, close: emb.dataset.embassy === 'close' });
+      else if (spy && !spy.disabled) {
+        if (confirm(`Send a spy into ${world.geography.neighbours[id].name}? If caught, they will not forget it.`)) order({ type: 'spy', realm: id });
+      } else if (place) openForeign(place.dataset.foreign);
+      else menuAction(t.closest('[data-action]')?.dataset.action);
+    };
+  }
+
+  // A foreign town, as far as the crown knows it.
+  function openForeign(id) {
+    selection = null;
+    hideUnitLabel();
+    // The renderer knows whether it is in sight; a remembered town comes from
+    // the last report.
+    const live = renderer.foreignInfo(id);
+    const seen = state.ambient.intel?.seen[id];
+    const view = live ?? (seen && { visible: false, ...seen });
+    if (!view) return;
+    const body = sheet.open(`foreign:${id}`, foreignCardHtml(world, state, id, view));
+    body.onclick = (e) => {
+      const realm = e.target.closest('[data-realm]');
+      if (realm) openRealm(realm.dataset.realm);
     };
   }
 
@@ -427,6 +452,7 @@ async function boot() {
     const hit = renderer.pick(x, y, state, frac);
     if (hit?.settlement) openSettlement(hit.settlement);
     else if (hit?.neighbour) openRealm(hit.neighbour);
+    else if (hit?.foreign) openForeign(hit.foreign);
     else if (hit?.unit) {
       sheet.close();
       selection = { unit: hit.unit };
@@ -537,6 +563,11 @@ async function boot() {
     get state() { return state; },
     get speed() { return speed; },
     get renderStats() { return renderer.stats; },
+    // What a tap at these page coordinates would pick, for browser tests.
+    pickAt(x, y) {
+      const r = canvas.getBoundingClientRect();
+      return renderer.pick(x - r.left, y - r.top, state, frac);
+    },
     setSpeed,
     screenOf(id) {
       const st = world.byId[id];

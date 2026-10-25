@@ -3,6 +3,7 @@ import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
+import { defaultRealms } from './realms.js';
 import { seasonOf } from './calendar.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
@@ -82,6 +83,15 @@ const MIGRATIONS = {
       Object.assign(s, { plague: 0, quarantine: 0, priestesses: false, cleared: {}, raided: 0, raidKind: null });
     }
     state.version = 7;
+    return state;
+  },
+  // v8 brings the neighbouring realms to life, with embassies, spies and
+  // the fog of war (kept with the cosmetic traffic, so it starts afresh).
+  7(state, world) {
+    state.realms = defaultRealms(world);
+    state.embassies = {};
+    state.spies = {};
+    state.version = 8;
     return state;
   },
 };

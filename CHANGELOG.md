@@ -1,5 +1,14 @@
 # Changelog
 
+## M8 The wider North
+- A larger map: every neighbouring realm now reaches its real extent, with 35 towns, cities and castles of its own, roads, terrain and roads across the border.
+- Living neighbours: their towns grow, their rulers raise buildings and keep garrisons, and their own caravans and riders travel their roads in their colours.
+- Fog of war over foreign lands: shrouded until seen, then shown as last seen, and live where someone of ours is watching.
+- Sight from border towns, a new Watchtower building, patrols, Temerian merchants abroad, friendly realms, true allies, embassies and spies.
+- Embassies and spies on each realm's card, with what we can see of it and the places we know; tap a known foreign town for its card.
+- Toasts no longer block taps on the map.
+- Save version 8.
+
 ## M7 Balance and polish
 - Long-run balance: thirty-year runs of four kinds of crown, written up in docs/BALANCE.md with the dials worth turning, and tools/longrun.mjs to repeat them.
 - A full treasury now draws courtiers and hangers-on (1% a month of anything above 5,000), so an idle hoard levels off around 43,000 instead of passing 150,000.

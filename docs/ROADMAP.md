@@ -10,6 +10,7 @@
 | M5 Nobility | Great houses, holdings, loyalty, demands, crown actions, soft failure | Done |
 | M6 Military holdings and events | Garrisons, castles, patrol routes, levies, threats, event system with auto-pause | Done |
 | M7 Balance and polish | Long-run balance, chronicle, tutorial hints, performance on mobile | Done |
+| M8 The wider North | A larger world with living neighbouring realms (towns, roads, growth, buildings, garrisons, traffic) under a fog of war lifted by watchers, merchants, friends, embassies and spies | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -19,6 +20,15 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M8 acceptance criteria
+- The map reaches beyond Temeria to every neighbour's real extent, with 35 foreign towns, cities and castles, their roads and roads across the borders; Temeria keeps its coordinates.
+- Each neighbouring realm grows, taxes, keeps garrisons, raises buildings in its own order of preference and has its fires, raids, sickness, fairs and harvests, under lighter rules than Temeria.
+- Fog of war: never-seen land is shrouded, once-seen land shows foreign towns as last seen, and land in sight shows them as they are. Sight comes from Temerian towns (more from a new Watchtower on the border), patrols, merchants abroad, embassies, friends (their towns), true allies and spies (the whole realm).
+- Embassies and spies as crown actions; news from abroad only through those, friends or trade.
+- Foreign caravans and riders in their realm's colours, shown only where they can be seen; tap a known foreign town for its card.
+- The fog is cosmetic state: the game plays out the same with or without it (tested).
+- Version 7 saves load with living realms.
 
 ## M7 acceptance criteria
 - Thirty-year runs of four kinds of crown (idle, steward, spendthrift, tyrant) over several seeds with nothing running away; findings and dials in docs/BALANCE.md; a thirty-year guard in the test suite.

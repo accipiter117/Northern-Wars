@@ -9,6 +9,7 @@ import { stepCultureDay, monthlyCulture, tensionUnrest } from './culture.js';
 import { stepPetitionsDay, monthlyPetition } from './petitions.js';
 import { stepHousesDay, monthlyHouses, holderUnrest } from './houses.js';
 import { monthlyThreats, monthlyEvent, stepEventsDay, plagueActive } from './military.js';
+import { monthlyRealms } from './realms.js';
 
 const CHRONICLE_LIMIT = 400;
 
@@ -80,6 +81,7 @@ export function stepRealmDay(state, world, rng) {
     monthlyHouses(state, world, rng);
     monthlyThreats(state, world, rng);
     monthlyEvent(state, world, rng, date.season);
+    monthlyRealms(state, world, rng);
   }
 }
 
