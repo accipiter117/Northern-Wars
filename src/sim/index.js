@@ -44,3 +44,9 @@ export {
 } from './audiences.js';
 export { intentions, assess as assessRealm, deterrence, strengthOf, armyTarget } from './strategy.js';
 export { canRaiseAbroad as canBuildAbroad } from './realms.js';
+export {
+  canRequisition, captureOptions, conquestDecisionText, integrationParts, fearOf as fearOfTemeria, northFear, peoplesAt, canResettle, resettleCost,
+  canPension, pensionCost, canSpyOnClaimant, canRepair, crushOdds, claimantName, optionLabel, leagueAllies,
+} from './conquest.js';
+export { peopleOf, livingRealms, isFallen } from './lands.js';
+export { realmNow } from './conflict.js';

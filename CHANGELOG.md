@@ -1,5 +1,15 @@
 # Changelog
 
+## M19 A and B Conquest
+- Towns taken in war are occupied, not owned, until a peace says otherwise. Our soldiers can strip an occupied town of grain and coin; nothing is built there. On the map an occupied town wears its occupier's colour hatched over its own.
+- A town that becomes Temerian is ours for good: a full crown town with its own people (Bremervoord's stay Cidarians), their faith, buildings and stores, to be built in, taxed and garrisoned like any other. Towns we lose at a peace leave us the same way. Old reigns keep what they won.
+- Take a town and decide its fate: spare it, sack it for plunder and a generation of hatred, or drive out one of its peoples, who take the road to their kin. At the peace, keep it as crown land or grant it to a great house.
+- Conquered towns have an integration bar: time, a garrison, prosperity, building and tolerant laws win them over; heavy taxes, harsh laws, sacks elsewhere and an exiled ruler's whispers set them back. Settlers from Temeria speed it up, at a price. A sullen town pays less, sends fewer men and may rise.
+- Risings spread to towns of the same people and can bring their old realm back to war. Crush them, or treat with them for a charter. A town that holds out for a season is free.
+- Swallow a whole realm and its ruler goes into exile, a claimant whose claim fades with the years. Pay them off, send an agent against them, or ask their host to hand them over. A small realm can be made a vassal instead.
+- The North fears a conqueror. Every town taken raises it, sacks and expulsions twice over; when fear runs high the realms swear a league against us, and may strike together when we are weak. Great houses whose loyalty has collapsed may defect to a neighbour, lands and all. Foreign rulers conquer, sack, annex and face risings by the same rules.
+- Save version 16.
+
 ## M18 Rulers who govern
 - The rulers of the North now govern. Each month they weigh the danger they face, the chances before them and the state of their purse, and settle on a course: growing, arming, preparing a war, mending their debts or scheming against a stronger neighbour. They keep to it for at least six months unless danger jumps.
 - Foreign realms keep standing armies that cost them every month, and courts that sit on gold pay for it. A realm in debt sees soldiers desert and towns suffer, and its ruler may offer Temeria a loan, goods or a village for coin. Verden no longer drowns in debt, and Kerack's garrisons recover after a war.

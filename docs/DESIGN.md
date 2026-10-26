@@ -174,6 +174,49 @@ Diplomacy as meetings with people. No story or scripted dialogue: rulers speak i
 - Rulers request audiences with real proposals, about one in fourteen a month each: a deal of their own devising (by their agenda: trade pacts, non-aggression, defensive pacts, protectorates, goods for crowns), a demand when they are hostile and stronger (crowns, or the town they want, or else), or a warning when our armies crowd their border. Requests wait in the Court inbox and the Diplomacy tab's Audiences, can be accepted, refused or bargained over at the deal table, and lapse after 30 days. They replace the random envoys.
 - Save version 14: old saves keep their stances; a friendly stance with a true ally (relation 75 or more) becomes a defensive pact for five years; trust starts from the relation; envoys still waiting take their default answer.
 
+## Conquest and battles (M19)
+Towns that change hands now change realm for good, and what becomes of them is the crown's choice and the crown's problem. Numbers live in data/conquest.json; the rules in src/sim/lands.js (who rules what) and src/sim/conquest.js (what it costs).
+
+### How towns change hands
+- **Taken by force.** A village or any unwalled place falls to an army that holds it a day unopposed. Walled towns, cities and castles need a siege.
+- **Occupied, not owned.** While the war lasts a captured town is only occupied. The occupier can requisition grain and coin from it (its people resent it, and remember), but cannot build in it or grant it. On the map it is drawn with the occupier's colour hatched over the owner's.
+- **Ownership changes only by:** a peace that leaves the town with its taker (each keeps what it holds, or towns named in the terms); a sale or exchange at the deal table; a revolt that frees it; or a great house that turns its coat and takes its lands to a neighbour that courted it.
+- **Annexation.** A town that becomes Temerian is a full crown settlement from then on: its people by kind (they keep their origin, so Bremervoord's people stay Cidarians), their faith, prosperity, stores, buildings (damaged ones stay damaged), garrison, roads and place on the map. It is governed, built in and taxed like any Temerian town. A Temerian town lost at a peace leaves the crown's lists the same way.
+- **A realm that loses every town falls.** Its ruler flees into exile as a claimant, to the court most hostile to the conqueror. A capital still goes home at a peace (M18) unless its taker holds every town the realm had left. A small realm (four towns or fewer) may instead be offered vassalage at the peace table: it keeps its ruler and its towns, under our protection, and pays a quarter of its income.
+- **Old saves.** Any foreign town still held after its war ended is annexed when the save is loaded, so a reign keeps what it won; a realm left with nothing falls.
+
+### What to do with a town
+- **On capture** the crown is asked once (a short card, the game paused): spare it (the default: no loot, the best start); sack it (plunder of coin and goods at once, prosperity crashes, its best buildings burn, an eighth of its people die or flee, it smoulders for six weeks, its people hate us, and the whole North's fear of us rises twice as fast); or drive out one people (its own folk, elves, dwarves or halflings). Those driven out take the road to their kin; the town loses their share of people and prosperity for years. Driving out elves feeds the Scoia'tael and pleases the Eternal Fire; their kin's realms remember it.
+- **At the peace** the crown decides who holds each town gained: kept as crown demesne, or granted to a great house (whose loyalty rises, and the others' envy with it).
+- **Settlers.** Once a town is ours, Temerian settlers can be paid to move there over a year: integration rises faster, but locals turned off their land side with the old crown.
+- **Rebuilding.** What a sack burned can be rebuilt for half its cost, once the ruins stop smouldering.
+
+### Integration
+- Every conquered town has an integration from 0 to 100, shown as a bar on its card with the reasons it is rising or falling.
+- It starts from how the town was taken (spared, sacked or a people driven out), how far its people and faith stand from Temeria's (Soddeners are near kin, the folk of Mahakam strangers), and how bloody the war was.
+- It rises each month with time, a garrison, prosperity, what the crown builds there and tolerant laws; it falls with heavy taxes, martial law, harsh laws on its people or its faith, a claimant's agitation, and every sack or expulsion elsewhere.
+- A town that has not taken to the crown pays less tax (a third of its due at nothing), sends fewer men to the levy and the garrison, and is more restless.
+- Foreign rulers' conquests work the same way, more slowly; a realm still digesting sullen conquests leans to Consolidate rather than another war.
+
+### Revolts
+- A conquered town with low integration and high unrest may rise, more readily with a claimant stirring it. Its rebels (about a twentieth of its people) declare for their old crown. If they outnumber the garrison they hold the town and it stops paying.
+- A rising can spread to nearby towns of the same people, and the old realm, if it still stands and is cold to us, may march to help.
+- The crown can crush it (the odds are shown: the garrison, armies and companies near by, and a share of nearby garrisons, against the rebels; integration falls but the town is held), or treat with it (a charter and lighter taxes for three years; integration rises; Authority falls).
+- An army standing in the town puts a rising down. A revolt that holds its town for a season frees it: the town returns to its old crown, raising a fallen realm again.
+
+### Claimants
+- An exiled ruler's legitimacy starts at 80 and fades each year, faster where the old lands take to their new masters (integration above 70). Below 5 the claim is given up.
+- A claimant stirs their old towns (integration falls, risings come readier) and, with a willing host, may land with an exile army.
+- The crown can pay a pension to renounce, send an agent to discredit them (it may be caught, which angers the host), or ask the host at the deal table to hand them over.
+
+### Fear
+- Each ruler keeps a Fear of a conqueror, apart from mood and trust. Every town taken raises it (larger towns more, sacks and expulsions twice over), most in the realms near by; it ebbs a point a month in peace. It shows on the Diplomacy tab and among each ruler's mood reasons.
+- When the North's fear of Temeria runs high (35 on average), the most afraid swear a league: strike one and the rest join the war. When fear is extreme (65) and Temeria weakened (at war elsewhere, or stability under 45), the league may declare war together.
+- Foreign rulers follow the same rules by their tempers: greedy and opportunist captains sack, zealous ones drive out elves, the rest spare; they annex, face risings and claimants, and fear one another.
+
+### Save
+- Version 16: lands, claimants and conquest records; towns held after ended wars are annexed.
+
 ## Rulers who govern (M18)
 The foreign realms stop rolling dice and start governing. Each month every ruler looks at their realm, chooses what to do with it, and spends their money accordingly. Numbers live in data/strategy.json; the rules in src/sim/strategy.js.
 

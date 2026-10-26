@@ -6,6 +6,7 @@ import { cardHead, orderAttr, section } from './card.js';
 import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { portraitImg } from './audience.js';
+import { occupiedHtml, fearHtml, fearWord } from './conquest.js';
 import { parties, rulerShort, moodWord, treatyDef, intentions } from '../sim/index.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
@@ -96,12 +97,14 @@ export function neighboursHtml(app) {
   const waiting = new Set([...state.envoys.map((e) => e.realm), ...(state.diplomacy?.requests ?? []).map((q) => q.realm)]);
   const rows = Object.keys(world.neighbours.realms).map((id) => {
     const n = state.neighbours[id];
+    const fallen = state.realms?.[id]?.fallen;
+    const fear = world.conquest && !fallen && (state.conquest?.fear?.[id]?.temeria ?? 0) >= 5 ? ` ${fearWord(state, id)} of us.` : '';
     return `<button type="button" class="row realm-row" data-realm="${id}" data-go="realm:${id}">
-      ${icon('dove')}<span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[id].name)}${waiting.has(id) ? ' <span class="badge bad">Asks an audience</span>' : ''}${hostile(state, TEMERIA, id) ? ' <span class="badge bad">At war</span>' : ''}</span>
-      <span class="row-sub">${escapeHtml(world.neighbours.realms[id].ruler)}. ${world.neighbours.stances[n.stance].name} stance. ${tradeLine(world, state, id)}.</span></span>
-      <span class="row-end">${describeLevel((n.relation + 100) / 2, WORDS)}${trendArrow(state, world, id)}</span></button>`;
+      ${icon('dove')}<span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[id].name)}${waiting.has(id) ? ' <span class="badge bad">Asks an audience</span>' : ''}${hostile(state, TEMERIA, id) ? ' <span class="badge bad">At war</span>' : ''}${fallen ? ' <span class="badge">Fallen</span>' : ''}</span>
+      <span class="row-sub">${fallen ? `Fell to ${escapeHtml(sideName(world, fallen.by))} in ${formatDate(fallen.day)}.` : `${escapeHtml(world.neighbours.realms[id].ruler)}. ${world.neighbours.stances[n.stance].name} stance. ${tradeLine(world, state, id)}.${fear}`}</span></span>
+      <span class="row-end">${fallen ? '' : `${describeLevel((n.relation + 100) / 2, WORDS)}${trendArrow(state, world, id)}`}</span></button>`;
   }).join('');
-  return `${rulersRowHtml(app)}<div data-part="realms"><div class="rows">${rows}</div></div>`;
+  return `${rulersRowHtml(app)}<div data-part="realms"><div class="rows">${rows}</div></div>${fearHtml(world, state)}`;
 }
 
 // What the crown can see of each realm, and its embassies and spies.
@@ -152,9 +155,15 @@ export function realmCard(app, id) {
   const envoys = pendingDecisions(state, world).filter((d) => (d.kind === 'envoy' || d.kind === 'request') && d.realm === id);
   const audience = world.diplomacy?.rulers[id]
     ? `<button type="button" class="act primary" data-audience="${id}"><span class="act-label">${icon('crown')} An audience with ${escapeHtml(rulerShort(world, id))}</span><span class="act-sub">Trade, diplomacy, alliances and war</span></button>` : '';
+  const fallen = state.realms?.[id]?.fallen;
+  if (fallen) {
+    const c = (state.claimants ?? []).find((x) => x.realm === id);
+    return `<div data-part="head"><p class="warn">${escapeHtml(world.geography.neighbours[id].name)} is no more: its last town fell to ${escapeHtml(sideName(world, fallen.by))} in ${formatDate(fallen.day)}.</p>
+      <p class="sub">${c ? `${escapeHtml(r.ruler)} lives in exile${c.host ? ` at the court of ${escapeHtml(sideName(world, c.host))}` : ''}, still claiming the crown (legitimacy ${Math.round(c.legitimacy)}).` : 'Its old ruler has given up the claim.'}</p></div>${fearHtml(world, state)}`;
+  }
   return `
     ${cardHead({
-      status: `<span>Ruled by ${escapeHtml(r.ruler)}.</span>`,
+      status: `<span>Ruled by ${escapeHtml(r.ruler)}.${world.conquest ? ` ${fearWord(state, id)} of us.` : ''}</span>`,
       infoText: r.temper,
       actions: audience,
       chips: [
@@ -197,6 +206,7 @@ export function foreignCardHtml(world, state, id, view) {
       <p class="sub">${TYPE_NAMES[st.type]}${capital ? `, seat of the crown of ${escapeHtml(realm)}` : ` in ${escapeHtml(realm)}`}. ${status}</p>
       ${view.owner && view.owner !== st.realm ? `<p class="warn">Held by ${escapeHtml(sideName(world, view.owner))}.</p>` : ''}
       ${view.visible && world.war ? siegeNote(world, state, id) : ''}
+      ${occupiedHtml(world, state, id)}
       <button type="button" class="act" data-realm="${st.realm}" data-go="realm:${st.realm}"><span class="act-label">${escapeHtml(realm)}</span></button>
     </div>
     <div data-part="stats">

@@ -48,7 +48,10 @@
     "schemeOpportunity": 0.75,
     "schemeBase": -20,
     "minMonths": 6,
-    "threatJump": 20
+    "threatJump": 20,
+    "digest": 10,
+    "digestMax": 45,
+    "digestBelow": 65
   },
   "traits": {
     "ambitious": {
@@ -188,7 +191,8 @@
     "companies": 1.0,
     "armies": 1.0,
     "allies": 0.5,
-    "whole": 0.35
+    "whole": 0.35,
+    "muster": 0.6
   },
   "probes": {
     "chance": 0.1,

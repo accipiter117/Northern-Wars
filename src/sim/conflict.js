@@ -10,7 +10,15 @@ export const TEMERIA = 'temeria';
 
 const W = (world) => world.war;
 
+// Where a town belonged when the reign began: the realm that still counts it
+// as its own after a conquest (M19).
 export function originOf(world, id) {
+  if (world.homeOf) return world.homeOf[id] ?? TEMERIA;
+  return world.realmOf[id] ?? TEMERIA;
+}
+
+// The realm a town belongs to now, conquests and cessions included.
+export function realmNow(world, id) {
   return world.realmOf[id] ?? TEMERIA;
 }
 

@@ -4,7 +4,7 @@
 // wait (war declared on Temeria, a siege, a rebellion, a deposition) also
 // raise a banner across the top.
 import {
-  TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort,
+  TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText,
 } from '../sim/index.js';
 import { escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
@@ -24,6 +24,15 @@ export function pendingDecisions(state, world, acked = Infinity) {
     out.push({
       key: `warDecision:${d.id}`, kind: 'warDecision', id: d.id, urgent: d.kind === 'declared', daysLeft: left(d.day, world.war.peace.offerDefaultDays),
       kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: d.kind === 'call' ? 1 : 0,
+    });
+  }
+  // What to do with a town taken, who is to hold a town gained, a rising (M19).
+  const waits = world.conquest ? { capture: world.conquest.capture.decisionDays, grant: world.conquest.grant.decisionDays, revolt: world.conquest.revolt.decisionDays } : {};
+  for (const d of state.conquest?.decisions ?? []) {
+    const t = conquestDecisionText(state, world, d);
+    out.push({
+      key: `conquestDecision:${d.id}`, kind: 'conquestDecision', id: d.id, urgent: d.kind !== 'grant', daysLeft: left(d.day, waits[d.kind] ?? 10),
+      kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: 0, town: d.town,
     });
   }
   for (const p of state.events ?? []) {
@@ -95,6 +104,9 @@ export function urgentItems(state, world, acked) {
     if (s && !s.occupier && a.side !== TEMERIA && hostile(state, TEMERIA, a.side)) {
       out.push({ key: `siege:${a.id}:${a.at}`, text: `${world.byId[a.at].name} is besieged by ${sideName(world, a.side)}.`, go: `town:${a.at}` });
     }
+  }
+  for (const r of state.conquest?.revolts ?? []) {
+    if (r.against === TEMERIA) out.push({ key: `revolt:${r.id}`, text: `${world.byId[r.town].name} has risen against the crown.`, go: `town:${r.town}` });
   }
   for (const [id, h] of Object.entries(state.houses ?? {})) {
     if (h.rebel) out.push({ key: `rebel:${id}:${h.rebel.since}`, text: `${world.houses.houses[id].name} is in open rebellion.`, go: `house:${id}` });

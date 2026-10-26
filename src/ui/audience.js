@@ -302,7 +302,11 @@ function presets(app, pid, side) {
   if (war && side === 'us') {
     add('Peace: each keeps what it holds', { kind: 'peace', terms: 'keep' });
     add('Peace: every town handed back', { kind: 'peace', terms: 'white' });
+    // A small realm may keep its ruler as our vassal (M19).
+    if (world.conquest && (world.foreignByRealm[pid] ?? []).length <= world.conquest.vassal.maxTowns) add('Peace: they become our vassal', { kind: 'peace', terms: 'vassal' });
   }
+  // An exile they shelter, handed over or sent away (M19).
+  if (side === 'them' && (state.claimants ?? []).some((c) => c.host === pid && c.against === TEMERIA)) add('Hand over the exile they shelter', { kind: 'claimant' });
   for (const a of [100, 250, 500, 1000]) add(`${number(a)} crowns`, { kind: 'coin', amount: a });
   for (const a of [20, 40, 80]) add(`${a} crowns a month, 12 months`, { kind: 'monthly', amount: a, months: 12 });
   if (!war) {

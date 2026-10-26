@@ -21,7 +21,7 @@ const BASIC = new Set(['fields', 'mill', 'granary', 'walls', 'shrine', 'lumber',
 const realms = Object.keys(world.realms.realms);
 const pct = (n, d) => `${Math.round((100 * n) / Math.max(1, d))}%`;
 
-const totals = { maxMonths: 0, changedBy30: 0, probesPerDecade: [], invasions: [], idleLost: 0, signBreakPerDecade: [], maxFloorRun: 0, newKinds: new Set() };
+const totals = { conquest: [], maxMonths: 0, changedBy30: 0, probesPerDecade: [], invasions: [], idleLost: 0, signBreakPerDecade: [], maxFloorRun: 0, newKinds: new Set() };
 
 for (const seed of seeds) {
   let s = createState(world, seed);
@@ -89,7 +89,19 @@ for (const seed of seeds) {
   }
   const changed = s.warHistory.some((w) => (w.changed ?? []).some((c) => c.to !== 'temeria' && world.realmOf[c.id] && c.to !== world.realmOf[c.id]))
     || realms.some((r) => (world.foreignByRealm[r] ?? []).some((id) => ownerOf(s, world, id) !== r && ownerOf(s, world, id) !== 'temeria'));
-  if (changed) totals.changedBy30++;
+  // Since M19 a town kept at a peace changes realm for good (state.lands).
+  const annexedAbroad = Object.keys(s.lands ?? {}).some((id) => world.homeOf[id] && s.lands[id].realm !== 'temeria');
+  if (changed || annexedAbroad) totals.changedBy30++;
+  // Conquest (M19): towns that changed realm for good, realms fallen, risings, a league.
+  const lands = Object.values(s.lands ?? {});
+  totals.conquest.push({
+    ours: lands.filter((l) => l.realm === 'temeria').length,
+    lost: Object.keys(s.lands ?? {}).filter((id) => !world.homeOf[id] && s.lands[id].realm !== 'temeria').length,
+    abroad: Object.keys(s.lands ?? {}).filter((id) => world.homeOf[id] && s.lands[id].realm !== 'temeria').length,
+    fallen: realms.filter((r) => s.realms[r].fallen).length,
+    risings: s.chronicle.filter((c) => /rises( against|!)/.test(c.text)).length,
+    league: s.chronicle.some((c) => /swear a league/.test(c.text)),
+  });
   totals.invasions.push(invaded.size);
   if (Object.keys(s.settlements).filter((id) => !s.settlements[id].occupier).length < crownStart) totals.idleLost++;
   totals.maxFloorRun = Math.max(totals.maxFloorRun, ...Object.values(maxFloor));
@@ -112,4 +124,5 @@ console.log(`invasions of Temeria per reign: ${totals.invasions.join(', ')} (ste
 if (crown === 'idle') console.log(`reigns in which the crown lost towns: ${totals.idleLost} of ${seeds.length}`);
 console.log(`foreign pact signings plus breaks per decade: ${avg(totals.signBreakPerDecade).toFixed(1)} (highest ${Math.max(...totals.signBreakPerDecade)}; target 10 or fewer)`);
 console.log(`longest run at the debt floor: ${totals.maxFloorRun} months (target 24 or fewer)`);
+console.log(`conquest at year ${years} (per seed): ${totals.conquest.map((c) => `ours ${c.ours}, lost ${c.lost}, between foreign realms ${c.abroad}, realms fallen ${c.fallen}, risings ${c.risings}${c.league ? ', a league' : ''}`).join(' | ')}`);
 console.log(`buildings beyond the basics raised abroad: ${[...totals.newKinds].sort().join(', ')}`);

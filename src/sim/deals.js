@@ -5,6 +5,8 @@
 // out by the simulation: lump sums at once, monthly payments and deliveries
 // through the ledger, goods on the road as caravans.
 import { addDispatch, clamp } from './realm.js';
+import { settleOwnership } from './lands.js';
+import { expelClaimant } from './conquest.js';
 import { creditLimit, realmStock } from './economy.js';
 import { goodPrice } from './industry.js';
 import { realmProsperity, openEmbassy } from './realms.js';
@@ -106,6 +108,11 @@ export function itemValue(state, world, pid, item) {
     }
     case 'treaty': return treatyValue(state, world, pid, TEMERIA, item.treaty, item.years);
     case 'peace': return peaceValue(state, world, pid, item.terms);
+    case 'claimant': {
+      // Giving up a guest costs a host what the exile's claim is worth to it.
+      const c = (state.claimants ?? []).find((x) => x.host === pid && x.against === TEMERIA);
+      return c ? -c.legitimacy * (world.conquest?.claimant.handOverValue ?? 30) * traitMult(world, pid, 'binding') : 0;
+    }
     default: return 0;
   }
 }
@@ -167,7 +174,10 @@ export function peaceValue(state, world, pid, terms) {
   const heldMe = heldValue(state, world, war, me);
   const heldThem = heldValue(state, world, war, them);
   const pressure = exhaustion(state, world, war, them) + warScore(state, world, war, me);
-  const cost = terms === 'keep' ? heldMe * 1.5 - heldThem : heldThem * 1.5 - heldMe;
+  // Vassalage hands every town back but binds them to pay us and follow us:
+  // a pride they weigh like a town or two more.
+  const pride = terms === 'vassal' ? Math.max(15, heldMe * 0.5) : 0;
+  const cost = terms === 'keep' ? heldMe * 1.5 - heldThem : heldThem * 1.5 - heldMe + pride;
   return (pressure - p.acceptMargin - cost) * V(world).peacePoint;
 }
 
@@ -184,6 +194,7 @@ export function refusal(state, world, pid, items) {
     if (!war) return `${realm} is not at war with us.`;
     if (war.sides[sideIndex(war, TEMERIA)][0] !== TEMERIA) return 'Our ally leads this war; only it can make the peace.';
     if ((state.day - war.since) / 30 < world.war.peace.minMonths) return `${name} refuses: no one makes peace in the first ${world.war.peace.minMonths} months of a war.`;
+    if (peace.terms === 'vassal' && (world.foreignByRealm[pid] ?? []).length > (world.conquest?.vassal.maxTowns ?? 0)) return `${name} laughs: ${realm} is too great to be anyone's vassal.`;
   }
   for (const i of items) {
     if (i.kind === 'treaty') {
@@ -433,7 +444,8 @@ export function describeItem(world, item, pid) {
     case 'embassy': return item.from === 'us' ? `Their embassy at Vizima` : `Our embassy in ${them}`;
     case 'town': return `${world.byId[item.town].name}`;
     case 'treaty': return `${treatyDef(world, item.treaty).name}${item.years ? ` (${item.years} years)` : ` (${treatyDef(world, item.treaty).years} years)`}`;
-    case 'peace': return item.terms === 'keep' ? 'Peace: each keeps what it holds' : 'Peace: every town handed back';
+    case 'peace': return item.terms === 'keep' ? 'Peace: each keeps what it holds' : item.terms === 'vassal' ? 'Peace: they become our vassal' : 'Peace: every town handed back';
+    case 'claimant': return 'The exile they shelter, handed over';
     default: return item.kind;
   }
 }
@@ -457,6 +469,7 @@ export function signDeal(state, world, pid, items) {
     } else if (i.kind === 'goods') recurring.push({ ...i, left: i.months });
     else if (i.kind === 'town' && !peace) setOwner(state, world, i.town, taker);
     else if (i.kind === 'embassy' && i.from === 'them' && !state.embassies[pid]) openEmbassy(state, world, pid);
+    else if (i.kind === 'claimant') expelClaimant(state, world, pid);
     else if (i.kind === 'route') state.routes.push({ id: state.nextRouteId++, from: i.a, to: i.b, since: state.day, last: 0, raided: false, closed: null, deal: true });
     else if (i.kind === 'intel') {
       const s = (state.diplomacy.sight[pid] ??= { theirs: 0, ours: 0 });
@@ -478,8 +491,18 @@ export function signDeal(state, world, pid, items) {
     const war = warWith(state, pid);
     const cede = items.filter((i) => i.kind === 'town');
     applyPeace(state, world, war, { towns: peace.terms === 'keep' ? 'keep' : 'white' });
+    // A vassal keeps its ruler and its towns, under our protection, and pays
+    // a share of what it earns (M19).
+    if (peace.terms === 'vassal' && world.conquest) {
+      const v = world.conquest.vassal;
+      const monthly = Math.max(20, Math.round((state.realms[pid]?.income ?? 100) * v.tributeShare));
+      makeTreaty(state, world, 'protectorate', TEMERIA, pid, { years: v.years, terms: { monthly } });
+      SAY(state, `${name} bends the knee: ${sideName(world, pid)} becomes Temeria's vassal, paying ${monthly} crowns a month.`);
+    }
     for (const i of cede) setOwner(state, world, i.town, i.from === 'us' ? pid : TEMERIA);
   }
+  // Towns sold, swapped or ceded change realm for good (M19).
+  if (items.some((i) => i.kind === 'town')) settleOwnership(state, world);
   if (recurring.length) {
     state.diplomacy.deals.push({ id: state.diplomacy.nextId++, with: pid, since: state.day, items: recurring, short: 0 });
   }

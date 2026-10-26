@@ -133,9 +133,13 @@ test('an old save carries over to the new North with nothing lost', () => {
   assert.equal(up.version, STATE_VERSION);
   // Stonegate and Deepdelve are both now Mount Carbon's country: what they
   // had is carried there.
-  const carbon = up.realms.mahakam.settlements.carbon;
+  // Held by the crown with no war left to settle it, Mount Carbon is now
+  // Temerian (M19), and Mahakam, with no other town, has fallen.
+  const carbon = up.settlements.carbon;
   assert.ok(carbon.buildings.includes('walls') && carbon.buildings.includes('smithy') && carbon.buildings.includes('market'));
   assert.equal(ownerOf(up, world, 'carbon'), 'temeria');
+  assert.equal(carbon.origin, 'mahakam');
+  assert.ok(up.realms.mahakam.fallen);
   assert.ok(!up.realms.mahakam.settlements.stonegate && !up.realms.mahakam.settlements.deepdelve);
   // Sodden's seat keeps its id at Kagen; Fordham's fields go to Riedbrune.
   assert.equal(world.byId.sodden_keep.name, 'Kagen');
@@ -143,6 +147,7 @@ test('an old save carries over to the new North with nothing lost', () => {
   assert.ok(up.realms.sodden.settlements.riedbrune.buildings.includes('fields'));
   // Every new town has its place in its realm.
   for (const st of world.foreign) assert.ok(up.realms[st.realm].settlements[st.id], st.id);
+  assert.ok(!world.foreign.some((st) => st.id === 'carbon'));
   // Routes, armies, memories and the ledger follow the towns.
   assert.equal(up.routes[0].to, 'carbon');
   const a = up.armies.find((x) => x.id === 77);

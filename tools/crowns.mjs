@@ -4,6 +4,7 @@
 import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
+  strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -26,17 +27,30 @@ export function makeCrowns(world) {
 
   // A sensible crown at war: one army to hold the capital, peace on the best
   // terms the enemy will take, and no part in other people's wars.
-  function warPolicy(s) {
+  function warPolicy(s, treat = 'spare') {
     for (const d of [...s.warDecisions]) {
-      const choice = d.kind === 'call' ? 1 : 0;
+      let choice = d.kind === 'call' ? 1 : 0;
+      // An offered peace that would leave our towns with them is refused,
+      // unless the war has dragged on past two years.
+      if (d.kind === 'offer') {
+        const w = s.wars.find((x) => x.id === d.war);
+        const lose = w && w.taken.some((t) => t.from === 'temeria' && ownerOf(s, world, t.id) !== 'temeria');
+        if (w && (d.terms.towns !== 'white' || d.terms.tribute) && lose && s.day - w.since < 720) choice = 1;
+      }
       s = act(s, { type: 'warDecision', id: d.id, choice });
     }
+    s = conquests(s, treat);
     const wars = warsOf(s, 'temeria');
     if (wars.length && !crownArmies(s).length) {
       s = act(s, { type: 'raise', muster: 'vizima', levy: 'third', nobles: true, companies: 0, marshal: 'vestibor', stance: 'cautious' });
     }
     for (const w of wars) {
-      for (const key of ['tribute', 'keep', 'white']) {
+      // Holding towns of theirs, keep them; otherwise take their coin.
+      const held = (side) => w.taken.filter((t) => ownerOf(s, world, t.id) === side && t.from !== side).reduce((a, t) => a + valueOf(s, world, t.id), 0);
+      const holding = held('temeria') > w.sides.flat().filter((r) => r !== 'temeria').reduce((a, r) => a + held(r), 0);
+      // A war of our own making goes on until we hold what we came for, or a year.
+      if (w.sides[0][0] === 'temeria' && !holding && s.day - w.since < 360) continue;
+      for (const key of holding ? ['keep', 'tribute', 'white'] : ['tribute', 'keep', 'white']) {
         const t = peaceTerms(s, world, w).list.find((x) => x.key === key);
         if (t.accept) { s = act(s, { type: 'peace', war: w.id, terms: key }); break; }
       }
@@ -74,9 +88,67 @@ export function makeCrowns(world) {
         const c = counterOffer(s, world, pid, ask);
         if (!c.items) continue;
         const price = c.items.filter((i) => i.kind === 'coin').reduce((a, i) => a + i.amount, 0);
-        if (price > 300 || s.treasury - price < 800) continue;
+        // Peace is worth paying for: up to a twentieth of a full treasury.
+        if (price > Math.max(300, Math.min(3000, s.treasury * 0.05)) || s.treasury - price < 800) continue;
         s = act(s, { type: 'deal', realm: pid, items: c.items });
       }
+    }
+    return s;
+  }
+
+  // What becomes of a town taken (M19): the steward spares it, keeps it as
+  // crown land and treats with rebels it cannot surely crush; the tyrant
+  // sacks, drives out the elves and crushes every rising.
+  function conquests(s, treat) {
+    for (const d of [...(s.conquest?.decisions ?? [])]) {
+      let choice = 0;
+      if (d.kind === 'capture') {
+        const want = treat === 'harsh' ? (d.options.includes('expel:elf') && d.town.length % 2 ? 'expel:elf' : 'sack') : 'spare';
+        choice = Math.max(0, d.options.indexOf(want));
+      } else if (d.kind === 'revolt') {
+        choice = treat === 'harsh' ? 0 : 1;
+      }
+      s = act(s, { type: 'conquestDecision', id: d.id, choice });
+    }
+    return s;
+  }
+
+  // Now and then the steward picks a fight it can win: the weakest
+  // neighbour it has a reason against, a town of theirs near the border,
+  // and a peace that keeps it. Then it wins the town over: settlers when it
+  // can afford them, and building there like anywhere else.
+  function campaign(s, month, purse = 12000) {
+    const wars = warsOf(s, 'temeria');
+    // One campaign every eight years at most, from the eighth year on, and
+    // never while a neighbour masses on the border.
+    const quiet = !(s.musters ?? []).some((m) => (m.against ?? 'temeria') === 'temeria');
+    if (month >= 96 && month % 96 === 0 && !wars.length && quiet && s.treasury > purse && !(s.conquest?.revolts ?? []).length) {
+      let best = null;
+      for (const pid of parties(world)) {
+        if (!s.realms[pid] || pid === 'brokilon' || hostile(s, 'temeria', pid)) continue;
+        const reason = ['claim', 'broken', 'refused', 'none'].find((r) => canDeclareWith(s, world, pid, r).ok);
+        if (!reason) continue;
+        const ours = Object.values(s.settlements).reduce((a, t) => a + (t.occupier ? 0 : t.garrison), 0) * 0.5 + s.forces.companies.reduce((a, c) => a + c.men, 0);
+        const ratio = ours / strengthOf(s, world, pid);
+        if (ratio >= 3 && (!best || ratio > best.ratio)) best = { pid, reason, ratio };
+      }
+      if (best) {
+        s = act(s, { type: 'declare', realm: best.pid, reason: best.reason });
+        if (hostile(s, 'temeria', best.pid)) {
+          s = act(s, { type: 'raise', muster: 'vizima', levy: 'half', nobles: true, companies: 3, marshal: 'vestibor', stance: 'bold' });
+          const a = crownArmies(s)[0];
+          const target = (world.foreignByRealm[best.pid] ?? []).filter((id) => world.realms.realms[best.pid].capital !== id)
+            .sort((x, y) => Math.min(...Object.keys(s.settlements).map((h) => Math.hypot(world.byId[h].x - world.byId[x].x, world.byId[h].y - world.byId[x].y)))
+              - Math.min(...Object.keys(s.settlements).map((h) => Math.hypot(world.byId[h].x - world.byId[y].x, world.byId[h].y - world.byId[y].y))))[0];
+          if (a && target) s = act(s, { type: 'army', army: a.id, order: 'siege', target, stance: 'bold' });
+        }
+      }
+    }
+    // Strip what we occupy while the war lasts.
+    for (const w of wars) for (const t of w.taken) if (canRequisition(s, world, t.id).ok && s.treasury < 3000) s = act(s, { type: 'requisition', settlement: t.id });
+    // Settlers for a sullen conquest, when the treasury allows.
+    for (const [id, t] of Object.entries(s.settlements)) {
+      if (t.integration !== undefined && t.integration < 40 && !t.resettle && s.treasury > 15000) s = act(s, { type: 'resettle', settlement: id });
     }
     return s;
   }
@@ -85,6 +157,7 @@ export function makeCrowns(world) {
     s = answer(s, true);
     s = diplomacy(s, month);
     s = warPolicy(s);
+    s = campaign(s, month);
     // Open the most lucrative trade route the crown can, before building.
     if (month % 6 === 1 && s.treasury > 900) {
       const ends = world.geography.settlements.filter((x) => x.type === 'town' || x.type === 'city').map((x) => x.id);
@@ -167,6 +240,9 @@ export function makeCrowns(world) {
 
   function tyrant(s, month) {
     s = answer(s, false);
+    s = warPolicy(s, 'harsh');
+    // The tyrant goes looking for plunder whenever its coffers allow.
+    s = campaign(s, month, -8000);
     const laws = [['taxation', 'heavy'], ['noble_privilege', 'taxed'], ['public_order', 'martial'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
     const [law, option] = laws[month % laws.length];
     s = act(s, { type: 'law', law, option });

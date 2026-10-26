@@ -89,11 +89,22 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   const FOG_EVERY_MS = 400;
   const FOG_RES = 0.5;
   const stats = { base: 0, overlay: 0, fog: 0, relayer: 0, draws: 0 };
-  const foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
+  let foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
   let dpr = 1;
   let dirty = true;
   let lastSelected = null;
-  const ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
+  let ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
+  // Towns change realm for good (M19): the lists of ours and theirs follow.
+  let landsVersion = world.landsVersion;
+  function followLands() {
+    if (landsVersion === world.landsVersion) return;
+    landsVersion = world.landsVersion;
+    foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
+    ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
+    infraState = null;
+    baseDirty = true;
+    dirty = true;
+  }
 
   // The cached layers are drawn a margin larger than the screen, so a pan
   // only slides them; they are redrawn when the zoom changes or the pan
@@ -276,6 +287,8 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
   }
 
+  // A town occupied in a war (M19): its occupier's colour hatched over the
+  // country round it, so it reads as held, not owned.
   const WASH = { city: 90, town: 70, castle: 60, village: 50, temple: 45 };
   function drawOwnership(c) {
     for (const { id, owner } of owned) {
@@ -283,13 +296,23 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const r = WASH[st.type];
       const [field] = sideColours(world, owner);
       const grad = c.createRadialGradient(st.x, st.y, 0, st.x, st.y, r);
-      grad.addColorStop(0, hexAlpha(field, 0.45));
-      grad.addColorStop(0.7, hexAlpha(field, 0.25));
+      grad.addColorStop(0, hexAlpha(field, 0.3));
       grad.addColorStop(1, hexAlpha(field, 0));
       c.fillStyle = grad;
       c.beginPath();
       c.arc(st.x, st.y, r, 0, Math.PI * 2);
       c.fill();
+      c.save();
+      c.clip();
+      c.strokeStyle = hexAlpha(field, 0.55);
+      c.lineWidth = 3;
+      c.beginPath();
+      for (let k = -r * 2; k <= r * 2; k += 9) {
+        c.moveTo(st.x + k - r, st.y - r);
+        c.lineTo(st.x + k + r, st.y + r);
+      }
+      c.stroke();
+      c.restore();
     }
   }
 
@@ -644,6 +667,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   let lastFrame = null;
   function draw(state, frac, selection) {
     const selectedId = selection?.settlement ?? null;
+    followLands();
     updateTints(state);
     updateInfra(state);
     const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, company: selection?.company ?? null, threat: selection?.threat ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };

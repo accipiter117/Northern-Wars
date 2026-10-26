@@ -4,6 +4,7 @@
 // month the ledger is drawn up: taxes and trade in, garrisons, upkeep, court
 // and interest out. The treasury may go below zero; the bankers lend, at a price.
 import { dateOf } from './calendar.js';
+import { integrationFactor } from './conquest.js';
 import { totalPopulation } from './state.js';
 import { addDispatch } from './realm.js';
 import { number } from './text.js';
@@ -204,6 +205,9 @@ export function authorityParts(state, world) {
     laws: lawEffects(state, world).authority,
     buildings: realmEffect(state, world, 'authority'),
     debt: debt > 0 ? -(debt / 1000) * world.economy.debt.authorityPerThousand : 0,
+    // Above what a crown regains of itself, prestige fades unless renewed
+    // (M19: in a long peace it no longer creeps to the cap).
+    fade: -Math.max(0, state.authority - (g.authorityRegenBelow ?? 100)) * (g.authorityFade ?? 0),
   };
 }
 
@@ -261,7 +265,10 @@ export function monthlyLedger(state, world, rng = null) {
     const type = world.byId[id].type;
     // Cities pay most a head and villages least; richer places pay more,
     // and market halls, guildhalls and merchants' quarters more again.
-    const tax = pop * e.taxes.perPersonMonth[type] * taxProsperity(world, s) * (1 + fx.taxBonus) * Math.max(0, 1 + law.tax) * share;
+    // A conquered town pays as it has come to accept the crown (M19), and
+    // less again under a charter won by rising.
+    const yoke = integrationFactor(world, s, 'taxAt') * (s.charter > state.day ? world.conquest.revolt.charterTax : 1);
+    const tax = pop * e.taxes.perPersonMonth[type] * taxProsperity(world, s) * (1 + fx.taxBonus) * Math.max(0, 1 + law.tax) * share * yoke;
     income.taxes += tax;
     const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
     // Roads held by bandits keep the carts at home.
@@ -354,7 +361,7 @@ export function monthlyLedger(state, world, rng = null) {
   // The crown's grip returns by itself only so far; beyond that it takes
   // content lords or a court that dazzles them.
   const parts = authorityParts(state, world);
-  state.authority += parts.regen + parts.nobles + parts.laws + parts.buildings;
+  state.authority += parts.regen + parts.nobles + parts.laws + parts.buildings + parts.fade;
   if (debt > 0) state.authority += parts.debt;
   state.authority = Math.max(0, Math.min(100, state.authority));
   state.unpaid = debt > limit;
@@ -369,7 +376,8 @@ export function monthlyLedger(state, world, rng = null) {
       const level = s.holder === 'crown' ? garrisonFactor(state, world, id) : 1;
       // Barracks quarter more men for their ordinary pay.
       const barracks = 1 + buildingEffects(world, s).garrisonBonus;
-      const target = Math.max(0, world.settlementData[id].garrison * Math.max(0, 1 + law.garrison) * level * barracks - (levied[id] ?? 0));
+      const willing = integrationFactor(world, s, 'levyAt');
+      const target = Math.max(0, world.settlementData[id].garrison * Math.max(0, 1 + law.garrison) * level * barracks * willing - (levied[id] ?? 0));
       s.garrison = Math.max(0, Math.round(s.garrison + (target - s.garrison) * 0.1));
     }
   }

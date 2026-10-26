@@ -8,6 +8,7 @@
 import { addDispatch, clamp } from './realm.js';
 import { informed } from './realms.js';
 import { realmPotential, raiseRealmArmy, soldiersOf } from './war.js';
+import { musterPreview } from './armies.js';
 import { TEMERIA, hostile, atWar, warsOf, sideIndex, warScore, ownerOf, originOf, valueOf, sideName, placesHeldBy, leviedMap } from './conflict.js';
 import {
   D, parties, rulerShort, hasTrait, agendaOf, trustIn, changeTrust, remember, powerOf, treatiesOf, treatyBetween, partnerOf, bindingTreaty, endTreaty,
@@ -24,6 +25,8 @@ const nearCache = new WeakMap();
 // included), worked out once per world.
 export function neighboursOf(world, rid) {
   let all = nearCache.get(world);
+  // Borders move when towns change realm (M19): work it out afresh then.
+  if (all && all.version !== world.landsVersion) all = null;
   if (!all) {
     all = {};
     const reach = world.war?.ai.reach ?? 260;
@@ -32,6 +35,7 @@ export function neighboursOf(world, rid) {
     for (const a of ids) {
       all[a] = ids.filter((b) => b !== a && townsOf(a).some((x) => townsOf(b).some((y) => Math.hypot(world.byId[x].x - world.byId[y].x, world.byId[x].y - world.byId[y].y) <= reach)));
     }
+    Object.defineProperty(all, 'version', { value: world.landsVersion });
     nearCache.set(world, all);
   }
   return all[rid] ?? [];
@@ -56,8 +60,10 @@ export function deterrence(state, world, rid) {
   for (const [id, s] of Object.entries(state.settlements)) if (!s.occupier && near(world.byId[id])) v += s.garrison * c.garrison;
   for (const co of state.forces?.companies ?? []) if (!co.army && world.byId[co.station] && near(world.byId[co.station])) v += co.men * c.companies;
   for (const a of state.armies ?? []) if (a.side === TEMERIA && near(world.byId[a.at])) v += a.soldiers * c.armies;
-  // The rest of the crown's strength could march to the border in time.
+  // The rest of the crown's strength could march to the border in time,
+  // and the army it could call up from its levies and its lords (M19).
   v += soldiersOf(state, world, TEMERIA) * c.whole;
+  if (c.muster) v += musterPreview(state, world, { levy: 'half', nobles: true, companies: 0 }).soldiers * c.muster;
   for (const p of parties(world)) {
     if (p === rid || !state.realms?.[p]) continue;
     if (bindingTreaty(state, p, TEMERIA, false)) v += strengthOf(state, world, p) * c.allies;
@@ -96,7 +102,7 @@ export function assess(state, world, rid) {
   const c = ST(world);
   const realm = state.realms[rid];
   const me = strengthOf(state, world, rid);
-  const near = neighboursOf(world, rid).filter((p) => p === TEMERIA || state.realms?.[p]);
+  const near = neighboursOf(world, rid).filter((p) => p === TEMERIA || (state.realms?.[p] && !state.realms[p].fallen));
   const name = (p) => sideName(world, p);
 
   // Threat.
@@ -212,20 +218,33 @@ export function postureScores(state, world, rid, a) {
   const T = a.threat.value;
   const O = a.opportunity.value;
   const P = a.purse.value;
+  // Fresh conquests still sullen under their new crown hold a ruler at home
+  // (M19): each weighs against another war until it has taken to them.
+  const digest = Math.min(c.digestMax ?? 0, undigested(state, world, rid) * (c.digest ?? 0));
   return {
     grow: c.growBase + (P - 50) * c.growPurse - T * c.growThreat - O * c.growOpportunity + traitBonus(world, rid, 'grow'),
     arm: c.armBase + T * c.armThreat + traitBonus(world, rid, 'arm'),
-    expand: c.expandBase + O * c.expandOpportunity * (strong ? 1 : 0.3) + traitBonus(world, rid, 'expand') + aggression * ST(world).aggressionExpand,
-    consolidate: c.consolidateBase - P * c.consolidatePurse + (afterWar ? c.afterWar : 0) + traitBonus(world, rid, 'consolidate'),
+    expand: c.expandBase + O * c.expandOpportunity * (strong ? 1 : 0.3) + traitBonus(world, rid, 'expand') + aggression * ST(world).aggressionExpand - digest,
+    consolidate: c.consolidateBase - P * c.consolidatePurse + (afterWar ? c.afterWar : 0) + traitBonus(world, rid, 'consolidate') + digest,
     scheme: c.schemeBase + O * c.schemeOpportunity * (strong ? 0.4 : 1) + traitBonus(world, rid, 'scheme') + greed * ST(world).greedScheme,
   };
+}
+
+// Conquered towns of a realm not yet won over, weighed by their size.
+export function undigested(state, world, rid) {
+  const below = ST(world).choose.digestBelow ?? 0;
+  let n = 0;
+  for (const [id, s] of Object.entries(state.realms[rid]?.settlements ?? {})) {
+    if (s.integration !== undefined && s.integration < below) n += world.byId[id].type === 'village' ? 0.4 : 1;
+  }
+  return n;
 }
 
 // The reasons shown for a posture: what drove it, in plain words.
 function postureReasons(kind, a) {
   if (kind === 'arm') return a.threat.parts.slice(0, 2);
   if (kind === 'expand' || kind === 'scheme') return a.opportunity.parts.slice(0, 2);
-  if (kind === 'consolidate') return a.purse.debt ? a.purse.parts.slice(0, 1) : [{ text: 'Recovering its strength', value: 0 }, ...a.purse.parts.slice(0, 1)];
+  if (kind === 'consolidate') return a.purse.debt ? a.purse.parts.slice(0, 1) : [{ text: a.digest ? 'Holding down its new conquests' : 'Recovering its strength', value: 0 }, ...a.purse.parts.slice(0, 1)];
   return [{ text: a.threat.value < 15 ? 'Its borders are quiet' : 'Its borders are quiet enough', value: 0 }, ...a.purse.parts.slice(0, 1)];
 }
 
@@ -237,6 +256,7 @@ export function choosePosture(state, world, rid, a) {
   const held = cur && (state.day - cur.since) / 30 < c.minMonths && a.threat.value - cur.threat < c.threatJump;
   if (!forced && held) return cur;
   const scores = postureScores(state, world, rid, a);
+  a.digest = undigested(state, world, rid) > 0;
   let kind = forced ?? Object.entries(scores).sort((x, y) => y[1] - x[1])[0][0];
   // An honourable ruler does not scheme: they wait, or grow.
   if (kind === 'scheme' && hasTrait(world, rid, 'honourable')) kind = 'grow';
@@ -407,7 +427,7 @@ function probe(state, world, rng, rid, a) {
 export function monthlyStrategy(state, world, rng) {
   if (!ST(world)) return;
   for (const rid of Object.keys(state.realms)) {
-    if (!D(world)?.rulers[rid]) continue;
+    if (!D(world)?.rulers[rid] || state.realms[rid].fallen) continue;
     const realm = state.realms[rid];
     const a = assess(state, world, rid);
     realm.posture = choosePosture(state, world, rid, a);
