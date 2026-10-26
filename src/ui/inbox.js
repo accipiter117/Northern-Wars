@@ -105,6 +105,10 @@ export function urgentItems(state, world, acked) {
       out.push({ key: `siege:${a.id}:${a.at}`, text: `${world.byId[a.at].name} is besieged by ${sideName(world, a.side)}.`, go: `town:${a.at}` });
     }
   }
+  // A battle our army is fighting: there to be watched and commanded (M19).
+  for (const f of state.fights ?? []) {
+    if (!f.over && f.sides.includes(TEMERIA)) out.push({ key: `battle:${f.id}`, text: `Battle near ${f.place}: our army is engaged.`, go: `battle:${f.id}` });
+  }
   for (const r of state.conquest?.revolts ?? []) {
     if (r.against === TEMERIA) out.push({ key: `revolt:${r.id}`, text: `${world.byId[r.town].name} has risen against the crown.`, go: `town:${r.town}` });
   }

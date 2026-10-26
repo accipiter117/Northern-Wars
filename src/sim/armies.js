@@ -5,6 +5,8 @@
 // they meet an enemy, starve or storm the towns they besiege, and carry off
 // what they can.
 import { creditLimit, realmEffect } from './economy.js';
+import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
+import { siegesOn, siegeDay } from './siege.js';
 import { onCapture, integrationFactor } from './conquest.js';
 import { stationedStrength, freeCompanies } from './forces.js';
 import { addDispatch, clamp } from './realm.js';
@@ -64,6 +66,8 @@ export function canRaise(state, world, opts) {
   if (crownArmies(state).length >= 3) return { ok: false, reason: 'The realm cannot keep more than three armies.' };
   if (opts.marshal && !w.marshals[opts.marshal]) return { ok: false, reason: 'Unknown marshal.' };
   if (opts.marshal && crownArmies(state).some((a) => a.marshal === opts.marshal)) return { ok: false, reason: 'That marshal already leads an army.' };
+  const held = (state.captives ?? []).find((c) => c.marshal === opts.marshal && c.side === TEMERIA);
+  if (opts.marshal && held) return { ok: false, reason: `He is a prisoner of ${sideName(world, held.by)}: ransom him at the deal table.` };
   const m = w.marshals[opts.marshal];
   if (m?.house && (state.houses[m.house]?.rebel || state.houses[m.house]?.loyalty < w.raise.nobleRefuseBelow)) return { ok: false, reason: 'His house will not lend him to the crown.' };
   const p = musterPreview(state, world, opts);
@@ -193,7 +197,7 @@ export function armyPosition(world, a, extra = 0) {
 
 // path[0] is always the next place on the way; an army finishes the stretch
 // of road it is on before it turns.
-function routeTo(world, a, dest) {
+export function routeTo(world, a, dest) {
   if (!dest) return false;
   if (a.dest === dest && (a.path.length || (!a.to && a.at === dest))) return true;
   const from = a.to ?? a.at;
@@ -205,7 +209,7 @@ function routeTo(world, a, dest) {
   return true;
 }
 
-function halt(a) {
+export function halt(a) {
   a.path = a.to ? [a.to] : [];
   a.dest = a.to ?? a.at;
 }
@@ -245,7 +249,7 @@ export function armyStrength(state, world, a, defending = false) {
 
 // Townsfolk man the walls beside the garrison, so a city is never taken
 // by a handful.
-function placeDefence(state, world, id) {
+export function placeDefence(state, world, id, withWalls = true) {
   const b = W(world).battle;
   const p = placeOf(state, world, id);
   const militia = peopleAt(state, world, id) * W(world).siege.militiaPerPerson;
@@ -253,7 +257,7 @@ function placeDefence(state, world, id) {
   const armed = 1 + p.buildings.reduce((v, b) => v + (world.buildings[b].effects.soldierStrength ?? 0), 0);
   // The crown's companies stationed there stand on the walls too.
   const companies = ownerOf(state, world, id) === TEMERIA ? stationedStrength(state, world, id) : 0;
-  return (p.garrison * armed + militia + companies) * (hasWalls(state, world, id) ? b.wallsDefence : 1) * (type === 'castle' ? b.castleDefence : type === 'city' ? b.cityDefence : 1);
+  return (p.garrison * armed + militia + companies) * (withWalls && hasWalls(state, world, id) ? b.wallsDefence : 1) * (type === 'castle' ? b.castleDefence : type === 'city' ? b.cityDefence : 1);
 }
 
 // ---- The day ----
@@ -262,13 +266,15 @@ export function stepArmiesDay(state, world, rng) {
   if (!state.armies?.length) return;
   const w = W(world);
   const speed = w.speed * (w.seasonSpeed[seasonOf(state.day)] ?? 1);
-  for (const a of state.armies) think(state, world, a);
+  // Armies locked in battle (M19) neither think nor march until it ends.
+  for (const a of state.armies) if (!a.battle) think(state, world, a);
   for (const a of state.armies) {
-    if (a.siege || a.raiding) { a.speed = 0; continue; }
+    if (a.siege || a.raiding || a.battle) { a.speed = 0; continue; }
     move(world, a, speed);
   }
   battles(state, world, rng);
-  for (const a of [...state.armies]) if (state.armies.includes(a)) siegeOrRaid(state, world, rng, a);
+  if (battlesOn(world)) stepBattlesDay(state, world, rng);
+  for (const a of [...state.armies]) if (state.armies.includes(a) && !a.battle) siegeOrRaid(state, world, rng, a);
   wear(state, world);
 }
 
@@ -291,7 +297,7 @@ function chase(world, a, b) {
 
 // The nearest place an army can fall back on: its own side's, walled if
 // possible.
-function refuge(state, world, a) {
+export function refuge(state, world, a) {
   const pos = armyPosition(world, a);
   let best = null;
   for (const id of Object.keys(world.byId)) {
@@ -445,11 +451,16 @@ function battles(state, world, rng) {
       const a = list[i];
       const b = list[j];
       if (a.fought === state.day || b.fought === state.day || !hostile(state, a.side, b.side)) continue;
+      if (a.battle || b.battle) continue;
       // A beaten army is let go for a few days before it can be brought to battle again.
       if ((a.routed ?? 0) > state.day || (b.routed ?? 0) > state.day) continue;
       const pa = armyPosition(world, a);
       const pb = armyPosition(world, b);
-      if (Math.hypot(pa.x - pb.x, pa.y - pb.y) <= r) fight(state, world, rng, a, b, pa);
+      if (Math.hypot(pa.x - pb.x, pa.y - pb.y) > r) continue;
+      // Since M19 a battle is fought over days, to be watched; the old
+      // single roll remains for worlds without battle data.
+      if (battlesOn(world)) startBattle(state, world, rng, a, b, pa);
+      else fight(state, world, rng, a, b, pa);
     }
   }
 }
@@ -500,7 +511,7 @@ function fight(state, world, rng, a, b, where) {
   } else if (informed(state, world, win.side) || informed(state, world, lose.side)) addDispatch(state, text, 'abroad');
 }
 
-function nearestPlaceName(world, p) {
+export function nearestPlaceName(world, p) {
   let best = null;
   for (const st of Object.values(world.byId)) {
     const d = Math.hypot(st.x - p.x, st.y - p.y);
@@ -510,7 +521,7 @@ function nearestPlaceName(world, p) {
 }
 
 // Victories lift the crown and the lords; defeats and lost towns cost it.
-function glory(state, world, kind, a) {
+export function glory(state, world, kind, a) {
   const g = W(world).glory;
   const v = g[kind] ?? 0;
   state.authority = clamp(state.authority + v, 0, 100);
@@ -549,7 +560,11 @@ function siegeOrRaid(state, world, rng, a) {
   }
   if (a.order === 'raid') {
     if (a.raidTarget === a.at) raidTick(state, world, a);
-  } else if (a.order === 'siege' && a.target === a.at) siegeTick(state, world, rng, a, owner);
+  } else if (a.order === 'siege' && a.target === a.at) {
+    // Since M19 a siege is a camp to watch: walls, food, sickness, terms.
+    if (siegesOn(world)) siegeDay(state, world, rng, a, owner);
+    else siegeTick(state, world, rng, a, owner);
+  }
 }
 
 function siegeTick(state, world, rng, a, owner) {
@@ -598,7 +613,7 @@ function siegeTick(state, world, rng, a, owner) {
   if (a.siege.progress >= 100) capture(state, world, rng, a, a.at, owner, 'starved');
 }
 
-function capture(state, world, rng, a, id, prev, how) {
+export function capture(state, world, rng, a, id, prev, how) {
   const w = W(world);
   const c = w.capture;
   const p = placeOf(state, world, id);
@@ -611,14 +626,17 @@ function capture(state, world, rng, a, id, prev, how) {
   if (war) recordCapture(war, id, prev, a.side, state.day);
   // Since M19 a town taken is spared unless its taker chooses to sack it.
   const loot = world.conquest ? 0 : round(peopleAt(state, world, id) * c.lootPerPerson * (p.prosperity / 50));
-  hurtPlace(state, world, id, { prosperity: c.prosperity, people: c.people, unrest: c.unrest });
+  // Surrendered on terms (M19), the town is taken intact.
+  if (how !== 'terms') hurtPlace(state, world, id, { prosperity: c.prosperity, people: c.people, unrest: c.unrest });
   p.sacked = state.day + c.sackedDays;
   if (a.side === TEMERIA) state.treasury += loot;
   else if (state.realms[a.side]) state.realms[a.side].treasury += loot;
   a.siege = null;
   const name = world.byId[id].name;
-  const how2 = { storm: 'stormed', starved: 'starved into surrender', open: 'taken without a fight' }[how];
-  const text = `${name} has fallen to ${sideName(world, a.side)}: ${how2}${lostGarrison >= 5 && how !== 'starved' ? `, its ${round(lostGarrison)} defenders put to the sword` : ''}. ${loot ? `${loot} crowns carried off.` : ''}`.trim();
+  const how2 = { storm: 'stormed', starved: 'starved into surrender', open: 'taken without a fight', terms: 'surrendered on terms, its garrison marching out with the honours of war' }[how];
+  const siege = a.siege ?? a.lastSiege;
+  const report = siege && siege.at === id && siege.days ? ` The siege lasted ${siege.days} days${siege.sallies ? `, with ${siege.sallies} sall${siege.sallies === 1 ? 'y' : 'ies'}` : ''}; sickness took ${round(siege.sick)} of the besiegers.` : '';
+  const text = `${name} has fallen to ${sideName(world, a.side)}: ${how2}${lostGarrison >= 5 && how !== 'starved' && how !== 'terms' ? `, its ${round(lostGarrison)} defenders put to the sword` : ''}.${report} ${loot ? `${loot} crowns carried off.` : ''}`.trim();
   onCapture(state, world, rng, a, id, prev, how);
   if (a.side === TEMERIA) {
     glory(state, world, 'townTaken', a);
@@ -661,10 +679,12 @@ function raidTick(state, world, a) {
 // an army living off the land strips it bare.
 function wear(state, world) {
   const w = W(world);
-  const winter = seasonOf(state.day) === 'winter';
+  const season = seasonOf(state.day);
+  const winter = season === 'winter';
   for (const a of [...state.armies]) {
     const own = ownerOf(state, world, a.at) === a.side;
-    a.soldiers -= a.soldiers * ((own ? w.attrition.home : w.attrition.enemy) + (winter ? w.attrition.winter : 0));
+    if (w.attrition.supplyRange) attrition(state, world, a, own, season);
+    else a.soldiers -= a.soldiers * ((own ? w.attrition.home : w.attrition.enemy) + (winter ? w.attrition.winter : 0));
     a.morale = clamp(a.morale + w.battle.moraleRecoverPerDay, 0, 100);
     if (!own && hostile(state, a.side, ownerOf(state, world, a.at))) {
       hurtPlace(state, world, a.at, { food: w.forage.food, prosperity: w.forage.prosperity });
@@ -677,11 +697,52 @@ function wear(state, world) {
   }
 }
 
+// Field attrition (M19), by its causes: supply far from friendly towns,
+// winter, disease in a large army in the warm months, and desertion when
+// the men go unpaid. Each cause is tallied over the last thirty days for
+// the army's card.
+function attrition(state, world, a, own, season) {
+  const at = W(world).attrition;
+  const p = armyPosition(world, a);
+  let near = Infinity;
+  for (const id of Object.keys(world.byId)) {
+    if (ownerOf(state, world, id) !== a.side) continue;
+    const d = Math.hypot(world.byId[id].x - p.x, world.byId[id].y - p.y);
+    if (d < near) near = d;
+    if (near <= at.supplyRange) break;
+  }
+  const rates = {
+    supply: own ? at.home : near > at.supplyRange ? at.enemy + at.supply : at.enemy,
+    winter: season === 'winter' ? at.winter : 0,
+    disease: a.soldiers > at.diseaseAbove && at.diseaseSeasons.includes(season) ? at.disease : 0,
+    desertion: (a.side === TEMERIA ? state.unpaid : (state.realms[a.side]?.treasury ?? 0) < 0) ? at.desertion : 0,
+  };
+  const t = (a.attrition ??= { days: [], causes: {} });
+  const today = {};
+  for (const [k, r] of Object.entries(rates)) {
+    const lost = a.soldiers * r;
+    today[k] = lost;
+  }
+  const total = Object.values(today).reduce((x, y) => x + y, 0);
+  a.soldiers -= total;
+  t.days.push(today);
+  if (t.days.length > 30) t.days.shift();
+}
+
+// What field attrition has cost an army over the last thirty days, by cause.
+export function attritionOf(a) {
+  const out = { supply: 0, winter: 0, disease: 0, desertion: 0 };
+  for (const d of a.attrition?.days ?? []) for (const k of Object.keys(out)) out[k] += d[k] ?? 0;
+  return out;
+}
+
 // What an army is doing, in words, for its card and the map label.
 export function describeArmy(state, world, a) {
   const where = a.to ? `on the road to ${world.byId[a.to].name}` : `at ${world.byId[a.at].name}`;
   let doing;
-  if (a.order === 'muster') doing = 'mustering';
+  const fight = a.battle && (state.fights ?? []).find((f) => f.id === a.battle);
+  if (fight) doing = `in battle near ${fight.place}`;
+  else if (a.order === 'muster') doing = 'mustering';
   else if (a.retreating) doing = 'falling back';
   else if (a.siege) doing = `besieging ${world.byId[a.at].name}`;
   else if (a.raiding) doing = `plundering ${world.byId[a.at].name}`;

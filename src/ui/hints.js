@@ -110,10 +110,13 @@ export function helpHtml(app) {
       <div class="volume"><span>Effects</span><input type="range" min="0" max="100" step="5" value="${pct(snd.sfx)}" data-volume="sfx" aria-label="Effects volume"${snd.sfxOn ? '' : ' disabled'}><button type="button" class="mute" data-action="${snd.sfxOn ? 'sfx-off' : 'sfx-on'}" aria-pressed="${!snd.sfxOn}" aria-label="${snd.sfxOn ? 'Mute the effects' : 'Play the effects'}">${snd.sfxOn ? 'On' : 'Off'}</button></div>
       ${'audioSession' in navigator ? `<div class="actions"><button type="button" class="act" data-action="${prefs.playOnSilent ? 'silent-off' : 'silent-on'}"><span class="act-label">${prefs.playOnSilent ? 'Follow the silent switch' : 'Play sound on silent'}</span><span class="act-sub">${prefs.playOnSilent ? 'Sound plays even with the phone on silent' : 'Sound follows the phone\'s silent switch'}</span></button></div>` : ''}
     </div>
+    <div data-part="pauses" class="form-row"><span>Pause for</span><div class="chips">
+      <button type="button" class="chip${pause ? ' on' : ''}" aria-pressed="${pause}" data-action="${pause ? 'sighting-pause-off' : 'sighting-pause-on'}">Sightings</button>
+      <button type="button" class="chip${prefs.pauseOnBattle ? ' on' : ''}" aria-pressed="${!!prefs.pauseOnBattle}" data-action="${prefs.pauseOnBattle ? 'battle-pause-off' : 'battle-pause-on'}">Our battles</button>
+    </div></div>
     <div data-part="settings" class="actions">
       <button type="button" class="act" data-action="${enabled ? 'hints-off' : 'hints-on'}"><span class="act-label">${enabled ? 'Turn hints off' : 'Turn hints back on'}</span></button>
-      <button type="button" class="act" data-action="${pause ? 'sighting-pause-off' : 'sighting-pause-on'}"><span class="act-label">${pause ? 'Stop pausing at sightings' : 'Pause when a threat is sighted'}</span><span class="act-sub">${pause ? 'The game pauses at each new sighting' : 'A short alert shows either way'}</span></button>
-      <button type="button" class="act" data-action="${prefs.haptics === false ? 'haptics-on' : 'haptics-off'}"><span class="act-label">${prefs.haptics === false ? 'Turn vibration on' : 'Turn vibration off'}</span><span class="act-sub">Ticks for long presses, orders and alerts</span></button>
+      <button type="button" class="act" data-action="${prefs.haptics === false ? 'haptics-on' : 'haptics-off'}"><span class="act-label">${prefs.haptics === false ? 'Turn vibration on' : 'Turn vibration off'}</span></button>
       <button type="button" class="act" data-action="${prefs.keepAwake ? 'awake-off' : 'awake-on'}"><span class="act-label">${prefs.keepAwake ? 'Let the screen sleep' : 'Keep the screen awake while playing'}</span><span class="act-sub">${'wakeLock' in navigator ? 'Only while the realm is running' : 'Not supported by this browser'}</span></button>
     </div>
     <div data-part="search" data-form="help"><label class="search">${icon('search')}<input type="search" data-field="q" value="${escapeHtml(f.q)}" placeholder="Search help" aria-label="Search help" autocomplete="off"></label></div>

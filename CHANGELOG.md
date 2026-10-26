@@ -1,5 +1,14 @@
 # Changelog
 
+## M19 C Battles and sieges you can watch
+- Battles last days, not an instant: a skirmish where the archers count, the melee where men-at-arms and knights decide it and the levies break first, then the rout, where horse ride the fleeing down. Ground and weather matter: woods and marsh blunt cavalry, hills favour the defender, rain spoils the bowstrings.
+- A fifth of every army waits in reserve. Commit it when the lines close for better odds and heavier losses, or sound the retreat to save what remains. Foreign captains make the same choices by their tempers.
+- The Battle card shows both sides' men, spirit and losses, a bar of who is winning, and each turn of the fight in a line: a volley breaking a charge, a flank turned, levies running, a commander wounded, killed or taken for ransom.
+- The game slows to 1x while our armies fight, so it can be watched (or pauses, if you prefer: see Help).
+- Sieges you can follow: walls of timber or stone worn down day by day, food counted in days, sickness and desertion in the camp, sallies and relief armies. Starving garrisons offer to march out on terms and leave the town intact. Storm the walls at the odds shown, starve them out, or lift the siege.
+- Armies waste away far from friendly towns, in winter, to disease in a big summer camp and to desertion when unpaid; the army card says how many and why.
+- Every battle and siege leaves its report in the Chronicle.
+
 ## M19 A and B Conquest
 - Towns taken in war are occupied, not owned, until a peace says otherwise. Our soldiers can strip an occupied town of grain and coin; nothing is built there. On the map an occupied town wears its occupier's colour hatched over its own.
 - A town that becomes Temerian is ours for good: a full crown town with its own people (Bremervoord's stay Cidarians), their faith, buildings and stores, to be built in, taxed and garrisoned like any other. Towns we lose at a peace leave us the same way. Old reigns keep what they won.

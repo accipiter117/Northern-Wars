@@ -11,6 +11,7 @@ import { treatyBetween, treatiesOf, partnerOf, endTreaty, hasTrait, changeTrust 
 import { treatyCalls, crownBound } from './audiences.js';
 import { settleOwnership } from './lands.js';
 import { leagueAllies, setWarHook, integrationFactor } from './conquest.js';
+import { answerTerms } from './siege.js';
 import {
   TEMERIA, ownerOf, originOf, placeOf, placesHeldBy, valueOf, hostile, warBetween, sideIndex, sideName, warsOf, atWar,
   heldValue, warScore, exhaustion, setOwner, truceUntil, setTruce,
@@ -436,12 +437,20 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
       setOwner(state, world, t.id, t.from);
     }
   }
+  // A town an ally retook goes home to its own realm, not to the ally (M19).
+  for (const t of war.taken) {
+    const home = originOf(world, t.id);
+    const owner = ownerOf(state, world, t.id);
+    if (owner !== home && sideIndex(war, owner) >= 0 && sideIndex(war, owner) === sideIndex(war, home)) setOwner(state, world, t.id, home);
+  }
   // No victor keeps more than it can hold down (M19): its war aim first,
   // then the richest towns, up to a share of what its own towns are worth;
   // the rest go home.
   if (world.conquest) digestible(state, world, war);
   if (tribute) state.tributes.push(tribute);
   if (lump) pay(state, lump.from, lump.to, lump.coin);
+  // Prisoners held a year or more go home at the peace (M19).
+  if (state.captives) state.captives = state.captives.filter((c) => !(war.sides.flat().includes(c.side) && war.sides.flat().includes(c.by) && state.day - c.day >= 365));
   state.wars = state.wars.filter((w) => w !== war);
   for (const a of war.sides[0]) for (const b of war.sides[1]) setTruce(state, a, b, state.day + p.truceDays);
   for (const rid of war.sides.flat()) {
@@ -606,6 +615,14 @@ export function warDecisionText(state, world, d) {
       choices: ['To arms', `Buy them off (${d.price} crowns)`],
     };
   }
+  if (d.kind === 'terms') {
+    const a = state.armies.find((x) => x.id === d.army);
+    return {
+      kicker: 'A siege', title: `${world.byId[d.town].name} offers terms`,
+      text: `Starving, the garrison of ${world.byId[d.town].name} offers to march out with the honours of war and leave the town intact.${a?.siege ? ` Our camp has lost ${Math.round(a.siege.sick)} men to sickness in ${a.siege.days} days.` : ''} Refuse, and we starve them to the last or storm what is left.`,
+      choices: ['Accept their terms', 'Refuse'],
+    };
+  }
   if (d.kind === 'call') {
     return {
       kicker: `An envoy from ${realm}`, title: 'A friend calls us to arms',
@@ -636,6 +653,10 @@ export function resolveWarDecision(state, world, id, choice, ignored = false) {
   const war = state.wars.find((w) => w.id === d.war);
   const realm = sideName(world, d.realm);
   if (!war) return true;
+  if (d.kind === 'terms') {
+    answerTerms(state, world, null, d, choice === 0);
+    return true;
+  }
   if (d.kind === 'declared') {
     if (choice === 1 && state.treasury - d.price >= -creditLimit(state, world)) {
       applyPeace(state, world, war, { towns: 'white', lump: { from: TEMERIA, to: d.realm, coin: d.price } });

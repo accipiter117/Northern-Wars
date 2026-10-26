@@ -214,6 +214,25 @@ Towns that change hands now change realm for good, and what becomes of them is t
 - When the North's fear of Temeria runs high (35 on average), the most afraid swear a league: strike one and the rest join the war. When fear is extreme (65) and Temeria weakened (at war elsewhere, or stability under 45), the league may declare war together.
 - Foreign rulers follow the same rules by their tempers: greedy and opportunist captains sack, zealous ones drive out elves, the rest spare; they annex, face risings and claimants, and fear one another.
 
+### Battles you can watch (M19 C)
+- When two hostile armies meet they fight over several days, one round a day: a skirmish of two days where archers and crossbows count most; the melee, where men-at-arms and knights decide it and levies break first; then rout and pursuit, where the victors' horse cut down the fleeing.
+- Each round both sides lose men and spirit by their strength in the line (stance, marshal, morale, arms, quality), their troops (a crown army by its companies, a foreign one by its realm's custom), the ground (woods blunt horse and archers, hills favour the defender, marsh bogs cavalry) and the weather (rain on the bowstrings, snow). A side breaks when its spirit is spent or half its men are down.
+- Each battle draws its fortune once, from the old odds (strength cubed against strength cubed), so over many battles the winner is as often the stronger side as the single roll had it; the odds shown on the Battle card are the captains' reckoning from the strengths and spirit they can see.
+- A fifth of each army starts in reserve. Committing it (once the lines close) puts more men in the line: better odds, heavier losses. Sounding the retreat (at any time) gives up the field and saves what remains; the withdrawal costs more once the lines have closed, and more against horse. Foreign captains, and our marshals when not told otherwise, commit when bold or when the day turns, and a cautious captain losing badly withdraws.
+- Events, one short line each: a volley that breaks a charge, a cavalry charge as the lines close, a flank turned by a skilled marshal, levies breaking, a commander wounded, killed or taken in the rout (captured commanders are ransomed at the deal table, or go home at a peace once held a year), rain on the bowstrings, an army joining from near by, the rout.
+- When one of our armies gives battle the game drops to 1x so it can be watched, and goes back to its speed afterwards; a setting in Help pauses instead. A banner leads to the Battle card: both sides' men in the line and in reserve, their losses and spirit, a bar of who is winning, the events so far, and the two orders.
+
+### Sieges (M19 C)
+- Walls: none round a village (it falls to an army that holds it a day), timber round a town (35), stone round a city or castle (80), and 40 more where walls were built. Siege works wear them down day by day, stone at half the rate of timber.
+- Food: a crown town's own stores against what it eats; abroad, by its kind and fortunes (a town about two months). When it runs out the garrison starves.
+- The camp: sickness that grows with the weeks, and desertion when the men go unpaid. The garrison sallies against a thin camp, burning works. A relief army coming is seen.
+- Starving, the defenders offer terms: the garrison marches out and the town is taken intact. The crown is asked (accepted if unanswered); foreign captains accept.
+- The crown's orders: storm the walls (the odds and the likely dead shown, taken or thrown back at those odds), starve them out (the marshal will not storm unless told), or lift the siege. Captains storm by themselves when the odds suit their stance.
+
+### Field attrition (M19 C)
+- Armies lose men outside battle: to supply when far from a friendly town, to winter, to disease in a large army in the warm months, and to desertion when unpaid. The army card shows what the last month cost, by cause.
+- Every battle and siege leaves a report in the Chronicle: the sides, the dead, the main turns of it and what was taken.
+
 ### Save
 - Version 16: lands, claimants and conquest records; towns held after ended wars are annexed.
 

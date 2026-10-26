@@ -7,6 +7,7 @@ import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
 import { cardHead, orderAttr, section } from './card.js';
 import { form } from './memory.js';
+import { siegeHtml, attritionHtml, defendedSiegeHtml } from './battle.js';
 const LEVIES = { none: 'No levy', third: 'A third', half: 'Half' };
 const TERMS = {
   white: ['Peace as we were', 'Every town taken in this war goes back to its old master.'],
@@ -161,7 +162,7 @@ export function armyCard(app, id) {
   const pick = (kind, label, sub, ok = true) => `<button type="button" class="act" data-order-kind="${kind}" data-pick-start='{"kind":"${kind}","army":${id}}' ${ok ? '' : 'disabled'}><span class="act-label">${icon('target')} ${label}</span><span class="act-sub">${sub}</span></button>`;
   return `
     ${cardHead({
-      status: `<span>${escapeHtml(describeArmy(state, world, a).replace(`${a.name}, `, ''))}.${a.siege ? ` The siege is ${Math.round(a.siege.progress)}% of the way to starving them out.` : ''}</span>`,
+      status: `<span>${escapeHtml(describeArmy(state, world, a).replace(`${a.name}, `, ''))}.</span>`,
       chips: [
         { icon: 'people', label: 'Men', value: number(Math.round(a.soldiers)) },
         { label: 'Spirit', value: a.morale >= 75 ? 'Eager' : a.morale >= 50 ? 'Steady' : a.morale >= 30 ? 'Shaken' : 'Broken', tone: a.morale < 30 ? 'bad' : '' },
@@ -169,6 +170,9 @@ export function armyCard(app, id) {
         a.companies && { label: 'Hired', value: a.companies },
       ],
     })}
+    ${a.battle ? `<div data-part="inbattle"><button type="button" class="act primary" data-go="battle:${a.battle}"><span class="act-label">${icon('sword')} In battle: to the field</span></button></div>` : ''}
+    ${siegeHtml(world, state, a)}
+    <div data-part="attrition">${attritionHtml(a)}</div>
     <div data-part="orders"><h3>Orders</h3>
       <div class="actions">
         ${pick('hold', 'Hold a place', 'Meets any enemy that comes near')}
@@ -208,5 +212,5 @@ export function occupationHtml(world, state, id) {
 // Battles and sieges round a place, for the town cards.
 export function siegeNote(world, state, id) {
   const a = state.armies.find((x) => x.siege && x.at === id);
-  return a ? `<p class="warn">Under siege by ${escapeHtml(a.name)} (${escapeHtml(sideName(world, a.side))}), ${number(Math.round(a.soldiers))} men.</p>` : '';
+  return a ? `<p class="warn">Under siege by ${escapeHtml(a.name)} (${escapeHtml(sideName(world, a.side))}), ${number(Math.round(a.soldiers))} men.</p>${defendedSiegeHtml(world, state, id)}` : '';
 }
