@@ -1,6 +1,7 @@
 // Every screen the panel can show, by route: the five tabs (each with its
 // sub-tabs) and the cards opened from them or from the map.
 import { escapeHtml } from './format.js';
+import { battleCard, battleTitle } from './battle.js';
 import { segs } from './card.js';
 import { realmTab, meterCard } from './realmTab.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
@@ -85,6 +86,10 @@ export function renderRoute(app, route) {
     case 'threat': {
       const t = state.threats.list.find((x) => x.id === Number(arg));
       return { title: escapeHtml(t ? threatLabel(world, t) : 'Gone'), html: threatCard(app, Number(arg)) };
+    }
+    case 'battle': {
+      const f = (state.fights ?? []).find((x) => x.id === Number(arg));
+      return { title: escapeHtml(f ? battleTitle(world, f) : 'The battle'), html: battleCard(app, Number(arg)) };
     }
     case 'army': {
       const a = state.armies.find((x) => x.id === Number(arg));

@@ -108,6 +108,12 @@ export function itemValue(state, world, pid, item) {
     }
     case 'treaty': return treatyValue(state, world, pid, TEMERIA, item.treaty, item.years);
     case 'peace': return peaceValue(state, world, pid, item.terms);
+    case 'captive': {
+      // A prisoner of war: ours to release for a ransom, or theirs.
+      const c = (state.captives ?? []).find((x) => x.id === item.captive);
+      if (!c) return 0;
+      return ours ? c.ransom * 0.9 : -c.ransom;
+    }
     case 'claimant': {
       // Giving up a guest costs a host what the exile's claim is worth to it.
       const c = (state.claimants ?? []).find((x) => x.host === pid && x.against === TEMERIA);
@@ -446,6 +452,7 @@ export function describeItem(world, item, pid) {
     case 'treaty': return `${treatyDef(world, item.treaty).name}${item.years ? ` (${item.years} years)` : ` (${treatyDef(world, item.treaty).years} years)`}`;
     case 'peace': return item.terms === 'keep' ? 'Peace: each keeps what it holds' : item.terms === 'vassal' ? 'Peace: they become our vassal' : 'Peace: every town handed back';
     case 'claimant': return 'The exile they shelter, handed over';
+    case 'captive': return item.from === 'them' ? 'Our captured commander, set free' : 'Their captured commander, set free';
     default: return item.kind;
   }
 }
@@ -470,6 +477,7 @@ export function signDeal(state, world, pid, items) {
     else if (i.kind === 'town' && !peace) setOwner(state, world, i.town, taker);
     else if (i.kind === 'embassy' && i.from === 'them' && !state.embassies[pid]) openEmbassy(state, world, pid);
     else if (i.kind === 'claimant') expelClaimant(state, world, pid);
+    else if (i.kind === 'captive') state.captives = (state.captives ?? []).filter((c) => c.id !== i.captive);
     else if (i.kind === 'route') state.routes.push({ id: state.nextRouteId++, from: i.a, to: i.b, since: state.day, last: 0, raided: false, closed: null, deal: true });
     else if (i.kind === 'intel') {
       const s = (state.diplomacy.sight[pid] ??= { theirs: 0, ours: 0 });

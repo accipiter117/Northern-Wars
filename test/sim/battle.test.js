@@ -120,3 +120,96 @@ test('the odds shown follow the battle', () => {
   f.spirit[0] = 10;
   assert.ok(battleOdds(s, world, f, 0) < start);
 });
+
+// ---- Sieges ----
+
+import { siegeDay, stormOdds, wallsOf, storm } from '../../src/sim/siege.js';
+import { setOwner } from '../../src/sim/conflict.js';
+import { resolveWarDecision } from '../../src/sim/war.js';
+import { attritionOf } from '../../src/sim/armies.js';
+import { step as stepState } from '../../src/sim/index.js';
+
+function camp(seed, town, men, side = 'temeria', realm = world.realmOf[town]) {
+  const s = createState(world, seed);
+  s.armies = [];
+  s.wars = [];
+  s.warDecisions = [];
+  const rng = makeRng(seed);
+  startWar(s, world, rng, side, realm, 'claim');
+  s.armies = [];
+  const a = newArmy(s, world, side, town, men, {}, { order: 'siege', target: town });
+  return { s, a, rng };
+}
+
+test('a siege wears the walls down, starves the garrison, and they offer terms', () => {
+  const town = world.foreignByRealm.redania.find((id) => world.byId[id].type === 'town');
+  const { s, a, rng } = camp(21, town, 1500);
+  a.stance = 'cautious';
+  // Told to starve them out, not to storm.
+  a.starve = true;
+  assert.ok(wallsOf(s, world, town) > 0, 'a town has timber walls');
+  let terms = null;
+  for (let d = 0; d < 200 && !terms && (d === 0 || a.siege); d++) {
+    s.day += 1;
+    siegeDay(s, world, rng, a, 'redania');
+    if (a.siege) a.siege.hold = true;
+    terms = s.warDecisions.find((x) => x.kind === 'terms');
+  }
+  assert.ok(terms, 'the starving garrison offers terms');
+  assert.ok(a.siege.walls < a.siege.wallsMax, 'the walls are worn');
+  assert.ok(a.siege.sick > 0, 'sickness thins the camp');
+  const pop = s.realms.redania.settlements[town].population;
+  resolveWarDecision(s, world, terms.id, 0);
+  assert.equal(s.realms.redania.settlements[town].owner, 'temeria', 'taken on terms');
+  assert.ok(s.realms.redania.settlements[town].population >= pop - 1, 'intact');
+});
+
+test('a village falls in a day; a storm is taken or thrown back at the odds shown', () => {
+  const village = world.foreignByRealm.redania.find((id) => world.byId[id].type === 'village');
+  {
+    const { s, a, rng } = camp(22, village, 600);
+    for (let d = 0; d < 3 && (d === 0 || a.siege); d++) {
+      s.day += 1;
+      siegeDay(s, world, rng, a, 'redania');
+    }
+    assert.equal(s.realms.redania.settlements[village].owner, 'temeria');
+  }
+  const city = world.foreignByRealm.redania.find((id) => world.byId[id].type === 'city');
+  let taken = 0;
+  let expected = 0;
+  for (let i = 0; i < 120; i++) {
+    const { s, a, rng } = camp(500 + i, city, 9000);
+    s.day += 1;
+    a.siege = null;
+    siegeDay(s, world, rng, a, 'redania');
+    if (!a.siege) continue;
+    a.siege.hold = true;
+    const o = stormOdds(s, world, a);
+    expected += o.odds;
+    const before = a.soldiers;
+    storm(s, world, rng, a, 'redania');
+    if (s.realms.redania.settlements[city].owner === 'temeria') taken++;
+    assert.ok(a.soldiers < before, 'a storm costs men either way');
+  }
+  assert.ok(Math.abs(taken - expected) / 120 < 0.12, `taken ${taken} of 120, odds said ${expected.toFixed(1)}`);
+});
+
+test('an army far from friendly towns in winter, unpaid, wastes away, and its card knows why', () => {
+  const s = createState(world, 23);
+  s.armies = [];
+  s.wars = [];
+  const rng = makeRng(23);
+  startWar(s, world, rng, 'temeria', 'redania', 'claim');
+  s.armies = [];
+  const far = world.foreignByRealm.redania.reduce((best, id) => (!best || world.byId[id].y < world.byId[best].y ? id : best), null);
+  const a = newArmy(s, world, 'temeria', far, 4000, {}, { order: 'defend', target: far });
+  s.unpaid = true;
+  s.day += 300 - (s.day % 365) + 300;
+  let next = s;
+  for (let d = 0; d < 30; d++) next = stepState(next, 1, world, { ambient: false });
+  const b = next.armies.find((x) => x.id === a.id) ?? null;
+  assert.ok(b, 'still in the field');
+  const why = attritionOf(b);
+  assert.ok(why.supply > 0 && why.desertion > 0, JSON.stringify(why));
+  assert.ok(b.soldiers < 4000);
+});

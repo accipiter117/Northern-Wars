@@ -31,11 +31,11 @@ export function makeCrowns(world) {
     for (const d of [...s.warDecisions]) {
       let choice = d.kind === 'call' ? 1 : 0;
       // An offered peace that would leave our towns with them is refused,
-      // unless the war has dragged on past two years.
+      // unless the war has dragged on a year.
       if (d.kind === 'offer') {
         const w = s.wars.find((x) => x.id === d.war);
         const lose = w && w.taken.some((t) => t.from === 'temeria' && ownerOf(s, world, t.id) !== 'temeria');
-        if (w && (d.terms.towns !== 'white' || d.terms.tribute) && lose && s.day - w.since < 720) choice = 1;
+        if (w && (d.terms.towns !== 'white' || d.terms.tribute) && lose && s.day - w.since < 360) choice = 1;
       }
       s = act(s, { type: 'warDecision', id: d.id, choice });
     }
@@ -50,7 +50,11 @@ export function makeCrowns(world) {
       const holding = held('temeria') > w.sides.flat().filter((r) => r !== 'temeria').reduce((a, r) => a + held(r), 0);
       // A war of our own making goes on until we hold what we came for, or a year.
       if (w.sides[0][0] === 'temeria' && !holding && s.day - w.since < 360) continue;
-      for (const key of holding ? ['keep', 'tribute', 'white'] : ['tribute', 'keep', 'white']) {
+      // Behind, never settle for each keeping what it holds.
+      // ('tribute' keeps what each holds too).
+      // After a year of it, any peace will do.
+      const weary = s.day - w.since >= 360;
+      for (const key of holding || weary ? ['tribute', 'keep', 'white'] : ['white']) {
         const t = peaceTerms(s, world, w).list.find((x) => x.key === key);
         if (t.accept) { s = act(s, { type: 'peace', war: w.id, terms: key }); break; }
       }

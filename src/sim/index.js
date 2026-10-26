@@ -50,3 +50,6 @@ export {
 } from './conquest.js';
 export { peopleOf, livingRealms, isFallen } from './lands.js';
 export { realmNow } from './conflict.js';
+export { battleOdds, meetingOdds, lineOf, canBattleOrder, makeupOf } from './battle.js';
+export { stormOdds, wallsOf, canSiegeOrder } from './siege.js';
+export { attritionOf } from './armies.js';

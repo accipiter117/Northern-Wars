@@ -437,12 +437,20 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
       setOwner(state, world, t.id, t.from);
     }
   }
+  // A town an ally retook goes home to its own realm, not to the ally (M19).
+  for (const t of war.taken) {
+    const home = originOf(world, t.id);
+    const owner = ownerOf(state, world, t.id);
+    if (owner !== home && sideIndex(war, owner) >= 0 && sideIndex(war, owner) === sideIndex(war, home)) setOwner(state, world, t.id, home);
+  }
   // No victor keeps more than it can hold down (M19): its war aim first,
   // then the richest towns, up to a share of what its own towns are worth;
   // the rest go home.
   if (world.conquest) digestible(state, world, war);
   if (tribute) state.tributes.push(tribute);
   if (lump) pay(state, lump.from, lump.to, lump.coin);
+  // Prisoners held a year or more go home at the peace (M19).
+  if (state.captives) state.captives = state.captives.filter((c) => !(war.sides.flat().includes(c.side) && war.sides.flat().includes(c.by) && state.day - c.day >= 365));
   state.wars = state.wars.filter((w) => w !== war);
   for (const a of war.sides[0]) for (const b of war.sides[1]) setTruce(state, a, b, state.day + p.truceDays);
   for (const rid of war.sides.flat()) {

@@ -333,7 +333,8 @@ function rout(state, world, rng, f, loser) {
   const lead = fightArmies(state, f, loser)[0];
   if (lead && rng.chance(bt.events.commander.captured) && f.commander?.[loser] !== 'killed') {
     const marshal = lead.marshal;
-    (state.captives ??= []).push({ side: f.sides[loser], by: f.sides[winner], marshal, day: state.day, ransom: ransomOf(world, f.sides[loser], marshal) });
+    state.nextCaptiveId = (state.nextCaptiveId ?? 0) + 1;
+    (state.captives ??= []).push({ id: state.nextCaptiveId, side: f.sides[loser], by: f.sides[winner], marshal, day: state.day, ransom: ransomOf(world, f.sides[loser], marshal) });
     note(f, state, `${marshal ? world.war.marshals[marshal].short ?? world.war.marshals[marshal].name : `${sideName(world, f.sides[loser])}'s commander`} is taken prisoner.`);
     if (marshal) lead.marshal = null;
   }

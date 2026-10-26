@@ -66,6 +66,8 @@ export function canRaise(state, world, opts) {
   if (crownArmies(state).length >= 3) return { ok: false, reason: 'The realm cannot keep more than three armies.' };
   if (opts.marshal && !w.marshals[opts.marshal]) return { ok: false, reason: 'Unknown marshal.' };
   if (opts.marshal && crownArmies(state).some((a) => a.marshal === opts.marshal)) return { ok: false, reason: 'That marshal already leads an army.' };
+  const held = (state.captives ?? []).find((c) => c.marshal === opts.marshal && c.side === TEMERIA);
+  if (opts.marshal && held) return { ok: false, reason: `He is a prisoner of ${sideName(world, held.by)}: ransom him at the deal table.` };
   const m = w.marshals[opts.marshal];
   if (m?.house && (state.houses[m.house]?.rebel || state.houses[m.house]?.loyalty < w.raise.nobleRefuseBelow)) return { ok: false, reason: 'His house will not lend him to the crown.' };
   const p = musterPreview(state, world, opts);
@@ -738,7 +740,9 @@ export function attritionOf(a) {
 export function describeArmy(state, world, a) {
   const where = a.to ? `on the road to ${world.byId[a.to].name}` : `at ${world.byId[a.at].name}`;
   let doing;
-  if (a.order === 'muster') doing = 'mustering';
+  const fight = a.battle && (state.fights ?? []).find((f) => f.id === a.battle);
+  if (fight) doing = `in battle near ${fight.place}`;
+  else if (a.order === 'muster') doing = 'mustering';
   else if (a.retreating) doing = 'falling back';
   else if (a.siege) doing = `besieging ${world.byId[a.at].name}`;
   else if (a.raiding) doing = `plundering ${world.byId[a.at].name}`;

@@ -12,6 +12,36 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### What battles and sieges changed (M19 C)
+Battles now last days and sieges are counted in walls, food and sickness; the outcome of a battle over many trials is the old roll's (tested in `test/sim/battle.test.js`: within six points at strength ratios of 1, 1.2, 1.5 and 2). From `node tools/realms.mjs 30 <crown> 1,2,3,4` and `node tools/longrun.mjs 30 <crown> 1,2,3`:
+
+| | Idle | Steward | Spendthrift | Tyrant |
+| --- | --- | --- | --- | --- |
+| People after 30 years | about 52,800 | about 78,300 (69,000 to 89,200) | about 59,300 (29,300 in one seed, about 74,000 in the others) | about 19,400 |
+| Invasions in 30 years (realms tool, four seeds) | 1, 1, 1, 0 | 0, 0, 0, 0 | | |
+| Wars (longrun, three seeds) | 1 each | 0 to 4 | 0 to 9 | 10 to 11 |
+| Depositions | 0 | 0 to 2 | 3 to 19 | 16 to 28 |
+| Towns lost for good | 0 | 0 to 3 | 0 to 11 | 3 to 15 |
+
+- **The steward is never invaded** in the four realms seeds, and its own campaigns (a town every eight years, Riedbrune most often) cost it a town at most. Its income still more than triples by year 10 (3.2, 3.4 and 3.3 times) and the idle crown still breaks even (year 10 nets +49 to +111).
+- **Wars drag where a crown refuses to lose.** The model crowns now refuse a peace that leaves their towns with the enemy for the first year of a war, then take what is offered. Refusing for two years cost far more people (to sieges, starvation and raids) than the towns themselves.
+- **The tyrant pays most.** At Authority nothing it is the North's favourite target: ten or eleven wars, two dozen regencies, and a third of the people it began with. The spendthrift collapses the same way in one seed of three. This is the design's "weakness invites wolves" at its harshest; if it proves too harsh in play, the dials are `peace.keepShare` (what a victor keeps) and strategy.json `deterrence.muster` (how much the neighbours respect the crown's levies).
+
+The battle dials, all in data/war.json:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| `battles.skirmishRounds` | 2 days | Longer exchanges of arrows before the lines close |
+| `battles.morale.melee`, `battles.morale.skirmish` | 15 and 6 spirit a day at even strength | Shorter battles |
+| `battles.casualties.melee` | 3.5% of the line a day at even strength | Bloodier battles |
+| `battles.reserve` | a fifth of each army | A bigger reserve to commit |
+| `battles.pursuit.cavalry` | 30% of the broken side for an all-horse victor | Deadlier routs |
+| `battles.retreat.melee` | 7% of the army, more against horse | A costlier retreat once the lines have closed |
+| `sieges.wear`, `sieges.stoneWear` | 1 a day for a thousand men, stone at half | Walls fall sooner |
+| `sieges.food` | a town about 60 days, a city 90 | Longer sieges before terms |
+| `sieges.sickness` | 0.12% of the camp a day, rising with the weeks | Sieges cost the besiegers more |
+| `attrition.supplyRange`, `attrition.supply` | 140 map units, 0.12% a day beyond | Armies waste faster far from home |
+
 ### What conquest changed (M19 A and B)
 Towns lost at a peace now leave the realm for good, so the four crowns' figures count only the towns each still holds. From `node tools/realms.mjs 30 <crown> 1,2,3,4` and `node tools/longrun.mjs 30 <crown> 1,2,3`:
 

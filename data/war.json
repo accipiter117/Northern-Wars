@@ -466,7 +466,7 @@
       "city": 80,
       "built": 40
     },
-    "wear": 1.4,
+    "wear": 1.0,
     "wearMen": 1000,
     "food": {
       "village": 25,
@@ -496,6 +496,7 @@
       "boldAt": 0.75,
       "cautiousAt": 0.9
     },
-    "termsDays": 10
+    "termsDays": 10,
+    "stoneWear": 0.5
   }
 }

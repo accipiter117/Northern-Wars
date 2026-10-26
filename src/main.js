@@ -193,6 +193,30 @@ async function boot() {
     return true;
   }
 
+  // Battle pace (M19): when one of our armies gives battle, the game drops
+  // to 1x so it can be watched (or pauses, if the player asked), and goes
+  // back to its old speed once the fighting is over.
+  const battlesSeen = new Set((state.fights ?? []).map((f) => f.id));
+  let paceFrom = null;
+  function battlePace() {
+    const ours = (state.fights ?? []).filter((f) => !f.over && f.sides.includes(TEMERIA));
+    const fresh = ours.find((f) => !battlesSeen.has(f.id));
+    for (const f of ours) battlesSeen.add(f.id);
+    if (fresh) {
+      toast(`Battle near ${fresh.place}. Tap the banner to watch.`);
+      audio.play('horn');
+      if (prefs.pauseOnBattle) setSpeed(0);
+      else if (speed > 1) {
+        paceFrom ??= speed;
+        setSpeed(1);
+      }
+      updateUrgent();
+    } else if (!ours.length && paceFrom !== null) {
+      if (speed === 1) setSpeed(paceFrom);
+      paceFrom = null;
+    }
+  }
+
   function looseThreats() {
     const hunted = new Set(freeCompanies(state).map((c) => c.task?.threat).filter(Boolean));
     return (state.threats?.list ?? []).filter((t) => !t.abroad && (t.sighted || t.campSeen) && !hunted.has(t.id) && !state.threats.contracts.some((c) => c.threat === t.id)).length;
@@ -438,6 +462,10 @@ async function boot() {
     } else if (/^(music|sfx)-(on|off)$/.test(action)) {
       const [k, v] = action.split('-');
       audio.set(k === 'music' ? 'musicOn' : 'sfxOn', v === 'on');
+      nav.refresh();
+    } else if (action === 'battle-pause-on' || action === 'battle-pause-off') {
+      prefs.pauseOnBattle = action === 'battle-pause-on';
+      savePrefs(prefs);
       nav.refresh();
     } else if (action === 'sighting-pause-on' || action === 'sighting-pause-off') {
       prefs.pauseOnSighting = action === 'sighting-pause-on';
@@ -697,6 +725,7 @@ async function boot() {
         if (dateOf(state.day).month !== month) save(true);
         uiDue += 1;
         if (newSightings()) setSpeed(0);
+        battlePace();
         if (newDecisions()) {
           setSpeed(0);
           uiDue = 3;

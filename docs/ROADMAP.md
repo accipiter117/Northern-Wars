@@ -20,7 +20,7 @@
 | M17 Audiences with rulers | A full-screen audience with any ruler (portrait, mood and its reasons, trust); a deal table with live verdicts, counter-offers and deals carried out through the ledger and caravans; gifts, denunciations, tribute, asks and intelligence; treaties (non-aggression, trade, defensive, alliance, access, protectorate) that bind calls to arms and cost trust to break; war declared with a reason and terms before war; rulers with traits and agendas who request audiences and make and break pacts among themselves | Done |
 | M18 Music and sound | A looping soundtrack that starts on the first tap, fades when put away and ducks under alerts; synthesised interface sounds for taps, sheets, tabs, speed, orders, laws, coin, refusals, alerts, war and long presses; music and effects volume and mute in Help; music cached by the service worker with Range support | Done |
 | M18 Rulers who govern | Foreign rulers assess threat, opportunity and purse each month and choose a posture (Grow, Arm, Expand, Consolidate, Scheme); standing armies with upkeep, a court that taxes hoards, debt with desertion and offers to Temeria; building from the full catalogue; wars with aims, musters and reasons in place of rivalry dice; deterrence, probes and harder-to-break pacts with Temeria; pacts between realms that last; posture and war aims learnt through embassies and spies | Done |
-| M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | In progress (A and B, conquest, done) |
+| M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | In progress (A, B and C done) |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -47,7 +47,15 @@ Part B, what a town costs:
 - Claimants with fading legitimacy, agitation, exile armies; pension, spy, hand-over at the deal table.
 - Fear of Temeria per ruler, shown on the Diplomacy tab and in mood reasons; a league when high, a joint war when extreme and Temeria weakened. AI realms follow the same rules.
 
-Part C, battles and sieges you can watch, and Part D, the map: see the brief; to follow in their own pull requests.
+Part C, battles and sieges you can watch:
+- Field battles in three phases (skirmish, melee, rout and pursuit), several rounds each, losses and spirit by strength, troops, ground and weather; a side breaks on spirit or numbers; outcomes over many trials match the old odds; the odds shown stay truthful.
+- A fifth of each army in reserve; commit (from the melee) and retreat (any time) for the crown, by temper for captains.
+- Events from troops, ground, weather and commanders, one line each; captured commanders ransomed at the deal table.
+- Battle pace: 1x for our battles, or pause by a setting.
+- Sieges with walls (none, timber, stone) worn by works, garrison, food in days, sickness and desertion, sallies, relief, surrender on terms, and orders to storm (odds and losses shown), starve or lift.
+- Field attrition by supply, winter, disease and desertion, shown on the army card; a Chronicle report for every battle and siege.
+
+Part D, the map: to follow in its own pull request.
 
 ## M18 acceptance criteria
 - Each foreign realm scores Threat, Opportunity and Purse (0 to 100, with parts) monthly and holds one of five postures for at least six months unless threat jumps; trait and agenda weights in data/strategy.json; the posture stored on the realm.

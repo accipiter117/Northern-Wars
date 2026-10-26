@@ -305,6 +305,11 @@ function presets(app, pid, side) {
     // A small realm may keep its ruler as our vassal (M19).
     if (world.conquest && (world.foreignByRealm[pid] ?? []).length <= world.conquest.vassal.maxTowns) add('Peace: they become our vassal', { kind: 'peace', terms: 'vassal' });
   }
+  // Commanders taken in battle, ransomed either way (M19).
+  for (const c of state.captives ?? []) {
+    if (side === 'them' && c.side === TEMERIA && c.by === pid) add(`${c.marshal ? world.war.marshals[c.marshal]?.short ?? 'Our marshal' : 'Our captain'}, their prisoner`, { kind: 'captive', captive: c.id });
+    if (side === 'us' && c.side === pid && c.by === TEMERIA) add('Their captured commander', { kind: 'captive', captive: c.id });
+  }
   // An exile they shelter, handed over or sent away (M19).
   if (side === 'them' && (state.claimants ?? []).some((c) => c.host === pid && c.against === TEMERIA)) add('Hand over the exile they shelter', { kind: 'claimant' });
   for (const a of [100, 250, 500, 1000]) add(`${number(a)} crowns`, { kind: 'coin', amount: a });

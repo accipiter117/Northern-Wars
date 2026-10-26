@@ -41,7 +41,7 @@ function foodDays(state, world, id) {
 function newSiege(state, world, a) {
   const walls = wallsOf(state, world, a.at);
   const food = foodDays(state, world, a.at);
-  return { at: a.at, days: 0, walls, wallsMax: walls, food, foodMax: Math.max(1, food), sick: 0, sallies: 0, terms: null, refused: 0, hold: false, progress: 0, events: [] };
+  return { at: a.at, days: 0, walls, wallsMax: walls, food, foodMax: Math.max(1, food), sick: 0, sallies: 0, terms: null, refused: 0, hold: !!a.starve, progress: 0, events: [] };
 }
 
 function note(state, sg, text) {
@@ -97,7 +97,8 @@ export function siegeDay(state, world, rng, a, owner) {
   // Siege works wear the walls down.
   if (s.walls > 0) {
     const before = s.walls;
-    s.walls = Math.max(0, s.walls - sg.wear * Math.sqrt(a.soldiers / sg.wearMen));
+    // Stone holds out longer than timber.
+    s.walls = Math.max(0, s.walls - sg.wear * Math.sqrt(a.soldiers / sg.wearMen) * (s.wallsMax >= 80 ? sg.stoneWear : 1));
     if (before > 0 && s.walls === 0) note(state, s, `The walls of ${name} are breached.`);
   }
   // The stores run down; then the garrison starves.
@@ -201,6 +202,7 @@ export function siegeOrder(state, world, rng, a, order) {
   if (order === 'storm') return storm(state, world, rng, a, owner);
   if (order === 'starve') {
     a.siege.hold = true;
+    a.starve = true;
     addDispatch(state, `${a.name} settles in to starve ${world.byId[a.at].name} out.`, 'military');
   }
   return null;

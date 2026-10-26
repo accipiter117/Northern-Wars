@@ -580,3 +580,17 @@ body.in-audience .tabbar, body.in-audience .sheet { visibility: hidden; }
 .volume input[type="range"]:disabled { opacity: 0.4; }
 .volume .mute { min-height: 36px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font: inherit; }
 .volume .mute[aria-pressed="true"] { color: var(--muted); }
+
+/* The Battle card (M19): who is winning, both sides, what has happened. */
+.balance-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; border: 1px solid var(--line); margin: 6px 0 2px; }
+.balance-bar span { display: block; height: 100%; transition: width 0.4s ease; }
+.balance-bar i { display: block; flex: 1; height: 100%; }
+.bsides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bside { border-top: 3px solid var(--side, var(--gold)); padding-top: 4px; }
+.bside h4 { margin: 2px 0 4px; }
+.bside .stats { grid-template-columns: 1fr; }
+.bside .stats div { display: flex; justify-content: space-between; gap: 6px; }
+.bevents { margin: 4px 0; padding-left: 18px; font-size: 14px; }
+.bevents li { margin: 3px 0; }
+.siege .stats { margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) { .balance-bar span { transition: none; } }
