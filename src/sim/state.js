@@ -13,6 +13,8 @@ import { defaultThreats } from './threats.js';
 import { defaultGold } from './gold.js';
 import { defaultDiplomacy } from './diplomacy.js';
 import { seedPacts } from './audiences.js';
+import { syncWorld } from './lands.js';
+import { defaultConquest } from './conquest.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -22,11 +24,13 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 15;
+export const STATE_VERSION = 16;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
   const day = dayNumber(k.start);
+  // A new reign starts from the map as it was drawn (M19).
+  syncWorld(world, { lands: {} });
   const settlements = {};
   for (const s of world.geography.settlements) {
     const d = world.settlementData[s.id];
@@ -75,6 +79,9 @@ export function createState(world, seed = 1) {
     flows: { out: {}, in: {} },
     ambient: { nextId: 1, units: [] },
     chronicle: [],
+    lands: {},
+    claimants: [],
+    conquest: defaultConquest(),
   };
   applyHoldings(state, world);
   // The North's standing pacts, as they stand when the reign begins (M18).

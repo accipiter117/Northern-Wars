@@ -42,9 +42,13 @@ for (const seed of SEEDS) {
       checkInvariants(a, `seed ${seed} year ${y + 1}`);
     }
     assert.equal(JSON.stringify(a), JSON.stringify(b));
-    // An untended realm should neither starve nor boom over ten years.
-    const pop = (x) => Object.values(x.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
-    const ratio = pop(a) / pop(createState(world, seed));
+    // An untended realm should neither starve nor boom over ten years. Towns
+    // lost to a neighbour at a peace leave the realm for good (M19), so the
+    // measure is taken over the towns it still has.
+    const start = createState(world, seed);
+    const kept = Object.keys(a.settlements).filter((id) => start.settlements[id]);
+    const pop = (x) => kept.reduce((n, id) => n + Object.values(x.settlements[id].population).reduce((p, q) => p + q, 0), 0);
+    const ratio = pop(a) / pop(start);
     assert.ok(ratio > 0.9 && ratio < 1.2, `population ratio ${ratio}`);
     assert.equal(a.day - createState(world, seed).day, 10 * YEAR_DAYS);
   });

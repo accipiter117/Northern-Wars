@@ -5,6 +5,7 @@
 // they meet an enemy, starve or storm the towns they besiege, and carry off
 // what they can.
 import { creditLimit, realmEffect } from './economy.js';
+import { onCapture, integrationFactor } from './conquest.js';
 import { stationedStrength, freeCompanies } from './forces.js';
 import { addDispatch, clamp } from './realm.js';
 import { roadPath, dist } from './world.js';
@@ -32,7 +33,7 @@ export function musterPreview(state, world, opts) {
   for (const [id, s] of Object.entries(state.settlements)) {
     if (s.occupier) continue;
     if (s.holder === 'crown') {
-      if (share) levy[id] = Math.floor(s.garrison * share);
+      if (share) levy[id] = Math.floor(s.garrison * share * integrationFactor(world, s, 'levyAt'));
     } else if (opts.nobles) {
       const h = state.houses[s.holder];
       if (!h || h.rebel) continue;
@@ -565,7 +566,7 @@ function siegeTick(state, world, rng, a, owner) {
       else if (informed(state, world, a.side) || informed(state, world, owner)) addDispatch(state, text, 'abroad');
     }
   }
-  if (placeDefence(state, world, a.at) < 5) return capture(state, world, a, a.at, owner, 'open');
+  if (placeDefence(state, world, a.at) < 5) return capture(state, world, rng, a, a.at, owner, 'open');
   const st = w.stances[a.stance];
   const defence = placeDefence(state, world, a.at);
   const mine = armyStrength(state, world, a);
@@ -579,19 +580,25 @@ function siegeTick(state, world, rng, a, owner) {
       war.lost[sideIndex(war, a.side)] += dead;
       war.lost[sideIndex(war, owner)] += p.garrison;
     }
-    return capture(state, world, a, a.at, owner, 'storm');
+    return capture(state, world, rng, a, a.at, owner, 'storm');
   }
   a.siege.days += 1;
   const type = world.byId[a.at].type;
+  // A village or any unwalled place falls to an army that holds it a day
+  // unopposed (M19); walls, cities and castles need a siege.
+  if (world.conquest && !hasWalls(state, world, a.at) && type !== 'city' && type !== 'castle' && a.siege.days > 1 && mine >= defence) {
+    a.soldiers -= Math.min(a.soldiers * 0.15, p.garrison * 0.5);
+    return capture(state, world, rng, a, a.at, owner, 'open');
+  }
   const slower = (hasWalls(state, world, a.at) ? sg.wallsSlower : 1) * (type === 'castle' ? sg.castleSlower : type === 'city' ? sg.citySlower : 1);
   a.siege.progress += (100 / (sg.starveDays * slower)) * clamp(mine / Math.max(1, defence * 1.5), 0.3, 1.5);
   p.garrison = Math.max(0, p.garrison - Math.max(1, p.garrison * sg.garrisonAttrition));
   a.soldiers -= a.soldiers * sg.besiegerAttrition;
   a.lastSiege = { ...a.siege };
-  if (a.siege.progress >= 100) capture(state, world, a, a.at, owner, 'starved');
+  if (a.siege.progress >= 100) capture(state, world, rng, a, a.at, owner, 'starved');
 }
 
-function capture(state, world, a, id, prev, how) {
+function capture(state, world, rng, a, id, prev, how) {
   const w = W(world);
   const c = w.capture;
   const p = placeOf(state, world, id);
@@ -602,7 +609,8 @@ function capture(state, world, a, id, prev, how) {
   setOwner(state, world, id, a.side);
   const war = warBetween(state, a.side, prev);
   if (war) recordCapture(war, id, prev, a.side, state.day);
-  const loot = round(peopleAt(state, world, id) * c.lootPerPerson * (p.prosperity / 50));
+  // Since M19 a town taken is spared unless its taker chooses to sack it.
+  const loot = world.conquest ? 0 : round(peopleAt(state, world, id) * c.lootPerPerson * (p.prosperity / 50));
   hurtPlace(state, world, id, { prosperity: c.prosperity, people: c.people, unrest: c.unrest });
   p.sacked = state.day + c.sackedDays;
   if (a.side === TEMERIA) state.treasury += loot;
@@ -611,6 +619,7 @@ function capture(state, world, a, id, prev, how) {
   const name = world.byId[id].name;
   const how2 = { storm: 'stormed', starved: 'starved into surrender', open: 'taken without a fight' }[how];
   const text = `${name} has fallen to ${sideName(world, a.side)}: ${how2}${lostGarrison >= 5 && how !== 'starved' ? `, its ${round(lostGarrison)} defenders put to the sword` : ''}. ${loot ? `${loot} crowns carried off.` : ''}`.trim();
+  onCapture(state, world, rng, a, id, prev, how);
   if (a.side === TEMERIA) {
     glory(state, world, 'townTaken', a);
     say(state, text);

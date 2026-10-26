@@ -7,6 +7,7 @@ import { addDispatch, clamp } from './realm.js';
 import { ownerOf, leviedMap, besieged } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
 import { monthlyStrategy, armyUpkeep } from './strategy.js';
+import { integrationFactor } from './conquest.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 const R = (world) => world.realms;
@@ -80,7 +81,8 @@ export function monthlyRealms(state, world, rng) {
       if (state.realms[owner]) {
         // Taxes, the ground, crafts, customs and any gold seam (doubled by a
         // gold mine), less the garrison's pay.
-        const income = townIncome(world, id, s, fx) + goldMonth(world, s) * (1 + fx.gold);
+        // A conquered town pays as it has come to accept its masters (M19).
+        const income = townIncome(world, id, s, fx) * integrationFactor(world, s, 'taxAt') + goldMonth(world, s) * (1 + fx.gold);
         gross[owner] = (gross[owner] ?? 0) + income;
         purse[owner] = (purse[owner] ?? 0) + income - s.garrison * e.garrisonPayMonth;
       }
@@ -93,7 +95,7 @@ export function monthlyRealms(state, world, rng) {
       const walls = s.buildings.includes('walls') ? e.wallsGarrison : 0;
       // An occupier keeps a lighter hold; no fresh men reach a town under siege;
       // a realm in debt cannot pay them all.
-      const target = Math.max(0, base.garrison * (1 + walls + fx.garrisonBonus) * (owner === rid ? 1 : 0.5) * (inDebt ? st.debt.garrison : 1) - (levied[id] ?? 0));
+      const target = Math.max(0, base.garrison * (1 + walls + fx.garrisonBonus) * (owner === rid ? 1 : 0.5) * (inDebt ? st.debt.garrison : 1) * integrationFactor(world, s, 'levyAt') - (levied[id] ?? 0));
       if (!besieged(state, id)) {
         // At least one man a month either way, so a small garrison is never
         // stuck short by rounding (Kerack's villages, M18).
@@ -155,6 +157,7 @@ export function monthlyRealms(state, world, rng) {
   // Rulers take stock and choose their course before they build or arm.
   if (st) monthlyStrategy(state, world, rng);
   for (const [rid, realm] of Object.entries(state.realms)) {
+    if (realm.fallen) continue;
     if (st) aiBuildM18(state, world, rid, realm);
     else aiBuild(state, world, rng, rid, realm);
     incident(state, world, rng, rid, realm);

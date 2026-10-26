@@ -12,6 +12,8 @@ import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { seasonOf } from './calendar.js';
 import { defaultGold } from './gold.js';
+import { syncWorld, settleOwnership } from './lands.js';
+import { upgradeConquest } from './conquest.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
 
@@ -196,6 +198,18 @@ const MIGRATIONS = {
     state.version = 15;
     return state;
   },
+  // v16 (M19): towns change realm for good. Any foreign town the crown (or a
+  // neighbour) still holds after its war has ended is annexed under the new
+  // rules, so a reign keeps what it won; a realm left with nothing falls.
+  15(state, world) {
+    state.lands ??= {};
+    state.claimants ??= [];
+    upgradeConquest(state);
+    syncWorld(world, state);
+    if (world.conquest) settleOwnership(state, world, { quiet: true });
+    state.version = 16;
+    return state;
+  },
 };
 
 // Swap every reference to a vanished foreign town for its replacement: as a
@@ -274,6 +288,8 @@ export function deserialize(text, world) {
   let { version, state } = data;
   if (typeof version !== 'number' || version > STATE_VERSION) throw new Error('That save comes from a newer version of the game.');
   if (state.kingdom !== world.kingdom.id) throw new Error(`That save is for another kingdom (${state.kingdom}).`);
+  // The map as this reign has redrawn it (M19), before anything is checked.
+  syncWorld(world, state);
   for (const s of world.geography.settlements) {
     if (!state.settlements?.[s.id]) throw new Error(`That save is missing ${s.name}.`);
   }

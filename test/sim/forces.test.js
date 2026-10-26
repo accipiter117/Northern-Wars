@@ -213,7 +213,9 @@ test('Scoia\'tael come out of the woods when sympathy is high; hostile neighbour
   let s = quiet(createState(world, 6));
   let commandos = 0;
   let raiders = 0;
-  for (let m = 0; m < 24; m++) {
+  // Four years: commandos come and go within a month or two, so a short
+  // window can miss them.
+  for (let m = 0; m < 48; m++) {
     s.sympathy = 90;
     s.neighbours.kaedwen.relation = -90;
     s = run(s, 30);

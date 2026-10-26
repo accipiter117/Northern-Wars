@@ -18,8 +18,10 @@ const abroad = (state, text) => addDispatch(state, text, 'abroad');
 
 // Everyone the crown can hold an audience with: today the realms with a
 // ruler in data/diplomacy.json, later lands beyond or powers without land.
+// A realm that has lost every town (M19) has no court to visit: its ruler
+// is a claimant in exile.
 export function parties(world) {
-  return Object.keys(D(world)?.rulers ?? {});
+  return Object.keys(D(world)?.rulers ?? {}).filter((p) => !world.realms?.realms[p] || (world.foreignByRealm[p] ?? []).length);
 }
 
 export function rulerOf(world, pid) {
@@ -353,6 +355,11 @@ export function moodReasons(state, world, rid) {
     else if (posture.kind === 'arm' && (posture.reasons ?? []).some((r) => r.text.startsWith('Temeria'))) add('posture', 'They fear our strength', ml.fearUs);
     else if (posture.kind === 'grow' && ag?.kind === 'trade') add('posture', 'Busy with trade, they welcome ours', ml.growTrade);
   }
+  // Fear of our conquests (M19), apart from mood and trust: it sours them,
+  // and binds the North against us.
+  const dread = state.conquest?.fear?.[rid]?.temeria ?? 0;
+  if (dread >= 1 && world.conquest) add('fear', dread >= 50 ? 'They dread our conquests' : 'They fear our conquests', -dread * world.conquest.fear.mood);
+  if (state.conquest?.league?.members.includes(rid)) add('league', 'Sworn to the league against us', -10);
   // Treaties in force.
   for (const t of treatiesOf(state, rid)) {
     if (partnerOf(t, rid) === TEMERIA) add(`treaty:${t.kind}`, `Our ${treatyDef(world, t.kind).name.toLowerCase()}`, treatyDef(world, t.kind).mood);

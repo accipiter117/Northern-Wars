@@ -47,7 +47,8 @@ export function wildSites(world, id) {
   const out = [];
   // Temeria's towns breed threats in Temeria's wilds; a foreign town in the
   // wild country abroad round it, whoever's map it is drawn on.
-  const realm = world.realmOf[id];
+  // A town keeps the wild country it was drawn in, whoever rules it now.
+  const realm = world.homeOf ? world.homeOf[id] : world.realmOf[id];
   const ours = (z) => (realm ? !!z.realm && z.realm !== TEMERIA : !z.realm);
   for (const [kind, zones] of Object.entries(world.geography.terrain)) {
     for (const z of zones) {

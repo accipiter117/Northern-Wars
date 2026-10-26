@@ -5,6 +5,7 @@
 // out by the simulation: lump sums at once, monthly payments and deliveries
 // through the ledger, goods on the road as caravans.
 import { addDispatch, clamp } from './realm.js';
+import { settleOwnership } from './lands.js';
 import { creditLimit, realmStock } from './economy.js';
 import { goodPrice } from './industry.js';
 import { realmProsperity, openEmbassy } from './realms.js';
@@ -480,6 +481,8 @@ export function signDeal(state, world, pid, items) {
     applyPeace(state, world, war, { towns: peace.terms === 'keep' ? 'keep' : 'white' });
     for (const i of cede) setOwner(state, world, i.town, i.from === 'us' ? pid : TEMERIA);
   }
+  // Towns sold, swapped or ceded change realm for good (M19).
+  if (items.some((i) => i.kind === 'town')) settleOwnership(state, world);
   if (recurring.length) {
     state.diplomacy.deals.push({ id: state.diplomacy.nextId++, with: pid, since: state.day, items: recurring, short: 0 });
   }

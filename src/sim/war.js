@@ -9,6 +9,8 @@ import { informed } from './realms.js';
 import { newArmy, disbandArmy, crownArmies } from './armies.js';
 import { treatyBetween, treatiesOf, partnerOf, endTreaty, hasTrait, changeTrust } from './diplomacy.js';
 import { treatyCalls, crownBound } from './audiences.js';
+import { settleOwnership } from './lands.js';
+import { leagueAllies, setWarHook, integrationFactor } from './conquest.js';
 import {
   TEMERIA, ownerOf, originOf, placeOf, placesHeldBy, valueOf, hostile, warBetween, sideIndex, sideName, warsOf, atWar,
   heldValue, warScore, exhaustion, setOwner, truceUntil, setTruce,
@@ -35,7 +37,8 @@ export function realmPotential(state, world, rid) {
   for (const [id, s] of Object.entries(state.realms[rid]?.settlements ?? {})) {
     if (ownerOf(state, world, id) !== rid) continue;
     n += Math.floor(s.garrison * ai.armyShare);
-    people += s.population;
+    // A conquered town sends few men until it has taken to its new crown (M19).
+    people += s.population * integrationFactor(world, s, 'levyAt');
   }
   // The standing army (M18) counts in full.
   return n + Math.round(people * ai.levyPerPeople) + Math.round(state.realms[rid]?.army ?? 0);
@@ -53,6 +56,8 @@ export function startWar(state, world, rng, attacker, defender, cause) {
     base: [soldiersOf(state, world, attacker), soldiersOf(state, world, defender)], lastOffer: state.day, called: false,
   };
   state.wars.push(war);
+  // The league against Temeria (M19) stands together when Vizima strikes.
+  if (attacker === TEMERIA) for (const r of leagueAllies(state, defender)) if (!war.sides[1].includes(r)) war.sides[1].push(r);
   for (const rid of [attacker, defender]) if (rid !== TEMERIA) hostility(state, world, rid);
   const text = `${sideName(world, attacker)} is at war with ${sideName(world, defender)}.`;
   if (attacker === TEMERIA || defender === TEMERIA) say(state, text);
@@ -91,7 +96,7 @@ function raiseForWar(state, world, war) {
   const ai = W(world).ai;
   for (const side of [0, 1]) {
     for (const rid of war.sides[side]) {
-      if (rid === TEMERIA || !state.realms[rid]) continue;
+      if (rid === TEMERIA || !state.realms[rid] || state.realms[rid].fallen) continue;
       const people = Object.values(state.realms[rid].settlements).reduce((a, s) => a + s.population, 0);
       const want = people >= ai.bigRealm ? ai.maxArmies : 1;
       const have = state.armies.filter((a) => a.side === rid);
@@ -195,6 +200,13 @@ export function declareWar(state, world, rng, rid, { cost = declareCost(state, w
 
 export function monthlyWar(state, world, rng) {
   if (!state.wars) return;
+  // A war whose every foe has fallen is over (M19); what was taken stays.
+  for (const war of [...state.wars]) {
+    if (war.sides.some((side) => !side.length)) {
+      state.wars = state.wars.filter((w) => w !== war);
+      settleOwnership(state, world);
+    }
+  }
   aiDeclarations(state, world, rng);
   rivalries(state, world, rng);
   for (const war of [...state.wars]) {
@@ -239,7 +251,7 @@ function aiDeclarations(state, world, rng) {
   const ai = W(world).ai;
   const ours = soldiersOf(state, world, TEMERIA);
   for (const rid of Object.keys(state.realms)) {
-    if (W(world).noWar.includes(rid) || !state.neighbours[rid] || hostile(state, rid, TEMERIA)) continue;
+    if (W(world).noWar.includes(rid) || !state.neighbours[rid] || hostile(state, rid, TEMERIA) || state.realms[rid].fallen) continue;
     if (truceUntil(state, rid, TEMERIA) > state.day || state.musters.some((m) => m.realm === rid)) continue;
     const hostilityLevel = hostilityTo(state, world, rid);
     if (hostilityLevel <= 0) continue;
@@ -414,12 +426,14 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
     const kept = towns === 'prize' ? prizeOf(state, world, war, prize) : null;
     for (const t of war.taken) if (t.id !== kept && !keep.includes(t.id) && ownerOf(state, world, t.id) !== t.from) setOwner(state, world, t.id, t.from);
   }
-  // A capital always goes home at the peace (M18): a realm may lose towns,
-  // never its seat, so no realm vanishes from the map.
+  // A capital goes home at the peace (M18), unless its taker holds every
+  // town the realm had left (M19): then the realm is swallowed whole.
   if (world.strategy) {
     for (const t of war.taken) {
       const capital = t.from === TEMERIA ? world.kingdom.capital === t.id : world.realms?.realms[t.from]?.capital === t.id;
-      if (capital && ownerOf(state, world, t.id) !== t.from) setOwner(state, world, t.id, t.from);
+      if (!capital || ownerOf(state, world, t.id) === t.from) continue;
+      if (t.from !== TEMERIA && whollyTaken(state, world, t.from)) continue;
+      setOwner(state, world, t.id, t.from);
     }
   }
   if (tribute) state.tributes.push(tribute);
@@ -452,6 +466,8 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
   const changed = [...new Set(war.taken.map((t) => t.id))].filter((id) => ownerOf(state, world, id) !== originOf(world, id)).map((id) => ({ id, to: ownerOf(state, world, id) }));
   state.warHistory.push({ sides: war.sides, since: war.since, until: state.day, towns, taken: war.taken.length, aims: war.aims ?? null, reason: war.reason ?? war.cause, changed });
   if (state.warHistory.length > 20) state.warHistory.shift();
+  // What each side keeps changes realm for good (M19).
+  settleOwnership(state, world);
   if (war.sides.flat().includes(TEMERIA)) {
     const me = sideIndex(war, TEMERIA);
     const gained = (towns === 'keep' ? heldValue(state, world, war, me) - heldValue(state, world, war, 1 - me) : 0) + (tribute?.to === TEMERIA ? 10 : 0) - (tribute?.from === TEMERIA || lump?.from === TEMERIA ? 10 : 0);
@@ -462,6 +478,11 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
 
 // The best town a side took in a war and still holds. A great city is too
 // much to ask in a peace unless the war was a rout.
+// Whether a realm holds none of the towns it still counted as its own.
+function whollyTaken(state, world, rid) {
+  return (world.foreignByRealm[rid] ?? []).every((id) => ownerOf(state, world, id) !== rid);
+}
+
 function prizeOf(state, world, war, side) {
   let best = null;
   const rout = warScore(state, world, war, sideIndex(war, side)) >= W(world).peace.cityPrizeAt;
@@ -632,3 +653,6 @@ export function stepWarDecisionsDay(state, world) {
 }
 
 export { crownArmies };
+
+// Revolts, exiles and the league start wars through the same door (M19).
+setWarHook(startWar);

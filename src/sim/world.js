@@ -8,7 +8,7 @@ import { buildGrid } from './vision.js';
 const WORKED_RADIUS = 40;
 const TEMERIA_ID = 'temeria';
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds = null, diplomacy = null, strategy = null }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds = null, diplomacy = null, strategy = null, conquest = null }) {
   // byId knows every place on the map, at home and abroad; adjacency is
   // Temeria's own road network, which every domestic system walks.
   // fullAdjacency adds the foreign roads, for traffic that crosses borders.
@@ -44,6 +44,12 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   for (const s of geography.settlements) {
     borderland[s.id] = Object.values(geography.neighbours).some((n) => n.shapes.some((sh) => distanceToPolygon(s.x, s.y, sh) < 90));
   }
+  // Foreign towns too, should one ever become Temerian (M19): near another
+  // realm's border, or Temeria's own.
+  for (const s of foreign) {
+    borderland[s.id] = distanceToPolygon(s.x, s.y, geography.temeria) < 90
+      || Object.entries(geography.neighbours).some(([rid, n]) => rid !== s.realm && n.shapes.some((sh) => distanceToPolygon(s.x, s.y, sh) < 90));
+  }
 
   const rivers = {};
   for (const name of kingdom.rivers?.navigable ?? []) {
@@ -70,7 +76,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   // Scoia'tael commandos strike.
   const forestNear = {};
   const woods = [...(geography.terrain.forest ?? []).filter((z) => !z.realm).map((z) => z.shape), ...(geography.neighbours.brokilon?.shapes ?? [])];
-  for (const s of geography.settlements) forestNear[s.id] = woods.some((sh) => distanceToPolygon(s.x, s.y, sh) < 60);
+  for (const s of [...geography.settlements, ...foreign]) forestNear[s.id] = woods.some((sh) => distanceToPolygon(s.x, s.y, sh) < 60);
 
   // Which kinds of wild country lie within reach of each settlement: where
   // bandits hide and monsters breed.
@@ -151,6 +157,9 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     kingdom,
     foreign,
     realmOf,
+    // Where each foreign town belonged when the reign began; realmOf follows
+    // conquests and cessions (M19, see lands.js), homeOf never changes.
+    homeOf: { ...realmOf },
     foreignByRealm,
     fullAdjacency,
     borderland,
@@ -185,6 +194,9 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     adjacency,
     rivers,
     pathCache: new Map(),
+    conquest,
+    landsKey: '',
+    landsVersion: 0,
   };
   if (realms) world.grid = buildGrid(world);
   return world;

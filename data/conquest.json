@@ -1,0 +1,335 @@
+{
+  "note": "Conquest (M19): how towns change hands, what becomes of them, and what it costs. Peoples: who lives in each realm's towns and what they believe, and how far they stand from Temeria (0 kin, 1 strangers). Integration runs 0 to 100.",
+  "peoples": {
+    "temeria": {
+      "name": "Temerians",
+      "adjective": "Temerian",
+      "distance": 0
+    },
+    "redania": {
+      "name": "Redanians",
+      "adjective": "Redanian",
+      "mix": {
+        "human": 0.94,
+        "dwarf": 0.03,
+        "elf": 0.01,
+        "halfling": 0.02
+      },
+      "faith": {
+        "eternal_fire": 0.55,
+        "melitele": 0.35,
+        "old_ways": 0.1
+      },
+      "distance": 0.25
+    },
+    "kaedwen": {
+      "name": "Kaedweni",
+      "adjective": "Kaedweni",
+      "mix": {
+        "human": 0.93,
+        "dwarf": 0.04,
+        "elf": 0.01,
+        "halfling": 0.02
+      },
+      "faith": {
+        "eternal_fire": 0.2,
+        "melitele": 0.4,
+        "old_ways": 0.4
+      },
+      "distance": 0.4
+    },
+    "aedirn": {
+      "name": "Aedirnians",
+      "adjective": "Aedirnian",
+      "mix": {
+        "human": 0.88,
+        "dwarf": 0.07,
+        "elf": 0.02,
+        "halfling": 0.03
+      },
+      "faith": {
+        "eternal_fire": 0.15,
+        "melitele": 0.6,
+        "old_ways": 0.25
+      },
+      "distance": 0.3
+    },
+    "mahakam": {
+      "name": "the folk of Mahakam",
+      "adjective": "Mahakam",
+      "mix": {
+        "human": 0.1,
+        "dwarf": 0.82,
+        "elf": 0,
+        "halfling": 0.08
+      },
+      "faith": {
+        "eternal_fire": 0,
+        "melitele": 0.1,
+        "old_ways": 0.9
+      },
+      "distance": 0.8
+    },
+    "brokilon": {
+      "name": "dryads",
+      "adjective": "Brokilon",
+      "mix": {
+        "human": 0,
+        "dwarf": 0,
+        "elf": 1,
+        "halfling": 0
+      },
+      "faith": {
+        "eternal_fire": 0,
+        "melitele": 0,
+        "old_ways": 1
+      },
+      "distance": 1
+    },
+    "cidaris": {
+      "name": "Cidarians",
+      "adjective": "Cidarian",
+      "mix": {
+        "human": 0.93,
+        "dwarf": 0.02,
+        "elf": 0.02,
+        "halfling": 0.03
+      },
+      "faith": {
+        "eternal_fire": 0.1,
+        "melitele": 0.7,
+        "old_ways": 0.2
+      },
+      "distance": 0.2
+    },
+    "kerack": {
+      "name": "Kerackians",
+      "adjective": "Kerackian",
+      "mix": {
+        "human": 0.92,
+        "dwarf": 0.03,
+        "elf": 0.01,
+        "halfling": 0.04
+      },
+      "faith": {
+        "eternal_fire": 0.1,
+        "melitele": 0.7,
+        "old_ways": 0.2
+      },
+      "distance": 0.25
+    },
+    "verden": {
+      "name": "Verdenians",
+      "adjective": "Verdenian",
+      "mix": {
+        "human": 0.95,
+        "dwarf": 0.02,
+        "elf": 0.01,
+        "halfling": 0.02
+      },
+      "faith": {
+        "eternal_fire": 0.25,
+        "melitele": 0.55,
+        "old_ways": 0.2
+      },
+      "distance": 0.25
+    },
+    "brugge": {
+      "name": "Bruggians",
+      "adjective": "Bruggian",
+      "mix": {
+        "human": 0.94,
+        "dwarf": 0.02,
+        "elf": 0.02,
+        "halfling": 0.02
+      },
+      "faith": {
+        "eternal_fire": 0.15,
+        "melitele": 0.65,
+        "old_ways": 0.2
+      },
+      "distance": 0.2
+    },
+    "sodden": {
+      "name": "Soddeners",
+      "adjective": "Sodden",
+      "mix": {
+        "human": 0.93,
+        "dwarf": 0.02,
+        "elf": 0.02,
+        "halfling": 0.03
+      },
+      "faith": {
+        "eternal_fire": 0.05,
+        "melitele": 0.85,
+        "old_ways": 0.1
+      },
+      "distance": 0.15
+    },
+    "cintra": {
+      "name": "Cintrans",
+      "adjective": "Cintran",
+      "mix": {
+        "human": 0.94,
+        "dwarf": 0.02,
+        "elf": 0.02,
+        "halfling": 0.02
+      },
+      "faith": {
+        "eternal_fire": 0.05,
+        "melitele": 0.75,
+        "old_ways": 0.2
+      },
+      "distance": 0.35
+    }
+  },
+  "occupation": {
+    "food": 0.4,
+    "coinPerPerson": 0.08,
+    "unrest": 15,
+    "prosperity": 6,
+    "integration": 8,
+    "everyDays": 60
+  },
+  "capture": {
+    "decisionDays": 10,
+    "spare": {
+      "integration": 10
+    },
+    "sack": {
+      "lootPerPerson": 0.6,
+      "goods": 0.6,
+      "prosperity": 40,
+      "damaged": 3,
+      "people": 0.12,
+      "smoulderDays": 45,
+      "integration": -35,
+      "unrest": 40
+    },
+    "expel": {
+      "prosperityYears": 4,
+      "prosperity": 15,
+      "integration": -10,
+      "sympathy": 12,
+      "kinRelation": -15,
+      "fireMood": 6,
+      "unrest": 15
+    }
+  },
+  "integration": {
+    "start": 45,
+    "distance": 35,
+    "faithDistance": 15,
+    "bloody": 15,
+    "bloodyAt": 2000,
+    "monthly": {
+      "garrison": 0.3,
+      "garrisonAt": 0.6,
+      "prosperity": 0.012,
+      "building": 0.15,
+      "buildingMax": 0.9,
+      "tolerant": 0.4,
+      "time": 0.35,
+      "heavyTax": 0.6,
+      "harsh": 0.8,
+      "claimant": 0.5,
+      "occupierMonths": 0.4
+    },
+    "elsewhere": {
+      "sack": 4,
+      "expel": 3
+    },
+    "taxAt": 0.35,
+    "levyAt": 0.3,
+    "unrest": 0.45,
+    "unrestBelow": 55,
+    "foreignMonthly": 0.2
+  },
+  "resettle": {
+    "cost": 1200,
+    "costPerPerson": 0.6,
+    "months": 12,
+    "integration": 3,
+    "settlers": 0.12,
+    "displaced": 0.08,
+    "legitimacy": 4
+  },
+  "grant": {
+    "loyalty": 12,
+    "envy": 3,
+    "decisionDays": 20
+  },
+  "revolt": {
+    "integrationBelow": 30,
+    "unrestAbove": 55,
+    "chance": 0.05,
+    "claimantBoost": 1.5,
+    "rebelShare": 0.05,
+    "rebelMin": 40,
+    "spreadChance": 0.25,
+    "spreadRange": 170,
+    "holdDays": 90,
+    "joinChance": 0.4,
+    "crushIntegration": -15,
+    "crushUnrest": -15,
+    "crushStrength": 1.3,
+    "negotiateIntegration": 20,
+    "negotiateAuthority": -6,
+    "charterTax": 0.7,
+    "charterYears": 3,
+    "decisionDays": 15,
+    "foreignChance": 0.04
+  },
+  "claimant": {
+    "legitimacy": 80,
+    "fadePerYear": 5,
+    "fastFadeAbove": 70,
+    "fastFadePerYear": 12,
+    "goneBelow": 5,
+    "agitation": 0.4,
+    "agitationRange": 300,
+    "fundChance": 0.3,
+    "exileArmyAt": 45,
+    "exileArmyChance": 0.04,
+    "exileArmyMen": 900,
+    "pension": 2500,
+    "pensionPerLegitimacy": 40,
+    "spyCost": 600,
+    "spyChance": 0.45,
+    "spyCaught": 0.35,
+    "handOverValue": 30
+  },
+  "fear": {
+    "perValue": 0.6,
+    "sack": 2,
+    "expel": 2,
+    "neighbourShare": 1,
+    "farShare": 0.5,
+    "near": 450,
+    "decayPerMonth": 1,
+    "mood": 0.35,
+    "leagueAt": 35,
+    "leagueMemberAt": 30,
+    "leagueLeaveBelow": 15,
+    "attackAt": 65,
+    "attackStability": 45,
+    "attackChance": 0.15,
+    "max": 100
+  },
+  "defection": {
+    "loyaltyBelow": 12,
+    "chance": 0.06,
+    "relationAbove": 10,
+    "range": 220
+  },
+  "vassal": {
+    "maxTowns": 4,
+    "tributeShare": 0.25,
+    "years": 10
+  },
+  "ai": {
+    "sackGreedy": 0.5,
+    "sackBase": 0.08,
+    "expelZealous": 0.3
+  }
+}

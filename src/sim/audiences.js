@@ -4,6 +4,7 @@
 // accord: ask for audiences with real proposals, tax our caravans when they
 // sour on us, and make and break pacts among themselves by the same rules.
 import { addDispatch, clamp } from './realm.js';
+import { settleOwnership } from './lands.js';
 import { creditLimit } from './economy.js';
 import { informed } from './realms.js';
 import { disbandArmy } from './armies.js';
@@ -209,7 +210,10 @@ export function ultimatum(state, world, pid, demand) {
   if (demand.kind === 'pay') {
     if (state.realms[pid]) state.realms[pid].treasury -= demand.amount;
     state.treasury += demand.amount;
-  } else if (demand.kind === 'cede') setOwner(state, world, demand.town, TEMERIA);
+  } else if (demand.kind === 'cede') {
+    setOwner(state, world, demand.town, TEMERIA);
+    settleOwnership(state, world);
+  }
   else {
     const t = state.diplomacy.treaties.find((x) => x.id === demand.treaty);
     if (t) endTreaty(state, world, t, { broken: true, by: pid, why: 'at Temeria\'s demand' });
@@ -400,6 +404,7 @@ export function resolveRequest(state, world, id, choice, ignored = false) {
           if (state.realms[q.realm]) state.realms[q.realm].treasury += it.amount;
         } else if (it.kind === 'town') setOwner(state, world, it.town, q.realm);
       }
+      settleOwnership(state, world);
       remember(state, world, q.realm, 'We gave in to their demands', 6);
       say(state, `The crown gives ${realm} what it demands. ${name} is satisfied, for now.`);
     } else {

@@ -1,6 +1,11 @@
 // Things the crown can order. Each action is checked, then applied to a copy
 // of the state, so the UI can ask "could I?" before it asks "do it".
 import { realmStock, creditLimit } from './economy.js';
+import { syncWorld } from './lands.js';
+import {
+  resolveConquestDecision, canRequisition, requisition, canResettle, resettle, canPension, payPension, canSpyOnClaimant, spyOnClaimant,
+  canRepair, repair,
+} from './conquest.js';
 import { addDispatch } from './realm.js';
 import { canDecree, decree } from './laws.js';
 import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
@@ -33,8 +38,12 @@ export function canBuild(state, world, settlementId, buildingId) {
   const b = world.buildings[buildingId];
   const s = state.settlements[settlementId];
   const type = world.byId[settlementId]?.type;
+  if (b && !s && world.realmOf[settlementId] && state.realms?.[world.realmOf[settlementId]]?.settlements[settlementId]?.owner === 'temeria') {
+    return { ok: false, reason: 'Only occupied: nothing is built there until a peace makes it ours.' };
+  }
   if (!b || !s) return { ok: false, reason: 'Unknown building.' };
   if (s.occupier) return { ok: false, reason: 'The enemy holds it.' };
+  if ((s.damaged ?? []).includes(buildingId)) return { ok: false, reason: 'It lies in ruins: rebuild it instead.' };
   if (!b.types.includes(type)) return { ok: false, reason: `Not for a ${type}.`, hidden: true };
   if (b.needs && s.production !== b.needs) return { ok: false, reason: `Only where ${b.needs} is worked.`, hidden: true };
   if (b.needsBorder && !world.borderland[settlementId]) return { ok: false, reason: 'Only near a border.', hidden: true };
@@ -65,6 +74,7 @@ export function slotsOf(world, id) {
 }
 
 export function applyAction(state, world, action) {
+  syncWorld(world, state);
   if (action.type === 'build') {
     const check = canBuild(state, world, action.settlement, action.building);
     if (!check.ok) return { state, error: check.reason };
@@ -183,6 +193,7 @@ export function applyAction(state, world, action) {
   }
   if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
   if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision'].includes(action.type)) return warAction(state, world, action);
+  if (['conquestDecision', 'requisition', 'resettle', 'pension', 'claimantSpy', 'repair'].includes(action.type)) return conquestAction(state, world, action);
   if (action.type === 'route') {
     if (action.close) {
       if (!state.routes.some((r) => r.id === action.id)) return { state, error: 'No such route.' };
@@ -242,6 +253,38 @@ function warAction(state, world, action) {
     withdraw(next, world, action.war);
   } else if (action.type === 'warDecision') {
     if (!resolveWarDecision(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
+  }
+  return { state: next };
+}
+
+// Conquest (M19): answering a capture, grant or revolt; stripping an
+// occupied town; settlers; claimants; rebuilding what was burned.
+function conquestAction(state, world, action) {
+  const next = structuredClone(state);
+  if (action.type === 'conquestDecision') {
+    if (!resolveConquestDecision(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
+  } else if (action.type === 'requisition') {
+    const check = canRequisition(state, world, action.settlement);
+    if (!check.ok) return { state, error: check.reason };
+    requisition(next, world, action.settlement);
+  } else if (action.type === 'resettle') {
+    const check = canResettle(state, world, action.settlement);
+    if (!check.ok) return { state, error: check.reason };
+    resettle(next, world, action.settlement);
+  } else if (action.type === 'pension') {
+    const check = canPension(state, world, action.realm);
+    if (!check.ok) return { state, error: check.reason };
+    payPension(next, world, action.realm);
+  } else if (action.type === 'claimantSpy') {
+    const check = canSpyOnClaimant(state, world, action.realm);
+    if (!check.ok) return { state, error: check.reason };
+    const rng = makeRng(next.rng.game);
+    spyOnClaimant(next, world, rng, action.realm);
+    next.rng.game = rng.seed;
+  } else if (action.type === 'repair') {
+    const check = canRepair(state, world, action.settlement, action.building);
+    if (!check.ok) return { state, error: check.reason };
+    repair(next, world, action.settlement, action.building);
   }
   return { state: next };
 }
