@@ -1,5 +1,14 @@
 # Changelog
 
+## M14 Interface overhaul
+- A tab bar along the foot (down the side when the phone lies flat): Realm, Court, Treasury, Military and Diplomacy, with badges for what waits. Each tab has sub-tabs and reopens where you left it. Chronicle, Help and the saves moved to a small menu under the three dots.
+- A real back button: cards opened from a list stack up, and the back arrow, the browser's back and the Android back gesture retrace the way.
+- The panel never loses your place. In portrait it is a sheet with three heights, dragged by its title; a tap on the map lowers it to its title bar instead of closing it. In landscape it sits beside the map and stays open. Screens remember their sub-tab, scroll, open sections and half-filled forms, across saves too.
+- Decisions no longer jump in front of what you are doing: they wait in the Court inbox, sorted by urgency with the days left, and are answered right there. The game still pauses for each new one. Only war on Temeria, a siege of one of our towns, a rebellion or a deposition raise a red banner.
+- Shorter cards: one layout everywhere, with key figures as chips and long text behind an (i). Town cards have Overview, Build, Military and People tabs, and Build lists only what can be raised there. Laws are one line each. Help is a searchable list. Small icons beside the meters.
+- Fewer taps: tap a meter to see why it moved. Targets are picked on the map (hunts, patrols, stations, trade routes, sieges, the muster place) with the odds or the value shown before you confirm. Send nearest suitable company on every threat; Recruit here and Trade route from here on every town.
+- No rules or balance changed.
+
 ## M13 A realm under arms
 - Threats are things on the map. Bandit camps grow in the forests, marshes and hills near poor and restless places and send bands to hold the roads (caravans stop, crown routes and market trade are robbed) and fall on weak villages. Monster lairs hold drowners, wolves, harpies and wyverns, or something far worse. Scoia'tael commandos come out of the woods when the elves are angry; hostile neighbours send war parties over the border.
 - What the crown's eyes reach it sees clearly; beyond them, rumours. A short alert names each sighting, and Help can pause the game on sightings.

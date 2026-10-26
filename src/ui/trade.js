@@ -4,11 +4,12 @@ import {
   depositsOf, depositAt, activeMines, goldYield, canProspect, slotsOf, formatDate,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
+import { icon } from './icons.js';
+import { cardHead, orderAttr, info } from './card.js';
+import { form } from './memory.js';
+export const SAFETY = (t) => (t < 20 ? 'safe roads' : t < 35 ? 'some danger on the road' : t < 50 ? 'dangerous roads' : 'perilous roads');
 
-const back = '<div class="menu-list"><button type="button" data-action="back">Back to the realm</button></div>';
-const SAFETY = (t) => (t < 20 ? 'safe roads' : t < 35 ? 'some danger on the road' : t < 50 ? 'dangerous roads' : 'perilous roads');
-
-function placeName(world, state, id) {
+export function placeName(world, state, id) {
   const owner = ownerOf(state, world, id);
   return owner === TEMERIA ? world.byId[id].name : `${world.byId[id].name} (${sideName(world, owner)})`;
 }
@@ -36,52 +37,70 @@ function routeRow(world, state, r) {
   const detail = v.closed ? '' : `About ${number(v.value)} crowns a month from trade, ${SAFETY(v.parts.threat)}.${carried ? ` Last month it carried ${escapeHtml(carried)}, for ${number(r.premium ?? 0)} more.` : ''}`;
   return `<div class="law-option current"><span class="build-name">${escapeHtml(placeName(world, state, r.from))} to ${escapeHtml(placeName(world, state, r.to))} ${status}</span>
     <span class="build-cost">${detail} Since ${formatDate(r.since)}; ${world.trade.upkeep} a month to run.</span>
-    <button type="button" class="chip" data-close-route="${r.id}">Wind up</button></div>`;
+    <button type="button" class="chip" data-close-route="${r.id}" ${orderAttr({ type: 'route', close: true, id: r.id }, 'Wind up this trade route?')}>Wind up</button></div>`;
 }
 
-export function tradeHtml(world, state, form) {
-  const limit = routeLimit(state, world);
+// The form for a new route: a town of ours to start from and a destination
+// picked on the map, with what it would earn before the crown commits.
+export function routeForm(app) {
+  const { world, state } = app;
+  const f = form(app.memory, 'trade', { from: world.kingdom.capital, to: null });
   const ends = routeEnds(world, state);
-  if (!ends.ours.includes(form.from)) form.from = ends.ours[0];
-  const all = [...ends.ours, ...ends.theirs].filter((id) => id !== form.from);
-  if (!all.includes(form.to)) form.to = all[0];
-  const opt = (id) => `<option value="${id}"${id === form.to ? ' selected' : ''}>${escapeHtml(placeName(world, state, id))}</option>`;
-  const fromSel = `<select class="pick" data-pick="from" aria-label="from">${ends.ours.map((id) => `<option value="${id}"${id === form.from ? ' selected' : ''}>${escapeHtml(world.byId[id].name)}</option>`).join('')}</select>`;
-  const toSel = `<select class="pick" data-pick="to" aria-label="to"><optgroup label="In Temeria">${ends.ours.filter((id) => id !== form.from).map(opt).join('')}</optgroup>
-    ${ends.theirs.length ? `<optgroup label="Abroad">${ends.theirs.map(opt).join('')}</optgroup>` : ''}</select>`;
-  const check = form.from && form.to ? canOpenRoute(state, world, form.from, form.to) : { ok: false, reason: 'Choose two towns.' };
-  const preview = form.from && form.to ? routeValue(state, world, { from: form.from, to: form.to }) : null;
-  const estimate = preview && !preview.closed
-    ? `Would earn about ${number(preview.value)} crowns a month (${SAFETY(preview.parts.threat)}${preview.parts.wares > 1 ? ', each end selling what the other lacks' : ''}).`
-    : '';
-  const routes = state.routes.map((r) => routeRow(world, state, r)).join('');
+  if (!ends.ours.includes(f.from)) f.from = ends.ours[0] ?? null;
+  if (f.to && (f.to === f.from || !routeEndOk(state, world, f.to).ok)) f.to = null;
+  return f;
+}
+
+export function routePreview(app, from, to) {
+  const { world, state } = app;
+  const check = canOpenRoute(state, world, from, to);
+  const v = routeValue(state, world, { from, to });
+  const estimate = !v.closed
+    ? `About ${number(v.value)} crowns a month (${SAFETY(v.parts.threat)}${v.parts.wares > 1 ? ', each end selling what the other lacks' : ''}).`
+    : escapeHtml(v.closed);
+  return { check, estimate, value: v.value };
+}
+
+export function routesHtml(app) {
+  const { world, state } = app;
+  const limit = routeLimit(state, world);
+  const f = routeForm(app);
   const last = state.ledger.history.at(-1);
   const takings = last ? Object.values(last.income.routes ?? {}).reduce((a, b) => a + b, 0) : 0;
+  const routes = state.routes.map((r) => routeRow(world, state, r)).join('');
+  const p = f.from && f.to ? routePreview(app, f.from, f.to) : null;
+  const openBtn = p
+    ? `<button type="button" class="act primary wide" data-open-route ${orderAttr({ type: 'route', from: f.from, to: f.to })} ${p.check.ok ? '' : 'disabled'}><span class="act-label">Open the route${p.check.ok ? ` for ${number(p.check.cost)} crowns` : ''}</span><span class="act-sub">${p.check.ok ? p.estimate : escapeHtml(p.check.reason)}</span></button>`
+    : '';
+  return `
+    ${cardHead({
+      status: `<span>Crown routes carry the realm's trade for a share of it.</span>`,
+      infoText: 'A crown route earns from the size and fortunes of both towns, the length of the haul, wares one has and the other lacks, and safe roads. Patrols protect it; bandits rob it; war closes it. Market halls, guildhalls and harbours let the crown run more.',
+      chips: [{ icon: 'scroll', label: 'Routes', value: `${state.routes.length} of ${limit}` }, { icon: 'coin', label: 'Last month', value: last ? number(takings) : 'None yet' }],
+    })}
+    <div data-part="open" data-form="trade"><h3>Open a route</h3>
+      <div class="rows">
+        <button type="button" class="row" data-pick-start='{"kind":"routeFrom"}'><span class="row-main"><span class="row-sub">From</span><span class="row-name">${f.from ? escapeHtml(world.byId[f.from].name) : 'None of ours can'}</span></span><span class="row-end">${icon('target')} Change</span></button>
+        <button type="button" class="row" data-pick-start='{"kind":"route"}'><span class="row-main"><span class="row-sub">To</span><span class="row-name">${f.to ? escapeHtml(placeName(world, state, f.to)) : 'Tap to pick on the map'}</span></span><span class="row-end">${icon('target')} Pick</span></button>
+      </div>
+      ${openBtn}</div>
+    <div data-part="routes"><h3>Crown trade routes</h3>${routes || '<p class="sub">None yet.</p>'}</div>`;
+}
+
+export function industryHtml(app) {
+  const { world, state } = app;
   const mines = activeMines(state, world).map(({ id, settlement }) => {
     const left = state.gold.deposits[id].remaining;
     return `<li>${escapeHtml(world.gold.deposits[id].name)} at ${escapeHtml(world.byId[settlement].name)}: about ${number(goldYield(state, world, id))} crowns a month, ${Math.round((left / world.gold.deposits[id].gold) * 100)}% of the seam left</li>`;
   }).join('');
   const known = Object.entries(world.gold.deposits).filter(([id]) => state.gold.deposits[id].known && state.gold.deposits[id].remaining > 0
     && !state.settlements[world.gold.deposits[id].settlement]?.buildings.includes('goldmine'))
-    .map(([id, d]) => `<button type="button" class="chip" data-place="${d.settlement}">${escapeHtml(d.name)} (${escapeHtml(world.byId[d.settlement].name)})</button>`).join(' ');
+    .map(([id, d]) => `<button type="button" class="chip" data-go="town:${d.settlement}">${escapeHtml(d.name)} (${escapeHtml(world.byId[d.settlement].name)})</button>`).join(' ');
   return `
-    <div data-part="head"><h2>Trade and gold</h2>${back}
-      <dl class="stats">
-        <div><dt>Routes</dt><dd>${state.routes.length} of ${limit}</dd></div>
-        <div><dt>Last month</dt><dd>${last ? `${number(takings)} crowns` : 'None yet'}</dd></div>
-      </dl>
-      <p class="sub">A crown route earns from the size and fortunes of both towns, the length of the haul, wares one has and the other lacks, and safe roads. Patrols protect it; bandits rob it; war closes it. Market halls, guildhalls and harbours let the crown run more.</p></div>
-    <div data-part="routes"><h3>Crown trade routes</h3>${routes || '<p class="sub">None yet.</p>'}</div>
-    <div data-part="open"><h3>Open a route</h3>
-      <div class="form-row"><span>From</span>${fromSel}</div>
-      <div class="form-row"><span>To</span>${toSel}</div>
-      <button type="button" class="build" data-open-route ${check.ok ? '' : 'disabled'}><span class="build-name">Open the route${check.ok ? ` for ${number(check.cost)} crowns` : ''}</span>
-        <span class="build-cost">${escapeHtml(check.ok ? estimate : check.reason)}</span></button></div>
     ${goodsHtml(world, state)}
-    <div data-part="gold"><h3>Gold</h3>
+    <div data-part="gold"><h3>Gold ${info('Other hills may hide gold. Prospect from the card of a place near hills or mountains: open its Overview.', 'gold')}</h3>
       ${mines ? `<ul class="cares">${mines}</ul>` : '<p class="sub">No gold mine is working.</p>'}
-      ${known ? `<p class="sub">Known seams waiting for a mine:</p><div class="chips">${known}</div>` : ''}
-      <p class="sub">Other hills may hide gold. Prospect from the card of a place near hills or mountains.</p></div>
+      ${known ? `<p class="sub">Known seams waiting for a mine:</p><div class="chips">${known}</div>` : ''}</div>
   `;
 }
 
@@ -92,8 +111,7 @@ function goodsHtml(world, state) {
   const made = state.industry?.made ?? {};
   const rows = Object.entries(world.industry.goods).filter(([g]) => made[g])
     .map(([g, def]) => `<li>${escapeHtml(def.name)}: ${number(made[g])} made${last?.income.goods?.[g] ? `, sold for ${number(last.income.goods[g])} crowns` : ', all worked into other goods'}</li>`).join('');
-  return `<div data-part="goods"><h3>Goods</h3>${rows ? `<ul class="cares">${rows}</ul>` : '<p class="sub">No workshop or pasture of the crown makes goods yet.</p>'}
-    <p class="sub">Pastures, studs and salt pans make goods; weavers, distillers, charcoal burners and weaponsmiths work them into dearer ones. Crown routes carry finished goods at a premium where the far end lacks them, most of all abroad; the rest sells at home, cheaper once the home market is full.</p></div>`;
+  return `<div data-part="goods"><h3>Goods ${info('Pastures, studs and salt pans make goods; weavers, distillers, charcoal burners and weaponsmiths work them into dearer ones. Crown routes carry finished goods at a premium where the far end lacks them, most of all abroad; the rest sells at home, cheaper once the home market is full.', 'goods')}</h3>${rows ? `<ul class="cares">${rows}</ul>` : '<p class="sub">No workshop or pasture of the crown makes goods yet.</p>'}</div>`;
 }
 
 // A settlement card's trade, gold and room-to-build lines.
@@ -106,8 +124,8 @@ export function settlementTradeHtml(world, state, id) {
     .map((r) => `<li>${escapeHtml(placeName(world, state, r.from === id ? r.to : r.from))}: ${r.closed ? 'closed' : `${number(r.last)} crowns last month`}</li>`).join('');
   if (routeEndOk(state, world, id).ok) {
     parts.push(`<h3>Trade</h3>${mine ? `<ul class="cares">${mine}</ul>` : ''}
-      <button type="button" class="build" data-route-from="${id}"><span class="build-name">Open a trade route from here</span>
-      <span class="build-cost">${state.routes.length} of ${routeLimit(state, world)} crown routes in use.</span></button>`);
+      <button type="button" class="act" data-route-from="${id}" data-pick-start='{"kind":"route","from":"${id}"}'><span class="act-label">Open a trade route from here</span>
+      <span class="act-sub">${state.routes.length} of ${routeLimit(state, world)} crown routes in use. Pick the far end on the map.</span></button>`);
   }
   const deps = depositsOf(world, id).filter((d) => state.gold.deposits[d].known);
   const gold = deps.map((d) => {
@@ -122,8 +140,8 @@ export function settlementTradeHtml(world, state, id) {
   if (gold || !pc.hidden || prospecting) {
     parts.push(`<h3>Gold</h3>${gold ? `<ul class="cares">${gold}</ul>` : ''}
       ${prospecting ? `<p class="sub">Prospectors are in the hills; they report back on ${formatDate(prospecting.until)}.</p>`
-        : !pc.hidden ? `<button type="button" class="build" data-prospect ${pc.ok ? '' : 'disabled'}><span class="build-name">Send prospectors</span>
-        <span class="build-cost">${pc.ok ? `${world.gold.prospect.coin} crowns and ${world.gold.prospect.days} days. They may find nothing.` : escapeHtml(pc.reason)}</span></button>` : ''}`);
+        : !pc.hidden ? `<button type="button" class="act" data-prospect ${orderAttr({ type: 'prospect', settlement: id })} ${pc.ok ? '' : 'disabled'}><span class="act-label">Send prospectors</span>
+        <span class="act-sub">${pc.ok ? `${world.gold.prospect.coin} crowns and ${world.gold.prospect.days} days. They may find nothing.` : escapeHtml(pc.reason)}</span></button>` : ''}`);
   }
   return parts.join('');
 }

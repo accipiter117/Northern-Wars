@@ -9,7 +9,7 @@ export { loadWorld } from './load.js';
 export { canBuild, applyAction } from './actions.js';
 export { canDecree, reactions, enactment, lawEffects, opinionTargets } from './laws.js';
 export { relationTarget, foreignTrade, tradeFactor, canSetStance, envoyText } from './neighbours.js';
-export { ledgerNet, taxProsperity } from './economy.js';
+export { ledgerNet, taxProsperity, authorityParts } from './economy.js';
 export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
 export { petitionText } from './petitions.js';
 export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, demandText } from './houses.js';

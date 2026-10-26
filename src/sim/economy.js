@@ -190,6 +190,22 @@ function advanceConstruction(state, world) {
 }
 
 // Called on the first day of each month for the month just ended.
+// What will move Authority on the first of next month, part by part: its
+// slow return by itself, the lords' mood, the laws in force, buildings such
+// as a cathedral of the Fire, and the drain of debt. The monthly ledger uses
+// these very figures, so the meter's card and the rules never disagree.
+export function authorityParts(state, world) {
+  const g = world.groups.effects;
+  const debt = Math.max(0, -state.treasury);
+  return {
+    regen: state.authority < (g.authorityRegenBelow ?? 100) ? g.authorityRegen : 0,
+    nobles: (state.opinion.nobles - 50) * g.nobleAuthority,
+    laws: lawEffects(state, world).authority,
+    buildings: realmEffect(state, world, 'authority'),
+    debt: debt > 0 ? -(debt / 1000) * world.economy.debt.authorityPerThousand : 0,
+  };
+}
+
 export function monthlyLedger(state, world, rng = null) {
   const e = world.economy;
   const debtCfg = e.debt;
@@ -329,10 +345,9 @@ export function monthlyLedger(state, world, rng = null) {
   // and the court impresses them, and drains while the crown is in debt.
   // The crown's grip returns by itself only so far; beyond that it takes
   // content lords or a court that dazzles them.
-  const regen = state.authority < (g.authorityRegenBelow ?? 100) ? g.authorityRegen : 0;
-  // A cathedral of the Fire lends the crown its weight.
-  state.authority += regen + (state.opinion.nobles - 50) * g.nobleAuthority + law.authority + realmEffect(state, world, 'authority');
-  if (debt > 0) state.authority -= (debt / 1000) * debtCfg.authorityPerThousand;
+  const parts = authorityParts(state, world);
+  state.authority += parts.regen + parts.nobles + parts.laws + parts.buildings;
+  if (debt > 0) state.authority += parts.debt;
   state.authority = Math.max(0, Math.min(100, state.authority));
   state.unpaid = debt > limit;
   const levied = leviedMap(state);

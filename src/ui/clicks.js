@@ -1,0 +1,149 @@
+// One set of listeners for everything inside the panel. Screens describe
+// what a control does with data attributes, and this turns a tap into it:
+//   data-go="route"          open a card on top of the current screen
+//   data-tab-go="tab:sub"    jump to a tab and one of its sub-tabs
+//   data-sub / data-tsub     switch a tab's or a town card's sub-tab
+//   data-order='{...}'       an order through the rules (data-confirm asks
+//                            first; data-then says where to go after)
+//   data-expand="key"        open or fold a row in place
+//   data-form + data-set     set a remembered form field ("key:value")
+//   data-form + data-field   a typed field, kept as it is typed
+//   data-pick-start='{...}'  start picking a target on the map
+//   data-info                show or hide a card's longer text
+import { setOpen, form, isOpen } from './memory.js';
+
+const parse = (v) => (v === 'true' ? true : v === 'false' ? false : v !== '' && !Number.isNaN(Number(v)) ? Number(v) : v);
+
+export function attachPanelInput(app) {
+  const body = document.getElementById('sheet-body');
+  const { memory, nav } = app;
+  const route = () => nav.current ?? '';
+  const tabOf = (r) => (r.startsWith('tab:') ? r.slice(4) : null);
+
+  body.addEventListener('click', (e) => {
+    const t = e.target;
+    const btn = t.closest('button');
+    if (btn?.disabled) return;
+    const at = (sel) => t.closest(sel);
+
+    const infoBtn = at('[data-info]');
+    if (infoBtn) {
+      const text = infoBtn.nextElementSibling;
+      if (text) {
+        text.hidden = !text.hidden;
+        infoBtn.setAttribute('aria-expanded', String(!text.hidden));
+      }
+      return;
+    }
+    const pick = at('[data-pick-start]');
+    if (pick) return app.startPick(JSON.parse(pick.dataset.pickStart));
+    const send = at('[data-send]');
+    if (send) return app.sendNearest(Number(send.dataset.send));
+    if (at('[data-regency]')) return app.regency();
+    if (at('[data-new-reign]')) return app.newReign();
+
+    const ord = at('[data-order]');
+    if (ord) {
+      if (ord.dataset.confirm && !confirm(ord.dataset.confirm)) return;
+      const action = JSON.parse(ord.dataset.order);
+      const ok = app.order(action);
+      if (ok) after(action, ord.dataset.then);
+      return;
+    }
+    const exp = at('[data-expand]');
+    if (exp) {
+      const r = route();
+      setOpen(memory, r, exp.dataset.expand, !isOpen(memory, r, exp.dataset.expand));
+      nav.refresh();
+      app.persist();
+      return;
+    }
+    const sub = at('[data-sub]');
+    if (sub) {
+      const tab = tabOf(route());
+      if (tab) nav.change(() => { memory.sub[tab] = sub.dataset.sub; });
+      app.noteSub?.();
+      return;
+    }
+    const tsub = at('[data-tsub]');
+    if (tsub) {
+      nav.change(() => { memory.sub.town = tsub.dataset.tsub; });
+      if (tsub.hasAttribute('data-recruit-here')) document.getElementById('recruit')?.scrollIntoView({ block: 'start' });
+      return;
+    }
+    const filter = at('[data-set-filter]');
+    if (filter) {
+      const f = form(memory, 'places');
+      f.filter = filter.dataset.setFilter;
+      nav.refresh();
+      app.persist();
+      return;
+    }
+    const set = at('[data-set]');
+    const holder = set?.closest('[data-form]');
+    if (set && holder) {
+      const [k, ...rest] = set.dataset.set.split(':');
+      form(memory, holder.dataset.form)[k] = parse(rest.join(':'));
+      nav.refresh();
+      app.persist();
+      return;
+    }
+    const unit = at('[data-unit]');
+    if (unit) {
+      const f = form(memory, 'raise');
+      const id = Number(unit.dataset.unit);
+      f.units = (f.units ?? []).includes(id) ? f.units.filter((x) => x !== id) : [...(f.units ?? []), id];
+      nav.refresh();
+      app.persist();
+      return;
+    }
+    const chron = at('[data-chronicle]');
+    if (chron) {
+      form(memory, 'chronicle', { filter: 'all' }).filter = chron.dataset.chronicle;
+      nav.refresh();
+      return;
+    }
+    const tabGo = at('[data-tab-go]');
+    if (tabGo) return app.goTab(tabGo.dataset.tabGo);
+    const go = at('[data-go]');
+    if (go) return nav.push(go.dataset.go);
+    const action = at('[data-action]');
+    if (action) app.menuAction(action.dataset.action);
+  });
+
+  // What follows a successful order: some lead somewhere.
+  function after(action, then) {
+    if (action.type === 'raise') {
+      form(memory, 'raise').units = [];
+      app.armyRaised();
+    }
+    if (action.type === 'house' && (action.kind === 'grant' || action.kind === 'strip')) {
+      form(memory, `house:${action.house}`).picking = null;
+      nav.refresh();
+    }
+    if (!then) return;
+    if (then === 'back') nav.back();
+    else if (then.startsWith('tab:')) app.goTab(then.slice(4));
+    else nav.push(then);
+  }
+
+  body.addEventListener('input', (e) => {
+    const field = e.target.closest('[data-field]');
+    const holder = field?.closest('[data-form]');
+    if (!field || !holder) return;
+    form(memory, holder.dataset.form)[field.dataset.field] = field.value;
+    nav.refresh();
+    app.persist();
+  });
+
+  // Sections remember being opened or folded. The toggle event does not
+  // bubble, so it is caught on the way down.
+  body.addEventListener('toggle', (e) => {
+    const d = e.target;
+    if (!(d instanceof HTMLDetailsElement) || !d.dataset.sec) return;
+    setOpen(memory, route(), d.dataset.sec, d.open);
+    app.persist();
+  }, true);
+
+  body.addEventListener('scroll', () => app.scrolled(), { passive: true });
+}

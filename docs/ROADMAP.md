@@ -15,6 +15,7 @@
 | M11 Trade, gold and a busier realm | Crown trade routes at home and abroad, gold deposits and prospecting, sixteen new buildings with limits per place, and settlements laid out as living places on the map (houses, fields, workshops, walls, smoke and workers) | Done |
 | M12 A working economy | The economy rescaled so a well-run crown prospers: taxes that grow with development, earning buildings that earn, patrols by road length, cheaper debt; production chains (wool to cloth, grain to rye spirit, timber to charcoal to arms, salt, horses), silver, toll bridges, merchants' quarters, the pilgrims' hostel, the shipyard, the alchemist and the hunters' lodge; and the Treasury, with every line and every place's account | Done |
 | M13 A realm under arms | Bandit camps, monster lairs, Scoia'tael commandos and foreign raiders as things on the map, seen or rumoured; standing companies of six troop types with morale, wounds, experience and pay, on standing orders (station, patrol, escort, hunt, respond); fights with odds in words; field armies raised from the companies; banner tokens, camps and lairs, and a Forces screen | Done |
+| M14 Interface overhaul | A persistent tab bar (Realm, Court, Treasury, Military, Diplomacy) with sub-tabs and badges, an overflow menu, a navigation stack tied to the back gesture, a three-height sheet that a map tap lowers instead of closing (a side panel in landscape), screens that remember their place and forms across saves, decisions in a Court inbox answered inline with a banner only for what cannot wait, one card template, town cards in four tabs, compact laws, searchable help, meter cards, and map pick mode for every target | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -24,6 +25,16 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M14 acceptance criteria
+- No game rules or balance change: this milestone is navigation, layout and interaction only (the one sim change, authorityParts, is the existing monthly Authority sum split into named parts and reused by the ledger, so the numbers are unchanged).
+- A persistent tab bar (bottom in portrait, down the side in landscape; safe-area aware; 44px targets; badges) with Realm, Court, Treasury, Military and Diplomacy, each with segmented sub-tabs that reopen on the last one used; Chronicle, Help, Save, Load, Export, Import and New reign in an overflow menu.
+- A navigation stack: cards opened from lists push, and the back arrow, browser back and Android back return to exactly where the player was.
+- Portrait sheet with peek, half and full heights; a map tap lowers it to peek; landscape side panel stays open. Every screen remembers its sub-tab, scroll, open sections and half-filled forms for the session and across saves.
+- Decisions go to the Court inbox (badge and toast, auto-pause as before), sorted by urgency with time left and answered inline; only war declared on Temeria, a siege of a Temerian town, a rebellion or a deposition raise a banner.
+- One card template; town cards with Overview, Build (buildable only, one line each, Not possible here folded), Military and People; compact laws; searchable help; small icons beside meters and figures.
+- Map pick mode with a preview of odds or value before confirming, for hunts, patrols, stations, trade routes, army orders and the muster place; contextual actions on threat, town and lord cards.
+- Playwright tests count the taps from the map (meter 1, decision 2, company 3, build 4, law 4, return 1), check state survives a map tap, a close, a decision arriving mid-form and a reload, the back gesture, both layouts, and that no tab or card opens longer than about two screens at 390x844; the frame-budget test passes with the sheet open and being dragged.
 
 ## M13 acceptance criteria
 - Dice-roll raids are gone: the monthly threat levels decide where bandit camps and monster lairs appear and grow. Camps send bands that hold roads (stopping real crown caravans and ambient carts on the map, robbing routes, trade and goods) and fall on weak villages; lairs hold beasts suited to their country, rarer and stronger kinds among them; witchers clear them with no losses, troops at a cost in men. Scoia'tael commandos come out of the woods when sympathy is high, strike and vanish; hostile neighbours send raiders over the border; enemy armies march visibly.

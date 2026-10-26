@@ -741,6 +741,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   return {
     resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
+    // The camera jumped (centred on a place): draw the cached layers round
+    // where it landed, so the next pan has the whole margin to slide in.
+    recentre: () => { lc = null; },
     canSeePoint: (x, y) => !vision || canSee(world, vision, x, y),
     foreignInfo: (id) => foreignView[id] ?? null,
   };

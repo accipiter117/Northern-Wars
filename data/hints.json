@@ -5,33 +5,35 @@
       "id": "welcome",
       "trigger": "start",
       "title": "The crown of Temeria",
-      "text": "The realm lives on its own: carts on the roads, harvests, tempers. You steer it. Pause, 1x, 2x and 4x are at the top; drag to pan and pinch to zoom. Tap any town to see how it fares."
+      "text": "The realm lives on its own: carts on the roads, harvests, tempers. You steer it. Pause, 1x, 2x and 4x are at the top; drag to pan and pinch to zoom. Tap any town to see how it fares. The tabs along the foot (down the side when the phone lies flat) hold everything else, and tapping a meter at the top says why it moved."
     },
     {
       "id": "town",
       "trigger": "townOpened",
       "title": "A town's card",
-      "text": "Each card shows how long a place's food will last, what it grows and eats, its mood and its dangers. Raise buildings here: fields and mills feed people, markets bring coin, walls and shrines calm them."
+      "text": "A town's card opens on its summary: people, fortunes, unrest, who holds it and its garrison. Build lists only what can be raised here, one line each: tap one to see it, then build. Military holds its garrison and recruiting, People its peoples and faiths."
     },
     {
       "id": "decision",
       "trigger": "decision",
       "title": "A decision",
-      "text": "Envoys, petitions, lords' demands and news from the realm pause the game until you answer. Close one unanswered and the cautious choice is made for you after twenty days."
+      "text": "Envoys, petitions, lords' demands, war and news from the realm wait under Court, Decisions, with a badge on the tab. Each is answered right there in the list. Leave one and the choice marked is taken for you when its time runs out."
     },
     {
       "id": "ledger",
       "trigger": "firstLedger",
       "title": "The first accounts",
-      "text": "On the first of every month the accounts are drawn up. The menu's Treasury shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in Authority.",
-      "open": "ledger",
+      "text": "On the first of every month the accounts are drawn up. Treasury, Ledger shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in Authority.",
+      "open": "treasury:ledger",
       "openLabel": "Open the Treasury"
     },
     {
       "id": "laws",
       "trigger": "noDecreeAfter60",
       "title": "Your strongest lever",
-      "text": "Laws and edicts in the menu change taxes, order, faith and more. Every decree costs Authority and pleases some groups while angering others. Watch the realm's mood before you choose."
+      "text": "Court, Laws changes taxes, order, faith and more. Every decree costs Authority and pleases some groups while angering others: tap a law to see who. The realm's mood sits at the top.",
+      "open": "court:laws",
+      "openLabel": "Open the Laws"
     },
     {
       "id": "hunger",
@@ -43,21 +45,25 @@
       "id": "debt",
       "trigger": "debt",
       "title": "Into the red",
-      "text": "The treasury has gone below zero. The bankers charge about one crown in a hundred each month, and the lords' respect for the crown drains while the debt stands; deep in debt, the tax farmers squeeze the towns and unrest rises. The Treasury shows every crown in and out, line by line, and what each place earned and cost: look there for what to cut and what to build.",
-      "open": "ledger",
+      "text": "The treasury has gone below zero. The bankers charge about one crown in a hundred each month, and the lords' respect for the crown drains while the debt stands; deep in debt, the tax farmers squeeze the towns and unrest rises. Treasury, Ledger shows every crown in and out, line by line, and what each place earned and cost: look there for what to cut and what to build.",
+      "open": "treasury:ledger",
       "openLabel": "Open the Treasury"
     },
     {
       "id": "houses",
       "trigger": "day120",
       "title": "The great houses",
-      "text": "Five houses hold land of the crown and keep their own soldiers. Their loyalty rises with favours and falls with grievances. Let it collapse with your Authority and they will depose you."
+      "text": "Five houses hold land of the crown and keep their own soldiers (Court, Great houses). Their loyalty rises with favours and falls with grievances. Let it collapse with your Authority and they will depose you.",
+      "open": "court:houses",
+      "openLabel": "Open the great houses"
     },
     {
       "id": "raid",
       "trigger": "raid",
       "title": "Raiders",
-      "text": "A village has been raided. Raids now come from things on the map: bandit camps and their bands on the roads, beasts from their lairs, Scoia'tael out of the woods and war parties over the border. Garrisons defend their own walls; to stop raids at the source, send companies to hunt the camps down, patrol the roads, or hire witchers for the beasts."
+      "text": "A village has been raided. Raids come from things on the map: bandit camps and their bands on the roads, beasts from their lairs, Scoia'tael out of the woods and war parties over the border. Garrisons defend their own walls; to stop raids at the source, send companies after them from Military, Threats, set them patrolling the roads, or hire witchers for the beasts.",
+      "open": "military:threats",
+      "openLabel": "Open Threats"
     },
     {
       "id": "authority",
@@ -69,19 +75,23 @@
       "id": "drums",
       "trigger": "warDrums",
       "title": "War drums",
-      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a strong Authority, or an army of your own may change their minds."
+      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a strong Authority, or an army of your own may change their minds.",
+      "open": "diplomacy:realms",
+      "openLabel": "Open Diplomacy"
     },
     {
       "id": "war",
       "trigger": "atWar",
       "title": "At war",
-      "text": "War in the menu raises armies: a levy from crown garrisons, the lords' men, and hired companies. Give each army an order and a stance and its marshal does the marching. Tap an army on the map for its card."
+      "text": "Military, War raises armies: a levy from crown garrisons, the lords' men, and hired companies, mustered at a town you tap on the map. Give each army an order and a stance and its marshal does the marching. Tap an army on the map for its card.",
+      "open": "military:war",
+      "openLabel": "Open War"
     },
     {
       "id": "army",
       "trigger": "armyRaised",
       "title": "Your army",
-      "text": "Hold a place and the army meets any enemy that comes near. Besiege a town and it starves or storms it, then holds it. Raid a realm and it plunders unwalled places, then comes home. Levied men leave garrisons thin."
+      "text": "Hold a place and the army meets any enemy that comes near. Besiege a town and it starves or storms it, then holds it. Raid a realm and it plunders unwalled places, then comes home. Tap Hold or Besiege, then tap the place on the map: the banner shows what you would face before you confirm."
     },
     {
       "id": "lost",
@@ -99,13 +109,15 @@
       "id": "trade",
       "trigger": "day150NoRoutes",
       "title": "Trade routes",
-      "text": "Trade and gold in the menu opens crown trade routes between towns and cities, at home or in a friendly neighbour. A route earns each month from both towns' size and fortunes, the length of the haul and safe roads; patrols protect it and war closes it. Market halls and guildhalls let you run more."
+      "text": "Treasury, Trade routes opens crown routes between towns and cities, at home or in a friendly neighbour: tap the far end on the map and see what it would earn before you pay. A route earns each month from both towns' size and fortunes, the length of the haul and safe roads; patrols protect it and war closes it. Market halls and guildhalls let you run more.",
+      "open": "treasury:routes",
+      "openLabel": "Open Trade routes"
     },
     {
       "id": "gold",
       "trigger": "goldWaiting",
       "title": "Gold in the hills",
-      "text": "Gold seams are known near Carreras, Zavada, Razwan, Petrelsteyn and Rissberg; a Gold mine on one pays the treasury every month until it runs out. Others may hide elsewhere in the hills: send prospectors from a hill town's card. Gold draws miners and dwarves, but also bandits, greedy neighbours and Mahakam's frown."
+      "text": "Gold seams are known near Carreras, Zavada, Razwan, Petrelsteyn and Rissberg; a Gold mine on one pays the treasury every month until it runs out. Others may hide elsewhere in the hills: send prospectors from a hill town's card. Treasury, Mines and industry lists them. Gold draws miners and dwarves, but also bandits, greedy neighbours and Mahakam's frown."
     },
     {
       "id": "slots",
@@ -117,9 +129,36 @@
       "id": "sighted",
       "trigger": "sighted",
       "title": "Something in the wilds",
-      "text": "A threat has been sighted: a bandit camp, a beast's lair, a commando or a war party. Tap it on the map, or open Forces from the menu, to send the nearest company after it, with the odds in plain words. Beasts are best left to a witcher. Companies are recruited from a town's card; give them standing orders to patrol a road, guard a trade route or stand ready to answer whatever is sighted near them.",
-      "open": "forces",
-      "openLabel": "Open Forces"
+      "text": "A threat has been sighted: a bandit camp, a beast's lair, a commando or a war party. Tap it on the map, or open Military, Threats, and send the nearest suitable company in one tap, with the odds in plain words. Beasts are best left to a witcher. Companies are recruited from a town's card under Military; give them orders by tapping the map: hunt, patrol a road, hold a station, or stand ready to answer whatever is sighted near them.",
+      "open": "military:threats",
+      "openLabel": "Open Threats"
+    }
+  ],
+  "topics": [
+    {
+      "id": "tabs",
+      "title": "Finding your way",
+      "text": "Five tabs hold the realm: Realm (the dashboard and every place), Court (decisions, laws, the great houses, faith), Treasury (the ledger, trade routes, mines and industry), Military (companies, threats, garrisons, war) and Diplomacy (neighbouring realms, spies and embassies, envoys). Each reopens where you left it. Chronicle, Help and saves are under the three dots at the top."
+    },
+    {
+      "id": "panel",
+      "title": "The panel",
+      "text": "On a phone held upright the panel is a sheet you can drag by its title bar: just the title, half the screen, or all of it. Tapping the map lowers it to its title bar rather than closing it, and a tap on the title brings it back as it was. The back arrow, or your phone's back gesture, returns to the screen before. Held flat, the panel sits beside the map and stays open."
+    },
+    {
+      "id": "meters",
+      "title": "The four meters",
+      "text": "Treasury is coin in hand; Granary the food in every store; Authority the crown's grip on the realm, spent by decrees and the lords; Stability the realm's calm, from the unrest of every place. Tap one to see what moved it."
+    },
+    {
+      "id": "pick",
+      "title": "Picking on the map",
+      "text": "Orders that need a place or a target (a hunt, a patrol, a station, a trade route, an army's march, where to muster) are given by tapping the map. A banner says what to tap; once you tap, it shows the odds or what it would earn, and you confirm or tap elsewhere."
+    },
+    {
+      "id": "urgent",
+      "title": "What cannot wait",
+      "text": "War declared on Temeria, a siege of one of our towns, a rebellion and a deposition raise a red banner across the top. Tap it to go straight there. Everything else waits quietly in the Court inbox."
     }
   ]
 }
