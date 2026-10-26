@@ -11,7 +11,9 @@
     "test": "node tools/test.js",
     "test:sim": "node tools/test.js sim",
     "test:smoke": "node tools/test.js smoke",
-    "serve": "node tools/serve.js"
+    "serve": "node tools/serve.js",
+    "sw": "node tools/sw.mjs",
+    "icons": "node tools/icons.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"

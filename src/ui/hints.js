@@ -105,6 +105,8 @@ export function helpHtml(app) {
     <div data-part="settings" class="actions">
       <button type="button" class="act" data-action="${enabled ? 'hints-off' : 'hints-on'}"><span class="act-label">${enabled ? 'Turn hints off' : 'Turn hints back on'}</span></button>
       <button type="button" class="act" data-action="${pause ? 'sighting-pause-off' : 'sighting-pause-on'}"><span class="act-label">${pause ? 'Stop pausing at sightings' : 'Pause when a threat is sighted'}</span><span class="act-sub">${pause ? 'The game pauses at each new sighting' : 'A short alert shows either way'}</span></button>
+      <button type="button" class="act" data-action="${prefs.haptics === false ? 'haptics-on' : 'haptics-off'}"><span class="act-label">${prefs.haptics === false ? 'Turn vibration on' : 'Turn vibration off'}</span><span class="act-sub">Short ticks for long presses, orders and alerts, where the phone has them</span></button>
+      <button type="button" class="act" data-action="${prefs.keepAwake ? 'awake-off' : 'awake-on'}"><span class="act-label">${prefs.keepAwake ? 'Let the screen sleep' : 'Keep the screen awake while playing'}</span><span class="act-sub">${'wakeLock' in navigator ? 'Only while the realm is running' : 'Not supported by this browser'}</span></button>
     </div>
     <div data-part="search" data-form="help"><label class="search">${icon('search')}<input type="search" data-field="q" value="${escapeHtml(f.q)}" placeholder="Search help" aria-label="Search help" autocomplete="off"></label></div>
     <div data-part="topics">${items || '<p class="sub">Nothing matches.</p>'}</div>

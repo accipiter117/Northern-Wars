@@ -78,7 +78,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   let lastFog = 0;
   const FOG_EVERY_MS = 400;
   const FOG_RES = 0.5;
-  const stats = { base: 0, overlay: 0, fog: 0, relayer: 0 };
+  const stats = { base: 0, overlay: 0, fog: 0, relayer: 0, draws: 0 };
   const foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
   let dpr = 1;
   let dirty = true;
@@ -91,7 +91,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   let margin = 0;
   let lc = null;
   function resize(w, h) {
-    dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    // Two device pixels per CSS pixel is as sharp as a phone needs, and spares
+    // the battery the rest.
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
     margin = Math.round(Math.max(w, h) * 0.25);
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
@@ -520,6 +522,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army && lastFrame.company === frame.company && lastFrame.threat === frame.threat
       && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale) return;
     lastFrame = frame;
+    stats.draws += 1;
     // A new zoom, or a pan past the margin, redraws every layer from here.
     if (fogPending && performance.now() - lastFog > FOG_EVERY_MS) {
       fogPending = false;

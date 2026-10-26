@@ -16,6 +16,7 @@
 | M12 A working economy | The economy rescaled so a well-run crown prospers: taxes that grow with development, earning buildings that earn, patrols by road length, cheaper debt; production chains (wool to cloth, grain to rye spirit, timber to charcoal to arms, salt, horses), silver, toll bridges, merchants' quarters, the pilgrims' hostel, the shipyard, the alchemist and the hunters' lodge; and the Treasury, with every line and every place's account | Done |
 | M13 A realm under arms | Bandit camps, monster lairs, Scoia'tael commandos and foreign raiders as things on the map, seen or rumoured; standing companies of six troop types with morale, wounds, experience and pay, on standing orders (station, patrol, escort, hunt, respond); fights with odds in words; field armies raised from the companies; banner tokens, camps and lairs, and a Forces screen | Done |
 | M14 Interface overhaul | A persistent tab bar (Realm, Court, Treasury, Military, Diplomacy) with sub-tabs and badges, an overflow menu, a navigation stack tied to the back gesture, a three-height sheet that a map tap lowers instead of closing (a side panel in landscape), screens that remember their place and forms across saves, decisions in a Court inbox answered inline with a banner only for what cannot wait, one card template, town cards in four tabs, compact laws, searchable help, meter cards, and map pick mode for every target | Done |
+| M15 Native feel and a detailed North | A: no browser gestures, long press as a game gesture (quick-action rings, what's here, list previews), momentum and zoom gestures, an installable offline app with a versioned service worker, save and pause when put away, haptics and wake lock settings. B: the North retraced (24 lands, terrain, 19 rivers, lakes, 92 towns, new roads, same rules and life abroad, richer terrain art, cached terrain tiles) | A done, B in progress |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -25,6 +26,15 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M15 acceptance criteria
+Part A, native mobile feel:
+- No text selection, long-press callouts, image dragging or context menus on the map and interface; fields stay selectable.
+- Long press (about 450ms, small movement allowed, a filling ring under the finger): quick actions on our towns, companies, armies and threats; what's known of foreign towns and armies; what's here on open land; a quick look from list rows.
+- Pressed state within a frame; momentum panning that comes to rest; pinch zoom between the fingers; double-tap to zoom in, two-finger tap to zoom out; the page never zooms, bounces or pulls to refresh.
+- A valid manifest (name, short name, icons including maskable, standalone, theme and background colours, any orientation), Apple touch icon and status bar tags; a service worker caching every game file with a versioned cache, offline play and a restart prompt for new versions.
+- Save and pause when hidden or closed, staying paused on return; optional wake lock; haptics with a setting; dynamic viewport units; 16px inputs; canvas pixel ratio capped at 2; no drawing while paused and still.
+- Tests: long press opens quick actions with nothing selected; no context menu on the map; manifest valid and service worker registers; the game reloads offline; hiding the page saves; momentum panning comes to rest.
 
 ## M14 acceptance criteria
 - No game rules or balance change: this milestone is navigation, layout and interaction only (the one sim change, authorityParts, is the existing monthly Authority sum split into named parts and reused by the ledger, so the numbers are unchanged).

@@ -159,6 +159,21 @@
       "id": "urgent",
       "title": "What cannot wait",
       "text": "War declared on Temeria, a siege of one of our towns, a rebellion and a deposition raise a red banner across the top. Tap it to go straight there. Everything else waits quietly in the Court inbox."
+    },
+    {
+      "id": "longpress",
+      "title": "Long press",
+      "text": "Hold a finger on the map for half a second, until the ring under it fills. On one of your towns it offers Build, Recruit, Garrison, Trade route and Open card; on a company or army, its orders; on a threat, sending the nearest company. On anything foreign it says what is known, and on open land what's here: the ground, whose land, the nearest place and how dangerous it is. Hold a row in a list for a quick look without leaving it."
+    },
+    {
+      "id": "gestures",
+      "title": "Moving about the map",
+      "text": "Drag to pan, and flick to send the map gliding. Pinch to zoom, double tap open land to zoom in, and tap with two fingers to zoom out."
+    },
+    {
+      "id": "install",
+      "title": "Install and play offline",
+      "text": "Add the game to your home screen from the browser's menu (Share, then Add to Home Screen on an iPhone). It opens full screen, starts at once and plays without a connection. When a new version is ready, a small prompt offers to restart. Switching away saves and pauses the reign."
     }
   ]
 }

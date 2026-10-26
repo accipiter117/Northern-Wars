@@ -1,5 +1,13 @@
 # Changelog
 
+## M15 A Native feel
+- The game behaves like an installed app: no selecting text, no copy or save menus on a long press, no dragging images, no right-click menu, no page zoom or pull-to-refresh. Buttons look pressed the instant they are touched.
+- Long press is a game gesture, with a ring filling under your finger. On one of your towns, a ring of quick actions: Build, Recruit, Garrison, Trade route, Open card. On a company, its orders; on an army, Hold and Besiege; on a threat, Send nearest. On anything foreign, what is known of it; on open land, what's here. On a row in a list, a quick look without leaving the list.
+- The map glides on after a flick, pinch zooms between your fingers, a double tap zooms in and a two-finger tap zooms out.
+- Install it to your home screen: it has its own icon, opens full screen, starts at once and plays offline. When an update is ready, a small prompt offers to restart.
+- Switching away saves the reign and pauses it; it stays paused until you play on. Help has settings for vibration (Android) and for keeping the screen awake while playing.
+- Kinder to the battery: the map is never drawn denser than two pixels to one, and not at all while paused and still.
+
 ## M14 Interface overhaul
 - A tab bar along the foot (down the side when the phone lies flat): Realm, Court, Treasury, Military and Diplomacy, with badges for what waits. Each tab has sub-tabs and reopens where you left it. Chronicle, Help and the saves moved to a small menu under the three dots.
 - A real back button: cards opened from a list stack up, and the back arrow, the browser's back and the Android back gesture retrace the way.

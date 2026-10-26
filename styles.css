@@ -34,7 +34,22 @@ body {
   overflow: hidden;
   position: fixed;
   inset: 0;
+  /* The dynamic viewport: the sheet and tab bar stay put as the browser's
+     own bars show and hide. */
+  height: 100vh;
+  height: 100dvh;
+  /* An app, not a page: no selecting, no long-press callouts, no dragging
+     images out, no tap flash. Fields stay selectable. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
+img, svg, canvas { -webkit-user-drag: none; user-drag: none; }
+/* No double-tap zoom anywhere on the page; the map handles its own gestures. */
+body * { touch-action: manipulation; }
+input, textarea, select, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+/* 16px or larger, so iOS never zooms in when a field takes focus. */
+input, textarea, select { font-size: max(16px, 1em); }
 
 button {
   font: inherit;
@@ -47,7 +62,7 @@ button {
   cursor: pointer;
   touch-action: manipulation;
 }
-button:active { transform: translateY(1px); filter: brightness(1.15); }
+button:active, button.pressed, .row.pressed { transform: translateY(1px); filter: brightness(1.15); }
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 /* Icons: small line drawings beside words, never instead of them. */
@@ -407,3 +422,52 @@ select.pick { min-height: 44px; font: inherit; color: var(--text); background: v
 /* Forces: a small morale bar beside a company's name. */
 .mini-bar { display: inline-block; width: 40px; height: 5px; background: rgba(43, 33, 22, 0.6); border: 1px solid var(--line); vertical-align: middle; margin-left: 6px; }
 .mini-bar span { display: block; height: 100%; background: var(--gold); }
+
+/* Long press: a ring filling under the finger, then a ring of quick actions
+   round it, or a small card of what is known. */
+.press-ring {
+  position: absolute; z-index: 4; width: 64px; height: 64px; margin: -32px 0 0 -32px; pointer-events: none;
+  border-radius: 50%; background: conic-gradient(var(--gold) calc(var(--fill, 0) * 1turn), rgba(29, 22, 16, 0.35) 0);
+  -webkit-mask: radial-gradient(circle, transparent 23px, #000 24px); mask: radial-gradient(circle, transparent 23px, #000 24px);
+}
+.press-ring[hidden] { display: none; }
+@property --fill { syntax: '<number>'; inherits: false; initial-value: 0; }
+.press-ring.filling { animation: press-fill var(--press-ms, 340ms) linear forwards; }
+@keyframes press-fill { from { --fill: 0; } to { --fill: 1; } }
+.quick-ring { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+.quick-ring[hidden] { display: none; }
+.quick-centre {
+  position: absolute; transform: translate(-50%, -50%); max-width: 120px; text-align: center;
+  background: rgba(29, 22, 16, 0.9); border: 1px solid var(--gold); border-radius: 10px; padding: 4px 8px;
+  font-size: 13px; color: var(--gold); pointer-events: none;
+}
+.quick-btn {
+  /* Centred with translate, so a pressed state's transform adds to it. */
+  position: absolute; translate: -50% -50%; pointer-events: auto;
+  width: 64px; height: 64px; border-radius: 50%; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  background: rgba(42, 33, 24, 0.96); border: 1px solid var(--gold); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+  font-size: 11px; line-height: 1.05; animation: quick-pop 0.14s ease-out;
+}
+.quick-btn .ico { width: 20px; height: 20px; color: var(--gold); }
+.quick-btn span { max-width: 58px; }
+@keyframes quick-pop { from { transform: scale(0.6); opacity: 0; } }
+.quick-btn.pressed { transform: scale(0.94); }
+.peek {
+  position: fixed; z-index: 25; max-width: min(320px, 86vw);
+  background: rgba(42, 33, 24, 0.98); border: 1px solid var(--gold); border-radius: 10px;
+  padding: 10px 12px; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.7); font-size: 14px; line-height: 1.4;
+}
+.peek[hidden] { display: none; }
+.peek-title { margin: 0 0 4px; color: var(--gold); font-weight: 600; font-size: 16px; }
+.peek p { margin: 0 0 4px; }
+.peek .figs { margin: 6px 0; }
+.peek .actions { margin: 8px 0 0; }
+.update {
+  position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(var(--tab-h, 60px) + 14px);
+  background: var(--panel-2); border: 1px solid var(--gold); border-radius: 10px; padding: 6px 6px 6px 14px;
+  display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); white-space: nowrap;
+}
+.update[hidden] { display: none; }
+.update button { padding: 0 14px; background: var(--gold); color: #1d1610; border-color: var(--gold); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .quick-btn { animation: none; } }
