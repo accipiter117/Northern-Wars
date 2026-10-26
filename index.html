@@ -22,14 +22,16 @@
         <button type="button" data-speed="2" aria-label="Double speed">2&times;</button>
         <button type="button" data-speed="4" aria-label="Fastest speed">4&times;</button>
       </div>
-      <button type="button" id="menu-button" class="icon-button" aria-label="Realm menu">&#9776;</button>
+      <button type="button" id="more-button" class="icon-button" aria-label="More: chronicle, help, saves" aria-haspopup="true" aria-expanded="false"></button>
     </div>
-    <dl class="meters">
-      <div class="meter"><dt>Treasury</dt><dd id="m-treasury">0</dd></div>
-      <div class="meter"><dt>Granary</dt><dd id="m-granary">0</dd></div>
-      <div class="meter"><dt>Authority</dt><dd id="m-authority">0</dd></div>
-      <div class="meter"><dt>Stability</dt><dd id="m-stability">0</dd></div>
-    </dl>
+    <div class="meters">
+      <button type="button" class="meter" data-go="meter:treasury" aria-label="Treasury: why it changed"><span class="m-name" data-icon="coin">Treasury</span><span class="m-val" id="m-treasury">0</span></button>
+      <button type="button" class="meter" data-go="meter:granary" aria-label="Granary: why it changed"><span class="m-name" data-icon="wheat">Granary</span><span class="m-val" id="m-granary">0</span></button>
+      <button type="button" class="meter" data-go="meter:authority" aria-label="Authority: why it changed"><span class="m-name" data-icon="crown">Authority</span><span class="m-val" id="m-authority">0</span></button>
+      <button type="button" class="meter" data-go="meter:stability" aria-label="Stability: why it changed"><span class="m-name" data-icon="scales">Stability</span><span class="m-val" id="m-stability">0</span></button>
+    </div>
+    <div id="urgent" class="urgent" role="alert" hidden></div>
+    <div id="pickbar" class="pickbar" role="status" hidden></div>
   </header>
 
   <main id="stage">
@@ -39,9 +41,17 @@
   </main>
 
   <aside id="sheet" class="sheet" hidden aria-live="polite">
-    <button type="button" id="sheet-close" class="icon-button sheet-close" aria-label="Close">&times;</button>
+    <div id="sheet-head" class="sheet-head">
+      <span class="grabber" aria-hidden="true"></span>
+      <button type="button" id="sheet-back" class="icon-button sheet-back" aria-label="Back" hidden></button>
+      <h2 id="sheet-title"></h2>
+      <button type="button" id="sheet-close" class="icon-button sheet-close" aria-label="Close"></button>
+    </div>
     <div id="sheet-body"></div>
   </aside>
+
+  <nav id="tabbar" class="tabbar" aria-label="Screens"></nav>
+  <div id="more-menu" class="more-menu" role="menu" hidden></div>
 
   <div id="hint" class="hint" role="note" hidden></div>
   <div id="toast" class="toast" role="status" hidden></div>

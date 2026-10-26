@@ -1,21 +1,19 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor } from './sim/index.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock } from './sim/index.js';
 import { createCamera, resizeCamera, panBy } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createTopbar } from './ui/topbar.js';
-import { createSheet } from './ui/sheet.js';
-import { settlementCardHtml } from './ui/settlementCard.js';
-import { realmMenuHtml, chronicleHtml, ledgerHtml } from './ui/menu.js';
-import { lawsHtml } from './ui/laws.js';
-import { neighboursHtml, realmCardHtml, envoyHtml, foreignCardHtml } from './ui/neighbours.js';
-import { faithHtml, petitionHtml } from './ui/faith.js';
-import { noblesHtml, houseCardHtml, demandHtml, depositionHtml } from './ui/nobles.js';
-import { militaryHtml, eventHtml } from './ui/military.js';
-import { warHtml, armyCardHtml, warDecisionHtml, musterPlaces } from './ui/war.js';
-import { forcesHtml, companyCardHtml, threatCardHtml } from './ui/forces.js';
-import { tradeHtml } from './ui/trade.js';
-import { createHints, helpHtml, loadPrefs, savePrefs } from './ui/hints.js';
+import { createPanel } from './ui/panel.js';
+import { createNav } from './ui/nav.js';
+import { attachPanelInput } from './ui/clicks.js';
+import { createPick } from './ui/pick.js';
+import { renderRoute } from './ui/router.js';
+import { pendingDecisions, urgentItems } from './ui/inbox.js';
+import { loadMemory, saveMemory, TABS } from './ui/memory.js';
+import { icon } from './ui/icons.js';
+import { escapeHtml } from './ui/format.js';
+import { createHints, loadPrefs, savePrefs } from './ui/hints.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -30,25 +28,94 @@ async function readJson(path) {
 async function boot() {
   const world = await loadWorld(readJson);
   const [peoples, faiths, goods, hintData, layoutCfg] = await Promise.all(['data/peoples.json', 'data/faiths.json', 'data/goods.json', 'data/hints.json', 'data/layout.json'].map(readJson));
-  const hints = createHints(hintData, { disabled: params.has('nohints'), onOpen: (action) => menuAction(action) });
+  const hints = createHints(hintData, { disabled: params.has('nohints'), onOpen: (where) => openHint(where) });
   const lookups = { peoples, faiths, goods };
 
   let state = startingState(world);
   let speed = 0;
   let frac = 0;
   let selection = null;
+  let label = null;
   let unitLabelUntil = 0;
+  // Depositions the player has seen through (answered in the inbox).
+  let acked = state.depositions.length;
 
   const stage = document.getElementById('stage');
   const canvas = document.getElementById('map');
   const unitLabel = document.getElementById('unit-label');
   const toastEl = document.getElementById('toast');
+  const urgentEl = document.getElementById('urgent');
+  const moreMenu = document.getElementById('more-menu');
   const cam = createCamera(world);
   const renderer = createRenderer(canvas, world, cam, layoutCfg);
-
-  const topbar = createTopbar(world, { onSpeed: setSpeed, onMenu: openMenu });
-  const sheet = createSheet({ onClose: () => { if (selection?.settlement || selection?.company || selection?.threat) selection = null; } });
   const prefs = loadPrefs();
+  // The interface's memory survives reloads, but the panel starts closed:
+  // one tap on a tab brings back exactly what was open.
+  const memory = loadMemory();
+  memory.open = false;
+
+  const topbar = createTopbar(world, { onSpeed: setSpeed, onMore: toggleMore, onMeter: (route) => nav.push(route) });
+
+  // One context for every screen and control.
+  const app = {
+    world, lookups, hintData, hints, prefs, memory,
+    get state() { return state; },
+    samples: [],
+    acked: () => acked,
+    order,
+    persist: () => saveMemory(memory),
+    foreignView,
+    looseThreats,
+    startPick: (p) => pick.start(p),
+    sendNearest,
+    regency,
+    newReign: () => menuAction('new'),
+    goTab,
+    armyRaised,
+    menuAction,
+    highlight: (hit) => { selection = hit.settlement ? { settlement: hit.settlement } : hit.foreign ? null : { ...hit }; },
+    afterPick,
+    scrolled: () => {},
+  };
+
+  const panel = createPanel({
+    onBack: () => nav.back(),
+    onClose: () => { if (memory.open) nav.close(); },
+    onSnap: () => {},
+  });
+  panel.restoreSnap(memory.snap);
+  document.getElementById('sheet-back').innerHTML = icon('back');
+  document.getElementById('sheet-close').innerHTML = icon('close');
+  const nav = createNav({
+    memory, panel,
+    render: (r) => renderRoute(app, r),
+    persist: () => { memory.snap = panel.snap === 'peek' ? panel.raised : panel.snap; saveMemory(memory); },
+    onShow,
+    onTab: (t, same) => {
+      // A tap on Court while decisions wait goes straight to them.
+      if (t === 'court' && !same && pendingDecisions(state, world, acked).length) memory.sub.court = 'inbox';
+    },
+  });
+  app.nav = nav;
+  attachPanelInput(app);
+  const pick = createPick(app, {
+    onStart: () => {
+      hideUnitLabel();
+      // Clear the map: the panel drops to its title bar while picking.
+      if (nav.open && !panel.side && panel.snap !== 'peek') panel.setSnap('peek', { remember: false });
+    },
+  });
+
+  // ---- Notices ----
+
+  let toastTimer = 0;
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (toastEl.hidden = true), 2600);
+  }
+
   // Sightings already announced, so a loaded reign does not cry wolf again.
   let alertsSeen = new Set((state.threats?.alerts ?? []).map((a) => `${a.id}:${a.day}`));
   function newSightings() {
@@ -64,13 +131,62 @@ async function boot() {
     return !!prefs.pauseOnSighting;
   }
 
-  let toastTimer = 0;
-  function toast(text) {
-    toastEl.textContent = text;
-    toastEl.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => (toastEl.hidden = true), 2600);
+  // Decisions go to the Court inbox with a badge and a short toast; the
+  // game still pauses for each new one, as it always has.
+  let decisionsSeen = new Set(pendingDecisions(state, world, acked).map((d) => d.key));
+  function newDecisions() {
+    const list = pendingDecisions(state, world, acked);
+    const fresh = list.filter((d) => !decisionsSeen.has(d.key));
+    decisionsSeen = new Set(list.map((d) => d.key));
+    if (!fresh.length) return false;
+    hints.note('decision');
+    const d = fresh[0];
+    toast(`${d.kicker}: ${d.title}. It waits at court.${fresh.length > 1 ? ` (${fresh.length} new)` : ''}`);
+    updateBadges();
+    return true;
   }
+
+  function looseThreats() {
+    const hunted = new Set(freeCompanies(state).map((c) => c.task?.threat).filter(Boolean));
+    return (state.threats?.list ?? []).filter((t) => (t.sighted || t.campSeen) && !hunted.has(t.id) && !state.threats.contracts.some((c) => c.threat === t.id)).length;
+  }
+
+  function updateBadges() {
+    nav.setBadges({
+      court: pendingDecisions(state, world, acked).length,
+      military: looseThreats(),
+      diplomacy: state.envoys.length,
+    });
+  }
+
+  // Only what cannot wait gets a banner across the top, until tapped or
+  // dismissed.
+  const dismissed = new Set();
+  let urgentKey = '';
+  function updateUrgent() {
+    const items = urgentItems(state, world, acked).filter((u) => !dismissed.has(u.key));
+    const top = items[0];
+    const key = top ? `${top.key}|${items.length}` : '';
+    if (key === urgentKey) return;
+    urgentKey = key;
+    urgentEl.hidden = !top;
+    if (!top) { urgentEl.innerHTML = ''; return; }
+    urgentEl.innerHTML = `<button type="button" class="urgent-go" data-urgent="${escapeHtml(top.go)}">${escapeHtml(top.text)}${items.length > 1 ? ` <small>(and ${items.length - 1} more)</small>` : ''}</button>
+      <button type="button" class="icon-button" data-urgent-x="${escapeHtml(top.key)}" aria-label="Dismiss">${icon('close')}</button>`;
+  }
+  urgentEl.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-urgent]');
+    const x = e.target.closest('[data-urgent-x]');
+    if (x) dismissed.add(x.dataset.urgentX);
+    else if (go) {
+      const where = go.dataset.urgent;
+      if (where === 'inbox') goTab('court:inbox');
+      else nav.push(where);
+    }
+    updateUrgent();
+  });
+
+  // ---- The clock and the state ----
 
   function setSpeed(s) {
     speed = s;
@@ -79,6 +195,7 @@ async function boot() {
 
   function save(quiet) {
     const err = writeSave(serialize(state));
+    saveMemory(memory);
     if (err) toast(err);
     else if (!quiet) toast('The reign is saved.');
   }
@@ -86,279 +203,43 @@ async function boot() {
   function replaceState(next, message) {
     state = next;
     frac = 0;
-    shownDepositions = state.depositions.length;
+    acked = state.depositions.length;
     alertsSeen = new Set((state.threats?.alerts ?? []).map((a) => `${a.id}:${a.day}`));
+    decisionsSeen = new Set(pendingDecisions(state, world, acked).map((d) => d.key));
+    app.samples.length = 0;
+    pick.end();
+    nav.close();
+    // Cards from the old realm may name things that no longer exist.
+    for (const t of TABS) memory.stacks[t] = [`tab:${t}`];
+    memory.stacks.map = [];
     selection = null;
-    sheet.close();
     hideUnitLabel();
     topbar.update(state);
+    updateBadges();
+    dismissed.clear();
+    updateUrgent();
     if (message) toast(message);
-  }
-
-  // Panels
-
-  function openSettlement(id) {
-    selection = { settlement: id };
-    hideUnitLabel();
-    hints.note('townOpened');
-    const body = sheet.open(`settlement:${id}`, settlementCardHtml(world, state, id, lookups));
-    body.onclick = (e) => {
-      const b = e.target.closest('[data-build]');
-      const house = e.target.closest('[data-house]');
-      const level = e.target.closest('[data-garrison]');
-      const route = e.target.closest('[data-route-from]');
-      const prospect = e.target.closest('[data-prospect]');
-      const rec = e.target.closest('[data-recruit]');
-      const comp = e.target.closest('[data-company]');
-      if (rec && !rec.disabled) order({ type: 'recruit', settlement: id, kind: rec.dataset.recruit });
-      else if (comp) openCompany(Number(comp.dataset.company));
-      else if (route) {
-        tradeForm.from = id;
-        openTrade();
-      } else if (prospect && !prospect.disabled) order({ type: 'prospect', settlement: id });
-      else if (b && !b.disabled) order({ type: 'build', settlement: id, building: b.dataset.build });
-      else if (house) openHouse(house.dataset.house);
-      else if (level && !level.disabled) order({ type: 'garrison', settlement: id, level: level.dataset.garrison });
-    };
   }
 
   // Player orders go through the simulation's own rules, like everything else.
   function order(action) {
     const out = applyAction(state, world, action);
-    if (out.error) return toast(out.error);
+    if (out.error) {
+      toast(out.error);
+      return false;
+    }
+    const before = state.chronicle.length;
     state = out.state;
     topbar.update(state);
-    refreshOpenSheet();
-    const last = state.chronicle.at(-1);
-    if (last) toast(last.text);
+    renderer.invalidate();
+    nav.refresh();
+    updateBadges();
+    updateUrgent();
+    decisionsSeen = new Set(pendingDecisions(state, world, acked).map((d) => d.key));
+    if (state.chronicle.length > before) toast(state.chronicle.at(-1).text);
+    return true;
   }
 
-  function openMenu() {
-    if (sheet.current === 'menu') return sheet.close();
-    selection = null;
-    const body = sheet.open('menu', realmMenuHtml(world, state, !!readSave()));
-    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
-  }
-
-  let openLaw = null;
-  function openLaws() {
-    const body = sheet.open('laws', lawsHtml(world, state, openLaw));
-    body.onclick = (e) => {
-      const head = e.target.closest('[data-law]');
-      const pick = e.target.closest('[data-decree]');
-      if (head) {
-        openLaw = openLaw === head.dataset.law ? null : head.dataset.law;
-        sheet.patch('laws', lawsHtml(world, state, openLaw));
-      } else if (pick && !pick.disabled) {
-        const [law, option] = pick.dataset.decree.split(':');
-        const name = world.laws.laws[law].options[option].name;
-        // Decrees cost Authority and cannot be undone for a month, so ask once.
-        if (confirm(`Decree: ${name}?`)) {
-          order({ type: 'law', law, option });
-          sheet.patch('laws', lawsHtml(world, state, openLaw));
-        }
-      } else menuAction(e.target.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  function openNeighbours() {
-    selection = null;
-    const body = sheet.open('neighbours', neighboursHtml(world, state));
-    body.onclick = (e) => {
-      const realm = e.target.closest('[data-realm]');
-      const envoy = e.target.closest('[data-envoy]');
-      if (realm) openRealm(realm.dataset.realm);
-      else if (envoy) openEnvoy(Number(envoy.dataset.envoy));
-      else menuAction(e.target.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  function openRealm(id) {
-    selection = null;
-    hideUnitLabel();
-    const body = sheet.open(`realm:${id}`, realmCardHtml(world, state, id));
-    body.onclick = (e) => {
-      const t = e.target;
-      const st = t.closest('[data-stance]');
-      const emb = t.closest('[data-embassy]');
-      const spy = t.closest('[data-spy]');
-      const place = t.closest('[data-foreign]');
-      const declare = t.closest('[data-declare]');
-      if (declare && !declare.disabled) {
-        if (confirm(`Declare war on ${world.geography.neighbours[id].name}?`)) {
-          order({ type: 'declare', realm: id });
-          openWar();
-        }
-      } else if (st && !st.disabled) order({ type: 'stance', realm: id, stance: st.dataset.stance });
-      else if (emb && !emb.disabled) order({ type: 'embassy', realm: id, close: emb.dataset.embassy === 'close' });
-      else if (spy && !spy.disabled) {
-        if (confirm(`Send a spy into ${world.geography.neighbours[id].name}? If caught, they will not forget it.`)) order({ type: 'spy', realm: id });
-      } else if (place) openForeign(place.dataset.foreign);
-      else menuAction(t.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  // A foreign town, as far as the crown knows it.
-  function openForeign(id) {
-    selection = null;
-    hideUnitLabel();
-    // The renderer knows whether it is in sight; a remembered town comes from
-    // the last report.
-    const live = renderer.foreignInfo(id);
-    const seen = state.ambient.intel?.seen[id];
-    const view = live ?? (seen && { visible: false, ...seen });
-    if (!view) return;
-    const body = sheet.open(`foreign:${id}`, foreignCardHtml(world, state, id, view));
-    body.onclick = (e) => {
-      const realm = e.target.closest('[data-realm]');
-      if (realm) openRealm(realm.dataset.realm);
-    };
-  }
-
-  // Envoys pause the game and wait for an answer, once each. Closed unanswered,
-  // they stay listed under Neighbouring realms until their time runs out.
-  const shownEnvoys = new Set();
-  function openEnvoy(id) {
-    const pending = state.envoys.find((p) => p.id === id);
-    if (!pending) return;
-    shownEnvoys.add(id);
-    selection = null;
-    hideUnitLabel();
-    const body = sheet.open(`envoy:${id}`, envoyHtml(world, pending));
-    body.onclick = (e) => {
-      const c = e.target.closest('[data-choice]');
-      if (!c) return;
-      order({ type: 'envoy', id, choice: Number(c.dataset.choice) });
-      sheet.close();
-      showNextDecision();
-    };
-  }
-
-  function openFaith() {
-    selection = null;
-    const body = sheet.open('faith', faithHtml(world, state, lookups));
-    body.onclick = (e) => {
-      const place = e.target.closest('[data-place]');
-      const pet = e.target.closest('[data-petition]');
-      if (place) openSettlement(place.dataset.place);
-      else if (pet) openPetition(Number(pet.dataset.petition));
-      else menuAction(e.target.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  const shownPetitions = new Set();
-  function openPetition(id) {
-    const pending = state.petitions.find((p) => p.id === id);
-    if (!pending) return;
-    shownPetitions.add(id);
-    selection = null;
-    hideUnitLabel();
-    const body = sheet.open(`petition:${id}`, petitionHtml(world, pending));
-    body.onclick = (e) => {
-      const c = e.target.closest('[data-choice]');
-      if (!c) return;
-      order({ type: 'petition', id, choice: Number(c.dataset.choice) });
-      sheet.close();
-      showNextDecision();
-    };
-  }
-
-  function openNobles() {
-    selection = null;
-    const body = sheet.open('nobles', noblesHtml(world, state));
-    body.onclick = (e) => {
-      const house = e.target.closest('[data-house]');
-      const demand = e.target.closest('[data-demand]');
-      if (house) openHouse(house.dataset.house);
-      else if (demand) openDemand(Number(demand.dataset.demand));
-      else menuAction(e.target.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  let housePicking = null;
-  function openHouse(id, picking = null) {
-    selection = null;
-    hideUnitLabel();
-    housePicking = picking;
-    const body = sheet.open(`house:${id}`, houseCardHtml(world, state, id, picking));
-    body.onclick = (e) => {
-      const t = e.target;
-      const act = t.closest('[data-house-action]');
-      const pick = t.closest('[data-house-pick]');
-      const grant = t.closest('[data-grant]');
-      const strip = t.closest('[data-strip]');
-      const place = t.closest('[data-place]');
-      const name = world.houses.houses[id].name;
-      if (act && !act.disabled) {
-        const kind = act.dataset.houseAction;
-        // Fines and levies leave grievances behind, so ask once.
-        if ((kind === 'fine' || kind === 'levies') && !confirm(`${act.querySelector('.build-name').textContent}: ${name}?`)) return;
-        order({ type: 'house', house: id, kind });
-      } else if (pick && !pick.disabled) {
-        openHouse(id, housePicking === pick.dataset.housePick ? null : pick.dataset.housePick);
-      } else if (grant) {
-        if (confirm(`Grant ${world.byId[grant.dataset.grant].name} to ${name}?`)) {
-          order({ type: 'house', house: id, kind: 'grant', settlement: grant.dataset.grant });
-          openHouse(id);
-        }
-      } else if (strip) {
-        if (confirm(`Strip ${name} of ${world.byId[strip.dataset.strip].name}? Every house will remember.`)) {
-          order({ type: 'house', house: id, kind: 'strip', settlement: strip.dataset.strip });
-          openHouse(id);
-        }
-      } else if (place) openSettlement(place.dataset.place);
-      else menuAction(t.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  const shownDemands = new Set();
-  function openDemand(id) {
-    const pending = state.demands.find((p) => p.id === id);
-    if (!pending) return;
-    shownDemands.add(id);
-    selection = null;
-    hideUnitLabel();
-    const body = sheet.open(`demand:${id}`, demandHtml(world, pending));
-    body.onclick = (e) => {
-      const c = e.target.closest('[data-choice]');
-      if (!c) return;
-      order({ type: 'demand', id, choice: Number(c.dataset.choice) });
-      sheet.close();
-      showNextDecision();
-    };
-  }
-
-  // A deposition is shown once, when it happens. The regency is already in
-  // place; the player may carry on or start afresh.
-  let shownDepositions = state.depositions.length;
-  function openDeposition() {
-    shownDepositions = state.depositions.length;
-    const summary = state.depositions.at(-1);
-    const body = sheet.open('deposition', depositionHtml(summary));
-    body.onclick = (e) => {
-      if (e.target.closest('[data-regency]')) {
-        sheet.close();
-        showNextDecision();
-        toast('The regency council takes up the crown.');
-      } else if (e.target.closest('[data-new-reign]') && confirm('Abandon this realm and start anew?')) {
-        replaceState(createState(world, freshSeed()), 'A new reign begins.');
-        shownDepositions = state.depositions.length;
-        save(true);
-      }
-    };
-  }
-
-  function openMilitary() {
-    selection = null;
-    const body = sheet.open('military', militaryHtml(world, state));
-    body.onclick = (e) => {
-      const place = e.target.closest('[data-place]');
-      if (place) openSettlement(place.dataset.place);
-      else menuAction(e.target.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  // Forces: every company, army and sighted threat, and the cards for each.
   function sendNearest(threatId) {
     const t = state.threats.list.find((x) => x.id === threatId);
     const best = t && bestCompanyFor(state, world, t);
@@ -366,284 +247,109 @@ async function boot() {
     order({ type: 'company', id: best.c.id, order: { kind: 'hunt', threat: threatId } });
   }
 
-  function forcesClick(e) {
-    const t = e.target;
-    const comp = t.closest('[data-company]');
-    const threat = t.closest('[data-threat]');
-    const send = t.closest('[data-send]');
-    const army = t.closest('[data-army]');
-    const witcher = t.closest('[data-witcher]');
-    if (send && !send.disabled) sendNearest(Number(send.dataset.send));
-    else if (witcher) order({ type: 'witcher', threat: Number(witcher.dataset.witcher) });
-    else if (comp) openCompany(Number(comp.dataset.company));
-    else if (threat) openThreat(Number(threat.dataset.threat));
-    else if (army) openArmy(Number(army.dataset.army));
-    else menuAction(t.closest('[data-action]')?.dataset.action);
+  function regency() {
+    acked = state.depositions.length;
+    nav.refresh();
+    updateBadges();
+    updateUrgent();
+    toast('The regency council takes up the crown.');
   }
 
-  function openForces() {
-    selection = null;
-    hideUnitLabel();
-    const body = sheet.open('forces', forcesHtml(world, state));
-    body.onclick = forcesClick;
+  function armyRaised() {
+    hints.note('armyRaised');
+    const a = state.armies.at(-1);
+    if (a?.side === TEMERIA) nav.push(`army:${a.id}`);
   }
 
-  const companyPick = {};
-  function openCompany(id) {
-    selection = { company: id };
-    hideUnitLabel();
-    for (const k of Object.keys(companyPick)) delete companyPick[k];
-    const body = sheet.open(`company:${id}`, companyCardHtml(world, state, id, companyPick));
-    body.onchange = (e) => {
-      const p = e.target.closest('[data-pick]');
-      if (p) companyPick[p.dataset.pick] = p.dataset.pick === 'route' ? Number(p.value) : p.value;
-    };
-    body.onclick = (e) => {
-      const t = e.target;
-      const kind = t.closest('[data-order-kind]')?.dataset.orderKind;
-      const respond = t.closest('[data-respond]');
-      const hunt = t.closest('[data-hunt]');
-      const huntArmy = t.closest('[data-hunt-army]');
-      const give = (o) => {
-        order({ type: 'company', id, order: o });
-        renderer.invalidate();
-      };
-      if (kind === 'station') give({ kind: 'station', place: companyPick.station });
-      else if (kind === 'patrol') give({ kind: 'patrol', from: companyPick.from, to: companyPick.to });
-      else if (kind === 'escort') give({ kind: 'escort', route: Number(companyPick.route) });
-      else if (respond) give({ kind: 'respond', radius: Number(respond.dataset.respond) });
-      else if (hunt) give({ kind: 'hunt', threat: Number(hunt.dataset.hunt) });
-      else if (huntArmy) give({ kind: 'hunt', army: Number(huntArmy.dataset.huntArmy) });
-      else if (t.closest('[data-disband-company]')) {
-        if (confirm('Stand this company down? Its men go home.')) {
-          order({ type: 'company', id, disband: true });
-          openForces();
-        }
-      } else forcesClick(e);
-    };
+  // "military:war" opens the Military tab on its War sub-tab.
+  function goTab(where) {
+    const [t, sub] = where.split(':');
+    if (sub) memory.sub[t] = sub;
+    if (nav.open && memory.active === t) {
+      memory.stacks[t] = [`tab:${t}`];
+      nav.redraw(true);
+      nav.updateTabs();
+    } else nav.tab(t);
   }
 
-  function openThreat(id) {
-    selection = { threat: id };
-    hideUnitLabel();
-    const body = sheet.open(`threat:${id}`, threatCardHtml(world, state, id));
-    body.onclick = forcesClick;
+  function openHint(where) {
+    const old = { ledger: 'treasury:ledger', forces: 'military:threats' };
+    goTab(old[where] ?? where);
   }
 
-  const shownEvents = new Set();
-  function openEvent(id) {
-    const pending = state.events.find((p) => p.id === id);
-    if (!pending) return;
-    shownEvents.add(id);
-    selection = null;
-    hideUnitLabel();
-    const body = sheet.open(`event:${id}`, eventHtml(world, pending));
-    body.onclick = (e) => {
-      const c = e.target.closest('[data-choice]');
-      if (!c) return;
-      order({ type: 'event', id, choice: Number(c.dataset.choice) });
-      sheet.close();
-      showNextDecision();
-    };
+  function afterPick() {
+    if (nav.open && panel.snap === 'peek') panel.setSnap(panel.raised);
+    selectionFromRoute(nav.current);
+    nav.refresh();
   }
 
-  // Trade routes, gold mines and prospecting.
-  const tradeForm = { from: 'vizima', to: 'maribor' };
-  function openTrade() {
-    selection = null;
-    hideUnitLabel();
-    hints.note('tradeOpened');
-    const body = sheet.open('trade', tradeHtml(world, state, tradeForm));
-    body.onchange = (e) => {
-      const p = e.target.closest('[data-pick]');
-      if (p) {
-        tradeForm[p.dataset.pick] = p.value;
-        sheet.patch('trade', tradeHtml(world, state, tradeForm));
-      }
-    };
-    body.onclick = (e) => {
-      const t = e.target;
-      const close = t.closest('[data-close-route]');
-      const place = t.closest('[data-place]');
-      if (t.closest('[data-open-route]') && !t.closest('[data-open-route]').disabled) {
-        order({ type: 'route', from: tradeForm.from, to: tradeForm.to });
-        renderer.invalidate();
-      } else if (close) {
-        if (confirm('Wind up this trade route?')) {
-          order({ type: 'route', close: true, id: Number(close.dataset.closeRoute) });
-          renderer.invalidate();
-        }
-      } else if (place) openSettlement(place.dataset.place);
-      else menuAction(t.closest('[data-action]')?.dataset.action);
-    };
+  function foreignView(id) {
+    // The renderer knows whether it is in sight; a remembered town comes from
+    // the last report.
+    const live = renderer.foreignInfo(id);
+    const seen = state.ambient.intel?.seen[id];
+    return live ?? (seen && { visible: false, ...seen });
   }
 
-  // War: the panel with every war, army and the raising form.
-  const raiseForm = { muster: 'vizima', levy: 'third', nobles: false, companies: 0, marshal: 'vestibor', stance: 'cautious', units: [] };
-  function openWar() {
-    selection = null;
-    hideUnitLabel();
-    if (!musterPlaces(world, state).includes(raiseForm.muster)) raiseForm.muster = musterPlaces(world, state)[0];
-    const body = sheet.open('war', warHtml(world, state, raiseForm));
-    body.onchange = (e) => {
-      const p = e.target.closest('[data-pick]');
-      if (p) {
-        raiseForm[p.dataset.pick] = p.value;
-        sheet.patch('war', warHtml(world, state, raiseForm));
-      }
-    };
-    body.onclick = (e) => {
-      const t = e.target;
-      const set = t.closest('[data-set]');
-      const army = t.closest('[data-army]');
-      const peace = t.closest('[data-peace]');
-      const out = t.closest('[data-withdraw]');
-      const dec = t.closest('[data-war-decision]');
-      const unit = t.closest('[data-unit]');
-      if (unit) {
-        const uid = Number(unit.dataset.unit);
-        raiseForm.units = raiseForm.units.includes(uid) ? raiseForm.units.filter((x) => x !== uid) : [...raiseForm.units, uid];
-        sheet.patch('war', warHtml(world, state, raiseForm));
-      } else if (set) {
-        const [k, v] = set.dataset.set.split(':');
-        raiseForm[k] = k === 'companies' ? Number(v) : k === 'nobles' ? v === 'true' : v;
-        sheet.patch('war', warHtml(world, state, raiseForm));
-      } else if (t.closest('[data-raise]') && !t.closest('[data-raise]').disabled) {
-        order({ type: 'raise', ...raiseForm });
-        raiseForm.units = [];
-        hints.note('armyRaised');
-        const a = state.armies.at(-1);
-        if (a?.side === TEMERIA) openArmy(a.id);
-      } else if (army) openArmy(Number(army.dataset.army));
-      else if (peace && !peace.disabled) {
-        const [war, terms] = peace.dataset.peace.split(':');
-        if (confirm('Make peace on these terms?')) order({ type: 'peace', war: Number(war), terms });
-      } else if (out && confirm('Leave our friend to fight alone?')) order({ type: 'withdraw', war: Number(out.dataset.withdraw) });
-      else if (dec) openWarDecision(Number(dec.dataset.warDecision));
-      else menuAction(t.closest('[data-action]')?.dataset.action);
-    };
+  function selectionFromRoute(r) {
+    const [kind, arg] = (r ?? '').split(':');
+    if (kind === 'town') selection = { settlement: arg };
+    else if (kind === 'company') selection = { company: Number(arg) };
+    else if (kind === 'threat') selection = { threat: Number(arg) };
+    else if (kind === 'army') selection = { army: Number(arg) };
+    else if (!label) selection = null;
   }
 
-  const armyPick = {};
-  function openArmy(id) {
-    selection = { army: id };
-    hideUnitLabel();
-    const body = sheet.open(`army:${id}`, armyCardHtml(world, state, id, armyPick));
-    body.onchange = (e) => {
-      const p = e.target.closest('[data-pick]');
-      if (p) armyPick[p.dataset.pick] = p.value;
-    };
-    body.onclick = (e) => {
-      const t = e.target;
-      const ord = t.closest('[data-order]');
-      const stance = t.closest('[data-stance]');
-      const raid = t.closest('[data-raid]');
-      const a = state.armies.find((x) => x.id === id);
-      if (!a) return menuAction(t.closest('[data-action]')?.dataset.action);
-      if (ord) {
-        const kind = ord.dataset.order;
-        const sel = body.querySelector(`[data-pick="${kind === 'defend' ? 'hold' : 'siege'}"]`);
-        order({ type: 'army', army: id, order: kind, target: sel?.value });
-      } else if (stance) order({ type: 'army', army: id, order: a.order, target: a.target, stance: stance.dataset.stance });
-      else if (raid) order({ type: 'army', army: id, order: 'raid', target: raid.dataset.raid });
-      else if (t.closest('[data-disband]')) {
-        if (confirm(`Stand down ${a.name}?`)) {
-          order({ type: 'disband', army: id });
-          openWar();
-        }
-      } else menuAction(t.closest('[data-action]')?.dataset.action);
-    };
+  function onShow(r) {
+    if (panel.snap === 'peek' && !pick.active) panel.setSnap(panel.raised);
+    if (!label) selectionFromRoute(r);
+    if (r.startsWith('town:')) hints.note('townOpened');
+    if (r === 'tab:treasury' && memory.sub.treasury === 'routes') hints.note('tradeOpened');
   }
 
-  const shownWarDecisions = new Set();
-  function openWarDecision(id) {
-    const pending = state.warDecisions.find((p) => p.id === id);
-    if (!pending) return;
-    shownWarDecisions.add(id);
-    selection = null;
-    hideUnitLabel();
-    const body = sheet.open(`warDecision:${id}`, warDecisionHtml(world, state, pending));
-    body.onclick = (e) => {
-      const c = e.target.closest('[data-choice]');
-      if (!c) return;
-      order({ type: 'warDecision', id, choice: Number(c.dataset.choice) });
-      sheet.close();
-      if (!showNextDecision() && pending.kind === 'declared' && state.wars.length) openWar();
-    };
+  // ---- The overflow menu ----
+
+  function moreHtml() {
+    const has = !!readSave();
+    return `<button type="button" data-more="chronicle">${icon('scroll')} Chronicle</button>
+      <button type="button" data-more="help">${icon('info')} Help</button>
+      <hr>
+      <button type="button" data-more="save">Save now</button>
+      <button type="button" data-more="load" ${has ? '' : 'disabled'}>Load last save</button>
+      <button type="button" data-more="export">Export save</button>
+      <button type="button" data-more="import">Import save</button>
+      <hr>
+      <button type="button" class="danger" data-more="new">Start a new reign</button>`;
   }
 
-  // Decisions waiting on the crown open one at a time, the gravest first.
-  // Answering one opens the next, so a crowded morning is dealt with in a row.
-  function showNextDecision() {
-    const opened = nextDecision();
-    if (opened) hints.note('decision');
-    return opened;
+  function toggleMore() {
+    const open = moreMenu.hidden;
+    moreMenu.innerHTML = open ? moreHtml() : '';
+    moreMenu.hidden = !open;
+    document.getElementById('more-button').setAttribute('aria-expanded', String(open));
   }
-
-  function nextDecision() {
-    if (state.depositions.length > shownDepositions) { openDeposition(); return true; }
-    const warDecision = state.warDecisions?.find((p) => !shownWarDecisions.has(p.id));
-    if (warDecision) { openWarDecision(warDecision.id); return true; }
-    const event = state.events.find((p) => !shownEvents.has(p.id));
-    if (event) { openEvent(event.id); return true; }
-    const demand = state.demands.find((p) => !shownDemands.has(p.id));
-    if (demand) { openDemand(demand.id); return true; }
-    const envoy = state.envoys.find((p) => !shownEnvoys.has(p.id));
-    if (envoy) { openEnvoy(envoy.id); return true; }
-    const petition = state.petitions.find((p) => !shownPetitions.has(p.id));
-    if (petition) { openPetition(petition.id); return true; }
-    return false;
-  }
-
-  function openHelp() {
-    const body = sheet.open('help', helpHtml(hintData, hints.enabled, !!prefs.pauseOnSighting));
-    body.onclick = (e) => menuAction(e.target.closest('[data-action]')?.dataset.action);
-  }
-
-  function openLedger() {
-    const body = sheet.open('ledger', ledgerHtml(world, state));
-    body.onclick = (e) => {
-      const place = e.target.closest('[data-place]');
-      if (place) openSettlement(place.dataset.place);
-      else menuAction(e.target.closest('[data-action]')?.dataset.action);
-    };
-  }
-
-  let chronicleFilter = 'all';
-  function openChronicle() {
-    const body = sheet.open('chronicle', chronicleHtml(state, chronicleFilter));
-    body.onclick = (e) => {
-      const f = e.target.closest('[data-chronicle]');
-      if (f) {
-        chronicleFilter = f.dataset.chronicle;
-        sheet.patch('chronicle', chronicleHtml(state, chronicleFilter));
-      } else menuAction(e.target.closest('[data-action]')?.dataset.action);
-    };
-  }
+  moreMenu.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-more]');
+    if (!b || b.disabled) return;
+    toggleMore();
+    const what = b.dataset.more;
+    if (what === 'chronicle' || what === 'help') nav.push(what);
+    else menuAction(what);
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (!moreMenu.hidden && !e.target.closest('#more-menu, #more-button')) toggleMore();
+  });
 
   function menuAction(action) {
     if (!action) return;
-    if (action === 'chronicle') openChronicle();
-    else if (action === 'ledger') openLedger();
-    else if (action === 'laws') openLaws();
-    else if (action === 'neighbours') openNeighbours();
-    else if (action === 'faith') openFaith();
-    else if (action === 'nobles') openNobles();
-    else if (action === 'military') openMilitary();
-    else if (action === 'forces') openForces();
-    else if (action === 'war') openWar();
-    else if (action === 'trade') openTrade();
-    else if (action === 'help') openHelp();
-    else if (action === 'sighting-pause-on' || action === 'sighting-pause-off') {
+    if (action === 'sighting-pause-on' || action === 'sighting-pause-off') {
       prefs.pauseOnSighting = action === 'sighting-pause-on';
       savePrefs(prefs);
-      openHelp();
+      nav.refresh();
     } else if (action === 'hints-off' || action === 'hints-on') {
       hints.setEnabled(action === 'hints-on');
-      openHelp();
-    }
-    else if (action === 'back') openMenu();
-    else if (action === 'save') save(false);
+      nav.refresh();
+    } else if (action === 'save') save(false);
     else if (action === 'load') {
       try {
         replaceState(deserialize(readSave(), world), 'The last save is restored.');
@@ -674,40 +380,74 @@ async function boot() {
     }
   });
 
-  // Map input
+  // ---- Map input ----
 
   function hideUnitLabel() {
     unitLabel.hidden = true;
-    if (selection?.unit || selection?.label) selection = null;
+    if (label) {
+      label = null;
+      selectionFromRoute(nav.open ? nav.current : null);
+    }
+  }
+
+  function showLabel(sel, text) {
+    label = sel;
+    selection = sel;
+    unitLabel.textContent = text;
+    unitLabel.hidden = false;
+    unitLabelUntil = performance.now() + 4000;
+  }
+
+  // A tap on the map never closes the panel: in portrait it drops to its
+  // title bar, so the player's place is one tap away; beside the map in
+  // landscape it simply stays.
+  function lowerPanel() {
+    if (nav.open && !panel.side && panel.snap !== 'peek') panel.setSnap('peek', { remember: false });
+  }
+
+  // What a tap means while picking a target: the thing wanted, or the
+  // nearest place to the finger when a place is wanted.
+  function hitForPick(x, y) {
+    const hit = renderer.pick(x, y, state, frac);
+    const wants = pick.wants;
+    if (hit && wants.some((k) => hit[k] !== undefined)) return hit;
+    if (!wants.includes('settlement') && !wants.includes('foreign')) return null;
+    let best = null;
+    const places = [...(wants.includes('settlement') ? world.geography.settlements : []), ...(wants.includes('foreign') ? world.foreign : [])];
+    for (const st of places) {
+      const px = (st.x - cam.x) * cam.scale + cam.viewW / 2;
+      const py = (st.y - cam.y) * cam.scale + cam.viewH / 2;
+      const d = Math.hypot(px - x, py - y);
+      if (d < 44 && (!best || d < best.d)) best = { d, id: st.id, foreign: !state.settlements[st.id] };
+    }
+    if (!best) return null;
+    return best.foreign ? { foreign: best.id } : { settlement: best.id };
   }
 
   function onTap(x, y) {
-    const hit = renderer.pick(x, y, state, frac);
-    if (hit?.settlement) openSettlement(hit.settlement);
-    else if (hit?.neighbour) openRealm(hit.neighbour);
-    else if (hit?.foreign) openForeign(hit.foreign);
-    else if (hit?.company) openCompany(hit.company);
-    else if (hit?.threat) openThreat(hit.threat);
-    else if (hit?.army) {
-      const a = state.armies.find((x) => x.id === hit.army);
-      if (a.side === TEMERIA) openArmy(a.id);
-      else {
-        sheet.close();
-        selection = { army: a.id, label: true };
-        unitLabel.textContent = describeArmy(state, world, a);
-        unitLabel.hidden = false;
-        unitLabelUntil = performance.now() + 4000;
-      }
+    if (pick.active) {
+      pick.tap(hitForPick(x, y));
+      return;
     }
-    else if (hit?.unit) {
-      sheet.close();
-      selection = { unit: hit.unit };
+    const hit = renderer.pick(x, y, state, frac);
+    if (hit?.settlement) { hideUnitLabel(); nav.push(`town:${hit.settlement}`); }
+    else if (hit?.neighbour) { hideUnitLabel(); nav.push(`realm:${hit.neighbour}`); }
+    else if (hit?.foreign && foreignView(hit.foreign)) { hideUnitLabel(); nav.push(`foreign:${hit.foreign}`); }
+    else if (hit?.company) { hideUnitLabel(); nav.push(`company:${hit.company}`); }
+    else if (hit?.threat) { hideUnitLabel(); nav.push(`threat:${hit.threat}`); }
+    else if (hit?.army) {
+      const a = state.armies.find((v) => v.id === hit.army);
+      if (a.side === TEMERIA) { hideUnitLabel(); nav.push(`army:${a.id}`); }
+      else {
+        lowerPanel();
+        showLabel({ army: a.id }, describeArmy(state, world, a));
+      }
+    } else if (hit?.unit) {
+      lowerPanel();
       const u = state.ambient.units.find((v) => v.id === hit.unit);
-      unitLabel.textContent = describeUnit(world, u);
-      unitLabel.hidden = false;
-      unitLabelUntil = performance.now() + 4000;
+      showLabel({ unit: hit.unit }, describeUnit(world, u));
     } else {
-      sheet.close();
+      lowerPanel();
       hideUnitLabel();
     }
   }
@@ -717,13 +457,16 @@ async function boot() {
 
   let firstSize = true;
   function layout() {
-    document.documentElement.style.setProperty('--bar-h', `${document.getElementById('topbar').offsetHeight}px`);
+    const root = document.documentElement.style;
+    root.setProperty('--bar-h', `${document.getElementById('topbar').offsetHeight}px`);
+    root.setProperty('--tab-h', `${panel.side ? 0 : document.getElementById('tabbar').offsetHeight}px`);
     const w = stage.clientWidth;
     const h = stage.clientHeight;
     resizeCamera(cam, world, w, h, firstSize);
     if (firstSize) { cam.x = 500; cam.y = 420; resizeCamera(cam, world, w, h, false); }
     firstSize = false;
     renderer.resize(w, h);
+    if (panel.open) panel.place();
   }
   new ResizeObserver(layout).observe(stage);
   layout();
@@ -734,8 +477,23 @@ async function boot() {
     if (e.key === '1') setSpeed(1);
     if (e.key === '2') setSpeed(2);
     if (e.key === '3') setSpeed(4);
-    if (e.key === 'Escape') { sheet.close(); hideUnitLabel(); }
+    if (e.key === 'Escape') {
+      if (pick.active) { pick.end(); afterPick(); } else nav.close();
+      hideUnitLabel();
+    }
   });
+
+  // Keep the interface's memory when the page is put away or closed.
+  const keep = () => { nav.rememberScroll(); saveMemory(memory); };
+  window.addEventListener('pagehide', keep);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) keep(); });
+
+  function sample() {
+    const last = app.samples.at(-1);
+    if (last?.day === state.day) return;
+    app.samples.push({ day: state.day, treasury: state.treasury, granary: realmStock(state).food, authority: state.authority, stability: state.stability });
+    if (app.samples.length > 120) app.samples.shift();
+  }
 
   // The clock. Whole days go through the simulation; the leftover fraction
   // only slides ambient units along so motion looks smooth between days.
@@ -758,18 +516,25 @@ async function boot() {
         state = step(state, days, world);
         if (dateOf(state.day).month !== month) save(true);
         topbar.update(state);
+        sample();
         // Open panels follow the realm twice a second at most: at 4x that
         // spares the phone rebuilding a card four times a second.
         if (now - lastSheetRefresh > 500) {
           lastSheetRefresh = now;
-          refreshOpenSheet();
+          nav.refresh();
+          updateBadges();
+          updateUrgent();
         }
         if (newSightings()) setSpeed(0);
-        if (showNextDecision()) setSpeed(0);
+        if (newDecisions()) {
+          setSpeed(0);
+          nav.refresh();
+          updateUrgent();
+        }
       }
     }
-    if (selection?.unit || selection?.label) {
-      const p = selection.unit ? renderer.unitScreen(state, selection.unit, frac) : renderer.armyScreen(state, selection.army, frac);
+    if (label) {
+      const p = label.unit ? renderer.unitScreen(state, label.unit, frac) : renderer.armyScreen(state, label.army, frac);
       if (!p || now > unitLabelUntil) hideUnitLabel();
       else {
         // Keep the label on screen even when its unit is near an edge.
@@ -778,7 +543,7 @@ async function boot() {
         unitLabel.style.top = `${p.y}px`;
       }
     }
-    renderer.draw(state, frac, selection);
+    renderer.draw(state, frac, nav.open || label || pick.active ? selection : null);
     if (now - lastHintCheck > 1000) {
       lastHintCheck = now;
       hints.check(state, world);
@@ -792,32 +557,10 @@ async function boot() {
     requestAnimationFrame(frame);
   }
 
-  function refreshOpenSheet() {
-    const cur = sheet.current;
-    if (cur?.startsWith('settlement:')) sheet.patch(cur, settlementCardHtml(world, state, cur.slice(11), lookups));
-    else if (cur === 'chronicle') sheet.patch(cur, chronicleHtml(state, chronicleFilter));
-    else if (cur === 'ledger') sheet.patch(cur, ledgerHtml(world, state));
-    else if (cur === 'laws') sheet.patch(cur, lawsHtml(world, state, openLaw));
-    else if (cur === 'neighbours') sheet.patch(cur, neighboursHtml(world, state));
-    else if (cur?.startsWith('realm:')) sheet.patch(cur, realmCardHtml(world, state, cur.slice(6)));
-    else if (cur?.startsWith('envoy:') && !state.envoys.some((p) => `envoy:${p.id}` === cur)) sheet.close();
-    else if (cur === 'faith') sheet.patch(cur, faithHtml(world, state, lookups));
-    else if (cur?.startsWith('petition:') && !state.petitions.some((p) => `petition:${p.id}` === cur)) sheet.close();
-    else if (cur === 'nobles') sheet.patch(cur, noblesHtml(world, state));
-    else if (cur === 'military') sheet.patch(cur, militaryHtml(world, state));
-    else if (cur === 'forces') sheet.patch(cur, forcesHtml(world, state));
-    else if (cur?.startsWith('company:')) sheet.patch(cur, companyCardHtml(world, state, Number(cur.slice(8)), companyPick));
-    else if (cur?.startsWith('threat:')) sheet.patch(cur, threatCardHtml(world, state, Number(cur.slice(7))));
-    else if (cur?.startsWith('event:') && !state.events.some((p) => `event:${p.id}` === cur)) sheet.close();
-    else if (cur?.startsWith('house:')) sheet.patch(cur, houseCardHtml(world, state, cur.slice(6), housePicking));
-    else if (cur?.startsWith('demand:') && !state.demands.some((p) => `demand:${p.id}` === cur)) sheet.close();
-    else if (cur === 'war') sheet.patch(cur, warHtml(world, state, raiseForm));
-    else if (cur === 'trade') sheet.patch(cur, tradeHtml(world, state, tradeForm));
-    else if (cur?.startsWith('army:')) sheet.patch(cur, armyCardHtml(world, state, Number(cur.slice(5)), armyPick));
-    else if (cur?.startsWith('warDecision:') && !state.warDecisions.some((p) => `warDecision:${p.id}` === cur)) sheet.close();
-  }
-
   topbar.update(state);
+  sample();
+  updateBadges();
+  updateUrgent();
   setSpeed(params.has('paused') ? 0 : 1);
   document.getElementById('loading').hidden = true;
   requestAnimationFrame(frame);
@@ -832,6 +575,11 @@ async function boot() {
     get frameStats() {
       const sorted = [...frameStats.recent].sort((a, b) => a - b);
       return { frames: frameStats.frames, mean: frameStats.ms / Math.max(1, frameStats.frames), max: frameStats.max, p95: sorted[Math.floor(sorted.length * 0.95)] ?? 0 };
+    },
+    // Where the interface stands: the open screen, the panel's height, and
+    // its remembered state.
+    get ui() {
+      return { open: nav.open, route: nav.current, depth: nav.depth, snap: panel.side ? 'side' : panel.snap, scroll: panel.scroll, memory, picking: pick.active };
     },
     resetFrameStats() { Object.assign(frameStats, { frames: 0, ms: 0, max: 0, recent: [] }); },
     planOf: (id) => renderer.planOf(id),

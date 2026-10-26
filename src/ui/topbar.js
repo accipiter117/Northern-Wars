@@ -1,7 +1,10 @@
 import { formatDate, seasonOf, SEASON_NAMES, realmStock, foodNeed } from '../sim/index.js';
 import { number } from './format.js';
+import { icon } from './icons.js';
 
-export function createTopbar(world, { onSpeed, onMenu }) {
+// The top bar: the date, the speed buttons, the overflow menu button and the
+// four meters. Each meter is a button that opens why it changed.
+export function createTopbar(world, { onSpeed, onMore, onMeter }) {
   const el = {
     date: document.getElementById('date'),
     season: document.getElementById('season'),
@@ -12,7 +15,14 @@ export function createTopbar(world, { onSpeed, onMenu }) {
   };
   const speedButtons = [...document.querySelectorAll('[data-speed]')];
   for (const b of speedButtons) b.addEventListener('click', () => onSpeed(Number(b.dataset.speed)));
-  document.getElementById('menu-button').addEventListener('click', onMenu);
+  const more = document.getElementById('more-button');
+  more.innerHTML = icon('more');
+  more.addEventListener('click', onMore);
+  for (const m of document.querySelectorAll('.meter')) {
+    const name = m.querySelector('.m-name');
+    name.insertAdjacentHTML('afterbegin', icon(name.dataset.icon));
+    m.addEventListener('click', () => onMeter(m.dataset.go));
+  }
 
   let last = '';
   return {

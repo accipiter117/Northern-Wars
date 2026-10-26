@@ -2,6 +2,8 @@
 // What has been seen is remembered per device, not per save, so a second
 // reign is not lectured again.
 import { escapeHtml } from './format.js';
+import { icon } from './icons.js';
+import { form, isOpen } from './memory.js';
 
 const KEY = 'northern-wars.hints';
 
@@ -86,16 +88,26 @@ export function createHints(data, { disabled = false, onOpen = () => {} } = {}) 
   return { note, check, hide, reset, get enabled() { return !prefs.off && !disabled; }, setEnabled(on) { prefs.off = !on; store(prefs); if (!on) hide(); } };
 }
 
-export function helpHtml(data, enabled, pauseOnSighting = false) {
-  const items = data.hints.map((h) => `<li><b>${escapeHtml(h.title)}.</b> ${escapeHtml(h.text)}</li>`).join('');
+// Help: the settings, then a searchable list of short topics (every hint,
+// and a few more), each folded until tapped.
+export function helpHtml(app) {
+  const { hintData: data, hints, prefs, memory } = app;
+  const enabled = hints.enabled;
+  const pause = !!prefs.pauseOnSighting;
+  const f = form(memory, 'help', { q: '' });
+  const q = f.q.trim().toLowerCase();
+  const topics = [...(data.topics ?? []), ...data.hints].filter((h) => !q || `${h.title} ${h.text}`.toLowerCase().includes(q));
+  const items = topics.map((h) => {
+    const open = isOpen(memory, 'help', `t:${h.id}`, !!q);
+    return `<details class="sec" data-sec="t:${h.id}"${open ? ' open' : ''}><summary>${escapeHtml(h.title)}</summary><div class="sec-body"><p>${escapeHtml(h.text)}</p></div></details>`;
+  }).join('');
   return `
-    <h2>Help</h2>
-    <div class="menu-list">
-      <button type="button" data-action="back">Back to the realm</button>
-      <button type="button" data-action="${enabled ? 'hints-off' : 'hints-on'}">${enabled ? 'Turn hints off' : 'Turn hints back on'}</button>
-      <button type="button" data-action="${pauseOnSighting ? 'sighting-pause-off' : 'sighting-pause-on'}">${pauseOnSighting ? 'Stop pausing when a threat is sighted' : 'Pause when a threat is sighted'}<small>${pauseOnSighting ? 'The game pauses at each new sighting' : 'A short alert shows either way'}</small></button>
+    <div data-part="settings" class="actions">
+      <button type="button" class="act" data-action="${enabled ? 'hints-off' : 'hints-on'}"><span class="act-label">${enabled ? 'Turn hints off' : 'Turn hints back on'}</span></button>
+      <button type="button" class="act" data-action="${pause ? 'sighting-pause-off' : 'sighting-pause-on'}"><span class="act-label">${pause ? 'Stop pausing at sightings' : 'Pause when a threat is sighted'}</span><span class="act-sub">${pause ? 'The game pauses at each new sighting' : 'A short alert shows either way'}</span></button>
     </div>
-    <ul class="chronicle help">${items}</ul>
+    <div data-part="search" data-form="help"><label class="search">${icon('search')}<input type="search" data-field="q" value="${escapeHtml(f.q)}" placeholder="Search help" aria-label="Search help" autocomplete="off"></label></div>
+    <div data-part="topics">${items || '<p class="sub">Nothing matches.</p>'}</div>
   `;
 }
 
