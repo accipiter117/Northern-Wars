@@ -20,6 +20,7 @@
 | M17 Audiences with rulers | A full-screen audience with any ruler (portrait, mood and its reasons, trust); a deal table with live verdicts, counter-offers and deals carried out through the ledger and caravans; gifts, denunciations, tribute, asks and intelligence; treaties (non-aggression, trade, defensive, alliance, access, protectorate) that bind calls to arms and cost trust to break; war declared with a reason and terms before war; rulers with traits and agendas who request audiences and make and break pacts among themselves | Done |
 | M18 Music and sound | A looping soundtrack that starts on the first tap, fades when put away and ducks under alerts; synthesised interface sounds for taps, sheets, tabs, speed, orders, laws, coin, refusals, alerts, war and long presses; music and effects volume and mute in Help; music cached by the service worker with Range support | Done |
 | M18 Rulers who govern | Foreign rulers assess threat, opportunity and purse each month and choose a posture (Grow, Arm, Expand, Consolidate, Scheme); standing armies with upkeep, a court that taxes hoards, debt with desertion and offers to Temeria; building from the full catalogue; wars with aims, musters and reasons in place of rivalry dice; deterrence, probes and harder-to-break pacts with Temeria; pacts between realms that last; posture and war aims learnt through embassies and spies | Done |
+| M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | In progress (A and B, conquest, done) |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -29,6 +30,24 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M19 acceptance criteria
+Part A, how towns change hands:
+- Villages and unwalled places fall to an army holding them a day; walled towns, cities and castles need a siege.
+- Captured towns are occupied during a war (requisition allowed, no building or granting), drawn hatched in the occupier's colour.
+- Ownership changes only by a peace, a deal, a revolt or a defecting house. A town that becomes Temerian is a full crown settlement (peoples keeping their origin, faith, prosperity, stores, buildings with damage, garrison, roads), governed like any other.
+- A realm that loses every town falls and its ruler becomes a claimant; a small realm may be offered vassalage instead.
+- Save upgrade: towns held after their war ended are annexed; a realm left with none falls.
+
+Part B, what a town costs:
+- On capture a short card (game paused): spare, sack or expel a people, with their consequences (loot, damage, smoke, refugees, Scoia'tael, the Eternal Fire, kin realms, fear).
+- At the peace, crown demesne or a grant to a great house; resettlement once annexed.
+- Integration 0 to 100 on every annexed town, as a bar on its card, rising and falling for the reasons given, with lower taxes and levies and more unrest when low.
+- Revolts that start, spread, may bring in the old realm, can be crushed or treated with, and free a town held for a season.
+- Claimants with fading legitimacy, agitation, exile armies; pension, spy, hand-over at the deal table.
+- Fear of Temeria per ruler, shown on the Diplomacy tab and in mood reasons; a league when high, a joint war when extreme and Temeria weakened. AI realms follow the same rules.
+
+Part C, battles and sieges you can watch, and Part D, the map: see the brief; to follow in their own pull requests.
 
 ## M18 acceptance criteria
 - Each foreign realm scores Threat, Opportunity and Purse (0 to 100, with parts) monthly and holds one of five postures for at least six months unless threat jumps; trait and agenda weights in data/strategy.json; the posture stored on the realm.

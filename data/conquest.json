@@ -317,9 +317,10 @@
     "max": 100
   },
   "defection": {
-    "loyaltyBelow": 12,
-    "chance": 0.06,
-    "relationAbove": 10,
+    "loyaltyBelow": 8,
+    "authorityBelow": 30,
+    "chance": 0.015,
+    "relationBelow": -20,
     "range": 220
   },
   "vassal": {
@@ -331,5 +332,9 @@
     "sackGreedy": 0.5,
     "sackBase": 0.08,
     "expelZealous": 0.3
+  },
+  "peace": {
+    "keepShare": 0.15,
+    "keepMin": 15
   }
 }

@@ -436,6 +436,10 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
       setOwner(state, world, t.id, t.from);
     }
   }
+  // No victor keeps more than it can hold down (M19): its war aim first,
+  // then the richest towns, up to a share of what its own towns are worth;
+  // the rest go home.
+  if (world.conquest) digestible(state, world, war);
   if (tribute) state.tributes.push(tribute);
   if (lump) pay(state, lump.from, lump.to, lump.coin);
   state.wars = state.wars.filter((w) => w !== war);
@@ -478,6 +482,27 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
 
 // The best town a side took in a war and still holds. A great city is too
 // much to ask in a peace unless the war was a rout.
+function digestible(state, world, war) {
+  const c = world.conquest.peace;
+  const takers = new Set(war.taken.map((t) => ownerOf(state, world, t.id)).filter((o) => o && war.sides.flat().includes(o)));
+  for (const taker of takers) {
+    const own = taker === TEMERIA
+      ? Object.keys(state.settlements).filter((id) => !state.settlements[id].occupier)
+      : (world.foreignByRealm[taker] ?? []).filter((id) => ownerOf(state, world, id) === taker);
+    let room = Math.max(c.keepMin, own.reduce((a, id) => a + valueOf(state, world, id), 0) * c.keepShare);
+    const held = war.taken.filter((t) => ownerOf(state, world, t.id) === taker && t.from !== taker);
+    const aim = war.aims?.[taker];
+    held.sort((x, y) => (y.id === aim) - (x.id === aim) || valueOf(state, world, y.id) - valueOf(state, world, x.id));
+    // A realm swallowed whole is the exception: its taker keeps it all.
+    const whole = (rid) => rid !== TEMERIA && whollyTaken(state, world, rid);
+    for (const t of held) {
+      const v = valueOf(state, world, t.id);
+      if (whole(t.from) || v <= room) room -= v;
+      else setOwner(state, world, t.id, t.from);
+    }
+  }
+}
+
 // Whether a realm holds none of the towns it still counted as its own.
 function whollyTaken(state, world, rid) {
   return (world.foreignByRealm[rid] ?? []).every((id) => ownerOf(state, world, id) !== rid);

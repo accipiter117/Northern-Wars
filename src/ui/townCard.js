@@ -8,6 +8,7 @@ import {
 import { mixHtml as mix, gaugeHtml, FAITH_COLOURS, PEOPLE_COLOURS, TENSION_WORDS } from './faith.js';
 import { defenceHtml, statusBadges } from './military.js';
 import { occupationHtml, siegeNote } from './war.js';
+import { conquestTownHtml } from './conquest.js';
 import { settlementTradeHtml } from './trade.js';
 import { settlementForcesHtml } from './forces.js';
 import { number, escapeHtml, describeLevel } from './format.js';
@@ -47,7 +48,7 @@ export function townCard(app, id) {
       holder ? { icon: 'crown', label: 'Holder', value: escapeHtml(world.houses.houses[holder].name), go: `house:${holder}` } : { icon: 'crown', label: 'Holder', value: 'Crown demesne' },
       { icon: 'shield', label: 'Garrison', value: s.garrison ? `${number(s.garrison)}${state.unpaid ? ' unpaid' : ''}` : 'None', tone: state.unpaid ? 'bad' : '' },
     ],
-    extra: (world.war ? occupationHtml(world, state, id) + siegeNote(world, state, id) : '')
+    extra: (world.war ? occupationHtml(world, state, id) + siegeNote(world, state, id) : '') + conquestTownHtml(world, state, id)
       + (s.troubled > 0 ? '<p class="warn">Riots or raiders have struck here lately. Some folk are leaving.</p>' : ''),
     actions,
   });

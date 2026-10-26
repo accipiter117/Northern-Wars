@@ -819,13 +819,13 @@ export function leagueAllies(state, victim) {
 function monthlyDefection(state, world, rng) {
   const df = C(world).defection;
   for (const [hid, h] of Object.entries(state.houses ?? {})) {
-    if (h.rebel || h.defected || h.loyalty >= df.loyaltyBelow) continue;
+    if (h.rebel || h.defected || h.loyalty >= df.loyaltyBelow || state.authority >= df.authorityBelow) continue;
     const lands = Object.keys(state.settlements).filter((id) => state.settlements[id].holder === hid && !state.settlements[id].occupier);
     if (!lands.length || lands.includes(world.kingdom.capital)) continue;
-    // A neighbour courting them: near their lands, and cold to the crown.
+    // A neighbour courting them: near their lands, and hostile to the crown.
     let suitor = null;
     for (const rid of livingRealms(state)) {
-      if (rid === 'brokilon' || (state.neighbours[rid]?.relation ?? 0) >= df.relationAbove) continue;
+      if (rid === 'brokilon' || (state.neighbours[rid]?.relation ?? 0) >= df.relationBelow) continue;
       const near = lands.some((id) => (world.foreignByRealm[rid] ?? []).some((t) => Math.hypot(world.byId[t].x - world.byId[id].x, world.byId[t].y - world.byId[id].y) < df.range));
       if (near && (!suitor || state.neighbours[rid].relation < state.neighbours[suitor].relation)) suitor = rid;
     }

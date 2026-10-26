@@ -168,6 +168,7 @@ async function boot() {
   const decisionKeys = () => [
     ...(state.depositions.length > acked ? ['deposition'] : []),
     ...(state.warDecisions ?? []).map((d) => `warDecision:${d.id}`),
+    ...(state.conquest?.decisions ?? []).map((d) => `conquestDecision:${d.id}`),
     ...state.events.map((d) => `event:${d.id}`),
     ...state.demands.map((d) => `demand:${d.id}`),
     ...state.envoys.map((d) => `envoy:${d.id}`),
