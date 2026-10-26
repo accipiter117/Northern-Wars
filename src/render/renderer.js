@@ -10,7 +10,7 @@ import { createSettlementArt, seasonLook } from './settlementArt.js';
 import { dateOf } from '../sim/calendar.js';
 import { totalPopulation } from '../sim/state.js';
 import { houseCount } from './layout.js';
-import { toScreen, toWorld } from './camera.js';
+import { toScreen, toWorld, worldBounds } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
 import { plagueActive } from '../sim/military.js';
@@ -396,7 +396,11 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       bctx.clearRect(0, 0, base.width, base.height);
       bctx.setTransform(...worldTransform);
       const half = { x: (cam.viewW / 2 + margin) / cam.scale, y: (cam.viewH / 2 + margin) / cam.scale };
-      const view = { x0: cam.x - half.x, x1: cam.x + half.x, y0: cam.y - half.y, y1: cam.y + half.y };
+      // Beyond the edge of the world is open sea: one fill, no tiles.
+      const b = worldBounds(world);
+      const view = { x0: Math.max(b.x0, cam.x - half.x), x1: Math.min(b.x1, cam.x + half.x), y0: Math.max(b.y0, cam.y - half.y), y1: Math.min(b.y1, cam.y + half.y) };
+      bctx.fillStyle = COLOURS.sea;
+      bctx.fillRect(cam.x - half.x, cam.y - half.y, half.x * 2, half.y * 2);
       bctx.imageSmoothingEnabled = true;
       const complete = tiles.draw(bctx, view, cam.scale * dpr);
       drawOwnership(bctx);
@@ -503,6 +507,10 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const w = text.length * (size * 0.72 + gap);
       regionBoxes.push({ x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - size * 0.7, y1: p.y + size * 0.7 });
     };
+    // The heartland's own name is kept clear first: no neighbour writes over
+    // Temeria.
+    const home = toScreen(cam, 520, 470);
+    if (z < 2.2) box(home, world.kingdom.name, 18 + z * 4, 8);
     // The biggest lands are named first; a smaller one whose name would
     // run into theirs waits until the view is close enough.
     for (const n of [...prep.lands].sort((a, b) => b.size - a.size)) {
@@ -545,10 +553,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
     // The realm's own name, faint across the heartland when zoomed out.
     if (z < 2.2) {
-      const p = toScreen(cam, 520, 470);
       c.font = `600 ${Math.round(18 + z * 4)}px ${SERIF}`;
       c.fillStyle = 'rgba(110, 29, 22, 0.35)';
-      spaced(c, world.kingdom.name.toUpperCase(), p.x, p.y, 8);
+      spaced(c, world.kingdom.name.toUpperCase(), home.x, home.y, 8);
     }
   }
 
@@ -869,6 +876,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 
   return {
     resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
+    get tileStats() { return { size: tiles.size, drawn: tiles.stats.drawn, pending: baseDirty }; },
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     // The camera jumped (centred on a place): draw the cached layers round
     // where it landed, so the next pan has the whole margin to slide in.

@@ -163,6 +163,7 @@ test('no browser menus on the map or the interface; fields stay selectable', asy
 test('map gestures: momentum comes to rest, double-tap zooms in, two-finger tap zooms out', async () => {
   const { context, page, errors } = await open(null, '?seed=3&fresh&paused&nohints');
   const at = () => page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.waitForFunction(() => !window.northernWars.tileStats.pending);
   // A flick: the map glides on after the finger lifts, then stops.
   await page.mouse.move(200, 500);
   await page.mouse.down();
@@ -227,6 +228,8 @@ test('put away, the reign is saved and paused, and stays paused on return', asyn
 
 test('paused with nothing moving, the map is not redrawn', async () => {
   const { context, page, errors } = await open(null, '?seed=3&fresh&paused&nohints');
+  // The painted map's tiles fill in over the first moments; then it rests.
+  await page.waitForFunction(() => !window.northernWars.tileStats.pending);
   await page.waitForTimeout(500);
   const a = await page.evaluate(() => window.northernWars.renderStats.draws);
   await page.waitForTimeout(1000);

@@ -10,6 +10,9 @@ const LEVELS = [0.25, 0.5, 1, 2, 4, 8];
 export function createTiles({ paint, size = 256, cap = 140 }) {
   const cache = new Map();
   const stats = { drawn: 0 };
+  // A big screen may need more tiles at once than the usual cap: never keep
+  // fewer than twice what one view needs, or panning would redraw forever.
+  let limit = cap;
   const span = (l) => size / LEVELS[l];
   const key = (l, tx, ty) => `${l}:${tx}:${ty}`;
 
@@ -26,9 +29,9 @@ export function createTiles({ paint, size = 256, cap = 140 }) {
     cache.set(k, c);
     stats.drawn += 1;
     // Forget the least recently used, keeping the coarsest for stand-ins.
-    if (cache.size > cap) {
+    if (cache.size > limit) {
       for (const old of cache.keys()) {
-        if (cache.size <= cap) break;
+        if (cache.size <= limit) break;
         if (!old.startsWith('0:')) cache.delete(old);
       }
     }
@@ -52,17 +55,23 @@ export function createTiles({ paint, size = 256, cap = 140 }) {
     if (l < 0) l = LEVELS.length - 1;
     const start = performance.now();
     let complete = true;
+    let made = 0;
     const w = span(l);
     const tx0 = Math.floor(view.x0 / w);
     const ty0 = Math.floor(view.y0 / w);
     const tx1 = Math.floor(view.x1 / w);
     const ty1 = Math.floor(view.y1 / w);
+    limit = Math.max(cap, (tx1 - tx0 + 1) * (ty1 - ty0 + 1) * 2);
     // A hair of overlap hides the seams between tiles.
     const lap = w / size;
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
         let tile = get(l, tx, ty);
-        if (!tile && performance.now() - start < budgetMs) tile = make(l, tx, ty);
+        // At least one new tile a frame, however long copying the others took.
+        if (!tile && (!made || performance.now() - start < budgetMs)) {
+          tile = make(l, tx, ty);
+          made += 1;
+        }
         if (tile) {
           ctx.drawImage(tile, tx * w, ty * w, w + lap, w + lap);
           continue;

@@ -2,7 +2,7 @@
 // It opens framed on the home realm (the geography's width and height) and
 // can roam the whole world (its bounds).
 
-function worldBounds(world) {
+export function worldBounds(world) {
   const g = world.geography;
   const [x0, y0, x1, y1] = g.bounds ?? [0, 0, g.width, g.height];
   return { x0, y0, x1, y1, w: x1 - x0, h: y1 - y0 };
