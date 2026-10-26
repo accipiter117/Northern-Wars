@@ -133,6 +133,7 @@ export function canOrderCompany(state, world, c, order) {
     const a = order.army ? state.armies.find((x) => x.id === order.army) : null;
     if (!t && !a) return { ok: false, reason: 'Nothing to hunt.' };
     if (t && !t.sighted) return { ok: false, reason: 'Only a threat that has been seen can be hunted.' };
+    if (t?.abroad) return { ok: false, reason: 'It lies over the border: theirs to deal with.' };
     if (a && !hostile(state, TEMERIA, a.side)) return { ok: false, reason: 'We are not at war with them.' };
   } else if (k === 'respond') {
     if (!F(world).respond.radii.includes(order.radius)) return { ok: false, reason: 'Choose how far it rides.' };
@@ -196,6 +197,7 @@ export function huntOdds(state, world, companies, target) {
 
 // The free company best placed to deal with a threat: likely to win, and near.
 export function bestCompanyFor(state, world, target) {
+  if (target.abroad) return null;
   const p = targetPos(world, target);
   let best = null;
   for (const c of freeCompanies(state)) {
@@ -289,7 +291,7 @@ function think(state, world, c) {
     const home = world.byId[c.station];
     let best = null;
     for (const t of state.threats.list) {
-      if (!t.sighted) continue;
+      if (!t.sighted || t.abroad) continue;
       const d = near(threatPos(t), home);
       if (d > o.radius) continue;
       if (huntOdds(state, world, [c], t).chance < f.respond.minOdds) continue;

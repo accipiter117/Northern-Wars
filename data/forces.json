@@ -346,6 +346,14 @@
         2,
         4
       ]
+    },
+    "abroad": {
+      "note": "Bandit camps and monster lairs in the neighbouring realms' own wilds: chance scales Temeria's spawn chance; at most max at once; each month a realm's soldiers clear one with chance clear (more from a strong garrison); each camp costs its town toll prosperity a month; every garrisonPerPoint soldiers in the town lower the wildness by a point (up to 15).",
+      "max": 10,
+      "chance": 0.5,
+      "clear": 0.1,
+      "toll": 1.2,
+      "garrisonPerPoint": 40
     }
   },
   "species": {

@@ -45,9 +45,13 @@ export function wildSites(world, id) {
   const st = world.byId[id];
   const reach = world.military.wildReach + 30;
   const out = [];
+  // Temeria's towns breed threats in Temeria's wilds; a foreign town in its
+  // own realm's (or the unclaimed mountains').
+  const realm = world.realmOf[id];
+  const ours = (z) => (realm ? z.realm === realm || z.realm === 'wilds' : !z.realm);
   for (const [kind, zones] of Object.entries(world.geography.terrain)) {
     for (const z of zones) {
-      if (z.realm) continue;
+      if (!ours(z)) continue;
       if (distanceToPolygon(st.x, st.y, z.shape) > reach) continue;
       // The nearest point of the zone, then a step towards its middle.
       let best = null;
@@ -151,7 +155,7 @@ export function monthlyThreatsSpawn(state, world, rng) {
   for (const kind of ['bandits', 'monsters']) {
     const cfg = T(world)[kind];
     for (const [id, lv] of Object.entries(levels)) {
-      if (state.threats.list.filter((t) => t.kind === kind).length >= cfg.max) break;
+      if (state.threats.list.filter((t) => t.kind === kind && !t.abroad).length >= cfg.max) break;
       const level = lv[kind];
       if (level < cfg.spawnAt) continue;
       if (!rng.chance(cfg.spawnChance * (level - cfg.spawnAt + 10) / 50)) continue;
@@ -162,7 +166,7 @@ export function monthlyThreatsSpawn(state, world, rng) {
   // Camps grow while the country round them is poor and wild, and wither
   // where the crown keeps order.
   for (const t of [...state.threats.list]) {
-    if (!isCamp(t)) continue;
+    if (!isCamp(t) || t.abroad) continue;
     const lv = levels[t.near]?.[t.kind] ?? 0;
     t.level = lv;
     const cfg = T(world)[t.kind];
@@ -181,13 +185,77 @@ export function monthlyThreatsSpawn(state, world, rng) {
   }
   // Camps send out bands; lairs send out their beasts.
   for (const t of state.threats.list) {
-    if (!isCamp(t) || t.band) continue;
+    if (!isCamp(t) || t.band || t.abroad) continue;
     const cfg = T(world)[t.kind];
     const ready = t.kind === 'bandits' ? t.men >= cfg.bandAt : t.count >= 1;
     if (ready && rng.chance(cfg.bandChance * (0.5 + (t.level ?? 30) / 100))) sendBand(state, world, rng, t);
   }
   spawnScoiatael(state, world, rng);
   spawnRaiders(state, world, rng);
+  monthlyAbroad(state, world, rng);
+}
+
+// ---- Abroad ----
+
+// How wild and lawless the country round a foreign town is, by the same
+// measure as Temeria's: its wild country, and how poor the town is. A strong
+// garrison keeps the roads round it quieter.
+export function abroadLevel(state, world, id, kind) {
+  const t = world.military.threats[kind];
+  const s = state.realms?.[world.realmOf[id]]?.settlements[id];
+  if (!s) return 0;
+  let v = t.base;
+  for (const [terrain, add] of Object.entries(t.wild)) if (world.wildOf[id]?.[terrain]) v += add;
+  if (kind === 'bandits') v += Math.max(0, 50 - s.prosperity) * t.perPovertyPoint;
+  v -= Math.min(15, s.garrison / T(world).abroad.garrisonPerPoint);
+  return clamp(v, 0, 100);
+}
+
+// The neighbouring realms have wilds of their own: camps and lairs breed in
+// their forests, marshes and hills by the same rules as Temeria's, weigh on
+// the towns near them, and are burned out by that realm's soldiers in time.
+// The crown sees them where its eyes reach, but they are not its to hunt.
+function monthlyAbroad(state, world, rng) {
+  const cfg = T(world).abroad;
+  if (!cfg || !state.realms) return;
+  for (const t of [...state.threats.list]) {
+    if (!t.abroad) continue;
+    const realm = state.realms[t.abroad];
+    const s = realm?.settlements[t.near];
+    if (!s || ownerOf(state, world, t.near) !== t.abroad) {
+      state.threats.list = state.threats.list.filter((x) => x !== t);
+      continue;
+    }
+    const lv = abroadLevel(state, world, t.near, t.kind);
+    t.level = lv;
+    const c = T(world)[t.kind];
+    if (t.kind === 'bandits') {
+      if (lv < c.fadeBelow) t.men -= t.men * c.fade;
+      else t.men = Math.min(c.capBase + c.capPerLevel * lv, t.men + t.men * c.growth * (lv / 50));
+    } else if (lv >= c.fadeBelow && (state.day - t.born) % (c.growthMonths * 30) < 30) {
+      t.count = Math.min(round(speciesOf(world, t).count[1] * 1.5), t.count + 1);
+    }
+    // Their soldiers ride out in time, sooner from a strong garrison.
+    if ((t.kind === 'bandits' && t.men < 8) || (t.kind === 'monsters' && t.count <= 0) || rng.chance(cfg.clear * (0.5 + s.garrison / 400))) {
+      state.threats.list = state.threats.list.filter((x) => x !== t);
+      if (t.sighted) say(state, `${threatName(world, t)} near ${world.byId[t.near].name} ${t.kind === 'bandits' ? 'have been burned out' : 'have been hunted down'} by the soldiers of ${sideName(world, t.abroad)}.`);
+      continue;
+    }
+    s.prosperity = clamp(s.prosperity - cfg.toll * (t.kind === 'bandits' ? 1 : 0.6), 0, 100);
+  }
+  for (const kind of ['bandits', 'monsters']) {
+    const c = T(world)[kind];
+    for (const id of world.foreign.map((st) => st.id)) {
+      if (state.threats.list.filter((t) => t.abroad).length >= cfg.max) return;
+      const rid = world.realmOf[id];
+      if (!state.realms[rid]?.settlements[id] || ownerOf(state, world, id) !== rid) continue;
+      const level = abroadLevel(state, world, id, kind);
+      if (level < c.spawnAt) continue;
+      if (!rng.chance(c.spawnChance * cfg.chance * (level - c.spawnAt + 10) / 50)) continue;
+      const t = spawnCamp(state, world, rng, id, kind, level);
+      if (t) t.abroad = rid;
+    }
+  }
 }
 
 // A raiding band leaves camp for a road near it, lurks there robbing what
@@ -497,6 +565,7 @@ export function updateSight(state, world) {
     if (seen) {
       t.rumour = null;
       t.lastSeen = state.day;
+      if (!t.alerted && t.abroad) t.alerted = true;
       if (!t.alerted) {
         t.alerted = true;
         const place = nearestPlace(world, p);

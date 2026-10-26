@@ -1,38 +1,239 @@
 {
   "note": "The neighbouring realms as living places, run by lighter rules than Temeria. Settlements start from their type, with overrides for the great cities. Each realm builds from its own preference list. Vision radii are in map units.",
   "startByType": {
-    "city": { "population": 9000, "garrison": 500, "prosperity": 55 },
-    "town": { "population": 2200, "garrison": 120, "prosperity": 48 },
-    "village": { "population": 350, "garrison": 10, "prosperity": 38 },
-    "castle": { "population": 220, "garrison": 180, "prosperity": 40 },
-    "temple": { "population": 150, "garrison": 0, "prosperity": 45 }
+    "city": {
+      "population": 9000,
+      "garrison": 500,
+      "prosperity": 55
+    },
+    "town": {
+      "population": 2200,
+      "garrison": 120,
+      "prosperity": 48
+    },
+    "village": {
+      "population": 350,
+      "garrison": 10,
+      "prosperity": 38
+    },
+    "castle": {
+      "population": 220,
+      "garrison": 180,
+      "prosperity": 40
+    },
+    "temple": {
+      "population": 150,
+      "garrison": 0,
+      "prosperity": 45
+    }
   },
   "overrides": {
-    "novigrad": { "population": 30000, "garrison": 1200, "prosperity": 75 },
-    "tretogor": { "population": 15000, "garrison": 900, "prosperity": 60 },
-    "oxenfurt": { "population": 5000, "garrison": 150, "prosperity": 62 },
-    "ard_carraigh": { "population": 12000, "garrison": 900, "prosperity": 52 },
-    "kaer_morhen": { "population": 40, "garrison": 0, "prosperity": 20 },
-    "vengerberg": { "population": 11000, "garrison": 600, "prosperity": 58 },
-    "carbon": { "population": 9000, "garrison": 400, "prosperity": 65 },
-    "cintra_city": { "population": 14000, "garrison": 800, "prosperity": 62 },
-    "kerack_city": { "population": 6000, "garrison": 250, "prosperity": 60 },
-    "cidaris_city": { "population": 5000, "garrison": 250, "prosperity": 55 },
-    "brugge_city": { "population": 6000, "garrison": 300, "prosperity": 50 },
-    "duen_canell": { "population": 300, "garrison": 0, "prosperity": 50 }
+    "novigrad": {
+      "population": 30000,
+      "garrison": 1200,
+      "prosperity": 75
+    },
+    "tretogor": {
+      "population": 15000,
+      "garrison": 900,
+      "prosperity": 60
+    },
+    "oxenfurt": {
+      "population": 5000,
+      "garrison": 150,
+      "prosperity": 62
+    },
+    "ard_carraigh": {
+      "population": 12000,
+      "garrison": 900,
+      "prosperity": 52
+    },
+    "kaer_morhen": {
+      "population": 40,
+      "garrison": 0,
+      "prosperity": 20
+    },
+    "vengerberg": {
+      "population": 11000,
+      "garrison": 600,
+      "prosperity": 58
+    },
+    "carbon": {
+      "population": 9000,
+      "garrison": 400,
+      "prosperity": 65
+    },
+    "cintra_city": {
+      "population": 14000,
+      "garrison": 800,
+      "prosperity": 62
+    },
+    "kerack_city": {
+      "population": 6000,
+      "garrison": 250,
+      "prosperity": 60
+    },
+    "cidaris_city": {
+      "population": 5000,
+      "garrison": 250,
+      "prosperity": 55
+    },
+    "brugge_city": {
+      "population": 6000,
+      "garrison": 300,
+      "prosperity": 50
+    },
+    "duen_canell": {
+      "population": 300,
+      "garrison": 0,
+      "prosperity": 50
+    }
   },
   "realms": {
-    "redania":  { "capital": "tretogor", "colours": ["#8b1e1e", "#efe6cf"], "builds": ["market", "walls", "workshop", "granary", "mill", "fields"] },
-    "kaedwen":  { "capital": "ard_carraigh", "colours": ["#6b4a8a", "#e2c46a"], "builds": ["walls", "granary", "fields", "mill", "market"] },
-    "aedirn":   { "capital": "vengerberg", "colours": ["#a07a2a", "#2b2116"], "builds": ["market", "fields", "mill", "workshop", "walls"] },
-    "mahakam":  { "capital": "carbon", "colours": ["#5a4a3a", "#d9b45a"], "builds": ["workshop", "market", "walls", "granary"] },
-    "brokilon": { "capital": "duen_canell", "colours": ["#2e5a3a", "#c9e2a8"], "builds": [] },
-    "cidaris":  { "capital": "cidaris_city", "colours": ["#2a6a7a", "#efe6cf"], "builds": ["market", "granary", "fields", "walls"] },
-    "kerack":   { "capital": "kerack_city", "colours": ["#6a2a5a", "#e2c46a"], "builds": ["market", "workshop", "granary", "walls"] },
-    "verden":   { "capital": "verden_town", "colours": ["#4a6a2a", "#efe6cf"], "builds": ["fields", "granary", "walls", "mill"] },
-    "brugge":   { "capital": "brugge_city", "colours": ["#7a5a2a", "#efe6cf"], "builds": ["fields", "mill", "market", "granary"] },
-    "sodden":   { "capital": "sodden_keep", "colours": ["#3a3a6a", "#d9c27a"], "builds": ["walls", "fields", "granary", "mill"] },
-    "cintra":   { "capital": "cintra_city", "colours": ["#9a7a1a", "#2e3a6a"], "builds": ["walls", "market", "fields", "mill", "workshop", "granary"] }
+    "redania": {
+      "capital": "tretogor",
+      "colours": [
+        "#8b1e1e",
+        "#efe6cf"
+      ],
+      "builds": [
+        "market",
+        "walls",
+        "workshop",
+        "granary",
+        "mill",
+        "fields"
+      ]
+    },
+    "kaedwen": {
+      "capital": "ard_carraigh",
+      "colours": [
+        "#6b4a8a",
+        "#e2c46a"
+      ],
+      "builds": [
+        "walls",
+        "granary",
+        "fields",
+        "mill",
+        "market"
+      ]
+    },
+    "aedirn": {
+      "capital": "vengerberg",
+      "colours": [
+        "#a07a2a",
+        "#2b2116"
+      ],
+      "builds": [
+        "market",
+        "fields",
+        "mill",
+        "workshop",
+        "walls"
+      ]
+    },
+    "mahakam": {
+      "capital": "carbon",
+      "colours": [
+        "#5a4a3a",
+        "#d9b45a"
+      ],
+      "builds": [
+        "workshop",
+        "market",
+        "walls",
+        "granary"
+      ]
+    },
+    "brokilon": {
+      "capital": "duen_canell",
+      "colours": [
+        "#2e5a3a",
+        "#c9e2a8"
+      ],
+      "builds": []
+    },
+    "cidaris": {
+      "capital": "cidaris_city",
+      "colours": [
+        "#2a6a7a",
+        "#efe6cf"
+      ],
+      "builds": [
+        "market",
+        "granary",
+        "fields",
+        "walls"
+      ]
+    },
+    "kerack": {
+      "capital": "kerack_city",
+      "colours": [
+        "#6a2a5a",
+        "#e2c46a"
+      ],
+      "builds": [
+        "market",
+        "workshop",
+        "granary",
+        "walls"
+      ]
+    },
+    "verden": {
+      "capital": "verden_town",
+      "colours": [
+        "#4a6a2a",
+        "#efe6cf"
+      ],
+      "builds": [
+        "fields",
+        "granary",
+        "walls",
+        "mill"
+      ]
+    },
+    "brugge": {
+      "capital": "brugge_city",
+      "colours": [
+        "#7a5a2a",
+        "#efe6cf"
+      ],
+      "builds": [
+        "fields",
+        "mill",
+        "market",
+        "granary"
+      ]
+    },
+    "sodden": {
+      "capital": "sodden_keep",
+      "colours": [
+        "#3a3a6a",
+        "#d9c27a"
+      ],
+      "builds": [
+        "walls",
+        "fields",
+        "granary",
+        "mill"
+      ]
+    },
+    "cintra": {
+      "capital": "cintra_city",
+      "colours": [
+        "#9a7a1a",
+        "#2e3a6a"
+      ],
+      "builds": [
+        "walls",
+        "market",
+        "fields",
+        "mill",
+        "workshop",
+        "granary"
+      ]
+    }
   },
   "economy": {
     "taxPerPersonMonth": 0.012,
@@ -43,26 +244,94 @@
     "garrisonDrift": 0.1,
     "wallsGarrison": 0.3,
     "buildMargin": 1.3,
-    "debtFloor": -3000
+    "debtFloor": -3000,
+    "terrainIncome": {
+      "forest": 0.1,
+      "hills": 0.15,
+      "mountains": 0.2,
+      "marsh": 0.02
+    },
+    "terrainNote": "Foreign towns sell what their country gives (timber from forests, stone and iron from hills and mountains) on top of their taxes: a share of the tax, by the ground they work."
   },
   "incidents": {
     "chance": 0.1,
     "kinds": {
-      "fire":     { "weight": 2, "types": ["city", "town"], "prosperity": -6, "people": 0, "text": "Fire in {place}, {realm}: a quarter burned before the wind turned." },
-      "raid":     { "weight": 3, "types": ["village", "town"], "prosperity": -5, "people": 0.02, "text": "Bandits raided {place} in {realm}." },
-      "sickness": { "weight": 1, "types": ["city", "town"], "prosperity": -3, "people": 0.04, "text": "Sickness in {place}, {realm}. The dead are carted out at dawn." },
-      "fair":     { "weight": 3, "types": ["city", "town"], "prosperity": 4, "people": 0, "text": "A great fair at {place} in {realm} draws merchants from across the North." },
-      "harvest":  { "weight": 2, "types": ["village"], "prosperity": 4, "people": 0, "text": "A rich harvest around {place} in {realm}." }
+      "fire": {
+        "weight": 2,
+        "types": [
+          "city",
+          "town"
+        ],
+        "prosperity": -6,
+        "people": 0,
+        "text": "Fire in {place}, {realm}: a quarter burned before the wind turned."
+      },
+      "raid": {
+        "weight": 3,
+        "types": [
+          "village",
+          "town"
+        ],
+        "prosperity": -5,
+        "people": 0.02,
+        "text": "Bandits raided {place} in {realm}."
+      },
+      "sickness": {
+        "weight": 1,
+        "types": [
+          "city",
+          "town"
+        ],
+        "prosperity": -3,
+        "people": 0.04,
+        "text": "Sickness in {place}, {realm}. The dead are carted out at dawn."
+      },
+      "fair": {
+        "weight": 3,
+        "types": [
+          "city",
+          "town"
+        ],
+        "prosperity": 4,
+        "people": 0,
+        "text": "A great fair at {place} in {realm} draws merchants from across the North."
+      },
+      "harvest": {
+        "weight": 2,
+        "types": [
+          "village"
+        ],
+        "prosperity": 4,
+        "people": 0,
+        "text": "A rich harvest around {place} in {realm}."
+      }
     }
   },
   "intelligence": {
-    "embassy": { "coin": 250, "monthly": 20, "minRelation": -30 },
-    "spy": { "coin": 200, "days": 120, "discovery": 0.25, "relation": -15 },
-    "noEmbassy": ["brokilon"]
+    "embassy": {
+      "coin": 250,
+      "monthly": 20,
+      "minRelation": -30
+    },
+    "spy": {
+      "coin": 200,
+      "days": 120,
+      "discovery": 0.25,
+      "relation": -15
+    },
+    "noEmbassy": [
+      "brokilon"
+    ]
   },
   "vision": {
     "cell": 20,
-    "home": { "village": 40, "town": 55, "city": 70, "castle": 85, "temple": 40 },
+    "home": {
+      "village": 40,
+      "town": 55,
+      "city": 70,
+      "castle": 85,
+      "temple": 40
+    },
     "watchtower": 130,
     "patrol": 40,
     "export": 45,
@@ -71,5 +340,15 @@
     "allyAt": 75,
     "embassy": 170,
     "army": 90
+  },
+  "gold": {
+    "note": "Hidden seams in the neighbours' hills and mountains. Each month a hill or mountain town of a realm may strike its seam; a working seam pays the realm monthly until it runs out (months).",
+    "chance": 0.004,
+    "monthly": 80,
+    "months": 120,
+    "ground": [
+      "hills",
+      "mountains"
+    ]
   }
 }

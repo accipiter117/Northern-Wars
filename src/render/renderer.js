@@ -415,6 +415,14 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     drawSettlementLabels(cctx, selectedId);
   }
 
+  // What a foreign place works, from the country round it: villages by the
+  // woods cut timber, in the hills quarry stone, in the mountains mine iron.
+  const WORK = { forest: 'timber', hills: 'stone', mountains: 'iron' };
+  function foreignWork(st) {
+    if (st.type !== 'village') return 'other';
+    return WORK[world.terrainOf[st.id]] ?? 'food';
+  }
+
   function drawForeign(c, z) {
     for (const st of foreignOrdered.slice().reverse()) {
       const f = foreignView[st.id];
@@ -428,7 +436,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       let reach = iconSize(st.type) / 2;
       if (full || z >= LABEL_ZOOM[st.type] || st.type === 'city') {
         reach = Math.max(reach, art.draw(c, st, {
-          people: f.population, production: st.type === 'village' ? 'food' : 'other', buildings: f.buildings, construction: f.construction,
+          people: f.population, production: foreignWork(st), buildings: f.buildings, construction: f.construction,
         }, infraState.seed, artView(p, st, colours[0])));
       }
       if (!full) getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });

@@ -6,8 +6,9 @@ import { buildGrid } from './vision.js';
 
 // How far a settlement's fields and woodlots reach, in map units.
 const WORKED_RADIUS = 40;
+const TEMERIA_ID = 'temeria';
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds = null }) {
   // byId knows every place on the map, at home and abroad; adjacency is
   // Temeria's own road network, which every domestic system walks.
   // fullAdjacency adds the foreign roads, for traffic that crosses borders.
@@ -121,7 +122,29 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     waterOf[s.id] = best;
   }
 
+  // Foreign towns work the ground round them as Temeria's do: the nearest
+  // wild country in reach (their own realm's zones) decides what they make.
+  for (const s of foreign) {
+    let best = { kind: 'open', d: WORKED_RADIUS };
+    for (const [kind, zones] of Object.entries(geography.terrain)) {
+      for (const z of zones) {
+        if (!z.realm || z.realm === TEMERIA_ID) continue;
+        const d = distanceToPolygon(s.x, s.y, z.shape);
+        if (d < best.d) best = { kind, d };
+      }
+    }
+    terrainOf[s.id] = best.kind;
+    // And the wild country in reach of them, where their bandits and beasts breed.
+    wildOf[s.id] = {};
+    for (const [kind, zones] of Object.entries(geography.terrain)) {
+      if (zones.some((z) => (z.realm === s.realm || z.realm === 'wilds') && distanceToPolygon(s.x, s.y, z.shape) < reach)) wildOf[s.id][kind] = true;
+    }
+  }
+
   const world = {
+    northIds,
+    lands: geography.lands ?? {},
+    distantTowns: geography.distantTowns ?? [],
     waterOf,
     kingdom,
     foreign,

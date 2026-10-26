@@ -95,7 +95,7 @@ test('crown routes carry finished goods at a premium, dearest abroad', () => {
 
 test('toll bridges earn from real crossings', () => {
   const crossings = bridgeCrossings(world);
-  assert.ok(crossings.la_valette.has('la_valette|oxenfurt'), 'Devil\'s Ford carries the Oxenfurt road');
+  assert.ok(crossings.la_valette.has('la_valette|rinde'), 'Devil\'s Ford carries the road to Rinde in Redania');
   assert.ok(crossings.white_bridge.size > 0);
   // A bridge earns from Redania's trade and local carts; a crown route over
   // the river adds its own caravans.
@@ -104,7 +104,7 @@ test('toll bridges earn from real crossings', () => {
   const busy = month((x) => {
     x.settlements.la_valette.buildings.push('tollbridge');
     x.neighbours.redania.relation = 45;
-    x.routes = [{ id: 1, from: 'vizima', to: 'oxenfurt', since: x.day, last: 0, raided: false, closed: null }];
+    x.routes = [{ id: 1, from: 'vizima', to: 'rinde', since: x.day, last: 0, raided: false, closed: null }];
   });
   const t = tollsAt(busy, world, 'la_valette');
   assert.equal(t.routes, 1);
