@@ -179,10 +179,14 @@ test('map gestures: momentum comes to rest, double-tap zooms in, two-finger tap 
   assert.ok(Math.abs(a.x - b.x) < 0.5, 'and comes to rest');
 
   // Double tap on open land zooms in.
+  // A hard flick can carry the view off over a neighbour, where every spot
+  // picks that realm: back home first, then find a spot with nothing to pick.
+  await page.evaluate(() => { const v = window.northernWars.world.byId.vizima; window.northernWars.lookAt(v.x, v.y); });
   const empty = await page.evaluate(() => {
-    for (let y = 250; y < 600; y += 13) for (let x = 40; x < 350; x += 17) if (!window.northernWars.pickAt(x, y)) return { x, y };
+    for (let y = 160; y < innerHeight - 160; y += 7) for (let x = 30; x < innerWidth - 30; x += 7) if (!window.northernWars.pickAt(x, y)) return { x, y };
     return null;
   });
+  assert.ok(empty, 'open land to double tap ' + JSON.stringify(await page.evaluate(() => [window.northernWars.pickAt(200, 400), window.northernWars.pickAt(60, 700), window.northernWars.ui])));
   const scale = () => page.evaluate(() => { const nw = window.northernWars; const p = nw.screenOfPoint(0, 0); const q = nw.screenOfPoint(100, 0); return (q.x - p.x) / 100; });
   const s0 = await scale();
   await page.touchscreen.tap(empty.x, empty.y);
