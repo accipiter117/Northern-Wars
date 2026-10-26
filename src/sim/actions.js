@@ -2,6 +2,9 @@
 // of the state, so the UI can ask "could I?" before it asks "do it".
 import { realmStock, creditLimit } from './economy.js';
 import { syncWorld } from './lands.js';
+import { canBattleOrder, battleOrder } from './battle.js';
+import { canSiegeOrder, siegeOrder } from './siege.js';
+import { refuge } from './armies.js';
 import {
   resolveConquestDecision, canRequisition, requisition, canResettle, resettle, canPension, payPension, canSpyOnClaimant, spyOnClaimant,
   canRepair, repair,
@@ -192,7 +195,7 @@ export function applyAction(state, world, action) {
     return { state: next };
   }
   if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
-  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision'].includes(action.type)) return warAction(state, world, action);
+  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege'].includes(action.type)) return warAction(state, world, action);
   if (['conquestDecision', 'requisition', 'resettle', 'pension', 'claimantSpy', 'repair'].includes(action.type)) return conquestAction(state, world, action);
   if (action.type === 'route') {
     if (action.close) {
@@ -253,6 +256,25 @@ function warAction(state, world, action) {
     withdraw(next, world, action.war);
   } else if (action.type === 'warDecision') {
     if (!resolveWarDecision(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
+  } else if (action.type === 'battle') {
+    // Commit the reserve, or sound the retreat (M19).
+    const check = canBattleOrder(state, world, action.battle, action.order);
+    if (!check.ok) return { state, error: check.reason };
+    battleOrder(next, world, action.battle, action.order);
+  } else if (action.type === 'siege') {
+    // Storm the walls, starve them out, or lift the siege (M19).
+    if (action.order === 'lift') {
+      if (!army?.siege) return { state, error: 'Not besieging anything.' };
+      army.siege = null;
+      army.lastSiege = null;
+      orderArmy(next, world, army, 'defend', refuge(next, world, army));
+    } else {
+      const check = canSiegeOrder(next, world, army, action.order);
+      if (!check.ok) return { state, error: check.reason };
+      const rng = makeRng(next.rng.game);
+      siegeOrder(next, world, rng, army, action.order);
+      next.rng.game = rng.seed;
+    }
   }
   return { state: next };
 }

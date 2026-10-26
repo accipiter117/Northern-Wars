@@ -106,7 +106,16 @@
   "attrition": {
     "home": 0.0003,
     "enemy": 0.0015,
-    "winter": 0.001
+    "winter": 0.001,
+    "supplyRange": 140,
+    "supply": 0.0012,
+    "disease": 0.0006,
+    "diseaseAbove": 3000,
+    "diseaseSeasons": [
+      "summer",
+      "autumn"
+    ],
+    "desertion": 0.003
   },
   "forage": {
     "food": 0.02,
@@ -249,5 +258,244 @@
   },
   "atWarRelation": -80,
   "claimRelation": -10,
-  "callRelation": -25
+  "callRelation": -25,
+  "battles": {
+    "note": "Battles fought over days (M19): a skirmish, the melee, then rout and pursuit. One round a day. Each battle draws its fortune once, so over many battles the stronger side wins as often as strength cubed against strength cubed says, as before.",
+    "skirmishRounds": 2,
+    "maxRounds": 14,
+    "pursuitRounds": 2,
+    "reserve": 0.2,
+    "morale": {
+      "skirmish": 6,
+      "melee": 15,
+      "noise": 0.12
+    },
+    "casualties": {
+      "skirmish": 0.012,
+      "melee": 0.035,
+      "noise": 0.25
+    },
+    "breakMen": 0.5,
+    "pursuit": {
+      "base": 0.05,
+      "cavalry": 0.3,
+      "winner": 0.01
+    },
+    "retreat": {
+      "skirmish": 0.02,
+      "melee": 0.07,
+      "rout": 0.12,
+      "cavalry": 1.5,
+      "morale": 15
+    },
+    "commitAt": 60,
+    "aiRetreatAt": 25,
+    "weights": {
+      "skirmish": {
+        "missile": 1.8,
+        "heavy": 0.7,
+        "levy": 0.6,
+        "cav": 0.6
+      },
+      "melee": {
+        "missile": 0.7,
+        "heavy": 1.3,
+        "levy": 0.8,
+        "cav": 1.15
+      }
+    },
+    "standard": {
+      "missile": 0.2,
+      "heavy": 0.25,
+      "levy": 0.45,
+      "cav": 0.1
+    },
+    "realmMix": {
+      "redania": {
+        "missile": 0.2,
+        "heavy": 0.3,
+        "levy": 0.35,
+        "cav": 0.15
+      },
+      "kaedwen": {
+        "missile": 0.15,
+        "heavy": 0.3,
+        "levy": 0.4,
+        "cav": 0.15
+      },
+      "aedirn": {
+        "missile": 0.2,
+        "heavy": 0.25,
+        "levy": 0.45,
+        "cav": 0.1
+      },
+      "mahakam": {
+        "missile": 0.25,
+        "heavy": 0.55,
+        "levy": 0.2,
+        "cav": 0
+      },
+      "cintra": {
+        "missile": 0.15,
+        "heavy": 0.25,
+        "levy": 0.4,
+        "cav": 0.2
+      },
+      "kerack": {
+        "missile": 0.25,
+        "heavy": 0.2,
+        "levy": 0.5,
+        "cav": 0.05
+      },
+      "cidaris": {
+        "missile": 0.25,
+        "heavy": 0.2,
+        "levy": 0.5,
+        "cav": 0.05
+      },
+      "verden": {
+        "missile": 0.2,
+        "heavy": 0.2,
+        "levy": 0.5,
+        "cav": 0.1
+      },
+      "brugge": {
+        "missile": 0.2,
+        "heavy": 0.2,
+        "levy": 0.5,
+        "cav": 0.1
+      },
+      "sodden": {
+        "missile": 0.2,
+        "heavy": 0.25,
+        "levy": 0.45,
+        "cav": 0.1
+      }
+    },
+    "companyKind": {
+      "militia": "levy",
+      "archers": "missile",
+      "crossbows": "missile",
+      "menatarms": "heavy",
+      "lightcav": "cav",
+      "knights": "cav"
+    },
+    "ground": {
+      "forest": {
+        "missile": 0.7,
+        "cav": 0.6,
+        "defender": 1.1
+      },
+      "hills": {
+        "defender": 1.15
+      },
+      "mountains": {
+        "cav": 0.6,
+        "defender": 1.2
+      },
+      "marsh": {
+        "cav": 0.5,
+        "heavy": 0.85
+      }
+    },
+    "weather": {
+      "spring": {
+        "rain": 0.25
+      },
+      "summer": {
+        "rain": 0.1
+      },
+      "autumn": {
+        "rain": 0.35
+      },
+      "winter": {
+        "snow": 0.4
+      }
+    },
+    "rain": {
+      "missile": 0.55
+    },
+    "snow": {
+      "all": 0.9
+    },
+    "events": {
+      "volley": {
+        "chance": 0.6,
+        "morale": 8,
+        "missileAt": 0.18,
+        "cavAt": 0.08
+      },
+      "charge": {
+        "chance": 0.6,
+        "morale": 9,
+        "cavAt": 0.1
+      },
+      "flank": {
+        "chance": 0.15,
+        "morale": 10,
+        "skillAt": 1.1
+      },
+      "levies": {
+        "chance": 0.5,
+        "morale": 10,
+        "levyAt": 0.35,
+        "below": 55
+      },
+      "commander": {
+        "chance": 0.03,
+        "wounded": 6,
+        "killed": 15,
+        "captured": 0.25
+      },
+      "reinforce": {
+        "range": 70
+      }
+    },
+    "ransom": {
+      "perSkill": 900,
+      "foreign": 600
+    }
+  },
+  "sieges": {
+    "note": "Sieges you can watch (M19): walls worn down by siege works, food counted in days, sickness and desertion in the camp, sallies, relief, surrender on terms, and storming at shown odds.",
+    "walls": {
+      "village": 0,
+      "temple": 0,
+      "town": 35,
+      "castle": 80,
+      "city": 80,
+      "built": 40
+    },
+    "wear": 1.4,
+    "wearMen": 1000,
+    "food": {
+      "village": 25,
+      "temple": 30,
+      "town": 60,
+      "castle": 100,
+      "city": 90
+    },
+    "starving": 0.02,
+    "sickness": 0.0012,
+    "sicknessRise": 90,
+    "desertion": 0.002,
+    "sally": {
+      "chance": 0.03,
+      "share": 0.3,
+      "attackers": 0.025,
+      "defenders": 0.04
+    },
+    "relief": 250,
+    "storm": {
+      "walls": 1.2,
+      "loss": [
+        0.3,
+        0.6
+      ],
+      "fail": 1.5,
+      "boldAt": 0.75,
+      "cautiousAt": 0.9
+    },
+    "termsDays": 10
+  }
 }

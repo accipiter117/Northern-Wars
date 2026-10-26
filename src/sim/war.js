@@ -11,6 +11,7 @@ import { treatyBetween, treatiesOf, partnerOf, endTreaty, hasTrait, changeTrust 
 import { treatyCalls, crownBound } from './audiences.js';
 import { settleOwnership } from './lands.js';
 import { leagueAllies, setWarHook, integrationFactor } from './conquest.js';
+import { answerTerms } from './siege.js';
 import {
   TEMERIA, ownerOf, originOf, placeOf, placesHeldBy, valueOf, hostile, warBetween, sideIndex, sideName, warsOf, atWar,
   heldValue, warScore, exhaustion, setOwner, truceUntil, setTruce,
@@ -606,6 +607,14 @@ export function warDecisionText(state, world, d) {
       choices: ['To arms', `Buy them off (${d.price} crowns)`],
     };
   }
+  if (d.kind === 'terms') {
+    const a = state.armies.find((x) => x.id === d.army);
+    return {
+      kicker: 'A siege', title: `${world.byId[d.town].name} offers terms`,
+      text: `Starving, the garrison of ${world.byId[d.town].name} offers to march out with the honours of war and leave the town intact.${a?.siege ? ` Our camp has lost ${Math.round(a.siege.sick)} men to sickness in ${a.siege.days} days.` : ''} Refuse, and we starve them to the last or storm what is left.`,
+      choices: ['Accept their terms', 'Refuse'],
+    };
+  }
   if (d.kind === 'call') {
     return {
       kicker: `An envoy from ${realm}`, title: 'A friend calls us to arms',
@@ -636,6 +645,10 @@ export function resolveWarDecision(state, world, id, choice, ignored = false) {
   const war = state.wars.find((w) => w.id === d.war);
   const realm = sideName(world, d.realm);
   if (!war) return true;
+  if (d.kind === 'terms') {
+    answerTerms(state, world, null, d, choice === 0);
+    return true;
+  }
   if (d.kind === 'declared') {
     if (choice === 1 && state.treasury - d.price >= -creditLimit(state, world)) {
       applyPeace(state, world, war, { towns: 'white', lump: { from: TEMERIA, to: d.realm, coin: d.price } });
