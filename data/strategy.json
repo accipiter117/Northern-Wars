@@ -191,7 +191,8 @@
     "companies": 1.0,
     "armies": 1.0,
     "allies": 0.5,
-    "whole": 0.35
+    "whole": 0.35,
+    "muster": 0.6
   },
   "probes": {
     "chance": 0.1,

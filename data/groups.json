@@ -58,6 +58,7 @@
     "nobleAuthority": 0.03,
     "burgherTrade": 0.004,
     "authorityRegen": 1,
-    "authorityRegenBelow": 75
+    "authorityRegenBelow": 75,
+    "authorityFade": 0.03
   }
 }

@@ -162,8 +162,8 @@ test('integration rises under a garrison and good laws, and falls under harsh on
 });
 
 test('a conquered town rises: the revolt spreads, and can be crushed or treated with', () => {
-  const { s, war } = conquer(16, 'cidaris', ['cidaris_city', 'gors_velen']);
-  // Gors Velen is Temerian; use Cidaris's own towns for the spread.
+  const { s, war } = conquer(16, 'cidaris', ['cidaris_city']);
+  // Two more of Cidaris's towns, for the rising to spread between.
   const towns = Object.keys(s.realms.cidaris.settlements).filter((id) => id !== 'cidaris_city').slice(0, 2);
   for (const id of towns) {
     setOwner(s, world, id, 'temeria');

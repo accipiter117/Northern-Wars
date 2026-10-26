@@ -334,7 +334,7 @@
     "expelZealous": 0.3
   },
   "peace": {
-    "keepShare": 0.15,
-    "keepMin": 15
+    "keepShare": 0.1,
+    "keepMin": 12
   }
 }

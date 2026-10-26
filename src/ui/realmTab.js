@@ -255,7 +255,7 @@ function granaryCard(app) {
 function authorityCard(app) {
   const { state, world } = app;
   const p = authorityParts(state, world);
-  const total = p.regen + p.nobles + p.laws + p.buildings + p.debt;
+  const total = p.regen + p.nobles + p.laws + p.buildings + p.debt + p.fade;
   const row = (label, v, note = '') => (Math.abs(v) < 0.05 ? '' : `<div><dt>${label}${note ? ` <small>${note}</small>` : ''}</dt><dd class="${v < 0 ? 'down' : 'up'}">${v < 0 ? '−' : '+'}${Math.abs(v).toFixed(1)}</dd></div>`);
   return `${cardHead({
     status: '<span>Authority is the crown\'s grip on the realm: decrees, the lords and war all spend it. It moves on the first of each month.</span>',
@@ -271,6 +271,7 @@ function authorityCard(app) {
       ${row('Laws in force', p.laws)}
       ${row('Buildings', p.buildings)}
       ${row('Debt to the bankers', p.debt)}
+      ${row('Prestige fades unless renewed', p.fade, '(above a point)')}
       <div class="total"><dt>In all</dt><dd>${total < 0 ? '−' : '+'}${Math.abs(total).toFixed(1)}</dd></div></dl>
       <p class="sub">Decrees, summons and fines spend it when ordered, and do not show here.</p></div>`;
 }

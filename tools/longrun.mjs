@@ -24,6 +24,8 @@ function report(s, label, totals) {
   const last = s.ledger.history.at(-1);
   console.log(`${label.padEnd(10)} pop ${String(pop).padStart(6)} treasury ${String(Math.round(s.treasury)).padStart(7)} net ${String(last ? ledgerNet(last).net : 0).padStart(5)}`
     + ` auth ${s.authority.toFixed(0).padStart(3)} stab ${s.stability.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
+    + ` annexed ${Object.values(s.lands ?? {}).filter((l) => l.realm === 'temeria').length} ceded ${Object.keys(s.lands ?? {}).filter((id) => !world.homeOf?.[id] && s.lands[id].realm !== 'temeria').length}`
+    + ` sacks ${s.chronicle.filter((c) => /is sacked by Temeria/.test(c.text)).length} expulsions ${s.chronicle.filter((c) => /are driven out of/.test(c.text)).length} risings ${s.chronicle.filter((c) => /rises!/.test(c.text)).length}`
     + ` routes ${s.routes.length} gold ${Math.round(last?.income.gold ?? 0)} wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`
     + ` faith F/M/O ${f.eternal_fire.toFixed(0)}/${f.melitele.toFixed(0)}/${f.old_ways.toFixed(0)} built ${totals.built} riots ${totals.riots} raids ${totals.raids} dead ${s.threats.tally.dead} roaddays ${s.threats.tally.roadDays} cleared ${s.threats.tally.cleared} fights ${totals.fights} companies ${s.forces.companies.length} threats ${s.threats.list.length} rebellions ${totals.rebels} deposed ${s.depositions.length}`);
 }

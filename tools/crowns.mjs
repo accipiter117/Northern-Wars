@@ -117,12 +117,12 @@ export function makeCrowns(world) {
   // neighbour it has a reason against, a town of theirs near the border,
   // and a peace that keeps it. Then it wins the town over: settlers when it
   // can afford them, and building there like anywhere else.
-  function campaign(s, month) {
+  function campaign(s, month, purse = 12000) {
     const wars = warsOf(s, 'temeria');
     // One campaign every eight years at most, from the eighth year on, and
     // never while a neighbour masses on the border.
     const quiet = !(s.musters ?? []).some((m) => (m.against ?? 'temeria') === 'temeria');
-    if (month >= 96 && month % 96 === 0 && !wars.length && quiet && s.treasury > 12000 && !(s.conquest?.revolts ?? []).length) {
+    if (month >= 96 && month % 96 === 0 && !wars.length && quiet && s.treasury > purse && !(s.conquest?.revolts ?? []).length) {
       let best = null;
       for (const pid of parties(world)) {
         if (!s.realms[pid] || pid === 'brokilon' || hostile(s, 'temeria', pid)) continue;
@@ -241,6 +241,8 @@ export function makeCrowns(world) {
   function tyrant(s, month) {
     s = answer(s, false);
     s = warPolicy(s, 'harsh');
+    // The tyrant goes looking for plunder whenever its coffers allow.
+    s = campaign(s, month, -8000);
     const laws = [['taxation', 'heavy'], ['noble_privilege', 'taxed'], ['public_order', 'martial'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
     const [law, option] = laws[month % laws.length];
     s = act(s, { type: 'law', law, option });

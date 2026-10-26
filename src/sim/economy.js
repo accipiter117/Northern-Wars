@@ -205,6 +205,9 @@ export function authorityParts(state, world) {
     laws: lawEffects(state, world).authority,
     buildings: realmEffect(state, world, 'authority'),
     debt: debt > 0 ? -(debt / 1000) * world.economy.debt.authorityPerThousand : 0,
+    // Above what a crown regains of itself, prestige fades unless renewed
+    // (M19: in a long peace it no longer creeps to the cap).
+    fade: -Math.max(0, state.authority - (g.authorityRegenBelow ?? 100)) * (g.authorityFade ?? 0),
   };
 }
 
@@ -358,7 +361,7 @@ export function monthlyLedger(state, world, rng = null) {
   // The crown's grip returns by itself only so far; beyond that it takes
   // content lords or a court that dazzles them.
   const parts = authorityParts(state, world);
-  state.authority += parts.regen + parts.nobles + parts.laws + parts.buildings;
+  state.authority += parts.regen + parts.nobles + parts.laws + parts.buildings + parts.fade;
   if (debt > 0) state.authority += parts.debt;
   state.authority = Math.max(0, Math.min(100, state.authority));
   state.unpaid = debt > limit;

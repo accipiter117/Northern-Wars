@@ -3,14 +3,50 @@
 How the realm behaves over a long reign, and the dials that shape it. Every number lives in `data/`; nothing here needs code changed.
 
 ## Thirty years, four crowns
-From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded down. Rerun for M18 (rulers who govern); M17 figures in brackets.
+From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded down. Rerun for M19 A and B (conquest); M18 figures in brackets.
 
 | Crown | What it does | People after 30 years | Treasury | Raids suffered | Depositions | Wars |
 | --- | --- | --- | --- | --- | --- | --- |
-| Idle | Nothing; every decision left to its default; no companies; rulers' requests left to lapse | about 52,300 from 54,240 (52,700) | about 35,700, levelled off (37,800) | about 1,090 (1,150) | 0 (0) | 0 to 3 (0 to 2) |
-| Steward | As in M15 (builds earners and food in turn, opens routes, answers generously, keeps a standing army that grows with its income, hunts what it sees), and since M17 holds audiences: a trade pact with every realm that trades and a non-aggression pact with every realm, each signed when the ruler accepts it as it stands or for 300 crowns or less; rulers' proposals taken when they are worth it to us, demands refused, warnings heeded | about 84,400, +55% (85,900) | about 253,000 (270,000) | about 128 (113) | 0 (0) | 0 to 1 (0) |
-| Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 70,200 (71,900) | at the limit for a decade, then about 152,400 (190,600) | about 435 (354) | about 3 (2) | 1 to 3 (0 to 2) |
-| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 47,900 (48,800) | about 13,800 (29,100) | about 1,140 (1,230) | about 1 (5) | 9 to 11 (3 to 6) |
+| Idle | Nothing; every decision left to its default; no companies; rulers' requests left to lapse | about 52,200 from 54,240 (52,300) | about 32,800, levelled off (35,700) | about 1,150 (1,090) | about 1 (0) | 0 to 4 (0 to 3) |
+| Steward | As in M15 (builds earners and food in turn, opens routes, answers generously, keeps a standing army that grows with its income, hunts what it sees), and since M17 holds audiences: a trade pact with every realm that trades and a non-aggression pact with every realm, each signed when the ruler accepts it as it stands or for 300 crowns or less; rulers' proposals taken when they are worth it to us, demands refused, warnings heeded | about 76,200 (84,400): about 83,000 in two seeds, 62,900 in the third | about 217,800 (253,000) | about 135 (128) | 0, 0 and 2 (0) | 0 to 1 (0 to 1), and one campaign of its own every eight years |
+| Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
+| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
+
+### What conquest changed (M19 A and B)
+Towns lost at a peace now leave the realm for good, so the four crowns' figures count only the towns each still holds. From `node tools/realms.mjs 30 <crown> 1,2,3,4` and `node tools/longrun.mjs 30 <crown> 1,2,3`:
+
+| Measure | Steward | Idle |
+| --- | --- | --- |
+| Invasions of Temeria in 30 years (M18 targets: steward 1 or fewer; idle still invaded) | 0, 1, 0, 1 | 3, 0, 4, 0 |
+| Towns Temeria annexed / lost for good by year 30 | 1 / 0 in every seed | 0 / 0 to 1 |
+| Towns that changed realm between foreign realms | 4 to 7 a reign; a realm fell in two seeds | 3 to 7; a realm fell in one seed |
+| Foreign treasury, most months of income | 17.1 (target 24 or fewer) | 17.4 |
+| Steward's income, year 10 against year 1 | 3.1, 3.2 and 2.9 times (target 2.5 or more) | year 10 nets about +110 a month (breaks even) |
+
+- **The steward conquers and holds.** Every eight years it picks a realm a third of its strength or less (Sodden, most often), takes a town near the border, keeps it at the peace, spares it and builds there. It loses nothing and is invaded once at most. In two seeds its people (about 83,000) and treasury are close to M18's; in the third a war and two regencies cost it a quarter of its people (about 62,900).
+- **A lost war now costs towns, so weak crowns shrink.** The spendthrift, in debt for its first decade, and the tyrant, at Authority nothing, are invaded six to eight times in thirty years. Each peace takes a town or two from them for good (a victor keeps only its war aim and towns worth up to a tenth of its own), so the tyrant ends with about three in five of its towns and under half its people, and the spendthrift loses a quarter of its towns in two of three seeds. Before M19 those towns stayed counted as only occupied, which hid the loss. Both are deposed far more often (about 11 and 12 times).
+- **The North consolidates, slowly.** Foreign realms annex what they win: by year 30 four to seven towns have changed realm abroad and one of the small realms may have fallen, its ruler in exile. Conquests integrate slowly abroad, and a realm digesting sullen towns leans to Consolidate rather than another war, which keeps the big winners (Cintra, Kaedwen) from rolling on.
+- **What deterrence counts.** Annexation made the winners strong enough to look past one another at Temeria, which then seemed three to six times weaker at its border than it is. Deterrence now also counts the army the crown could muster (half its levies and its lords' men, times 0.6), as a neighbour's own levy is counted; with that, invasions of the idle crown fell from about ten a reign back to M18's few.
+
+Flagged rather than fixed:
+- No town has risen in these runs: the steward spares, garrisons and settles its conquests, and keeps tolerant laws. Risings come to a crown that sacks, taxes hard or rules harshly (tested in `test/sim/conquest.test.js`).
+- The league against Temeria never formed: no model crown takes enough towns to frighten the North. One that conquers a town a year would raise it within a decade.
+- The model tyrant campaigns for plunder and sacks what it takes (Ansegis in seed 2), but it is too weak to take much.
+- **Authority no longer creeps to the cap in a long peace.** Above 75 (the point below which it returns by itself) it now fades by 3% of the excess a month (`effects.authorityFade` in data/groups.json): an untended crown settles near 76, a steward in the 80s. Fewer wars in M19 had let the untended crown's Authority drift to 100.
+
+The dials, all in data/conquest.json unless named:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| `peace.keepShare`, `peace.keepMin` | a tenth of the victor's own towns' value, at least 12 | Victors keep more at a peace; weak crowns shrink faster |
+| `integration.start`, `integration.distance` | 45, less 35 for strangers | Conquests start warmer (or colder) |
+| `integration.monthly.*` | time 0.35, garrison 0.3, tolerance 0.4, harsh laws -0.8 | Conquests come round faster (or slower) |
+| `integration.foreignMonthly` | 0.2 a month | Foreign realms digest conquests sooner and look for the next war sooner |
+| `revolt.chance`, `revolt.integrationBelow` | 5% a month below 30 | More risings |
+| `claimant.fadePerYear` | 5 (12 where the land is won over) | Exiles give up sooner |
+| `fear.perValue`, `fear.leagueAt`, `fear.attackAt` | 0.6 a point of town value; league at 35, war at 65 | The North bands together sooner |
+| strategy.json `deterrence.muster` | 0.6 of what the crown could muster | Neighbours respect the crown's levies more |
+| strategy.json `choose.digest`, `digestMax` | 10 a sullen conquest, up to 45 | Conquerors pause longer between wars |
 
 ### What rulers who govern changed (M18)
 From `node tools/realms.mjs 30 <crown> 1,2,3,4` (four seeds, thirty years), against the M18 targets:
@@ -70,8 +106,8 @@ Ten years, from `node tools/longrun.mjs 10 <crown> 1,2,3`:
 
 | | Raids on villages | Dead in raids | Days bands held a road | Camps and lairs cleared | Companies | Their pay |
 | --- | --- | --- | --- | --- | --- | --- |
-| Idle | about 300 (M12: about 115) | about 52,300 from 54,240 (52,700) | about 35,700, levelled off (37,800) | about 1,090 (1,150) | 0 (0) | 0 to 3 (0 to 2) |
-| Steward | about 120 | about 84,400, +55% (85,900) | about 253,000 (270,000) | about 128 (113) | 0 (0) | 0 to 1 (0) |
+| Idle | about 300 (M12: about 115) | about 52,200 from 54,240 (52,300) | about 32,800, levelled off (35,700) | about 1,150 (1,090) | about 1 (0) | 0 to 4 (0 to 3) |
+| Steward | about 120 | about 76,200 (84,400): about 83,000 in two seeds, 62,900 in the third | about 217,800 (253,000) | about 135 (128) | 0, 0 and 2 (0) | 0 to 1 (0 to 1), and one campaign of its own every eight years |
 | M15 rerun: idle | about 315 | about 532 | about 2,555 | 0 | 0 | 0 |
 | M15 rerun: steward | about 113 | about 160 | about 1,003 | about 20 | 9 | about 560 a month |
 | M17 rerun: idle | about 321 | about 567 | about 2,589 | 0 | 0 | 0 |
@@ -88,8 +124,8 @@ The crown's month, averaged over its year, from `node tools/longrun.mjs 10 <crow
 
 | | Year 1 in | Year 10 in | Year 10 net | Where the year-10 money comes from |
 | --- | --- | --- | --- | --- |
-| Idle | about 1,087 | about 52,300 from 54,240 (52,700) | about 35,700, levelled off (37,800) | about 1,090 (1,150) | 0 (0) | 0 to 3 (0 to 2) |
-| Steward | about 1,159 | about 84,400, +55% (85,900) | about 253,000 (270,000) | about 128 (113) | 0 (0) | 0 to 1 (0) |
+| Idle | about 1,087 | about 52,200 from 54,240 (52,300) | about 32,800, levelled off (35,700) | about 1,150 (1,090) | about 1 (0) | 0 to 4 (0 to 3) |
+| Steward | about 1,159 | about 76,200 (84,400): about 83,000 in two seeds, 62,900 in the third | about 217,800 (253,000) | about 135 (128) | 0, 0 and 2 (0) | 0 to 1 (0 to 1), and one campaign of its own every eight years |
 
 The M12 targets, and where they stand:
 - **The idle crown roughly breaks even, no richer than before.** Its first-year income is about 1,087 a month (M11: 1,091) and its thirty-year treasury about 40,200 (M11: 42,200). By year 30 its month nets about zero.
