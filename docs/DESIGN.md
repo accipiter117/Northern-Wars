@@ -395,3 +395,8 @@ Rebuilt in M14 around one rule: the player never loses their place.
 
 ## Save
 - Autosave to localStorage every in-game month, plus manual save, export and import as JSON. Versioned save schema.
+
+## Sound
+- One looping soundtrack (assets/audio/march-of-the-shadow.m4a), streamed through an audio element routed into Web Audio so volume works on iOS. It starts on the first tap, plays on while paused, fades out when the page is hidden and dips under bells and horns.
+- Interface sounds are synthesised at runtime in src/ui/audio.js, never loaded from files: tap, open, close, flick, clock, confirm, seal, coin, knock, bell, horn and ring. Each varies slightly; no more than four play at once.
+- Music and effects each have a volume and a mute, kept in the per-device prefs.

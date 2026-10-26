@@ -47,9 +47,55 @@ self.addEventListener('message', (e) => {
   if (e.data === 'restart') self.skipWaiting();
 });
 
+// Music is not part of the install (it is large); it is kept in its own
+// cache after the first full download, and served from there with proper
+// Range answers, which Safari needs to play cached media at all.
+const AUDIO = 'nw-audio-v1';
+async function audio(req) {
+  const key = req.url.split('?')[0].split('#')[0];
+  const cache = await caches.open(AUDIO);
+  let full = await cache.match(key);
+  if (!full) {
+    try {
+      const res = await fetch(key);
+      if (res.status !== 200) return res;
+      await cache.put(key, res.clone());
+      full = res;
+    } catch {
+      return new Response('', { status: 504 });
+    }
+  }
+  const range = req.headers.get('range');
+  if (!range) return full;
+  const buf = await full.clone().arrayBuffer();
+  const size = buf.byteLength;
+  const m = /bytes=(\\d*)-(\\d*)/.exec(range);
+  let start = 0;
+  let end = size - 1;
+  if (m && m[1] === '' && m[2] !== '') start = Math.max(0, size - Number(m[2]));
+  else if (m) {
+    start = Number(m[1] || 0);
+    if (m[2] !== '') end = Math.min(size - 1, Number(m[2]));
+  }
+  if (start >= size || start > end) return new Response('', { status: 416, headers: { 'Content-Range': \`bytes */\${size}\` } });
+  return new Response(buf.slice(start, end + 1), {
+    status: 206,
+    headers: {
+      'Content-Type': full.headers.get('Content-Type') || 'audio/mp4',
+      'Content-Range': \`bytes \${start}-\${end}/\${size}\`,
+      'Content-Length': String(end - start + 1),
+      'Accept-Ranges': 'bytes',
+    },
+  });
+}
+
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.pathname.includes('/assets/audio/')) {
+    e.respondWith(audio(e.request));
+    return;
+  }
   // The page itself is found whatever its query (?seed=, ?paused).
   e.respondWith(caches.open(CACHE).then((c) => c.match(e.request, { ignoreSearch: true })
     .then((hit) => hit ?? fetch(e.request))));
