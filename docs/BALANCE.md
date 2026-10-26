@@ -17,13 +17,13 @@ Towns lost at a peace now leave the realm for good, so the four crowns' figures 
 
 | Measure | Steward | Idle |
 | --- | --- | --- |
-| Invasions of Temeria in 30 years (M18 targets: steward 1 or fewer; idle still invaded) | 0, 1, 0, 1 | 3, 0, 4, 0 |
-| Towns Temeria annexed / lost for good by year 30 | 1 / 0 in every seed | 0 / 0 to 1 |
-| Towns that changed realm between foreign realms | 4 to 7 a reign; a realm fell in two seeds | 3 to 7; a realm fell in one seed |
-| Foreign treasury, most months of income | 17.1 (target 24 or fewer) | 17.4 |
+| Invasions of Temeria in 30 years (M18 targets: steward 1 or fewer; idle still invaded) | 0, 1, 3, 1 (one seed over) | 0, 0, 4, 0 |
+| Towns Temeria annexed / lost for good by year 30 | 1 in every seed / 5 in one seed | 0 / 1 in one seed |
+| Towns that changed realm between foreign realms (target: 3 of 4 seeds) | 4 to 8 in every seed; a realm fell in two | 3 to 7 in every seed; a realm fell in one |
+| Foreign treasury, most months of income | 16.9 (target 24 or fewer) | 17.4 |
 | Steward's income, year 10 against year 1 | 3.1, 3.2 and 2.9 times (target 2.5 or more) | year 10 nets about +110 a month (breaks even) |
 
-- **The steward conquers and holds.** Every eight years it picks a realm a third of its strength or less (Sodden, most often), takes a town near the border, keeps it at the peace, spares it and builds there. It loses nothing and is invaded once at most. In two seeds its people (about 83,000) and treasury are close to M18's; in the third a war and two regencies cost it a quarter of its people (about 62,900).
+- **The steward conquers and holds.** Every eight years it picks a realm a third of its strength or less (Sodden, most often), takes a town near the border, keeps it at the peace, spares it and builds there. It is invaded once at most in three of four seeds (three times, losing five towns, in the fourth). In two of the longrun seeds its people (about 83,000) and treasury are close to M18's; in the third a war and two regencies cost it a quarter of its people (about 62,900).
 - **A lost war now costs towns, so weak crowns shrink.** The spendthrift, in debt for its first decade, and the tyrant, at Authority nothing, are invaded six to eight times in thirty years. Each peace takes a town or two from them for good (a victor keeps only its war aim and towns worth up to a tenth of its own), so the tyrant ends with about three in five of its towns and under half its people, and the spendthrift loses a quarter of its towns in two of three seeds. Before M19 those towns stayed counted as only occupied, which hid the loss. Both are deposed far more often (about 11 and 12 times).
 - **The North consolidates, slowly.** Foreign realms annex what they win: by year 30 four to seven towns have changed realm abroad and one of the small realms may have fallen, its ruler in exile. Conquests integrate slowly abroad, and a realm digesting sullen towns leans to Consolidate rather than another war, which keeps the big winners (Cintra, Kaedwen) from rolling on.
 - **What deterrence counts.** Annexation made the winners strong enough to look past one another at Temeria, which then seemed three to six times weaker at its border than it is. Deterrence now also counts the army the crown could muster (half its levies and its lords' men, times 0.6), as a neighbour's own levy is counted; with that, invasions of the idle crown fell from about ten a reign back to M18's few.

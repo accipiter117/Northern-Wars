@@ -89,7 +89,9 @@ for (const seed of seeds) {
   }
   const changed = s.warHistory.some((w) => (w.changed ?? []).some((c) => c.to !== 'temeria' && world.realmOf[c.id] && c.to !== world.realmOf[c.id]))
     || realms.some((r) => (world.foreignByRealm[r] ?? []).some((id) => ownerOf(s, world, id) !== r && ownerOf(s, world, id) !== 'temeria'));
-  if (changed) totals.changedBy30++;
+  // Since M19 a town kept at a peace changes realm for good (state.lands).
+  const annexedAbroad = Object.keys(s.lands ?? {}).some((id) => world.homeOf[id] && s.lands[id].realm !== 'temeria');
+  if (changed || annexedAbroad) totals.changedBy30++;
   // Conquest (M19): towns that changed realm for good, realms fallen, risings, a league.
   const lands = Object.values(s.lands ?? {});
   totals.conquest.push({

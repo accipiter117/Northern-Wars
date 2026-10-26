@@ -89,7 +89,11 @@ test('the capture choice waits at court; an occupied town can be stripped, not b
     await page.waitForSelector('[data-decision^="conquestDecision:"]');
     const card = page.locator('[data-decision^="conquestDecision:"]').first();
     assert.match(await card.textContent(), /What of Bremervoord\?[\s\S]*Spare it[\s\S]*Sack it[\s\S]*Drive out/);
-    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await card.evaluate((el) => {
+      el.scrollIntoView({ block: 'start' });
+      const body = el.closest('#sheet-body');
+      if (body) body.scrollTop -= 90;
+    });
     await page.screenshot({ path: join(OUT, `${vp.name}-capture-choice.png`) });
     if (vp.name === 'portrait') {
       // The occupied town's card offers requisition, and no building.
