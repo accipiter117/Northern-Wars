@@ -40,7 +40,12 @@ export function createAudio(prefs, { save = () => {} } = {}) {
 
   // Let the soundtrack respect the iPhone's silent switch and mix with the
   // player's own audio rather than stopping it.
-  try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch { /* older Safari */ }
+  // By default the music follows the iPhone's silent switch, as most games'
+  // music does; a setting lets it play on silent too.
+  function session() {
+    try { if (navigator.audioSession) navigator.audioSession.type = prefs.playOnSilent ? 'playback' : 'ambient'; } catch { /* older Safari */ }
+  }
+  session();
 
   function graph() {
     if (ctx || !AC) return !!ctx;
@@ -97,16 +102,30 @@ export function createAudio(prefs, { save = () => {} } = {}) {
     setTimeout(() => { if (musicGain.gain.value < 0.01 || document.hidden || !musicLevel()) e.pause(); }, fade * 1000 + 50);
   }
 
-  // The first tap anywhere unlocks sound and starts the music.
+  // The first tap anywhere unlocks sound and starts the music. On phones only
+  // the end of a touch counts as a tap for sound (a finger going down does
+  // not), so listen for the release and the click as well, and keep trying
+  // until the browser has really let sound play.
+  const GESTURES = ['pointerup', 'touchend', 'click', 'keydown'];
   function unlock() {
     if (unlocked) return;
     if (!graph()) return;
-    unlocked = true;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    startMusic(2);
+    const ready = () => {
+      if (unlocked || ctx.state !== 'running') return;
+      unlocked = true;
+      for (const g of GESTURES) document.removeEventListener(g, unlock, true);
+      startMusic(2);
+    };
+    if (ctx.state === 'running') ready();
+    else ctx.resume().then(ready, () => {});
+    // Safari also wants the media element itself started inside the gesture.
+    if (musicLevel()) {
+      const e = musicEl();
+      const p = e.play();
+      if (p?.catch) p.catch(() => {});
+    }
   }
-  document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
-  document.addEventListener('keydown', unlock, { capture: true });
+  for (const g of GESTURES) document.addEventListener(g, unlock, { capture: true, passive: true });
 
   document.addEventListener('visibilitychange', () => {
     if (!ctx || !unlocked) return;
@@ -321,6 +340,7 @@ export function createAudio(prefs, { save = () => {} } = {}) {
   function set(key, value) {
     prefs[key] = value;
     save(prefs);
+    if (key === 'playOnSilent') session();
     apply();
   }
 

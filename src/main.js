@@ -431,6 +431,9 @@ async function boot() {
       wake.sync();
       if (k === 'haptics' && v === 'on') haptic('confirm');
       nav.refresh();
+    } else if (action === 'silent-on' || action === 'silent-off') {
+      audio.set('playOnSilent', action === 'silent-on');
+      nav.refresh();
     } else if (/^(music|sfx)-(on|off)$/.test(action)) {
       const [k, v] = action.split('-');
       audio.set(k === 'music' ? 'musicOn' : 'sfxOn', v === 'on');

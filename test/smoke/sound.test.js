@@ -59,6 +59,15 @@ test('nothing plays before the first tap; the first tap starts the looping music
   await context.close();
 });
 
+test('a finger tap (not just a mouse click) starts the music on a phone', async () => {
+  const { context, page, errors } = await open();
+  const box = await page.locator('#tabbar [data-tab="court"]').boundingBox();
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+  await page.waitForFunction(() => window.northernWars.audio.unlocked && window.northernWars.audio.musicPlaying, null, { timeout: 5000 });
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('interface actions ask for their sounds', async () => {
   const { context, page, errors } = await open();
   await page.click('#tabbar [data-tab="realm"]');
