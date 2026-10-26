@@ -42,6 +42,12 @@ export function attachPanelInput(app) {
     if (at('[data-regency]')) return app.regency();
     if (at('[data-new-reign]')) return app.newReign();
 
+    // An audience with a ruler, from a portrait, a realm card or a request.
+    const aud = at('[data-audience]');
+    if (aud) {
+      const deal = aud.dataset.audienceDeal;
+      return app.audience(aud.dataset.audience, deal ? { panel: 'trade', items: JSON.parse(deal) } : {});
+    }
     const ord = at('[data-order]');
     if (ord) {
       if (ord.dataset.confirm && !confirm(ord.dataset.confirm)) return;

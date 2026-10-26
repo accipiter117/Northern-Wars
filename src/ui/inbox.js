@@ -4,7 +4,7 @@
 // wait (war declared on Temeria, a siege, a rebellion, a deposition) also
 // raise a banner across the top.
 import {
-  TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile,
+  TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort,
 } from '../sim/index.js';
 import { escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
@@ -38,6 +38,14 @@ export function pendingDecisions(state, world, acked = Infinity) {
     const t = envoyText(world, p);
     out.push({ key: `envoy:${p.id}`, kind: 'envoy', id: p.id, realm: p.realm, daysLeft: left(p.day, world.neighbours.envoyDefaultDays), kicker: `An envoy from ${world.geography.neighbours[p.realm].name}`, ...t, fallback: defaultOf(world.envoys.envoys[p.envoy].choices) });
   }
+  // Rulers asking for an audience, with a proposal, a demand or a warning.
+  for (const q of state.diplomacy?.requests ?? []) {
+    const t = requestText(state, world, q);
+    out.push({
+      key: `request:${q.id}`, kind: 'request', id: q.id, realm: q.realm, deal: q.kind === 'deal' ? q.items : null, daysLeft: left(q.day, world.diplomacy.requests.expireDays),
+      kicker: `${rulerShort(world, q.realm)} of ${world.geography.neighbours[q.realm].name} asks an audience`, ...t, fallback: 1,
+    });
+  }
   for (const p of state.petitions ?? []) {
     const t = petitionText(world, p);
     out.push({ key: `petition:${p.id}`, kind: 'petition', id: p.id, daysLeft: left(p.day, world.culture.petitionDefaultDays), kicker: `A petition from ${t.place}`, ...t, fallback: defaultOf(world.petitions.petitions[p.petition].choices) });
@@ -56,6 +64,8 @@ export function decisionHtml(d, { compact = false } = {}) {
       <button type="button" data-go="deposition">The reign in full</button>`;
   } else {
     choices = d.choices.map((label, i) => `<button type="button" data-choice="${i}" ${orderAttr({ type: d.kind, id: d.id, choice: i })}>${escapeHtml(label)}${i === d.fallback ? ' <small>(taken if unanswered)</small>' : ''}</button>`).join('');
+    // A ruler's proposal can be bargained over at the deal table.
+    if (d.kind === 'request') choices += `<button type="button" data-audience="${d.realm}"${d.deal ? ` data-audience-deal='${escapeHtml(JSON.stringify(d.deal))}'` : ''}>${d.deal ? 'Hear them out' : 'Grant an audience'}</button>`;
   }
   const soon = d.daysLeft !== null && d.daysLeft <= 5;
   const left = d.daysLeft === null ? '' : `<span class="left${soon ? ' soon' : ''}">${d.daysLeft} day${d.daysLeft === 1 ? '' : 's'} left</span>`;

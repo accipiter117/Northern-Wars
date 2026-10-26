@@ -113,6 +113,15 @@ export function longPress(app, ctx, x, y) {
   }
   if (hit?.foreign || (hit?.settlement && state.settlements[hit.settlement]?.occupier)) {
     const id = hit.foreign ?? hit.settlement;
+    // A ruler's seat: an audience is one touch away.
+    const seatOf = Object.entries(world.realms?.realms ?? {}).find(([, r]) => r.capital === id)?.[0];
+    if (seatOf && world.diplomacy?.rulers[seatOf] && ownerOf(state, world, id) === seatOf) {
+      return ctx.ring(x, y, world.byId[id].name, [
+        { label: 'Audience', icon: 'crown', run: () => app.audience(seatOf) },
+        { label: 'Open card', icon: 'scroll', run: () => app.nav.push(`foreign:${id}`) },
+        { label: 'Realm', icon: 'dove', run: () => app.nav.push(`realm:${seatOf}`) },
+      ]);
+    }
     const view = app.foreignView(id) ?? (state.settlements[id] && { visible: true, population: 0 });
     const st = world.byId[id];
     if (!view) {

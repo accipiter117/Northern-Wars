@@ -179,6 +179,11 @@
       "id": "beyond",
       "title": "The North and the lands beyond",
       "text": "Eleven realms border our dealings: Redania, Kaedwen, Aedirn, Mahakam, Cidaris, Kerack, Brokilon, Verden, Brugge, Sodden and Cintra. Further off lie the lands beyond (Kovir, Poviss, Hengfors, Lyria and Rivia, Dol Blathanna, Angren, Nazair, Mag Turga, Toussaint, Tir Tochair, Metinna, Korath and Skellige), drawn lighter: the crown knows their towns from its maps and nothing more. Camps and lairs over the border are that realm's to deal with; our companies and witchers do not cross after them."
+    },
+    {
+      "id": "audiences",
+      "title": "Audiences with rulers",
+      "text": "Tap a ruler's portrait on the Diplomacy tab, or Audience on their realm card or capital, to meet them. Trade lays a deal on the table and shows their verdict as you add things; What would they accept? asks for their price. Diplomacy holds gifts, envoys, spies and demands; Alliance holds treaties; War holds the reason you give and the terms you can demand first. Their mood shows its reasons; their trust remembers whether Temeria keeps its word, and breaking a treaty costs trust in every court."
     }
   ]
 }

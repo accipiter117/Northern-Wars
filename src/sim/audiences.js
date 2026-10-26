@@ -299,13 +299,15 @@ export function requestText(state, world, q) {
   if (q.kind === 'warning') {
     return { title: `${name} sends a warning`, text: `${name} warns that our armies stand too near ${realm}'s border, and asks that they go home.`, choices: ['Pull them back', 'Ignore it'] };
   }
-  const want = q.items.filter((i) => i.from === 'us').map((i) => describeItem(world, i, q.realm).toLowerCase());
-  const give = q.items.filter((i) => i.from === 'them').map((i) => describeItem(world, i, q.realm).toLowerCase());
-  return {
-    title: `${name} proposes a deal`,
-    text: `${name} offers ${give.length ? give.join(', ') : 'friendship'}${want.length ? `, for ${want.join(', ')}` : ''}.`,
-    choices: ['Accept', 'Refuse'],
-  };
+  // Treaties bind both sides: they are proposed, not offered or asked.
+  const pacts = q.items.filter((i) => i.kind === 'treaty').map((i) => `a ${describeItem(world, i, q.realm).toLowerCase()}`);
+  const want = q.items.filter((i) => i.from === 'us' && i.kind !== 'treaty').map((i) => describeItem(world, i, q.realm).toLowerCase());
+  const give = q.items.filter((i) => i.from === 'them' && i.kind !== 'treaty').map((i) => describeItem(world, i, q.realm).toLowerCase());
+  const parts = [];
+  if (pacts.length) parts.push(`proposes ${pacts.join(' and ')}`);
+  if (give.length) parts.push(`offers ${give.join(', ')}`);
+  if (want.length) parts.push(`${give.length || pacts.length ? 'and asks' : 'asks'} ${want.join(', ')} in return`);
+  return { title: `${name} proposes a deal`, text: `${name} ${parts.join(', ')}.`, choices: ['Accept', 'Refuse'] };
 }
 
 function newRequest(state, world, pid, kind, items) {
@@ -449,7 +451,11 @@ function aiPacts(state, world, rng) {
       if (aff >= c.allianceAt) wants.push(['alliance', a, b]);
       if (aff >= c.defensiveAt) wants.push(['defensive', a, b]);
       if (aff >= c.tradeAt && world.neighbours.realms[a]?.trade && world.neighbours.realms[b]?.trade) wants.push(['trade', a, b]);
-      if (aff >= c.nonaggressionAt) wants.push(['nonaggression', a, b]);
+      // Only rivals, or a realm that fears the other, bother with a pact
+      // against war.
+      const rivals = (world.war?.rivalries ?? []).some((r) => (r.a === a && r.b === b) || (r.a === b && r.b === a));
+      const ratio = powerOf(state, world, a) / powerOf(state, world, b);
+      if (aff >= c.nonaggressionAt && (rivals || ratio > 2.5 || ratio < 1 / 2.5)) wants.push(['nonaggression', a, b]);
       for (const [kind, x, y] of wants) {
         if (treatyBetween(state, x, y, kind)) continue;
         const def = treatyDef(world, kind);
@@ -460,13 +466,16 @@ function aiPacts(state, world, rng) {
       }
     }
   }
-  // Pacts that no longer suit one side are broken: soonest by opportunists.
+  // Pacts that no longer suit one side are broken: soonest by opportunists,
+  // or once the goodwill behind them is gone.
   for (const t of [...state.diplomacy.treaties]) {
     if (t.a === TEMERIA || t.b === TEMERIA) continue;
-    if (affinity(state, world, t.a, t.b) >= c.breakBelow) continue;
     const breaker = hasTrait(world, t.b, 'opportunist') ? t.b : t.a;
-    if (rng.chance(c.breakChance * 10 * (hasTrait(world, breaker, 'opportunist') ? traitMult(world, breaker, 'breakChance') : 1))) {
-      endTreaty(state, world, t, { broken: true, by: breaker });
+    const sour = affinity(state, world, t.a, t.b) < c.breakBelow;
+    const fickle = hasTrait(world, breaker, 'opportunist');
+    if (!sour && !fickle) continue;
+    if (rng.chance(c.breakChance * (fickle ? traitMult(world, breaker, 'breakChance') : 1) * (sour ? 3 : 1))) {
+      endTreaty(state, world, t, { broken: true, by: breaker, why: sour ? 'as old quarrels return' : 'when it no longer pays' });
     }
   }
 }

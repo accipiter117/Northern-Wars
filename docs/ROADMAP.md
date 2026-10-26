@@ -17,6 +17,7 @@
 | M13 A realm under arms | Bandit camps, monster lairs, Scoia'tael commandos and foreign raiders as things on the map, seen or rumoured; standing companies of six troop types with morale, wounds, experience and pay, on standing orders (station, patrol, escort, hunt, respond); fights with odds in words; field armies raised from the companies; banner tokens, camps and lairs, and a Forces screen | Done |
 | M14 Interface overhaul | A persistent tab bar (Realm, Court, Treasury, Military, Diplomacy) with sub-tabs and badges, an overflow menu, a navigation stack tied to the back gesture, a three-height sheet that a map tap lowers instead of closing (a side panel in landscape), screens that remember their place and forms across saves, decisions in a Court inbox answered inline with a banner only for what cannot wait, one card template, town cards in four tabs, compact laws, searchable help, meter cards, and map pick mode for every target | Done |
 | M15 Native feel and a detailed North | A: no browser gestures, long press as a game gesture (quick-action rings, what's here, list previews), momentum and zoom gestures, an installable offline app with a versioned service worker, save and pause when put away, haptics and wake lock settings. B: the North retraced (24 lands, terrain, 19 rivers, lakes, 92 towns, new roads, same rules and life abroad, richer terrain art, cached terrain tiles) | Done |
+| M17 Audiences with rulers | A full-screen audience with any ruler (portrait, mood and its reasons, trust); a deal table with live verdicts, counter-offers and deals carried out through the ledger and caravans; gifts, denunciations, tribute, asks and intelligence; treaties (non-aggression, trade, defensive, alliance, access, protectorate) that bind calls to arms and cost trust to break; war declared with a reason and terms before war; rulers with traits and agendas who request audiences and make and break pacts among themselves | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -26,6 +27,16 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M17 acceptance criteria
+- A full-screen audience with any ruler from their realm card, the Diplomacy tab's portraits or a long press on their capital, in portrait and landscape: portrait, name, realm, traits, mood in a word and a number with its reasons, and four buttons (Trade, Diplomacy, Alliance, War) each opening a panel; back to the buttons, close to where the player came from.
+- Portraits through the sprite registry as portrait:<ruler id>, with a procedural placeholder (heraldic colours, a crowned silhouette, the realm's emblem).
+- The deal table: crowns (lump or monthly), goods, routes, sight, passage, an embassy, a town; a live verdict (Acceptable, Close, They want more, Insulting); What would they accept?; the ruler's own proposal; agreed deals carried out by the simulation, payments and deliveries in the ledger and caravans on the map.
+- Diplomacy: stance, gifts, embassy, spy, denounce, demand tribute, ask them to stop (massing troops, sheltering raiders, tolls), exchange or request intelligence.
+- Treaties: non-aggression, trade, defensive, alliance, military access, protectorate; each with a length, terms the AI weighs and a cost to break (trust with that ruler and a little with every other); trust as a lasting memory per ruler; calls to arms by treaty.
+- War with a stated reason (a claim, a broken treaty, an ally or protectorate, or none, which costs trust everywhere); terms before war; peace through the deal table.
+- Rulers with personalities and agendas from data; requests for audiences with real proposals in the Court inbox, expiring if ignored, replacing random envoys; foreign realms make and break pacts by the same rules; the web of pacts on the Diplomacy tab; reasoning in one plain line.
+- Built for parties beyond the eleven realms. Save version 14 with an upgrade from stances and envoys. Tests: verdicts match the valuation, counter-offers affordable and acceptable, treaties trigger calls to arms, breaking a treaty costs trust everywhere, foreign pacts made and broken over 30 years, deals and deliveries in the ledger.
 
 ## M15 acceptance criteria
 Part A, native mobile feel:

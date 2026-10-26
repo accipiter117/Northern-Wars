@@ -12,7 +12,7 @@ import { routesHtml, industryHtml } from './trade.js';
 import { forcesHtml, threatsHtml, companyCard, threatCard, threatLabel } from './forces.js';
 import { garrisonsHtml } from './military.js';
 import { warHtml, armyCard } from './war.js';
-import { neighboursHtml, intelListHtml, envoysHtml, realmCard, foreignCardHtml } from './neighbours.js';
+import { neighboursHtml, intelListHtml, envoysHtml, realmCard, foreignCardHtml, pactsHtml } from './neighbours.js';
 import { townCard } from './townCard.js';
 import { helpHtml } from './hints.js';
 
@@ -21,7 +21,7 @@ export const SUBS = {
   court: [['inbox', 'Decisions'], ['laws', 'Laws'], ['houses', 'Great houses'], ['faith', 'Faith']],
   treasury: [['ledger', 'Ledger'], ['routes', 'Trade routes'], ['industry', 'Mines and industry']],
   military: [['forces', 'Forces'], ['threats', 'Threats'], ['garrisons', 'Garrisons'], ['war', 'War']],
-  diplomacy: [['realms', 'Realms'], ['intel', 'Spies and embassies'], ['envoys', 'Envoys']],
+  diplomacy: [['realms', 'Rulers'], ['pacts', 'Pacts'], ['envoys', 'Audiences'], ['intel', 'Spies and embassies']],
 };
 
 const TAB_TITLES = { court: 'The Court', treasury: 'Treasury', military: 'Military', diplomacy: 'Diplomacy' };
@@ -31,7 +31,7 @@ function subBadges(app, tab) {
   const { state, world } = app;
   if (tab === 'court') return { inbox: pendingDecisions(state, world, app.acked()).length };
   if (tab === 'military') return { threats: app.looseThreats(), war: state.warDecisions?.length ?? 0 };
-  if (tab === 'diplomacy') return { envoys: state.envoys.length };
+  if (tab === 'diplomacy') return { envoys: state.envoys.length + (state.diplomacy?.requests.length ?? 0) };
   return {};
 }
 
@@ -58,6 +58,7 @@ function tabScreen(app, tab) {
   } else if (tab === 'diplomacy') {
     if (sub === 'intel') html = intelListHtml(app);
     else if (sub === 'envoys') html = envoysHtml(app);
+    else if (sub === 'pacts') html = pactsHtml(app);
     else html = neighboursHtml(app);
   }
   return { title: TAB_TITLES[tab], html: `${segs(list, sub)}${html}` };

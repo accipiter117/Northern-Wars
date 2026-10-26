@@ -114,7 +114,7 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 - Relation drifts (1% of the gap a day) towards: the realm's starting view, plus the crown's stance (friendly +25 at 30 crowns a month in gifts, neutral 0, cold -25), plus the laws it cares about (Mahakam and Brokilon about non-human rights, Redania about mages and the Eternal Fire, and so on).
 - Trade a month = the realm's trade x (0.5 + relation/100), up to 1.5x; nothing below -30. Brokilon never trades.
 - Envoys: about one month in three, one envoy card from a fitting realm (trade pacts, border disputes, refugees, marriages, loans, smugglers, Mahakam's smiths, dryad arrows, spies). Each has two or three choices touching relation, the treasury, Authority, group opinion, settlers or soldiers. The game pauses on arrival; ignored envoys default after 20 days. This is the seed of the M6 event system.
-- No armies, wars or treaties yet.
+- No armies, wars or treaties yet. (Since M17 envoys give way to rulers' own requests for audiences, and the relation is a ruler's mood, the sum of its reasons; see "Audiences with rulers (M17)".)
 
 ## The wider North (M8)
 - The world (geography.bounds) reaches beyond Temeria to each neighbour's extent. Temeria keeps its own coordinates; foreign places, roads and terrain are tagged with their realm and never touch Temerian rules.
@@ -135,6 +135,44 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 ### Terrain art
 - Forests as massed trees with darker edges, ranges as shaded peaks sized by the range (snow on the great ones), hills as mounds, marsh as reeds and pools, rivers that taper from source to mouth with their names set along the curve, lakes with a shoreline and a highlight. Scatter is seeded, so the same tree stands in the same place every time. Terrain stays visible under the fog of war.
 - Level of detail by zoom: far out only the ranges, great forests and main rivers are named; marks thin out. The painted map is cut into 256-pixel tiles at six resolutions, painted a few per frame with a coarser tile standing in until the fine one is ready, and kept in a cache that grows to twice what one view needs. Panning across the whole North on a slowed CPU takes about a millisecond a frame.
+
+## Audiences with rulers (M17)
+Diplomacy as meetings with people. No story or scripted dialogue: rulers speak in short plain lines built from the simulation. Numbers live in data/diplomacy.json.
+
+### The audience
+- A full-screen meeting with a ruler, opened from the rulers' portraits on the Diplomacy tab, a realm card, a request in the Court inbox, or a long press on their capital. It pauses the realm while it lasts. Upright, the ruler fills the top half and four large buttons (Trade, Diplomacy, Alliance, War) the bottom; held flat, the ruler sits on the left. Back returns to the four buttons; the cross ends the audience where the player was.
+- The ruler: portrait, name, realm, traits and agenda; mood as one word and the relation number, with the reasons behind it and their weights (their old view, our stance, the laws they care about, our towns of theirs, their agenda, treaties in force, trade between us, tolls, our armies near their border, wars fought, and remembered dealings that fade over two years or so); and trust.
+- Portraits go through the sprite registry as portrait:<ruler id>. The placeholder is drawn from the realm's colours, a crown (or circlet, or none for the Sodden council) and the realm's emblem; painted portraits can be registered later with no code changes.
+- Parties are whoever has a ruler in data/diplomacy.json, not the list of realms: lands beyond and powers without land can be given rulers and use the same screen.
+
+### Rulers
+- Traits: greedy (coin and goods count for more), honourable (keeps its word; minds broken treaties half as much again), ambitious (wants land, dislikes being bound, bends less), cautious (values safety, bends more to strength), opportunist (counts obligations lightly and breaks pacts when they stop paying), zealous (laws and faith it cares about count half as much again).
+- Agendas: secure the borders (Mahakam, Brokilon, Brugge), grow trade (Aedirn, Cidaris, Kerack), take a town (Kaedwen wants Vergen, Cintra wants Dillingen), spread a faith (Redania the Eternal Fire, Sodden Melitele), crush the Scoia'tael (Verden). Each changes what they value and what moves their mood.
+- Trust (0 to 100, starting at 50) is a lasting memory of whether Temeria keeps its word, separate from mood: deals honoured (+3) and treaties run to their end (+6) build it; deliveries that fall short (−6), broken deals (−15) and broken treaties (−20 to −50 with that ruler, −4 to −10 with every other) destroy it; a war declared without a reason costs 10 with everyone. It drifts back to the middle by 1% a month. Every treaty needs a minimum of trust (30 to 60); below it the ruler refuses and names the wrong ("Henselt refuses: Kaedwen does not trust us after we broke our defensive pact").
+
+### Trade: the deal table
+- Two columns, We offer and They offer. Items: crowns as a lump sum or monthly for a set time; goods by the month (grain, timber, stone, iron, cloth, rye spirit, arms, horses, salt); a trade route between named towns (opened free of the usual cost); what our or their watchers see; passage for armies; an embassy; a town (rare: valued at 160 crowns a point of its worth, three times that for a capital, which is never given up outside a peace).
+- The ruler values every item in crowns by their own temper and needs (a realm that makes a good wants little of it; a poor realm values coin more; our promises of future payments count for less when trust is low) and adds goodwill from mood and trust (up to 300). The verdict is shown live: Acceptable (worth it to them), Close (within 15% or 80 crowns), They want more (within 60% or 300) or Insulting. The crown also sees what the deal is worth to us.
+- What would they accept? builds a counter-offer from what they value most and the crown can afford: things they need that cost us little first (sight, an embassy, goods they lack that we hold), then crowns to close the gap; if the crown cannot pay, it asks for less from them instead. Hear their proposal lays out the ruler's own offer, built from their agenda and needs.
+- Agreed deals are carried out by the simulation: lump sums, towns, embassies, routes and treaties at once; monthly payments and deliveries each month in the ledger (a Deals line each way, and the goods delivered listed under the month); caravans under treaty run between Vizima and their capital while goods move. A delivery the crown cannot make falls short (trust −6); twice, and the deal is broken.
+
+### Diplomacy
+- Stance (the three of old), a gift (100, 250 or 500 crowns; mood +5, +10 or +16, half as much again for the greedy; one every two months), an embassy and a spy (as before), exchanging or asking for intelligence (through the deal table), denouncing them (mood −20 with them, +8 with their enemies; twice a year at most), demanding tribute (a sum by their strength, for a year), and asking them to stop massing troops on our border, sheltering raiders (they clear the camps near our border and send no raiders for a year) or taxing our caravans.
+- Demands and asks succeed by fear: our strength against theirs (times 40), plus their mood and trust, plus or minus temper, against the cost of what is asked. Greedy and opportunist rulers lay tolls on our caravans when their mood falls below −10 (our trade with them falls by a fifth).
+
+### Alliances and treaties
+- Non-aggression pact (5 years): neither makes war on the other. Trade pact (5 years): trade a quarter higher. Defensive pact (10 years): each joins the other's war if the other is attacked. Full alliance (10 years): each joins the other's wars and shares what it sees. Military access (2 years): one side's armies may pass. Protectorate (10 years): Kerack, Cidaris, Verden or Brugge places itself under our protection and pays 40 crowns a month; we must defend it.
+- Each has a minimum mood and trust, a mood bonus while in force, and a price for breaking it. Calls to arms now follow treaties, not the old friendly-enough rule: a partner attacked calls us (to refuse is to break the treaty), and our partners join our defence by temper (95% for the honourable, 50% for opportunists, less if they no longer trust us) or break their word.
+- The foreign realms make and break pacts among themselves by the same values: rivals, or a realm that fears another, sign non-aggression pacts; friends with a pact sign trade pacts; those in danger sign defensive pacts and alliances. Opportunists break pacts when they stop paying, others when old quarrels return; a rival bound by a pact keeps the peace unless an opportunist decides otherwise. The Diplomacy tab's Pacts screen draws the web of pacts and wars across the North.
+
+### War
+- War is declared with a reason: a border claim (they hold our towns; no Authority), a broken treaty (half), defending an ally or protectorate (we join their war; half), refused terms (half), or none (full cost, and every court trusts us less). Declaring ends every treaty with them, broken by us.
+- Terms before war: demand they pay, cede a town or break a treaty with a third realm, or face war. They yield by fear; refused, the crown has a cause for three months.
+- Peace terms use the deal table: each keeps what it holds, or every town handed back, with crowns, tribute and towns either way, weighed by the same war-weariness as before.
+
+### Rulers who act
+- Rulers request audiences with real proposals, about one in fourteen a month each: a deal of their own devising (by their agenda: trade pacts, non-aggression, defensive pacts, protectorates, goods for crowns), a demand when they are hostile and stronger (crowns, or the town they want, or else), or a warning when our armies crowd their border. Requests wait in the Court inbox and the Diplomacy tab's Audiences, can be accepted, refused or bargained over at the deal table, and lapse after 30 days. They replace the random envoys.
+- Save version 14: old saves keep their stances; a friendly stance with a true ally (relation 75 or more) becomes a defensive pact for five years; trust starts from the relation; envoys still waiting take their default answer.
 
 ## War with neighbours (M9)
 This replaces "no battles in v1": the owner asked for war. The crown still governs rather than commands: it raises armies, names marshals and gives orders and a stance; marshals do the marching and battles resolve by themselves. All numbers are in data/war.json.
