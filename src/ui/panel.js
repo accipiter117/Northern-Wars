@@ -41,11 +41,18 @@ export function createPanel({ onBack, onClose, onSnap }) {
     el.style.height = `${heightOf(snap)}px`;
   }
 
-  function setSnap(s, { remember = true } = {}) {
+  function setSnap(s, { remember = true, instant = false } = {}) {
     if (!SNAPS.includes(s)) return;
     snap = s;
     if (s !== 'peek' && remember) lastRaised = s;
+    // Picking a target on the map wants the map clear at once, not after
+    // the sheet has eased down.
+    if (instant) el.classList.add('dragging');
     place();
+    if (instant) {
+      void el.offsetHeight;
+      el.classList.remove('dragging');
+    }
     onSnap?.(s);
   }
 
@@ -88,7 +95,7 @@ export function createPanel({ onBack, onClose, onSnap }) {
     // Pulled down past the peek height: close.
     if (y > d.a - headH() + 40) {
       place();
-      close();
+      requestClose();
       return;
     }
     const shown = d.a - y;
@@ -98,7 +105,9 @@ export function createPanel({ onBack, onClose, onSnap }) {
   head.addEventListener('pointerup', end);
   head.addEventListener('pointercancel', end);
   backBtn.addEventListener('click', () => onBack?.());
-  document.getElementById('sheet-close').addEventListener('click', () => close());
+  document.getElementById('sheet-close').addEventListener('click', () => requestClose());
+  // The player closing it: whoever owns the panel files its place first.
+  const requestClose = () => (onClose ? onClose(route) : close());
   window.addEventListener('resize', () => { if (open) place(); });
 
   function show(r, heading, html, { back = false, keepScroll = null } = {}) {
@@ -149,7 +158,6 @@ export function createPanel({ onBack, onClose, onSnap }) {
     if (!open) return;
     open = false;
     el.hidden = true;
-    onClose?.(route);
   }
 
   return {
@@ -157,6 +165,7 @@ export function createPanel({ onBack, onClose, onSnap }) {
     get route() { return route; },
     get open() { return open; },
     get snap() { return snap; },
+    get dragging() { return !!drag?.moved; },
     get raised() { return lastRaised; },
     get side() { return side(); },
     get scroll() { return body.scrollTop; },

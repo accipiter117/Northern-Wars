@@ -39,26 +39,28 @@ for (const vp of VIEWPORTS) {
 
     // Let traffic build up at full speed, then pause for steady screenshots.
     // With this seed, decisions arrive on 1 April (an envoy from Cintra and
-    // a demand from a great house): the game pauses for each in turn.
+    // a demand from a great house). They do not open over the map: the game
+    // pauses, a toast says so and the Court tab shows a badge.
     await page.click('[data-speed="4"]');
-    await page.waitForSelector('.envoy-from', { timeout: 20000 });
+    await page.waitForSelector('[data-tab="court"] .tab-badge:not([hidden])', { timeout: 20000 });
     assert.equal(await page.evaluate(() => window.northernWars.speed), 0, 'a decision pauses the game');
-    await page.screenshot({ path: join(OUT, `${vp.name}-envoy.png`) });
+    assert.equal(await page.isHidden('#sheet'), true, 'no decision opens by itself');
+    assert.match(await page.textContent('#toast'), /waits at court/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-decision-badge.png`) });
     const seen = [];
-    for (let i = 0; i < 6; i++) {
+    await page.click('[data-tab="court"]');
+    await page.screenshot({ path: join(OUT, `${vp.name}-inbox.png`) });
+    for (let i = 0; i < 8; i++) {
       const pending = await page.evaluate(() => {
         const st = window.northernWars.state;
-        return st.envoys.length + st.petitions.length + st.demands.length;
+        return st.envoys.length + st.petitions.length + st.demands.length + st.events.length;
       });
       if (!pending) break;
-      if (!(await page.isVisible('.envoy-from'))) {
-        await page.click('[data-speed="1"]');
-        await page.waitForSelector('.envoy-from', { timeout: 5000 });
-      }
-      seen.push(await page.textContent('.envoy-from'));
-      await page.click('[data-choice="1"]');
+      seen.push(...await page.$$eval('#sheet-body .envoy-from', (els) => els.map((e) => e.textContent)));
+      await page.click('#sheet-body [data-choice="1"]');
     }
     assert.ok(seen.some((t) => /An envoy from Cintra/.test(t)), `decisions seen: ${seen}`);
+    await page.click('#sheet-close');
     await page.click('[data-speed="4"]');
     await page.waitForFunction((d) => window.northernWars.state.day >= d + 40, startDay, { timeout: 20000 });
     await page.click('[data-speed="0"]');
@@ -76,18 +78,21 @@ for (const vp of VIEWPORTS) {
     const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
     await page.touchscreen.tap(viz.x, viz.y);
     await page.waitForSelector('#sheet:not([hidden])');
-    assert.match(await page.textContent('#sheet-body'), /Vizima[\s\S]*Population[\s\S]*Crown demesne[\s\S]*Stores[\s\S]*Raise a building/);
+    assert.match(await page.textContent('#sheet-title'), /Vizima/);
+    assert.match(await page.textContent('#sheet-body'), /Population[\s\S]*Crown demesne[\s\S]*Overview[\s\S]*Build[\s\S]*Stores/);
     await page.screenshot({ path: join(OUT, `${vp.name}-card.png`) });
 
-    // Order a market hall in Vizima: coin leaves the treasury, works begin.
+    // Order a market hall in Vizima from the Build tab: coin leaves the
+    // treasury, works begin.
     const treasury = await page.evaluate(() => window.northernWars.state.treasury);
+    await page.click('.segs [data-tsub="build"]');
+    await page.click('[data-build-row="market"]');
     await page.click('[data-build="market"]');
     await page.waitForFunction(() => window.northernWars.state.settlements.vizima.construction, null, { timeout: 5000 });
-    assert.match(await page.textContent('[data-part="works"]'), /Raising: Market hall/);
+    assert.match(await page.textContent('[data-part="built"]'), /Raising: Market hall/);
     const market = await page.evaluate(() => window.northernWars.world.buildings.market.cost.coin);
     assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - market);
     assert.equal(await page.evaluate(() => window.northernWars.state.settlements.vizima.construction.building), 'market');
-    await page.locator('[data-part="works"]').scrollIntoViewIfNeeded();
     await page.screenshot({ path: join(OUT, `${vp.name}-building.png`) });
     await page.click('#sheet-close');
     assert.equal(await page.isHidden('#sheet'), true);
@@ -119,12 +124,13 @@ for (const vp of VIEWPORTS) {
     await page.mouse.wheel(0, -600);
     await page.waitForTimeout(100);
     await page.screenshot({ path: join(OUT, `${vp.name}-zoomed.png`) });
-    await page.click('#menu-button');
-    await page.click('[data-action="save"]');
+    await page.click('#more-button');
+    await page.click('[data-more="save"]');
     assert.ok(await page.evaluate(() => localStorage.getItem('northern-wars.save')?.includes('northern-wars-save')));
     // Decree heavy taxes from the Laws screen.
-    await page.click('[data-action="laws"]');
-    assert.match(await page.textContent('#sheet-body'), /The realm's mood[\s\S]*Peasants[\s\S]*Taxation/);
+    await page.click('[data-tab="court"]');
+    await page.click('[data-sub="laws"]');
+    assert.match(await page.textContent('#sheet-body'), /Peasants[\s\S]*Taxation/);
     const authority = await page.evaluate(() => window.northernWars.state.authority);
     await page.click('[data-law="taxation"]');
     await page.click('[data-decree="taxation:heavy"]');
@@ -132,23 +138,20 @@ for (const vp of VIEWPORTS) {
     assert.equal(await page.evaluate(() => window.northernWars.state.authority), authority - 10);
     assert.match(await page.textContent('[data-law="taxation"]'), /Heavy taxes[\s\S]*Taking hold/);
     await page.screenshot({ path: join(OUT, `${vp.name}-laws.png`) });
-    await page.click('[data-action="back"]');
 
     // Neighbouring realms: warm to Redania.
-    await page.click('[data-action="neighbours"]');
+    await page.click('[data-tab="diplomacy"]');
     await page.click('[data-realm="redania"]');
-    assert.match(await page.textContent('#sheet-body'), /Redania[\s\S]*Vizimir[\s\S]*Our stance/);
+    assert.match(await page.textContent('#sheet'), /Redania[\s\S]*Vizimir[\s\S]*Our stance/);
     await page.click('[data-stance="friendly"]');
     assert.equal(await page.evaluate(() => window.northernWars.state.neighbours.redania.stance), 'friendly');
     await page.screenshot({ path: join(OUT, `${vp.name}-realm.png`) });
-    await page.click('[data-action="neighbours"]');
-    await page.click('[data-action="back"]');
 
-    await page.click('[data-action="ledger"]');
+    await page.click('[data-tab="treasury"]');
     assert.match(await page.textContent('#sheet-body'), /Taxes[\s\S]*Garrisons[\s\S]*The past year/);
     await page.screenshot({ path: join(OUT, `${vp.name}-ledger.png`) });
-    await page.click('[data-action="back"]');
-    await page.click('[data-action="chronicle"]');
+    await page.click('#more-button');
+    await page.click('[data-more="chronicle"]');
     assert.match(await page.textContent('#sheet-body'), /Spring comes late/);
     await page.screenshot({ path: join(OUT, `${vp.name}-chronicle.png`) });
 
@@ -192,7 +195,7 @@ test('buildings and garrisons show beside their settlements', async () => {
   const z = await page.evaluate(() => window.northernWars.screenOf('vizima'));
   await page.touchscreen.tap(z.x - 34, z.y + 2);
   await page.waitForSelector('#sheet:not([hidden])');
-  assert.match(await page.textContent('#sheet-body'), /Vizima[\s\S]*unpaid[\s\S]*Raising: Shrine/);
+  assert.match(await page.textContent('#sheet'), /Vizima[\s\S]*unpaid[\s\S]*Raising: Shrine/);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -221,23 +224,26 @@ test('faith screen, petitions and riot markers', async () => {
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
   await page.screenshot({ path: join(OUT, 'riot-marker.png') });
 
-  await page.click('#menu-button');
-  await page.click('[data-action="faith"]');
+  await page.click('[data-tab="court"]');
+  await page.click('[data-sub="faith"]');
   const text = await page.textContent('#sheet-body');
-  assert.match(text, /Petitions waiting[\s\S]*preacher[\s\S]*Faith across the realm[\s\S]*Scoia'tael[\s\S]*Maribor \(riot-struck\)/);
+  assert.match(text, /Petitions waiting[\s\S]*Faith across the realm[\s\S]*Scoia'tael[\s\S]*Maribor \(riot-struck\)/);
   await page.screenshot({ path: join(OUT, 'faith.png') });
 
-  await page.click('[data-petition="1"]');
-  assert.match(await page.textContent('#sheet-body'), /A petition from Vizima/);
+  await page.click('[data-tab-go="court:inbox"]');
+  assert.match(await page.textContent('#sheet-body'), /A petition from Vizima[\s\S]*preacher/i);
   await page.screenshot({ path: join(OUT, 'petition.png') });
   await page.click('[data-choice="1"]');
   assert.equal(await page.evaluate(() => window.northernWars.state.petitions.length), 0);
 
   // The riot-struck town's card says so.
+  await page.click('#sheet-close');
   const c = await page.evaluate(() => window.northernWars.screenOf('maribor'));
   await page.touchscreen.tap(c.x, c.y);
   await page.waitForSelector('#sheet:not([hidden])');
-  assert.match(await page.textContent('#sheet-body'), /Maribor[\s\S]*Tension between peoples[\s\S]*Riots or raiders/);
+  assert.match(await page.textContent('#sheet'), /Maribor[\s\S]*Riots or raiders/);
+  await page.click('.segs [data-tsub="people"]');
+  assert.match(await page.textContent('#sheet-body'), /Tension between peoples/);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -266,13 +272,15 @@ test('great houses, rebellion and deposition', async () => {
   await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
 
-  await page.click('#menu-button');
-  await page.click('[data-action="nobles"]');
-  assert.match(await page.textContent('#sheet-body'), /The great houses[\s\S]*regency[\s\S]*House Ostrowicz[\s\S]*In rebellion/);
+  // The rebellion raises a banner across the top.
+  assert.match(await page.textContent('#urgent'), /Ostrowicz is in open rebellion/);
+  await page.click('[data-tab="court"]');
+  await page.click('[data-sub="houses"]');
+  assert.match(await page.textContent('#sheet-body'), /regency[\s\S]*House Ostrowicz[\s\S]*In rebellion/);
   await page.screenshot({ path: join(OUT, 'nobles.png') });
 
   await page.click('[data-house="brodowin"]');
-  assert.match(await page.textContent('#sheet-body'), /Wenzel Brodowin[\s\S]*Loyalist[\s\S]*Dorndal \(seat\)/);
+  assert.match(await page.textContent('#sheet-body'), /Wenzel Brodowin[\s\S]*Dorndal \(seat\)[\s\S]*Loyalist/);
   const t = await page.evaluate(() => window.northernWars.state.treasury);
   await page.click('[data-house-action="honours"]');
   assert.equal(await page.evaluate(() => window.northernWars.state.treasury), t - 300);
@@ -283,10 +291,16 @@ test('great houses, rebellion and deposition', async () => {
   await page.click('#sheet-close');
 
   // Let the crisis run: within a month or so the houses depose the crown.
+  // A banner says so; tapping it leads to the inbox.
   await page.click('[data-speed="4"]');
-  await page.waitForSelector('[data-regency]', { timeout: 20000 });
-  assert.match(await page.textContent('#sheet-body'), /The crown is deposed[\s\S]*Reign 1/);
+  await page.waitForFunction(() => /deposed/.test(document.getElementById('urgent').textContent), null, { timeout: 20000 });
+  assert.equal(await page.evaluate(() => window.northernWars.speed), 0, 'the deposition pauses the game');
+  await page.click('.urgent-go');
+  assert.match(await page.textContent('#sheet-body'), /The crown is deposed[\s\S]*Continue under a regency/);
   await page.screenshot({ path: join(OUT, 'deposed.png') });
+  await page.click('[data-go="deposition"]');
+  assert.match(await page.textContent('#sheet-body'), /Reign 1/);
+  await page.click('#sheet-back');
   await page.click('[data-regency]');
   assert.equal(await page.evaluate(() => window.northernWars.state.reign.number), 2);
   assert.deepEqual(errors, []);
@@ -315,36 +329,44 @@ test('military screen, companies, garrisons and events', async () => {
   await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
 
-  await page.click('#menu-button');
-  await page.click('[data-action="military"]');
-  assert.match(await page.textContent('#sheet-body'), /Garrisons and danger[\s\S]*Garrison soldiers[\s\S]*Where danger lies/);
+  await page.click('[data-tab="military"]');
+  await page.click('[data-sub="garrisons"]');
+  assert.match(await page.textContent('#sheet-body'), /Garrison soldiers[\s\S]*Where danger lies/);
   await page.screenshot({ path: join(OUT, 'military.png') });
   await page.click('#sheet-close');
 
-  // Recruit light horse at Vizima from its card, and set them riding a road.
+  // Recruit light horse at Vizima from its card, and set them riding a road
+  // picked on the map.
   const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
   await page.touchscreen.tap(viz.x, viz.y);
-  await page.waitForSelector('[data-recruit="lightcav"]');
+  await page.click('[data-recruit-here]');
   await page.click('[data-recruit="lightcav"]');
   assert.equal(await page.evaluate(() => window.northernWars.state.forces.companies.length), 1);
   await page.click('[data-part="companies"] [data-company]');
-  await page.waitForSelector('[data-order-kind="patrol"]');
-  await page.selectOption('[data-pick="from"]', 'vizima');
-  await page.selectOption('[data-pick="to"]', 'pontaria');
   await page.click('[data-order-kind="patrol"]');
-  assert.equal(await page.evaluate(() => window.northernWars.state.forces.companies[0].order.kind), 'patrol');
+  await page.waitForSelector('#pickbar:not([hidden])');
+  for (const id of ['vizima', 'pontaria']) {
+    await page.evaluate((p) => { const st = window.northernWars.world.byId[p]; window.northernWars.lookAt(st.x, st.y); }, id);
+    const q = await page.evaluate((p) => window.northernWars.screenOf(p), id);
+    await page.touchscreen.tap(q.x, q.y);
+  }
+  assert.match(await page.textContent('#pickbar'), /Patrol Vizima to Chippira/);
+  await page.screenshot({ path: join(OUT, 'pick-patrol.png') });
+  await page.click('[data-pick-confirm]');
+  const order = await page.evaluate(() => window.northernWars.state.forces.companies[0].order);
+  assert.deepEqual([order.kind, order.from, order.to], ['patrol', 'vizima', 'pontaria']);
   await page.click('#sheet-close');
 
-  await page.touchscreen.tap(viz.x, viz.y);
-  await page.waitForSelector('[data-garrison="strong"]');
+  const v2 = await page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.touchscreen.tap(v2.x, v2.y);
+  await page.click('.segs [data-tsub="military"]');
   await page.click('[data-garrison="strong"]');
   assert.equal(await page.evaluate(() => window.northernWars.state.garrisonLevel.vizima), 'strong');
   await page.click('#sheet-close');
   await page.screenshot({ path: join(OUT, 'threats-map.png') });
 
-  // The waiting witcher speaks up once the clock runs.
-  await page.click('[data-speed="1"]');
-  await page.waitForSelector('.envoy-from', { timeout: 10000 });
+  // The waiting witcher is in the Court inbox.
+  await page.click('[data-tab="court"]');
   assert.match(await page.textContent('#sheet-body'), /News from Chippira[\s\S]*witcher/i);
   const t = await page.evaluate(() => window.northernWars.state.treasury);
   await page.click('[data-choice="0"]');
@@ -370,9 +392,14 @@ test('tutorial hints appear once and can be turned off', async () => {
   await page.waitForSelector('#hint:not([hidden])', { timeout: 5000 });
   assert.match(await page.textContent('#hint'), /A town's card/);
   await page.click('[data-hint="off"]');
-  await page.click('#menu-button');
-  await page.click('[data-action="help"]');
-  assert.match(await page.textContent('#sheet-body'), /Help[\s\S]*Turn hints back on[\s\S]*The great houses/);
+  await page.click('#more-button');
+  await page.click('[data-more="help"]');
+  assert.match(await page.textContent('#sheet-body'), /Turn hints back on[\s\S]*Finding your way[\s\S]*The great houses/);
+  // Help is a searchable list of short topics.
+  await page.fill('[data-field="q"]', 'witcher');
+  await page.waitForFunction(() => !/Finding your way/.test(document.getElementById('sheet-body').textContent));
+  assert.match(await page.textContent('#sheet-body'), /Something in the wilds/);
+  await page.fill('[data-field="q"]', '');
   await page.click('[data-action="hints-on"]');
   assert.match(await page.textContent('#sheet-body'), /Turn hints off/);
   assert.deepEqual(errors, []);
@@ -422,17 +449,16 @@ test('foreign realms under the fog of war', async () => {
   await page.waitForTimeout(150);
   await page.screenshot({ path: join(OUT, 'north.png') });
 
-  await page.click('#menu-button');
-  await page.click('[data-action="neighbours"]');
+  await page.click('[data-tab="diplomacy"]');
   await page.click('[data-realm="redania"]');
   assert.match(await page.textContent('#sheet-body'), /What we see[\s\S]*through our agent[\s\S]*Places we know[\s\S]*Novigrad/);
   await page.click('[data-foreign="novigrad"]');
-  assert.match(await page.textContent('#sheet-body'), /Novigrad[\s\S]*In sight now[\s\S]*People[\s\S]*about/);
+  assert.match(await page.textContent('#sheet'), /Novigrad[\s\S]*In sight now[\s\S]*People[\s\S]*about/);
   await page.screenshot({ path: join(OUT, 'foreign-card.png') });
 
-  // Back to the realm list, and open an embassy in Kaedwen.
-  await page.click('[data-realm="redania"]');
-  await page.click('[data-action="neighbours"]');
+  // Back twice to the realm list, and open an embassy in Kaedwen.
+  await page.click('#sheet-back');
+  await page.click('#sheet-back');
   await page.click('[data-realm="kaedwen"]');
   const t = await page.evaluate(() => window.northernWars.state.treasury);
   await page.click('[data-embassy="open"]');
@@ -458,24 +484,34 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
 
   // Declare war from Kaedwen's card; the war panel opens.
-  await page.click('#menu-button');
-  await page.click('[data-action="neighbours"]');
+  await page.click('[data-tab="diplomacy"]');
   await page.click('[data-realm="kaedwen"]');
   assert.match(await page.textContent('#sheet-body'), /Declare war[\s\S]*Authority/);
   await page.click('[data-declare]');
   assert.match(await page.textContent('#sheet-body'), /Against Kaedwen[\s\S]*Raise an army/);
 
-  // Raise an army at Ellander: half the crown levy and two free companies.
-  await page.selectOption('[data-pick="muster"]', 'ellander');
+  // Raise an army at Ellander, picked on the map: half the crown levy and
+  // two free companies.
+  const tapPlace = async (pg, id) => {
+    await pg.evaluate((p) => { const st = window.northernWars.world.byId[p]; window.northernWars.lookAt(st.x, st.y); }, id);
+    const q = await pg.evaluate((p) => window.northernWars.screenOf(p), id);
+    await pg.touchscreen.tap(q.x, q.y);
+  };
+  await page.click('[data-pick-start*="muster"]');
+  await tapPlace(page, 'ellander');
+  await page.click('[data-pick-confirm]');
   await page.click('[data-set="levy:half"]');
   await page.click('[data-set="companies:2"]');
   await page.click('[data-set="stance:bold"]');
   await page.click('[data-raise]');
-  assert.match(await page.textContent('#sheet-body'), /The army of Ellander[\s\S]*Orders/);
+  assert.match(await page.textContent('#sheet'), /The army of Ellander[\s\S]*Orders/);
 
-  // Send it against Ban Ard.
-  await page.selectOption('[data-pick="siege"]', 'ban_ard');
-  await page.click('[data-order="siege"]');
+  // Send it against Ban Ard: tap it on the map and see what it would face.
+  await page.click('[data-order-kind="siege"]');
+  await tapPlace(page, 'ban_ard');
+  assert.match(await page.textContent('#pickbar'), /Besiege Ban Ard[\s\S]*Kaedwen/);
+  await page.screenshot({ path: join(OUT, 'pick-siege.png') });
+  await page.click('[data-pick-confirm]');
   const army = await page.evaluate(() => window.northernWars.state.armies.find((a) => a.side === 'temeria'));
   assert.equal(army.order, 'siege');
   assert.equal(army.target, 'ban_ard');
@@ -496,7 +532,7 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   await page.waitForTimeout(150);
   const pos = await page.evaluate(() => window.northernWars.armyScreenOf(window.northernWars.state.armies.find((a) => a.side === 'temeria').id));
   await page.mouse.click(pos.x, pos.y - 6);
-  await page.waitForSelector('[data-order]');
+  await page.waitForSelector('[data-order-kind="siege"]');
   assert.match(await page.textContent('#sheet-body'), /marching on Ban Ard/);
   assert.deepEqual(errors, []);
   await context.close();
@@ -528,8 +564,9 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   await p2.screenshot({ path: join(OUT, 'invasion.png') });
   // The occupied town's card says who holds it.
   const occupied = await p2.evaluate(() => Object.keys(window.northernWars.state.settlements).find((id) => window.northernWars.state.settlements[id].occupier));
-  await p2.click('#menu-button');
-  await p2.click('[data-action="war"]');
+  assert.match(await p2.textContent('#urgent'), /besieged by Redania/);
+  await p2.click('[data-tab="military"]');
+  await p2.click('[data-sub="war"]');
   assert.match(await p2.textContent('#sheet-body'), /Against Redania[\s\S]*They hold/);
   await p2.screenshot({ path: join(OUT, 'war-panel.png') });
   assert.ok(occupied);
@@ -550,13 +587,21 @@ test('trade routes and gold from the town cards and the Trade screen', async () 
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
   const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
   await page.touchscreen.tap(viz.x, viz.y);
+  // From the town card: tap the far end on the map, see what it would earn,
+  // confirm.
   await page.click('[data-route-from="vizima"]');
-  assert.match(await page.textContent('#sheet-body'), /Trade and gold[\s\S]*Open a route/);
-  await page.selectOption('[data-pick="to"]', 'maribor');
-  await page.click('[data-open-route]');
+  await page.waitForSelector('#pickbar:not([hidden])');
+  await page.evaluate(() => { const st = window.northernWars.world.byId.maribor; window.northernWars.lookAt(st.x, st.y); });
+  const mar = await page.evaluate(() => window.northernWars.screenOf('maribor'));
+  await page.touchscreen.tap(mar.x, mar.y);
+  assert.match(await page.textContent('#pickbar'), /Vizima to Maribor[\s\S]*crowns a month/);
+  await page.screenshot({ path: join(OUT, 'pick-route.png') });
+  await page.click('[data-pick-confirm]');
   const routes = await page.evaluate(() => window.northernWars.state.routes);
   assert.equal(routes.length, 1);
   assert.deepEqual([routes[0].from, routes[0].to], ['vizima', 'maribor']);
+  await page.click('[data-tab="treasury"]');
+  await page.click('[data-sub="routes"]');
   assert.match(await page.textContent('#sheet-body'), /Vizima to Maribor[\s\S]*crowns a month/);
   await page.screenshot({ path: join(OUT, 'trade.png') });
   await page.click('#sheet-close');
@@ -564,6 +609,7 @@ test('trade routes and gold from the town cards and the Trade screen', async () 
   await page.evaluate(() => { const st = window.northernWars.world.byId.napeys; window.northernWars.lookAt(st.x, st.y); });
   const nap = await page.evaluate(() => window.northernWars.screenOf('napeys'));
   await page.touchscreen.tap(nap.x, nap.y);
+  await page.click('.segs [data-tsub="overview"]');
   await page.waitForSelector('[data-prospect]');
   await page.click('[data-prospect]');
   assert.equal(await page.evaluate(() => window.northernWars.state.gold.prospects.length), 1);
@@ -653,6 +699,21 @@ test('a busy Vizima close up, within a sixtieth of a second a frame on a slowed 
       assert.ok(f.frames > 30, `${f.frames} frames drawn`);
       assert.ok(f.mean < 8, `${f.mean.toFixed(1)} ms a frame on average`);
       assert.ok(f.p95 < 1000 / 60, `${f.p95.toFixed(1)} ms for the slowest frames`);
+      // Again with a panel open and its sheet being dragged up and down, the
+      // realm still running. The realm's days were held to the budget above;
+      // here what counts is that the panel and the drag add nothing, so the
+      // slowest frames are taken from those that did not also run a day.
+      await page.click('[data-tab="military"]');
+      await page.evaluate(() => window.northernWars.resetFrameStats());
+      const head = await page.locator('#sheet-head').boundingBox();
+      await page.mouse.move(head.x + 60, head.y + 20);
+      await page.mouse.down();
+      for (let i = 0; i < 40; i++) { await page.mouse.move(head.x + 60, head.y + 20 - 220 * Math.abs(Math.sin(i / 7))); await page.waitForTimeout(30); }
+      await page.mouse.up();
+      const g = await page.evaluate(() => window.northernWars.frameStats);
+      assert.ok(g.frames > 30, `${g.frames} frames drawn while dragging`);
+      assert.ok(g.mean < 8, `${g.mean.toFixed(1)} ms a frame on average while dragging`);
+      assert.ok(g.p95Calm < 1000 / 60, `${g.p95Calm.toFixed(1)} ms for the slowest frames while dragging (${g.dayFrames} frames also ran a day; ${g.p95.toFixed(1)} with them)`);
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     }
     assert.deepEqual(errors, []);
@@ -702,6 +763,7 @@ test('the Treasury, town accounts and the industries close up', async () => {
     const text = await page.textContent('#sheet-body');
     assert.match(text, /Treasury[\s\S]*Taxes[\s\S]*Crafts[\s\S]*Market hall[\s\S]*Goods from the chains[\s\S]*Cloth sold[\s\S]*Bridge tolls[\s\S]*Rents[\s\S]*Crown trade routes[\s\S]*Where the money came from/);
     await page.screenshot({ path: join(OUT, `${vp.name}-treasury.png`), fullPage: false });
+    await page.click('[data-sec="places"] > summary');
     await page.locator('.place-list').first().scrollIntoViewIfNeeded();
     await page.screenshot({ path: join(OUT, `${vp.name}-treasury-places.png`) });
     await page.click('.place-row[data-place="vizima"]');
@@ -775,16 +837,19 @@ test('threats and companies on the map, the Forces screen and a Hunt order', asy
     await page.waitForTimeout(200);
     await page.screenshot({ path: join(OUT, `${vp.name}-forces-map.png`) });
     // The Forces screen lists the companies and every threat in sight.
-    await page.click('#menu-button');
-    await page.click('[data-action="forces"]');
+    await page.click('[data-tab="military"]');
+    await page.click('[data-sub="threats"]');
     const text = await page.textContent('#sheet-body');
-    assert.match(text, /Forces[\s\S]*Threats sighted[\s\S]*Bandit camp[\s\S]*Drowners[\s\S]*rumour[\s\S]*The crown's companies[\s\S]*Gors Velen Men-at-arms/);
+    assert.match(text, /Bandit camp[\s\S]*Drowners[\s\S]*rumour/);
     assert.match(text, /(Overwhelming|Favourable|Even|Risky|Hopeless) for/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-threats.png`) });
+    await page.click('[data-sub="forces"]');
+    assert.match(await page.textContent('#sheet-body'), /The crown's companies[\s\S]*Gors Velen Men-at-arms/);
     await page.screenshot({ path: join(OUT, `${vp.name}-forces.png`) });
     // A company's card: its orders, and the odds of each hunt.
     await page.click('[data-company="2"]');
     await page.waitForSelector('[data-hunt]');
-    assert.match(await page.textContent('#sheet-body'), /Standing orders[\s\S]*Hunt: Drowners[\s\S]*(Overwhelming|Favourable|Even|Risky|Hopeless)/);
+    assert.match(await page.textContent('#sheet-body'), /Orders[\s\S]*Hunt: Drowners[\s\S]*(Overwhelming|Favourable|Even|Risky|Hopeless)/);
     await page.screenshot({ path: join(OUT, `${vp.name}-company.png`) });
     await page.click('[data-hunt="2"]');
     assert.equal(await page.evaluate(() => window.northernWars.state.forces.companies.find((c) => c.id === 2).order.kind), 'hunt');
@@ -793,7 +858,7 @@ test('threats and companies on the map, the Forces screen and a Hunt order', asy
     const lair = await page.evaluate(() => window.northernWars.screenOfPoint(222, 470));
     await page.mouse.click(lair.x, lair.y);
     await page.waitForSelector('#sheet:not([hidden])');
-    assert.match(await page.textContent('#sheet-body'), /Drowners[\s\S]*Hire a witcher/);
+    assert.match(await page.textContent('#sheet'), /Drowners[\s\S]*Hire a witcher/);
     await page.screenshot({ path: join(OUT, `${vp.name}-threat.png`) });
     assert.deepEqual(errors, []);
     await context.close();

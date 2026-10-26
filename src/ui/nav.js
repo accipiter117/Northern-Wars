@@ -125,8 +125,10 @@ export function createNav({ memory, panel, render, onShow, persist, onTab }) {
     persist();
   }
 
+  // Follow the realm on the open screen. Not while the sheet is lowered to
+  // its title bar or held by a finger: nobody can read it then.
   function refresh() {
-    if (!memory.open || !panel.open) return;
+    if (!memory.open || !panel.open || panel.dragging || panel.snap === 'peek') return;
     const r = current();
     if (!r) return;
     const out = render(r);
@@ -162,9 +164,14 @@ export function createNav({ memory, panel, render, onShow, persist, onTab }) {
     }
   }
 
+  // Touch the page only when a count changes: a needless write makes the
+  // browser restyle the page inside the next frame.
+  const shownBadges = {};
   function setBadges(counts) {
     for (const b of bar.querySelectorAll('[data-tab]')) {
       const n = counts[b.dataset.tab] ?? 0;
+      if (shownBadges[b.dataset.tab] === n) continue;
+      shownBadges[b.dataset.tab] = n;
       const badge = b.querySelector('.tab-badge');
       badge.hidden = !n;
       badge.textContent = n > 9 ? '9+' : String(n);

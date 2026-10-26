@@ -127,7 +127,7 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 This replaces "no battles in v1": the owner asked for war. The crown still governs rather than commands: it raises armies, names marshals and gives orders and a stance; marshals do the marching and battles resolve by themselves. All numbers are in data/war.json.
 
 - Ownership: a Temerian town taken by an enemy keeps its record but carries an occupier (it pays the crown nothing, builds nothing, takes no orders and is left out of Stability); a foreign town taken by Temeria or another realm carries an owner (Temeria's conquests pay into a Conquered towns ledger line and are watched like our own towns). Every war remembers the towns that changed hands in it.
-- Raising an army (War, in the menu): a crown levy (a third or half of each crown garrison; the levied garrisons are not refilled while the men are away, and their fields suffer), the lords' men (40% of each loyal house's soldiers, at a grievance; houses below loyalty 30 send excuses), and free companies (200 men, 250 crowns each and 60 a month). Up to three armies, each with a marshal (skill 1 to 1.2; a house's own man wins it favour) and a stance: bold (attacks harder, storms at 3 to 1, seeks battle at 0.8 to 1) or cautious (defends harder, storms only at 5 to 1, fights only at 1.2 to 1). Armies in the field cost 0.15 crowns a man a month.
+- Raising an army (Military, War): a crown levy (a third or half of each crown garrison; the levied garrisons are not refilled while the men are away, and their fields suffer), the lords' men (40% of each loyal house's soldiers, at a grievance; houses below loyalty 30 send excuses), and free companies (200 men, 250 crowns each and 60 a month). Up to three armies, each with a marshal (skill 1 to 1.2; a house's own man wins it favour) and a stance: bold (attacks harder, storms at 3 to 1, seeks battle at 0.8 to 1) or cautious (defends harder, storms only at 5 to 1, fights only at 1.2 to 1). Armies in the field cost 0.15 crowns a man a month.
 - Orders: hold a place (and march out to meet any enemy army within 150), besiege a place (starve it out over about 70 days, longer behind walls, in a castle or a city, or storm it when strong enough), or raid a realm (plunder four unwalled towns and villages, then come home). A town is defended by its garrison and townsfolk (3 in every 100 people), times 1.6 behind walls, 1.4 in a castle and 1.5 in a city.
 - Battles: when hostile armies come within 16 units. The stronger side (men x marshal x spirit x stance, x1.6 behind its own walls) usually wins: the chance is s^3 / (s^3 + t^3). The beaten side loses a quarter to nearly half, the victor a few in ten, and the beaten army falls back and cannot be brought to battle again for eight days. Victories and defeats move Authority and the lords' mood.
 - Capture: the victor leaves a tenth of its men as garrison, carries off loot, and the town loses prosperity, people and calm, and is marked sacked (refugees take to the roads). Losing a town costs Authority (Vizima 30) and angers its lord.
@@ -141,7 +141,7 @@ This replaces "no battles in v1": the owner asked for war. The crown still gover
 All numbers are in data/trade.json, data/gold.json, data/buildings.json and data/layout.json.
 
 ### Crown trade routes
-- Between two towns or cities: ours, or a neighbour's (one end must be ours) once that realm's relation is 20 or more, it trades with us and we are not at war. Opened from a town's card or Trade and gold in the menu, for 400 crowns plus 0.8 a unit of road; 12 crowns a month to run.
+- Between two towns or cities: ours, or a neighbour's (one end must be ours) once that realm's relation is 20 or more, it trades with us and we are not at war. Opened from a town's card or Treasury, Trade routes, for 400 crowns plus 0.8 a unit of road; 12 crowns a month to run.
 - A month's takings = 0.0038 x the square root of both towns' people x their fortunes (average prosperity / 55) x the haul (road length / 350, from 0.6 to 1.6) x wares (1.3 if they make different things, 0.75 if the same; a foreign town always counts as different) x road safety (1 less 0.9% per point of the worst threat along the way, at least a quarter) x relation abroad (the border-trade factor, x1.25) x a quarter more for each market hall at either end and the harbour and guildhall bonuses, divided by the square root of how many routes share each end.
 - Bandits rob a month's takings with a chance of 30% x (1 - safety). An occupied end, or war with the far end's realm, closes the route.
 - The crown runs 2 routes, plus one for every two market halls, one for each guildhall and harbour, plus one under free guilds and minus one under a guild monopoly, up to 8.
@@ -261,11 +261,38 @@ Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG).
 Units move along the road network (or rivers for barges), at speeds affected by season. Tapping one shows a small label of what it is and where it's going.
 
 ## UI
-- Top bar: date and season, speed controls, treasury, granary, Authority, Stability.
-- Tap a settlement: card with population, peoples, faith, prosperity, unrest, production, garrison, holder, buildings.
-- Menus: Realm overview, Laws, Faith and Peoples, Nobles, Military, Chronicle (dispatch log).
-- Portrait: map fills the screen, panels as bottom sheets. Landscape: map with a side panel.
-- Parchment and ink look for the placeholder UI. Light and dark themes not needed in v1; one dark parchment theme.
+Rebuilt in M14 around one rule: the player never loses their place.
+
+### Getting about
+- Top bar: date and season, the speed buttons, and a small overflow menu (three dots) holding Chronicle, Help, Save, Load, Export, Import and New reign. Below them the four meters (Treasury, Granary, Authority, Stability), each with a small icon; tapping one opens a card saying why it moved (last month's biggest lines in and out; food grown against food eaten and the places shortest of it; next month's Authority part by part; the most restless places).
+- A tab bar along the foot in portrait (down the left side in landscape), safe-area aware, with badges: Realm, Court, Treasury, Military, Diplomacy. Each tab has segmented sub-tabs and reopens on the last one used.
+  - Realm: Overview (the meters with their month's movement, what needs attention, the five places in most trouble) and Places (every place, searchable and filtered).
+  - Court: Decisions (the inbox), Laws, Great houses, Faith.
+  - Treasury: Ledger, Trade routes, Mines and industry.
+  - Military: Forces, Threats, Garrisons, War.
+  - Diplomacy: Realms, Spies and embassies, Envoys.
+- A navigation stack per tab: opening a card from a list (a town, a lord, a company, a realm) pushes it, and the back arrow, the browser's back button and the Android back gesture return to exactly where the player was. A card opened from the map while the panel is closed starts a stack of its own. Tapping the open tab again returns to its root.
+
+### Never losing your place
+- Portrait: the panel is a bottom sheet with three heights (peek shows only its title bar; half; full), dragged by its title bar. A tap on the map lowers it to peek instead of closing it; a tap on the title raises it again. Swiping down from peek, or the close button, closes it. Landscape: a side panel that stays open while the map is used.
+- Every screen remembers its sub-tab, its scroll (per sub-tab), its opened sections and any half-filled form (raising an army, opening a route, a lord's grant) for the session and across saves (localStorage key northern-wars.ui, beside the save but outside the game state). The panel starts closed after a reload; one tap on a tab brings back exactly what was open.
+- Decisions never open themselves over another screen. They go to the Court inbox with a badge and a short toast, and the game still pauses for each new one. The inbox lists them by urgency with the days left, and each is answered in the list; the choice that will be taken if it is left is marked. A lord's card shows his pending demand, and a realm's card its envoy, with their answers.
+- Only what cannot wait (war declared on Temeria, a siege of a Temerian town, a rebellion, a deposition) raises a red banner across the top, which leads straight there and can be dismissed.
+
+### Cards
+- One template everywhere: title in the panel's head, a one-line status, key figures as compact chips with small icons, the main actions as buttons, then collapsible sections. Long descriptions sit behind an (i) button.
+- Town cards: a summary head (population, prosperity, unrest, holder, garrison) with Recruit here and Trade route from here, then Overview, Build, Military and People tabs. Build lists only what can be raised there, one line each with its cost; a tap opens the details and the Build button; what the place can never have is folded under Not possible here.
+- Laws: one line per law with the option in force; a tap shows the options and who each pleases or angers; tapping one decrees it.
+- Help: a searchable list of short topics.
+- No tab or card is longer than about two screens of a 390x844 phone when first opened.
+
+### Fewer taps
+- Map pick mode for anything that needs a target: a company's Hunt, Patrol and Station, a trade route's far end, an army's hold or siege, the muster place. A banner says what to tap; once tapped it shows the odds or the value, and Confirm commits. No lists of place names where a tap on the map will do.
+- Threat cards and the Threats list have Send nearest suitable company; town cards have Recruit here, Trade route from here and the garrison level.
+- Measured from the map by browser tests: why a meter moved, 1 tap; answering a decision, 2; sending a company after a sighted threat, 3; building in a town, 4; changing a law, 4; getting back to a screen after a stray map tap or a close, 1.
+
+### Look
+- Parchment and ink, one dark theme. Touch targets of 44px or more; no hover-only controls; motion kept short and off under reduced-motion settings.
 
 ## Save
 - Autosave to localStorage every in-game month, plus manual save, export and import as JSON. Versioned save schema.

@@ -80,8 +80,9 @@ async function boot() {
 
   const panel = createPanel({
     onBack: () => nav.back(),
-    onClose: () => { if (memory.open) nav.close(); },
-    onSnap: () => {},
+    onClose: () => nav.close(),
+    // Raised again from its title bar: bring the content up to date.
+    onSnap: (s) => { if (s !== 'peek') nav.refresh(); },
   });
   panel.restoreSnap(memory.snap);
   document.getElementById('sheet-back').innerHTML = icon('back');
@@ -102,7 +103,7 @@ async function boot() {
     onStart: () => {
       hideUnitLabel();
       // Clear the map: the panel drops to its title bar while picking.
-      if (nav.open && !panel.side && panel.snap !== 'peek') panel.setSnap('peek', { remember: false });
+      if (nav.open && !panel.side && panel.snap !== 'peek') panel.setSnap('peek', { remember: false, instant: true });
     },
   });
 
@@ -133,11 +134,25 @@ async function boot() {
 
   // Decisions go to the Court inbox with a badge and a short toast; the
   // game still pauses for each new one, as it always has.
-  let decisionsSeen = new Set(pendingDecisions(state, world, acked).map((d) => d.key));
+  // Checked every day, so it only compares ids; the words are written out
+  // only when something new has come.
+  const decisionKeys = () => [
+    ...(state.depositions.length > acked ? ['deposition'] : []),
+    ...(state.warDecisions ?? []).map((d) => `warDecision:${d.id}`),
+    ...state.events.map((d) => `event:${d.id}`),
+    ...state.demands.map((d) => `demand:${d.id}`),
+    ...state.envoys.map((d) => `envoy:${d.id}`),
+    ...state.petitions.map((d) => `petition:${d.id}`),
+  ];
+  let decisionsSeen = new Set(decisionKeys());
   function newDecisions() {
-    const list = pendingDecisions(state, world, acked);
-    const fresh = list.filter((d) => !decisionsSeen.has(d.key));
-    decisionsSeen = new Set(list.map((d) => d.key));
+    const keys = decisionKeys();
+    if (keys.every((k) => decisionsSeen.has(k))) {
+      if (keys.length !== decisionsSeen.size) decisionsSeen = new Set(keys);
+      return false;
+    }
+    const fresh = pendingDecisions(state, world, acked).filter((d) => !decisionsSeen.has(d.key));
+    decisionsSeen = new Set(keys);
     if (!fresh.length) return false;
     hints.note('decision');
     const d = fresh[0];
@@ -205,7 +220,7 @@ async function boot() {
     frac = 0;
     acked = state.depositions.length;
     alertsSeen = new Set((state.threats?.alerts ?? []).map((a) => `${a.id}:${a.day}`));
-    decisionsSeen = new Set(pendingDecisions(state, world, acked).map((d) => d.key));
+    decisionsSeen = new Set(decisionKeys());
     app.samples.length = 0;
     pick.end();
     nav.close();
@@ -235,7 +250,7 @@ async function boot() {
     nav.refresh();
     updateBadges();
     updateUrgent();
-    decisionsSeen = new Set(pendingDecisions(state, world, acked).map((d) => d.key));
+    decisionsSeen = new Set(decisionKeys());
     if (state.chronicle.length > before) toast(state.chronicle.at(-1).text);
     return true;
   }
@@ -262,12 +277,14 @@ async function boot() {
   }
 
   // "military:war" opens the Military tab on its War sub-tab.
+  // An explicit jump goes to the tab's own screen, not a card left open on it.
   function goTab(where) {
     const [t, sub] = where.split(':');
+    nav.rememberScroll();
     if (sub) memory.sub[t] = sub;
+    memory.stacks[t] = [`tab:${t}`];
     if (nav.open && memory.active === t) {
-      memory.stacks[t] = [`tab:${t}`];
-      nav.redraw(true);
+      nav.redraw();
       nav.updateTabs();
     } else nav.tab(t);
   }
@@ -502,37 +519,49 @@ async function boot() {
   let lastHintCheck = 0;
   // How long each frame's own work takes (the realm's days and the drawing),
   // for the performance test: it must fit well inside a sixtieth of a second.
-  const frameStats = { frames: 0, ms: 0, max: 0, recent: [] };
+  const frameStats = { frames: 0, ms: 0, max: 0, recent: [], days: [] };
+  // After a day of the realm the interface catches up in the next frame
+  // without one, so the frame that ran the day stays light.
+  let uiDue = 0;
+  function catchUp(now) {
+    uiDue = 0;
+    topbar.update(state);
+    sample();
+    // Open panels follow the realm twice a second at most: at 4x that
+    // spares the phone rebuilding a card four times a second.
+    if (now - lastSheetRefresh > 500) {
+      lastSheetRefresh = now;
+      nav.refresh();
+      updateBadges();
+      updateUrgent();
+    }
+  }
+
   function frame(now) {
     const work = performance.now();
     const dt = Math.min(0.25, (now - last) / 1000);
     last = now;
+    let stepped = false;
     if (speed > 0) {
       frac += dt * speed;
       const days = Math.min(MAX_DAYS_PER_FRAME, Math.floor(frac));
       if (days > 0) {
+        stepped = true;
         frac -= days;
         const month = dateOf(state.day).month;
         state = step(state, days, world);
         if (dateOf(state.day).month !== month) save(true);
-        topbar.update(state);
-        sample();
-        // Open panels follow the realm twice a second at most: at 4x that
-        // spares the phone rebuilding a card four times a second.
-        if (now - lastSheetRefresh > 500) {
-          lastSheetRefresh = now;
-          nav.refresh();
-          updateBadges();
-          updateUrgent();
-        }
+        uiDue += 1;
         if (newSightings()) setSpeed(0);
         if (newDecisions()) {
           setSpeed(0);
-          nav.refresh();
-          updateUrgent();
+          uiDue = 3;
+          lastSheetRefresh = 0;
         }
       }
     }
+    // Never more than a few frames behind, however busy the realm.
+    if (uiDue && (!stepped || uiDue >= 3)) catchUp(now);
     if (label) {
       const p = label.unit ? renderer.unitScreen(state, label.unit, frac) : renderer.armyScreen(state, label.army, frac);
       if (!p || now > unitLabelUntil) hideUnitLabel();
@@ -553,7 +582,11 @@ async function boot() {
     frameStats.ms += took;
     frameStats.max = Math.max(frameStats.max, took);
     frameStats.recent.push(took);
-    if (frameStats.recent.length > 600) frameStats.recent.shift();
+    frameStats.days.push(stepped);
+    if (frameStats.recent.length > 600) {
+      frameStats.recent.shift();
+      frameStats.days.shift();
+    }
     requestAnimationFrame(frame);
   }
 
@@ -572,16 +605,19 @@ async function boot() {
     get speed() { return speed; },
     get renderStats() { return renderer.stats; },
     get artStats() { return renderer.artStats; },
+    // p95Calm leaves out the frames that also ran a day of the realm, to see
+    // what the interface alone costs.
     get frameStats() {
-      const sorted = [...frameStats.recent].sort((a, b) => a - b);
-      return { frames: frameStats.frames, mean: frameStats.ms / Math.max(1, frameStats.frames), max: frameStats.max, p95: sorted[Math.floor(sorted.length * 0.95)] ?? 0 };
+      const p95 = (list) => [...list].sort((a, b) => a - b)[Math.floor(list.length * 0.95)] ?? 0;
+      const calm = frameStats.recent.filter((_, i) => !frameStats.days[i]);
+      return { frames: frameStats.frames, mean: frameStats.ms / Math.max(1, frameStats.frames), max: frameStats.max, p95: p95(frameStats.recent), p95Calm: p95(calm), dayFrames: frameStats.days.filter(Boolean).length };
     },
     // Where the interface stands: the open screen, the panel's height, and
     // its remembered state.
     get ui() {
       return { open: nav.open, route: nav.current, depth: nav.depth, snap: panel.side ? 'side' : panel.snap, scroll: panel.scroll, memory, picking: pick.active };
     },
-    resetFrameStats() { Object.assign(frameStats, { frames: 0, ms: 0, max: 0, recent: [] }); },
+    resetFrameStats() { Object.assign(frameStats, { frames: 0, ms: 0, max: 0, recent: [], days: [] }); },
     planOf: (id) => renderer.planOf(id),
     // What a tap at these page coordinates would pick, for browser tests.
     pickAt(x, y) {
@@ -592,7 +628,7 @@ async function boot() {
     // Bring a map point to the middle of the screen.
     lookAt(x, y) {
       panBy(cam, world, (cam.x - x) * cam.scale, (cam.y - y) * cam.scale);
-      renderer.invalidate();
+      renderer.recentre();
     },
     screenOf(id) {
       const st = world.byId[id];
