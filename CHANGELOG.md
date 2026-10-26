@@ -1,5 +1,11 @@
 # Changelog
 
+## M18 Music and sound
+- A soundtrack: March of the Shadow loops behind the realm. It starts with your first tap (browsers forbid sound before one), fades in, plays on while the game is paused, fades out when the game is put away and dips under alerts and horns. On iPhones it respects the silent switch and mixes with your own audio.
+- Interface sounds, all made in the browser with no sound files: a parchment tick for taps, a paper slide as the sheet opens and closes, a flick between tabs, a clock tick for the speed buttons, a wooden thunk for orders, a wax seal for laws and peace, a coin clink when the treasury moves, a dull knock when an order is refused, a hand bell for new decisions and sightings, a horn for war and sieges, and a soft tick as a long press completes. Each varies a little every time, and only a few ever sound at once.
+- Help has a Sound section: music and effects sliders, and a mute for each, kept on this device.
+- The music is not part of the install; the service worker keeps it after the first full download and answers Range requests, so it plays offline on Safari too.
+
 ## M17 Audiences with rulers
 - Meet the rulers of the North face to face. An audience opens from the row of portraits on the Diplomacy tab, a realm's card, a ruler's request in the Court inbox, or a long press on their capital. The realm waits while you talk.
 - Every ruler has a temper (greedy, honourable, ambitious, cautious, opportunist, zealous) and an agenda: Henselt wants Vergen, Calanthe wants Dillingen, Demavend wants busy roads, Ervyll wants the Scoia'tael crushed. Their mood is now a list of reasons you can read, and their trust in Temeria's word is a memory of its own.

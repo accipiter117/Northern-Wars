@@ -19,6 +19,7 @@ import { createQuick } from './ui/quick.js';
 import { longPress } from './ui/longpress.js';
 import { createAudience } from './ui/audience.js';
 import { stopBrowserGestures, instantPress, createHaptics, createWakeLock, registerWorker } from './ui/native.js';
+import { createAudio } from './ui/audio.js';
 
 const MAX_DAYS_PER_FRAME = 8;
 const params = new URLSearchParams(location.search);
@@ -57,7 +58,9 @@ async function boot() {
   instantPress();
   const haptic = createHaptics(prefs);
   const wake = createWakeLock(prefs);
-  const quick = createQuick({ haptic });
+  const audio = createAudio(prefs, { save: savePrefs });
+  // A long press completing ticks as well as buzzes.
+  const quick = createQuick({ haptic: (k) => { haptic(k); if (k === 'press') audio.play('ring'); } });
   // The interface's memory survives reloads, but the panel starts closed:
   // one tap on a tab brings back exactly what was open.
   const memory = loadMemory();
@@ -89,6 +92,8 @@ async function boot() {
     preview: (route) => renderRoute(app, route),
     peek: (x, y, title, html) => quick.peek(x, y, title, html),
     haptic: (k) => haptic(k),
+    sound: (k) => audio.play(k),
+    audio,
     // An audience with a ruler, over everything; the realm waits meanwhile.
     audience: (pid, opts) => audience.open(pid, opts),
     takeNote: () => {
@@ -152,6 +157,7 @@ async function boot() {
     }
     if (!fresh) return false;
     toast(fresh.text);
+    audio.play('bell');
     return !!prefs.pauseOnSighting;
   }
 
@@ -179,6 +185,7 @@ async function boot() {
     if (!fresh.length) return false;
     hints.note('decision');
     haptic('alert');
+    audio.play('bell');
     const d = fresh[0];
     toast(`${d.kicker}: ${d.title}. It waits at court.${fresh.length > 1 ? ` (${fresh.length} new)` : ''}`);
     updateBadges();
@@ -211,6 +218,8 @@ async function boot() {
     urgentEl.hidden = !top;
     if (!top) { urgentEl.innerHTML = ''; return; }
     haptic('alert');
+    // War and sieges sound the horn; other urgent news rings the bell.
+    audio.play(/^(declared|siege):/.test(top.key) ? 'horn' : 'bell');
     urgentEl.innerHTML = `<button type="button" class="urgent-go" data-urgent="${escapeHtml(top.go)}">${escapeHtml(top.text)}${items.length > 1 ? ` <small>(and ${items.length - 1} more)</small>` : ''}</button>
       <button type="button" class="icon-button" data-urgent-x="${escapeHtml(top.key)}" aria-label="Dismiss">${icon('close')}</button>`;
   }
@@ -269,12 +278,15 @@ async function boot() {
   function order(action) {
     const out = applyAction(state, world, action);
     if (out.error) {
+      audio.play('knock');
       toast(out.error);
       return false;
     }
     lastNote = out.note ?? null;
     const before = state.chronicle.length;
+    const purse = state.treasury;
     state = out.state;
+    orderSound(action, purse, state.treasury);
     topbar.update(state);
     renderer.invalidate();
     nav.refresh();
@@ -286,6 +298,14 @@ async function boot() {
     else if (state.chronicle.length > before) toast(state.chronicle.at(-1).text);
     audience?.render();
     return true;
+  }
+
+  // Laws and peace are sealed; war is declared with a horn; everything else
+  // lands with a wooden thunk, and coin clinks when the treasury moves.
+  function orderSound(action, before, after) {
+    const kind = action.type === 'declare' ? 'horn' : ['law', 'peace'].includes(action.type) ? 'seal' : 'confirm';
+    audio.play(kind);
+    if (Math.abs((after ?? 0) - (before ?? 0)) >= 1) setTimeout(() => audio.play('coin'), 90);
   }
 
   // Opening an audience pauses the realm; ending it plays on as before.
@@ -410,6 +430,10 @@ async function boot() {
       savePrefs(prefs);
       wake.sync();
       if (k === 'haptics' && v === 'on') haptic('confirm');
+      nav.refresh();
+    } else if (/^(music|sfx)-(on|off)$/.test(action)) {
+      const [k, v] = action.split('-');
+      audio.set(k === 'music' ? 'musicOn' : 'sfxOn', v === 'on');
       nav.refresh();
     } else if (action === 'sighting-pause-on' || action === 'sighting-pause-off') {
       prefs.pauseOnSighting = action === 'sighting-pause-on';
@@ -719,6 +743,13 @@ async function boot() {
     world,
     get state() { return state; },
     get speed() { return speed; },
+    // What the interface has asked to hear, newest last (sounds play only
+    // after the first tap and when not muted).
+    get sounds() { return [...audio.log]; },
+    get heard() { return [...audio.heard]; },
+    // Give an order as a tap would, for browser tests.
+    order: (a) => order(a),
+    get audio() { return { unlocked: audio.unlocked, musicPlaying: audio.musicPlaying, src: audio.music?.getAttribute('src') ?? null }; },
     get renderStats() { return renderer.stats; },
     get artStats() { return renderer.artStats; },
     get tileStats() { return renderer.tileStats; },

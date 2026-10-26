@@ -1,6 +1,7 @@
 // Tutorial hints: short notes that appear once each, when their moment comes.
 // What has been seen is remembered per device, not per save, so a second
 // reign is not lectured again.
+import { soundPrefs } from './audio.js';
 import { escapeHtml } from './format.js';
 import { icon } from './icons.js';
 import { form, isOpen } from './memory.js';
@@ -101,11 +102,17 @@ export function helpHtml(app) {
     const open = isOpen(memory, 'help', `t:${h.id}`, !!q);
     return `<details class="sec" data-sec="t:${h.id}"${open ? ' open' : ''}><summary>${escapeHtml(h.title)}</summary><div class="sec-body"><p>${escapeHtml(h.text)}</p></div></details>`;
   }).join('');
+  const snd = soundPrefs(prefs);
+  const pct = (v) => Math.round(v * 100);
   return `
+    <div data-part="sound" class="sound-settings">
+      <div class="volume"><span>Music</span><input type="range" min="0" max="100" step="5" value="${pct(snd.music)}" data-volume="music" aria-label="Music volume"${snd.musicOn ? '' : ' disabled'}><button type="button" class="mute" data-action="${snd.musicOn ? 'music-off' : 'music-on'}" aria-pressed="${!snd.musicOn}" aria-label="${snd.musicOn ? 'Mute the music' : 'Play the music'}">${snd.musicOn ? 'On' : 'Off'}</button></div>
+      <div class="volume"><span>Effects</span><input type="range" min="0" max="100" step="5" value="${pct(snd.sfx)}" data-volume="sfx" aria-label="Effects volume"${snd.sfxOn ? '' : ' disabled'}><button type="button" class="mute" data-action="${snd.sfxOn ? 'sfx-off' : 'sfx-on'}" aria-pressed="${!snd.sfxOn}" aria-label="${snd.sfxOn ? 'Mute the effects' : 'Play the effects'}">${snd.sfxOn ? 'On' : 'Off'}</button></div>
+    </div>
     <div data-part="settings" class="actions">
       <button type="button" class="act" data-action="${enabled ? 'hints-off' : 'hints-on'}"><span class="act-label">${enabled ? 'Turn hints off' : 'Turn hints back on'}</span></button>
       <button type="button" class="act" data-action="${pause ? 'sighting-pause-off' : 'sighting-pause-on'}"><span class="act-label">${pause ? 'Stop pausing at sightings' : 'Pause when a threat is sighted'}</span><span class="act-sub">${pause ? 'The game pauses at each new sighting' : 'A short alert shows either way'}</span></button>
-      <button type="button" class="act" data-action="${prefs.haptics === false ? 'haptics-on' : 'haptics-off'}"><span class="act-label">${prefs.haptics === false ? 'Turn vibration on' : 'Turn vibration off'}</span><span class="act-sub">Short ticks for long presses, orders and alerts, where the phone has them</span></button>
+      <button type="button" class="act" data-action="${prefs.haptics === false ? 'haptics-on' : 'haptics-off'}"><span class="act-label">${prefs.haptics === false ? 'Turn vibration on' : 'Turn vibration off'}</span><span class="act-sub">Ticks for long presses, orders and alerts</span></button>
       <button type="button" class="act" data-action="${prefs.keepAwake ? 'awake-off' : 'awake-on'}"><span class="act-label">${prefs.keepAwake ? 'Let the screen sleep' : 'Keep the screen awake while playing'}</span><span class="act-sub">${'wakeLock' in navigator ? 'Only while the realm is running' : 'Not supported by this browser'}</span></button>
     </div>
     <div data-part="search" data-form="help"><label class="search">${icon('search')}<input type="search" data-field="q" value="${escapeHtml(f.q)}" placeholder="Search help" aria-label="Search help" autocomplete="off"></label></div>
