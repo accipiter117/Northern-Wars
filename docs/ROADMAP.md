@@ -16,7 +16,7 @@
 | M12 A working economy | The economy rescaled so a well-run crown prospers: taxes that grow with development, earning buildings that earn, patrols by road length, cheaper debt; production chains (wool to cloth, grain to rye spirit, timber to charcoal to arms, salt, horses), silver, toll bridges, merchants' quarters, the pilgrims' hostel, the shipyard, the alchemist and the hunters' lodge; and the Treasury, with every line and every place's account | Done |
 | M13 A realm under arms | Bandit camps, monster lairs, Scoia'tael commandos and foreign raiders as things on the map, seen or rumoured; standing companies of six troop types with morale, wounds, experience and pay, on standing orders (station, patrol, escort, hunt, respond); fights with odds in words; field armies raised from the companies; banner tokens, camps and lairs, and a Forces screen | Done |
 | M14 Interface overhaul | A persistent tab bar (Realm, Court, Treasury, Military, Diplomacy) with sub-tabs and badges, an overflow menu, a navigation stack tied to the back gesture, a three-height sheet that a map tap lowers instead of closing (a side panel in landscape), screens that remember their place and forms across saves, decisions in a Court inbox answered inline with a banner only for what cannot wait, one card template, town cards in four tabs, compact laws, searchable help, meter cards, and map pick mode for every target | Done |
-| M15 Native feel and a detailed North | A: no browser gestures, long press as a game gesture (quick-action rings, what's here, list previews), momentum and zoom gestures, an installable offline app with a versioned service worker, save and pause when put away, haptics and wake lock settings. B: the North retraced (24 lands, terrain, 19 rivers, lakes, 92 towns, new roads, same rules and life abroad, richer terrain art, cached terrain tiles) | A done, B in progress |
+| M15 Native feel and a detailed North | A: no browser gestures, long press as a game gesture (quick-action rings, what's here, list previews), momentum and zoom gestures, an installable offline app with a versioned service worker, save and pause when put away, haptics and wake lock settings. B: the North retraced (24 lands, terrain, 19 rivers, lakes, 92 towns, new roads, same rules and life abroad, richer terrain art, cached terrain tiles) | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -35,6 +35,15 @@ Part A, native mobile feel:
 - A valid manifest (name, short name, icons including maskable, standalone, theme and background colours, any orientation), Apple touch icon and status bar tags; a service worker caching every game file with a versioned cache, offline play and a restart prompt for new versions.
 - Save and pause when hidden or closed, staying paused on return; optional wake lock; haptics with a setting; dynamic viewport units; 16px inputs; canvas pixel ratio capped at 2; no drawing while paused and still.
 - Tests: long press opens quick actions with nothing selected; no context menu on the map; manifest valid and service worker registers; the game reloads offline; hiding the page saves; momentum panning comes to rest.
+
+Part B, a detailed North:
+- The 24 lands of the atlas replace the old outlines; the thirteen not modelled are drawn and named as lands beyond, with their towns and roads.
+- The invented foreign terrain and the straight Pontar and Yaruga go; the atlas's forests, ranges, hills, marsh, 19 rivers and lakes come in. Temeria is unchanged.
+- The traced towns replace the invented ones: capitals keep their ids, other old towns map to the nearest new town of the same realm, and a save upgrade (version 13) carries holdings, sieges, routes, memories, armies and ledger lines across.
+- Foreign roads rebuilt: two or three nearest within a realm, roads across touching borders, round the mountains, over rivers near towns.
+- The same rules abroad: camps and lairs in foreign wilds, terrain effects on foreign towns, timber, stone and iron, hidden gold.
+- Richer terrain art (forests, peaks sized by range, mounds, reeds and pools, tapering rivers with names along the curve, lakes with shorelines, seeded scatter), visible under fog; level of detail by zoom and cached terrain tiles.
+- Tests: every town inside its realm; no terrain or town in the sea; every town reachable by road; old saves upgrade with nothing lost; foreign threats spawn in foreign wilds; panning the whole North zoomed out on a slowed CPU stays inside a sixtieth of a second a frame.
 
 ## M14 acceptance criteria
 - No game rules or balance change: this milestone is navigation, layout and interaction only (the one sim change, authorityParts, is the existing monthly Authority sum split into named parts and reused by the ledger, so the numbers are unchanged).

@@ -187,7 +187,7 @@ test('map gestures: momentum comes to rest, double-tap zooms in, two-finger tap 
     for (let y = 160; y < innerHeight - 160; y += 7) for (let x = 30; x < innerWidth - 30; x += 7) if (!window.northernWars.pickAt(x, y)) return { x, y };
     return null;
   });
-  assert.ok(empty, 'open land to double tap ' + JSON.stringify(await page.evaluate(() => [window.northernWars.pickAt(200, 400), window.northernWars.pickAt(60, 700), window.northernWars.ui])));
+  assert.ok(empty, 'open land to double tap');
   const scale = () => page.evaluate(() => { const nw = window.northernWars; const p = nw.screenOfPoint(0, 0); const q = nw.screenOfPoint(100, 0); return (q.x - p.x) / 100; });
   const s0 = await scale();
   await page.touchscreen.tap(empty.x, empty.y);
