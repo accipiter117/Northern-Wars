@@ -1,6 +1,6 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
 import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock } from './sim/index.js';
-import { createCamera, resizeCamera, panBy } from './render/camera.js';
+import { createCamera, resizeCamera, panBy, toWorld } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createTopbar } from './ui/topbar.js';
@@ -15,6 +15,9 @@ import { icon } from './ui/icons.js';
 import { escapeHtml } from './ui/format.js';
 import { createHints, loadPrefs, savePrefs } from './ui/hints.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
+import { createQuick } from './ui/quick.js';
+import { longPress } from './ui/longpress.js';
+import { stopBrowserGestures, instantPress, createHaptics, createWakeLock, registerWorker } from './ui/native.js';
 
 const MAX_DAYS_PER_FRAME = 8;
 const params = new URLSearchParams(location.search);
@@ -49,6 +52,11 @@ async function boot() {
   const cam = createCamera(world);
   const renderer = createRenderer(canvas, world, cam, layoutCfg);
   const prefs = loadPrefs();
+  stopBrowserGestures();
+  instantPress();
+  const haptic = createHaptics(prefs);
+  const wake = createWakeLock(prefs);
+  const quick = createQuick({ haptic });
   // The interface's memory survives reloads, but the panel starts closed:
   // one tap on a tab brings back exactly what was open.
   const memory = loadMemory();
@@ -76,6 +84,9 @@ async function boot() {
     highlight: (hit) => { selection = hit.settlement ? { settlement: hit.settlement } : hit.foreign ? null : { ...hit }; },
     afterPick,
     scrolled: () => {},
+    // A card's head, for a quick look from a list without leaving it.
+    preview: (route) => renderRoute(app, route),
+    peek: (x, y, title, html) => quick.peek(x, y, title, html),
   };
 
   const panel = createPanel({
@@ -155,6 +166,7 @@ async function boot() {
     decisionsSeen = new Set(keys);
     if (!fresh.length) return false;
     hints.note('decision');
+    haptic('alert');
     const d = fresh[0];
     toast(`${d.kicker}: ${d.title}. It waits at court.${fresh.length > 1 ? ` (${fresh.length} new)` : ''}`);
     updateBadges();
@@ -186,6 +198,7 @@ async function boot() {
     urgentKey = key;
     urgentEl.hidden = !top;
     if (!top) { urgentEl.innerHTML = ''; return; }
+    haptic('alert');
     urgentEl.innerHTML = `<button type="button" class="urgent-go" data-urgent="${escapeHtml(top.go)}">${escapeHtml(top.text)}${items.length > 1 ? ` <small>(and ${items.length - 1} more)</small>` : ''}</button>
       <button type="button" class="icon-button" data-urgent-x="${escapeHtml(top.key)}" aria-label="Dismiss">${icon('close')}</button>`;
   }
@@ -206,6 +219,7 @@ async function boot() {
   function setSpeed(s) {
     speed = s;
     topbar.setSpeed(s);
+    wake.playing(s > 0);
   }
 
   function save(quiet) {
@@ -251,6 +265,7 @@ async function boot() {
     updateBadges();
     updateUrgent();
     decisionsSeen = new Set(decisionKeys());
+    haptic('confirm');
     if (state.chronicle.length > before) toast(state.chronicle.at(-1).text);
     return true;
   }
@@ -359,7 +374,14 @@ async function boot() {
 
   function menuAction(action) {
     if (!action) return;
-    if (action === 'sighting-pause-on' || action === 'sighting-pause-off') {
+    if (/^(haptics|awake)-(on|off)$/.test(action)) {
+      const [k, v] = action.split('-');
+      prefs[k === 'haptics' ? 'haptics' : 'keepAwake'] = v === 'on';
+      savePrefs(prefs);
+      wake.sync();
+      if (k === 'haptics' && v === 'on') haptic('confirm');
+      nav.refresh();
+    } else if (action === 'sighting-pause-on' || action === 'sighting-pause-off') {
       prefs.pauseOnSighting = action === 'sighting-pause-on';
       savePrefs(prefs);
       nav.refresh();
@@ -469,8 +491,51 @@ async function boot() {
     }
   }
 
+  // Open a town's card on one of its tabs, scrolled to a part if asked.
+  function openTown(id, sub = null, part = null) {
+    const route = `town:${id}`;
+    if (sub) memory.sub.town = sub;
+    if (nav.open && nav.current === route) nav.redraw(true);
+    else nav.push(route);
+    if (part) document.getElementById(part)?.scrollIntoView({ block: 'start' });
+  }
+
+  // Long press on the map: quick actions, or what is known of the place.
+  const pressCtx = {
+    pick: (x, y) => renderer.pick(x, y, state, frac),
+    toWorld: (x, y) => toWorld(cam, x, y),
+    toPage: (x, y) => {
+      const r = canvas.getBoundingClientRect();
+      return { x: r.left + x, y: r.top + y };
+    },
+    ring: (x, y, title, list) => quick.show(x, y, title, list),
+    peek: (x, y, title, html, list) => quick.peek(x, y, title, html, list),
+    openTown,
+  };
+  function onLongPress(x, y) {
+    if (pick.active) return;
+    hideUnitLabel();
+    longPress(app, pressCtx, x, y);
+  }
+
+  // Two quick taps on open land zoom in; on anything else they are taps.
+  function onDoubleTap(x, y, zoom) {
+    if (pick.active || renderer.pick(x, y, state, frac)) return false;
+    zoom(2);
+    return true;
+  }
+
   // The renderer notices the camera moving by itself; a pan only slides its layers.
-  attachMapInput(canvas, cam, world, { onTap, onChange: () => {} });
+  const mapInput = attachMapInput(canvas, cam, world, {
+    onTap: (x, y) => {
+      if (quick.open) return quick.close();
+      onTap(x, y);
+    },
+    onDoubleTap,
+    onLongPress,
+    onPress: (at) => quick.pressing(at),
+    onChange: () => {},
+  });
 
   let firstSize = true;
   function layout() {
@@ -500,10 +565,31 @@ async function boot() {
     }
   });
 
-  // Keep the interface's memory when the page is put away or closed.
-  const keep = () => { nav.rememberScroll(); saveMemory(memory); };
+  // Put away or closed: save the reign and the interface's memory, and
+  // pause. Coming back, it stays paused until the player plays on.
+  const keep = () => {
+    nav.rememberScroll();
+    saveMemory(memory);
+    writeSave(serialize(state));
+  };
   window.addEventListener('pagehide', keep);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) keep(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden') return;
+    keep();
+    if (speed > 0) setSpeed(0);
+    mapInput.stop();
+  });
+
+  registerWorker({
+    onUpdate: (restart) => {
+      const el = document.getElementById('update');
+      el.hidden = false;
+      document.getElementById('update-restart').onclick = () => {
+        el.hidden = true;
+        restart();
+      };
+    },
+  });
 
   function sample() {
     const last = app.samples.at(-1);

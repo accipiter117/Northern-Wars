@@ -146,4 +146,45 @@ export function attachPanelInput(app) {
   }, true);
 
   body.addEventListener('scroll', () => app.scrolled(), { passive: true });
+
+  // A long press on a row that leads somewhere shows a quick look at it,
+  // without leaving the list. The click that would follow is swallowed.
+  let held = null;
+  let swallow = false;
+  const letGo = () => {
+    if (held) clearTimeout(held.timer);
+    held = null;
+  };
+  body.addEventListener('pointerdown', (e) => {
+    const row = e.target.closest('[data-go]');
+    if (!row || e.button > 0) return;
+    const at = { x: e.clientX, y: e.clientY };
+    letGo();
+    held = { at, timer: setTimeout(() => {
+      held = null;
+      swallow = true;
+      preview(row.dataset.go, at);
+    }, 450) };
+  });
+  body.addEventListener('pointermove', (e) => {
+    if (held && Math.hypot(e.clientX - held.at.x, e.clientY - held.at.y) > 10) letGo();
+  });
+  body.addEventListener('pointerup', letGo);
+  body.addEventListener('pointercancel', letGo);
+  body.addEventListener('click', (e) => {
+    if (!swallow) return;
+    swallow = false;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }, true);
+
+  function preview(route, at) {
+    const out = app.preview(route);
+    const tpl = document.createElement('template');
+    tpl.innerHTML = out.html;
+    const head = tpl.content.querySelector('[data-part="head"]') ?? tpl.content.querySelector('[data-part]');
+    // Buttons inside a quick look would act from the wrong place: keep the words.
+    head?.querySelectorAll('.actions, .info-btn').forEach((el) => el.remove());
+    app.peek(at.x, at.y, out.title, head ? head.innerHTML : '');
+  }
 }
