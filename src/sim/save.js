@@ -3,7 +3,9 @@ import { defaultForces } from './forces.js';
 import { defaultThreats } from './threats.js';
 import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
-import { defaultNeighbours } from './neighbours.js';
+import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
+import { defaultDiplomacy, makeTreaty } from './diplomacy.js';
+import { hostile } from './conflict.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
@@ -158,6 +160,30 @@ const MIGRATIONS = {
   12(state, world) {
     upgradeNorth(state, world);
     state.version = 13;
+    return state;
+  },
+  // v14 brings audiences with rulers: trust, treaties, deals and requests.
+  // Old friendships become pacts: a friendly stance with a true ally
+  // (relation 75 or more) becomes a defensive pact for five years, as the
+  // old rule called such friends to each other's wars. Envoys still waiting
+  // take their default answer, as if their time had run out.
+  13(state, world) {
+    state.diplomacy = defaultDiplomacy();
+    if (world.diplomacy) {
+      for (const [rid, n] of Object.entries(state.neighbours ?? {})) {
+        if (!world.diplomacy.rulers[rid]) continue;
+        state.diplomacy.trust[rid] = { temeria: Math.max(20, Math.min(80, world.diplomacy.trust.start + n.relation / 5)) };
+        if (n.stance === 'friendly' && n.relation >= (world.realms?.vision.allyAt ?? 75) && !hostile(state, 'temeria', rid)) {
+          makeTreaty(state, world, 'defensive', 'temeria', rid, { years: 5 });
+        }
+      }
+    }
+    for (const e of [...(state.envoys ?? [])]) {
+      const choices = world.envoys.envoys[e.envoy]?.choices ?? [];
+      resolveEnvoy(state, world, e.id, Math.max(0, choices.findIndex((c) => c.default)), true);
+    }
+    state.envoys = [];
+    state.version = 14;
     return state;
   },
 };

@@ -31,3 +31,14 @@ export {
 } from './forces.js';
 export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites } from './threats.js';
 export { companyStrength, threatStrength, winChance, oddsWord, resolve, speciesOf, groundAt } from './combat.js';
+export {
+  parties, rulerOf, rulerName, rulerShort, agendaText, agendaOf, trustIn, moodReasons, moodTarget, moodWord, treatiesOf, treatyBetween, treatyDef,
+  partnerOf, powerOf, fearOf, dangerTo, sharesSight, grievance,
+} from './diplomacy.js';
+export {
+  VERDICTS, weighDeal, counterOffer, proposeDeal, canSign, itemProblem, describeItem, goodDef, goodsInHand, ourValue, itemValue, treatyValue, dealEnds,
+} from './deals.js';
+export {
+  canGift, canDenounce, canDemandTribute, tributeAsk, asksOf, canAsk, canUltimatum, warReasons, canDeclareWith, reasonCost, requestText,
+  affinity, enemiesOfParty, resolve as rulerResolve,
+} from './audiences.js';

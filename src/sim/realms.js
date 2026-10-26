@@ -5,6 +5,7 @@
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { ownerOf, leviedMap, besieged } from './conflict.js';
+import { sharesSight } from './diplomacy.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 const R = (world) => world.realms;
@@ -39,6 +40,7 @@ export function informed(state, world, rid) {
   const v = R(world).vision;
   if (state.embassies?.[rid]) return true;
   if ((state.spies?.[rid] ?? 0) > state.day) return true;
+  if (sharesSight(state, rid)) return true;
   if (n && n.stance === 'friendly' && n.relation >= v.friendlyAt) return true;
   return n ? n.relation > world.neighbours.closedBelow && world.neighbours.realms[rid].trade > 0 : false;
 }

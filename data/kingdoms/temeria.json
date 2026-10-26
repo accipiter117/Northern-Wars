@@ -14,6 +14,7 @@
   "gold": "data/gold.json",
   "industry": "data/industry.json",
   "forces": "data/forces.json",
+  "diplomacy": "data/diplomacy.json",
   "northIds": "data/north-ids.json",
   "start": {
     "year": 1262,

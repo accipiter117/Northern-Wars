@@ -5,6 +5,7 @@ import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed, creditLimit }
 import { monthlyPopulation } from './population.js';
 import { lawEffects, stepOpinionDay, opinionUnrest } from './laws.js';
 import { stepNeighboursDay, monthlyEnvoy } from './neighbours.js';
+import { monthlyDiplomacy, stepDiplomacyDay } from './audiences.js';
 import { stepCultureDay, monthlyCulture, tensionUnrest } from './culture.js';
 import { stepPetitionsDay, monthlyPetition } from './petitions.js';
 import { stepHousesDay, monthlyHouses, holderUnrest } from './houses.js';
@@ -51,6 +52,7 @@ export function stepRealmDay(state, world, rng) {
   stepEconomyDay(state, world);
   stepOpinionDay(state, world);
   stepNeighboursDay(state, world);
+  stepDiplomacyDay(state, world);
   stepCultureDay(state, world);
   stepPetitionsDay(state, world);
   stepHousesDay(state, world);
@@ -102,13 +104,15 @@ export function stepRealmDay(state, world, rng) {
     monthlyCompanies(state, world);
     if (state.gold) monthlyGold(state, world);
     monthlyPopulation(state, world, rng);
-    monthlyEnvoy(state, world, rng);
+    // Rulers' own requests for audiences replace the old random envoys.
+    if (!state.diplomacy) monthlyEnvoy(state, world, rng);
     monthlyCulture(state, world, rng);
     monthlyPetition(state, world, rng);
     monthlyHouses(state, world, rng);
     monthlyThreats(state, world, rng);
     monthlyEvent(state, world, rng, date.season);
     monthlyRealms(state, world, rng);
+    monthlyDiplomacy(state, world, rng);
     if (state.wars) monthlyWar(state, world, rng);
   }
 }

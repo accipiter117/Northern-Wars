@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createState, step, applyAction, serialize, deserialize, foreignTrade, ownerOf, warsOf, peaceTerms, visionOf, canSee } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { startWar, applyPeace } from '../../src/sim/war.js';
+import { makeTreaty } from '../../src/sim/diplomacy.js';
 import { makeRng } from '../../src/sim/rng.js';
 import { nodeWorld } from '../helpers.js';
 
@@ -144,8 +145,8 @@ test('a soured neighbour gathers an army, gives warning, then invades', () => {
 test('an ally attacked calls on the crown; answering puts Temeria at its side', () => {
   const rng = makeRng(13);
   let s = createState(world, 7);
-  s.neighbours.aedirn.stance = 'friendly';
-  s.neighbours.aedirn.relation = 90;
+  // Since M17 calls to arms follow treaties, not friendship alone.
+  makeTreaty(s, world, 'defensive', 'temeria', 'aedirn');
   const war = startWar(s, world, rng, 'kaedwen', 'aedirn', 'test');
   const call = s.warDecisions.find((d) => d.kind === 'call');
   assert.ok(call);

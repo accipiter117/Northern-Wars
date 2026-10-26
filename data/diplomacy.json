@@ -1,0 +1,508 @@
+{
+  "note": "Audiences with rulers (M17). Rulers belong to a party (a realm id today; lands beyond and powers without land can be added here later with no code changes). Traits and agendas shape how each ruler values every item and treaty. Values are in crowns: what an item is worth to the ruler weighing it. Trust runs 0 to 100 and is a lasting memory, separate from mood.",
+  "rulers": {
+    "redania": {
+      "id": "vizimir",
+      "name": "Vizimir II",
+      "title": "King",
+      "traits": [
+        "ambitious",
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "faith",
+        "faith": "eternal_fire"
+      },
+      "emblem": "eagle"
+    },
+    "kaedwen": {
+      "id": "henselt",
+      "name": "Henselt",
+      "title": "King",
+      "traits": [
+        "ambitious",
+        "zealous"
+      ],
+      "agenda": {
+        "kind": "town",
+        "town": "vergen"
+      },
+      "emblem": "unicorn"
+    },
+    "aedirn": {
+      "id": "demavend",
+      "name": "Demavend III",
+      "title": "King",
+      "traits": [
+        "greedy",
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "trade"
+      },
+      "emblem": "sun"
+    },
+    "mahakam": {
+      "id": "brouver",
+      "name": "Brouver Hoog",
+      "title": "Elder",
+      "traits": [
+        "honourable",
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "borders"
+      },
+      "emblem": "hammer"
+    },
+    "brokilon": {
+      "id": "eithne",
+      "name": "Eithné",
+      "title": "Lady",
+      "traits": [
+        "zealous",
+        "honourable"
+      ],
+      "agenda": {
+        "kind": "borders"
+      },
+      "emblem": "tree"
+    },
+    "cidaris": {
+      "id": "ethain",
+      "name": "Ethain",
+      "title": "King",
+      "traits": [
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "trade"
+      },
+      "emblem": "ship"
+    },
+    "kerack": {
+      "id": "belohun",
+      "name": "Belohun",
+      "title": "King",
+      "traits": [
+        "greedy",
+        "opportunist"
+      ],
+      "agenda": {
+        "kind": "trade"
+      },
+      "emblem": "fish"
+    },
+    "verden": {
+      "id": "ervyll",
+      "name": "Ervyll",
+      "title": "King",
+      "traits": [
+        "opportunist",
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "scoiatael"
+      },
+      "emblem": "wolf"
+    },
+    "brugge": {
+      "id": "venzlav",
+      "name": "Venzlav",
+      "title": "King",
+      "traits": [
+        "cautious",
+        "honourable"
+      ],
+      "agenda": {
+        "kind": "borders"
+      },
+      "emblem": "tower"
+    },
+    "sodden": {
+      "id": "sodden_lords",
+      "name": "The Sodden lords",
+      "title": "",
+      "traits": [
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "faith",
+        "faith": "melitele"
+      },
+      "emblem": "star"
+    },
+    "cintra": {
+      "id": "calanthe",
+      "name": "Calanthe",
+      "title": "Queen",
+      "traits": [
+        "honourable",
+        "ambitious"
+      ],
+      "agenda": {
+        "kind": "town",
+        "town": "dillingen"
+      },
+      "emblem": "lion"
+    }
+  },
+  "traits": {
+    "greedy": {
+      "name": "Greedy",
+      "blurb": "Coin and goods count for more with them.",
+      "coin": 1.35,
+      "goods": 1.15,
+      "gift": 1.5
+    },
+    "honourable": {
+      "name": "Honourable",
+      "blurb": "Keeps its word and holds others to theirs.",
+      "trustWeight": 1.5,
+      "keep": 0.97,
+      "breakAll": 1.5
+    },
+    "ambitious": {
+      "name": "Ambitious",
+      "blurb": "Wants land and standing, and dislikes being bound.",
+      "town": 1.5,
+      "binding": 0.7,
+      "pride": 12
+    },
+    "cautious": {
+      "name": "Cautious",
+      "blurb": "Values safety above gain, and yields to strength.",
+      "safety": 1.4,
+      "fear": 12
+    },
+    "opportunist": {
+      "name": "Opportunist",
+      "blurb": "Honours a pact while it pays.",
+      "keep": 0.5,
+      "breakChance": 3
+    },
+    "zealous": {
+      "name": "Zealous",
+      "blurb": "The laws and faith it cares about count double.",
+      "cares": 1.5
+    }
+  },
+  "agendas": {
+    "borders": {
+      "name": "Secure the borders",
+      "line": "wants quiet borders"
+    },
+    "trade": {
+      "name": "Grow trade",
+      "line": "wants busy roads and full markets"
+    },
+    "town": {
+      "name": "Take {town}",
+      "line": "wants {town}"
+    },
+    "faith": {
+      "name": "Spread the faith of {faith}",
+      "line": "wants the faith of {faith} honoured"
+    },
+    "scoiatael": {
+      "name": "Crush the Scoia'tael",
+      "line": "wants the Scoia'tael crushed"
+    }
+  },
+  "faithNames": {
+    "eternal_fire": "the Eternal Fire",
+    "melitele": "Melitele"
+  },
+  "mood": {
+    "agendaTownHeld": -20,
+    "agendaFaith": 10,
+    "scoiataelLaw": 8,
+    "scoiataelSympathy": -8,
+    "tradePer": 0.25,
+    "tradeMax": 10,
+    "armiesNear": -10,
+    "armiesNearBorders": -15,
+    "armyRange": 120,
+    "warFought": -6,
+    "warFoughtMax": -18,
+    "warYears": 15,
+    "tolls": -5
+  },
+  "trust": {
+    "start": 50,
+    "drift": 0.01,
+    "dealDone": 3,
+    "dealShort": -6,
+    "dealBroken": -15,
+    "treatyKept": 6,
+    "treatyYear": 1,
+    "noCause": -10,
+    "lowAt": 30
+  },
+  "memory": {
+    "fade": 720,
+    "max": 12
+  },
+  "treaties": {
+    "nonaggression": {
+      "name": "Non-aggression pact",
+      "blurb": "Neither side makes war on the other.",
+      "years": 5,
+      "minRelation": -15,
+      "minTrust": 30,
+      "mood": 5,
+      "breakTrust": 30,
+      "breakAll": 6
+    },
+    "trade": {
+      "name": "Trade pact",
+      "blurb": "Open markets: trade between us a quarter higher.",
+      "years": 5,
+      "minRelation": 10,
+      "minTrust": 35,
+      "mood": 5,
+      "tradeBonus": 0.25,
+      "breakTrust": 20,
+      "breakAll": 4
+    },
+    "defensive": {
+      "name": "Defensive pact",
+      "blurb": "Each joins the other's war if the other is attacked.",
+      "years": 10,
+      "minRelation": 30,
+      "minTrust": 50,
+      "mood": 10,
+      "breakTrust": 40,
+      "breakAll": 8
+    },
+    "alliance": {
+      "name": "Full alliance",
+      "blurb": "Each joins the other's wars, attacking or attacked, and shares what it sees.",
+      "years": 10,
+      "minRelation": 50,
+      "minTrust": 60,
+      "mood": 15,
+      "breakTrust": 50,
+      "breakAll": 10
+    },
+    "access": {
+      "name": "Military access",
+      "blurb": "Our armies may march through and hold places in their land.",
+      "years": 2,
+      "minRelation": 20,
+      "minTrust": 40,
+      "mood": 0,
+      "breakTrust": 25,
+      "breakAll": 5
+    },
+    "protectorate": {
+      "name": "Protectorate",
+      "blurb": "A small realm places itself under our protection and pays for it. We must defend it.",
+      "years": 10,
+      "minRelation": 30,
+      "minTrust": 45,
+      "mood": 10,
+      "breakTrust": 50,
+      "breakAll": 10,
+      "small": [
+        "kerack",
+        "cidaris",
+        "verden",
+        "brugge"
+      ],
+      "power": 2,
+      "tribute": 40
+    }
+  },
+  "goods": {
+    "grain": {
+      "name": "Grain",
+      "stock": "food",
+      "price": 0.05,
+      "unit": 400
+    },
+    "timber": {
+      "name": "Timber",
+      "stock": "timber",
+      "price": 1,
+      "unit": 20
+    },
+    "stone": {
+      "name": "Stone",
+      "stock": "stone",
+      "price": 1,
+      "unit": 20
+    },
+    "iron": {
+      "name": "Iron",
+      "stock": "iron",
+      "price": 1.6,
+      "unit": 15
+    },
+    "cloth": {
+      "name": "Cloth",
+      "made": "cloth",
+      "unit": 10
+    },
+    "spirit": {
+      "name": "Rye spirit",
+      "made": "spirit",
+      "unit": 8
+    },
+    "arms": {
+      "name": "Arms",
+      "store": "arms",
+      "unit": 10
+    },
+    "horses": {
+      "name": "Horses",
+      "store": "horses",
+      "unit": 5
+    },
+    "salt": {
+      "name": "Salt",
+      "made": "salt",
+      "unit": 10
+    }
+  },
+  "values": {
+    "monthlyDiscount": 0.8,
+    "need": 1.3,
+    "spare": 0.6,
+    "makeCost": 0.75,
+    "buyCost": 1.2,
+    "routeMonths": 24,
+    "routeShare": 0.5,
+    "intelMonth": 18,
+    "intelGiveMonth": 25,
+    "passageBase": 250,
+    "passageMonth": 25,
+    "askPassage": 200,
+    "embassy": 150,
+    "townPer": 80,
+    "townGivePer": 160,
+    "goodwillRelation": 3,
+    "goodwillTrust": 4,
+    "goodwillMax": 300,
+    "close": 0.15,
+    "closeMin": 80,
+    "more": 0.6,
+    "moreMin": 300,
+    "peacePoint": 25
+  },
+  "treatyValue": {
+    "base": 120,
+    "fear": 400,
+    "threat": 700,
+    "burden": 500,
+    "tradeYears": 0.25,
+    "agendaTown": 600,
+    "accessCost": 250,
+    "protectBenefit": 900,
+    "protectFear": 300,
+    "protectPride": 500,
+    "hostility": 700
+  },
+  "actions": {
+    "gift": {
+      "sizes": [
+        100,
+        250,
+        500
+      ],
+      "mood": [
+        5,
+        10,
+        16
+      ],
+      "cooldown": 60
+    },
+    "denounce": {
+      "mood": -20,
+      "enemies": 8,
+      "cooldown": 180,
+      "fade": 1080
+    },
+    "tribute": {
+      "months": 12,
+      "cooldown": 365,
+      "refused": -15
+    },
+    "ask": {
+      "cooldown": 120,
+      "refused": -5,
+      "costs": {
+        "muster": 25,
+        "raiders": 10,
+        "tolls": 15
+      },
+      "restrainDays": 365
+    },
+    "intel": {
+      "months": 6
+    },
+    "ultimatum": {
+      "days": 30,
+      "cause": 90,
+      "refused": -10
+    }
+  },
+  "fearBase": 40,
+  "requests": {
+    "chance": 0.07,
+    "expireDays": 30,
+    "cooldown": 150,
+    "demandRefused": -12
+  },
+  "aiPacts": {
+    "chance": 0.008,
+    "breakChance": 0.0015,
+    "rivalry": -40,
+    "treaty": 15,
+    "war": -25,
+    "sharedEnemy": 20,
+    "trustWeight": 0.5,
+    "nonaggressionAt": 0,
+    "tradeAt": 15,
+    "defensiveAt": 25,
+    "allianceAt": 45,
+    "breakBelow": -25
+  },
+  "tolls": {
+    "below": -10,
+    "trade": 0.2,
+    "chance": 0.15
+  },
+  "war": {
+    "reasons": {
+      "claim": {
+        "name": "A border claim",
+        "authority": 0
+      },
+      "broken": {
+        "name": "A broken treaty",
+        "authority": 0.5,
+        "within": 1095
+      },
+      "ally": {
+        "name": "Defending an ally",
+        "authority": 0.5
+      },
+      "ultimatum": {
+        "name": "Our terms were refused",
+        "authority": 0.5
+      },
+      "none": {
+        "name": "No reason given",
+        "authority": 1
+      }
+    },
+    "noCauseMood": -8
+  },
+  "join": {
+    "honourable": 0.95,
+    "cautious": 0.75,
+    "opportunist": 0.5,
+    "default": 0.8
+  }
+}

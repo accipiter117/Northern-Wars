@@ -9,7 +9,7 @@ import { foreignTrade } from './neighbours.js';
 import { realmFaith } from './culture.js';
 import { visionOf, updateIntel } from './vision.js';
 
-const HALTED = new Set(['caravan', 'grain', 'goods', 'route', 'export', 'foreign', 'pilgrim']);
+const HALTED = new Set(['caravan', 'grain', 'goods', 'route', 'export', 'foreign', 'pilgrim', 'deal']);
 const HALT_RANGE = 18;
 
 export function stepAmbientDay(state, world, rng) {
@@ -89,6 +89,11 @@ const RATE = {
     for (const r of state.routes ?? []) if (!r.closed) v += r.last;
     return Math.min(3, v * (world.trade?.caravansPerCrown ?? 0));
   },
+  // Caravans under treaty run while a deal sends goods either way.
+  deal(state) {
+    const n = (state.diplomacy?.deals ?? []).filter((d) => d.items.some((i) => i.kind === 'goods' && i.left > 0)).length;
+    return Math.min(1, n);
+  },
   // Carts of wool, charcoal and finished goods run as the chains flow.
   goods(state, k, world) {
     const c = world.industry?.carts;
@@ -150,6 +155,20 @@ const SPAWNERS = {
     const to = realmPick(state, world, rng, rid);
     const route = to ? roadPath(world, from, to, true) : null;
     return route && route.length > 1 ? { route, realm: rid } : null;
+  },
+
+  // A caravan carrying a deal's goods between Vizima and the other capital,
+  // whichever way the goods go.
+  deal(state, world, rng) {
+    const deals = (state.diplomacy?.deals ?? []).filter((d) => d.items.some((i) => i.kind === 'goods' && i.left > 0));
+    if (!deals.length) return null;
+    const d = rng.pick(deals);
+    const item = rng.pick(d.items.filter((i) => i.kind === 'goods' && i.left > 0));
+    const home = world.kingdom.capital;
+    const there = world.realms?.realms[d.with]?.capital ?? world.neighbours.realms[d.with]?.gateway;
+    const path = there ? roadPath(world, home, there, true) : null;
+    if (!path || path.length < 2) return null;
+    return { route: item.from === 'us' ? path : [...path].reverse(), realm: d.with, good: item.good };
   },
 
   // A crown caravan works one of the crown's trade routes, from either end.
@@ -349,6 +368,10 @@ export function describeUnit(world, u) {
   if (u.kind === 'goods') {
     const good = world.industry.goods[u.good]?.name.toLowerCase() ?? 'goods';
     return `A cart of ${good} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
+  }
+  if (u.kind === 'deal') {
+    const good = world.diplomacy?.goods[u.good]?.name.toLowerCase() ?? 'goods';
+    return `A caravan of ${good} under our treaty with ${world.geography.neighbours[u.realm].name}, from ${world.byId[u.route[0]].name} bound for ${world.byId[u.route[u.route.length - 1]].name}`;
   }
   if (u.kind === 'export') {
     return `${kind} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name} in ${world.geography.neighbours[u.realm].name}`;

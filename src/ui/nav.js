@@ -20,7 +20,7 @@ export function tabBarHtml() {
     ${icon(TAB_INFO[t].icon)}<span class="tab-label">${TAB_INFO[t].label}</span><span class="tab-badge" hidden></span></button>`).join('');
 }
 
-export function createNav({ memory, panel, render, onShow, persist, onTab }) {
+export function createNav({ memory, panel, render, onShow, persist, onTab, onBack }) {
   const bar = document.getElementById('tabbar');
   bar.innerHTML = tabBarHtml();
   let pushed = 0;
@@ -108,8 +108,23 @@ export function createNav({ memory, panel, render, onShow, persist, onTab }) {
       return;
     }
     if (pushed > 0) pushed--;
+    // A screen over the panel (an audience) takes the back gesture first.
+    if (onBack?.()) return;
     if (memory.open) popOne();
   });
+
+  // Steps of a screen over the panel, so the back gesture can retrace them,
+  // and unwinding them all at once when it closes.
+  function mark() {
+    addHistory();
+  }
+  function unwind(n) {
+    if (n <= 0 || pushed <= 0) return;
+    const k = Math.min(n, pushed);
+    ignorePop++;
+    pushed -= k;
+    try { history.go(-k); } catch { /* fine */ }
+  }
 
   function close({ fromHistory = false } = {}) {
     rememberScroll();
@@ -184,7 +199,7 @@ export function createNav({ memory, panel, render, onShow, persist, onTab }) {
   });
 
   return {
-    tab, push, replace, back, close, refresh, redraw, change, setBadges, updateTabs, rememberScroll,
+    tab, push, replace, back, close, refresh, redraw, change, setBadges, updateTabs, rememberScroll, mark, unwind,
     get current() { return current(); },
     get depth() { return stack()?.length ?? 0; },
     get open() { return memory.open; },

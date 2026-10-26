@@ -5,6 +5,8 @@ import { sideName } from '../sim/index.js';
 import { cardHead, orderAttr, section } from './card.js';
 import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
+import { portraitImg } from './audience.js';
+import { parties, rulerShort, moodWord, treatyDef } from '../sim/index.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 
@@ -20,17 +22,86 @@ function trendArrow(state, world, id) {
   return gap > 2 ? ' <small class="up">\u25B2</small>' : gap < -2 ? ' <small class="down">\u25BC</small>' : '';
 }
 
+// The rulers of the North, each a portrait to tap for an audience.
+export function rulersRowHtml(app) {
+  const { world, state } = app;
+  if (!world.diplomacy) return '';
+  const waiting = new Set((state.diplomacy?.requests ?? []).map((q) => q.realm));
+  return `<div data-part="rulers" class="rulers-row" role="list">${parties(world).map((pid) => {
+    const rel = state.neighbours[pid]?.relation ?? 0;
+    return `<button type="button" class="ruler-chip" role="listitem" data-audience="${pid}" aria-label="An audience with ${escapeHtml(rulerShort(world, pid))}">
+      ${portraitImg(world, pid, 56)}${waiting.has(pid) ? '<span class="dot" aria-hidden="true"></span>' : ''}
+      <span class="ruler-name">${escapeHtml(rulerShort(world, pid))}</span><span class="ruler-mood ${rel >= 5 ? 'good' : rel < -25 ? 'bad' : ''}">${moodWord(rel)}</span></button>`;
+  }).join('')}</div>`;
+}
+
+const PACT_STYLE = {
+  nonaggression: { colour: '#b5a27e', dash: '5 4', width: 1.6 },
+  trade: { colour: '#d2ab5f', dash: '', width: 2 },
+  defensive: { colour: '#6f8fc4', dash: '', width: 2.6 },
+  alliance: { colour: '#c9573f', dash: '', width: 3.4 },
+  access: { colour: '#7fa86a', dash: '2 4', width: 1.6 },
+  protectorate: { colour: '#a77ac9', dash: '8 3', width: 2.4 },
+};
+
+// The web of pacts and wars across the North, drawn where each capital lies.
+export function pactsHtml(app) {
+  const { world, state } = app;
+  if (!state.diplomacy) return '<div data-part="pacts"><p class="sub">No treaties in this realm.</p></div>';
+  const ids = ['temeria', ...parties(world)];
+  const at = (pid) => world.byId[pid === 'temeria' ? world.kingdom.capital : world.realms.realms[pid].capital];
+  const pts = ids.map((p) => at(p));
+  const x0 = Math.min(...pts.map((p) => p.x)) - 80;
+  const x1 = Math.max(...pts.map((p) => p.x)) + 80;
+  const y0 = Math.min(...pts.map((p) => p.y)) - 70;
+  const y1 = Math.max(...pts.map((p) => p.y)) + 90;
+  // Nodes and lines sized to the span of the North, so they read on a phone.
+  const k = (x1 - x0) / 700;
+  const lines = state.diplomacy.treaties.map((t) => {
+    const a = at(t.a);
+    const b = at(t.b);
+    const st = PACT_STYLE[t.kind];
+    return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${st.colour}" stroke-width="${st.width * 3 * k}" ${st.dash ? `stroke-dasharray="${st.dash.split(' ').map((n) => n * 3 * k).join(' ')}"` : ''} stroke-linecap="round"><title>${escapeHtml(treatyDef(world, t.kind).name)}: ${escapeHtml(sideName(world, t.a))} and ${escapeHtml(sideName(world, t.b))}</title></line>`;
+  }).join('');
+  const wars = (state.wars ?? []).flatMap((w) => w.sides[0].flatMap((a) => w.sides[1].map((b) => [a, b]))).filter(([a, b]) => ids.includes(a) && ids.includes(b)).map(([a, b]) => {
+    const p = at(a);
+    const q = at(b);
+    return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#e0432f" stroke-width="${5 * k}" stroke-dasharray="${4 * k} ${10 * k}" stroke-linecap="round"><title>War: ${escapeHtml(sideName(world, a))} and ${escapeHtml(sideName(world, b))}</title></line>`;
+  }).join('');
+  const nodes = ids.map((pid) => {
+    const p = at(pid);
+    const label = pid === 'temeria' ? 'Temeria' : sideName(world, pid);
+    const r = 26 * k;
+    const img = pid === 'temeria' ? `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#23365e" stroke="#d2ab5f" stroke-width="${3 * k}"/>`
+      : `<image href="${portraitImg(world, pid, 48).match(/src="([^"]+)"/)[1]}" x="${p.x - r}" y="${p.y - r}" width="${2 * r}" height="${2 * r}"/>`;
+    return `<g class="web-node"${pid === 'temeria' ? '' : ` data-audience="${pid}"`}>${img}<text x="${p.x}" y="${p.y + r + 20 * k}" text-anchor="middle" style="font-size:${20 * k}px;stroke-width:${4 * k}px">${escapeHtml(label)}</text></g>`;
+  }).join('');
+  const legend = Object.entries(PACT_STYLE).map(([k, st]) => `<span class="leg"><svg width="28" height="10" aria-hidden="true"><line x1="2" y1="5" x2="26" y2="5" stroke="${st.colour}" stroke-width="${st.width}" ${st.dash ? `stroke-dasharray="${st.dash}"` : ''}/></svg>${escapeHtml(treatyDef(world, k).name)}</span>`).join('')
+    + '<span class="leg"><svg width="28" height="10" aria-hidden="true"><line x1="2" y1="5" x2="26" y2="5" stroke="#e0432f" stroke-width="2" stroke-dasharray="2 3"/></svg>At war</span>';
+  const list = state.diplomacy.treaties.slice().sort((a, b) => (a.a === 'temeria' || a.b === 'temeria' ? -1 : 0) - (b.a === 'temeria' || b.b === 'temeria' ? -1 : 0))
+    .map((t) => `<li>${escapeHtml(treatyDef(world, t.kind).name)}: ${escapeHtml(sideName(world, t.a))} and ${escapeHtml(sideName(world, t.b))}, until ${formatDate(t.until)}</li>`).join('');
+  const recent = state.diplomacy.log.slice(-6).reverse().filter((l) => l.what !== 'made')
+    .map((l) => `<li>${escapeHtml(treatyDef(world, l.kind).name)} between ${escapeHtml(sideName(world, l.a))} and ${escapeHtml(sideName(world, l.b))} ${l.what === 'broken' ? `broken by ${escapeHtml(sideName(world, l.by))}` : 'ran its course'}, ${formatDate(l.day)}</li>`).join('');
+  return `<div data-part="pacts">
+    <p class="sub">Who is bound to whom across the North. Tap a ruler for an audience.</p>
+    <svg class="web" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" role="img" aria-label="The web of pacts and alliances">${wars}${lines}${nodes}</svg>
+    <div class="legend">${legend}</div>
+    <h3>Treaties in force</h3>${list ? `<ul class="plain">${list}</ul>` : '<p class="sub">None.</p>'}
+    ${recent ? `<h3>Lately ended</h3><ul class="plain">${recent}</ul>` : ''}
+  </div>`;
+}
+
 export function neighboursHtml(app) {
   const { world, state } = app;
-  const waiting = new Set(state.envoys.map((e) => e.realm));
+  const waiting = new Set([...state.envoys.map((e) => e.realm), ...(state.diplomacy?.requests ?? []).map((q) => q.realm)]);
   const rows = Object.keys(world.neighbours.realms).map((id) => {
     const n = state.neighbours[id];
     return `<button type="button" class="row realm-row" data-realm="${id}" data-go="realm:${id}">
-      ${icon('dove')}<span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[id].name)}${waiting.has(id) ? ' <span class="badge bad">Envoy waiting</span>' : ''}${hostile(state, TEMERIA, id) ? ' <span class="badge bad">At war</span>' : ''}</span>
+      ${icon('dove')}<span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[id].name)}${waiting.has(id) ? ' <span class="badge bad">Asks an audience</span>' : ''}${hostile(state, TEMERIA, id) ? ' <span class="badge bad">At war</span>' : ''}</span>
       <span class="row-sub">${escapeHtml(world.neighbours.realms[id].ruler)}. ${world.neighbours.stances[n.stance].name} stance. ${tradeLine(world, state, id)}.</span></span>
       <span class="row-end">${describeLevel((n.relation + 100) / 2, WORDS)}${trendArrow(state, world, id)}</span></button>`;
   }).join('');
-  return `<div data-part="realms"><div class="rows">${rows}</div></div>`;
+  return `${rulersRowHtml(app)}<div data-part="realms"><div class="rows">${rows}</div></div>`;
 }
 
 // What the crown can see of each realm, and its embassies and spies.
@@ -56,8 +127,8 @@ export function intelListHtml(app) {
 }
 
 export function envoysHtml(app) {
-  const list = pendingDecisions(app.state, app.world).filter((d) => d.kind === 'envoy');
-  return inboxHtml(list, { empty: 'No envoy waits at court.' });
+  const list = pendingDecisions(app.state, app.world).filter((d) => d.kind === 'envoy' || d.kind === 'request');
+  return inboxHtml(list, { empty: 'No ruler waits for an audience.' });
 }
 
 export function realmCard(app, id) {
@@ -78,11 +149,14 @@ export function realmCard(app, id) {
       <span class="build-name">${st.name}</span><span class="build-blurb">${escapeHtml(st.blurb)}</span>
       <span class="build-cost">${check.ok ? cost : escapeHtml(check.reason)}</span></button>`;
   }).join('');
-  const envoys = pendingDecisions(state, world).filter((d) => d.kind === 'envoy' && d.realm === id);
+  const envoys = pendingDecisions(state, world).filter((d) => (d.kind === 'envoy' || d.kind === 'request') && d.realm === id);
+  const audience = world.diplomacy?.rulers[id]
+    ? `<button type="button" class="act primary" data-audience="${id}"><span class="act-label">${icon('crown')} An audience with ${escapeHtml(rulerShort(world, id))}</span><span class="act-sub">Trade, diplomacy, alliances and war</span></button>` : '';
   return `
     ${cardHead({
       status: `<span>Ruled by ${escapeHtml(r.ruler)}.</span>`,
       infoText: r.temper,
+      actions: audience,
       chips: [
         { icon: 'dove', label: 'Relations', value: `${describeLevel((n.relation + 100) / 2, WORDS)}${trendArrow(state, world, id)}`, tone: n.relation < -30 ? 'bad' : n.relation > 30 ? 'good' : '' },
         { label: 'Stance', value: world.neighbours.stances[n.stance].name },

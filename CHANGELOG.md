@@ -1,5 +1,15 @@
 # Changelog
 
+## M17 Audiences with rulers
+- Meet the rulers of the North face to face. An audience opens from the row of portraits on the Diplomacy tab, a realm's card, a ruler's request in the Court inbox, or a long press on their capital. The realm waits while you talk.
+- Every ruler has a temper (greedy, honourable, ambitious, cautious, opportunist, zealous) and an agenda: Henselt wants Vergen, Calanthe wants Dillingen, Demavend wants busy roads, Ervyll wants the Scoia'tael crushed. Their mood is now a list of reasons you can read, and their trust in Temeria's word is a memory of its own.
+- The deal table: lay crowns, monthly payments, goods, trade routes, sight, passage, embassies or towns on either side, and see the verdict change as you go: Acceptable, Close, They want more or Insulting. Ask what they would accept, or hear their own proposal. What is agreed is carried out: payments and deliveries each month in the ledger, caravans under treaty on the road.
+- Treaties: non-aggression, trade, defensive, full alliance, military access and protectorate (Kerack, Cidaris, Verden or Brugge may place themselves under our protection and pay for it). Allies are now called to war by treaty, not by friendship alone, and breaking a treaty costs trust in every court.
+- Gifts, denunciations, demands for tribute, and asking a ruler to stop massing troops, sheltering raiders or taxing our caravans. Demands succeed by fear.
+- War is declared with a reason, and a war without one costs trust everywhere. Demand terms before war. Peace is made at the deal table.
+- Rulers ask for audiences with real proposals, demands and warnings in place of the old random envoys, and the realms of the North make and break pacts among themselves. The Pacts screen draws the web of alliances across the North.
+- Save version 14: old friendships with true allies become defensive pacts.
+
 ## M15 B A detailed North
 - The North is retraced from an atlas: 24 lands with their true shapes. The eleven realms we deal with keep their rulers and ways; the thirteen further off (Kovir, Poviss, Hengfors, Lyria and Rivia, Dol Blathanna, Angren, Nazair, Mag Turga, Toussaint, Tir Tochair, Metinna, Korath and Skellige) appear as the lands beyond, named, with their towns and roads.
 - 65 real towns abroad replace the invented ones (Novigrad, Oxenfurt, Gors Velen, Ban Ard, Aldersberg, Hamm, Dillingen and the rest). Temeria is unchanged.

@@ -17,6 +17,7 @@ import { createHints, loadPrefs, savePrefs } from './ui/hints.js';
 import { writeSave, readSave, downloadText } from './ui/storage.js';
 import { createQuick } from './ui/quick.js';
 import { longPress } from './ui/longpress.js';
+import { createAudience } from './ui/audience.js';
 import { stopBrowserGestures, instantPress, createHaptics, createWakeLock, registerWorker } from './ui/native.js';
 
 const MAX_DAYS_PER_FRAME = 8;
@@ -87,6 +88,15 @@ async function boot() {
     // A card's head, for a quick look from a list without leaving it.
     preview: (route) => renderRoute(app, route),
     peek: (x, y, title, html) => quick.peek(x, y, title, html),
+    haptic: (k) => haptic(k),
+    // An audience with a ruler, over everything; the realm waits meanwhile.
+    audience: (pid, opts) => audience.open(pid, opts),
+    takeNote: () => {
+      const n = lastNote;
+      lastNote = null;
+      return n;
+    },
+    pauseFor,
   };
 
   const panel = createPanel({
@@ -103,12 +113,14 @@ async function boot() {
     render: (r) => renderRoute(app, r),
     persist: () => { memory.snap = panel.snap === 'peek' ? panel.raised : panel.snap; saveMemory(memory); },
     onShow,
+    onBack: () => audience?.onBack(),
     onTab: (t, same) => {
       // A tap on Court while decisions wait goes straight to them.
       if (t === 'court' && !same && pendingDecisions(state, world, acked).length) memory.sub.court = 'inbox';
     },
   });
   app.nav = nav;
+  const audience = createAudience(app);
   attachPanelInput(app);
   const pick = createPick(app, {
     onStart: () => {
@@ -230,6 +242,7 @@ async function boot() {
   }
 
   function replaceState(next, message) {
+    audience.close();
     state = next;
     frac = 0;
     acked = state.depositions.length;
@@ -251,12 +264,15 @@ async function boot() {
   }
 
   // Player orders go through the simulation's own rules, like everything else.
+  // The answer a ruler gave to the last order, for the audience to show.
+  let lastNote = null;
   function order(action) {
     const out = applyAction(state, world, action);
     if (out.error) {
       toast(out.error);
       return false;
     }
+    lastNote = out.note ?? null;
     const before = state.chronicle.length;
     state = out.state;
     topbar.update(state);
@@ -266,8 +282,22 @@ async function boot() {
     updateUrgent();
     decisionsSeen = new Set(decisionKeys());
     haptic('confirm');
-    if (state.chronicle.length > before) toast(state.chronicle.at(-1).text);
+    if (out.note) toast(out.note);
+    else if (state.chronicle.length > before) toast(state.chronicle.at(-1).text);
+    audience?.render();
     return true;
+  }
+
+  // Opening an audience pauses the realm; ending it plays on as before.
+  let pausedFrom = null;
+  function pauseFor(on) {
+    if (on) {
+      if (pausedFrom === null) pausedFrom = speed;
+      setSpeed(0);
+    } else if (pausedFrom !== null) {
+      setSpeed(pausedFrom);
+      pausedFrom = null;
+    }
   }
 
   function sendNearest(threatId) {

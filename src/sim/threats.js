@@ -340,6 +340,8 @@ function spawnRaiders(state, world, rng) {
     const chance = war ? cfg.warChance : n.relation <= cfg.below ? cfg.chance * Math.min(1, (cfg.below - n.relation + 10) / 50) : 0;
     if (!chance || !rng.chance(chance)) continue;
     if (state.threats.list.some((t) => t.kind === 'raiders' && t.realm === rid)) continue;
+    // A ruler who promised to stop them keeps the promise for a while.
+    if ((state.diplomacy?.restrain[rid] ?? 0) > state.day && !war) continue;
     // A border crossing: one of their towns with a road to one of ours.
     const crossings = [];
     for (const fid of world.foreignByRealm[rid] ?? []) {
