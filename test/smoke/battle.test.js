@@ -146,3 +146,51 @@ test('a siege: walls, food and the camp on the army card, with its orders', asyn
     await context.close();
   }
 });
+
+test('on the map: a battle in progress, and a tap on the battle opens its card', async () => {
+  const { s, f } = midBattle();
+  const save = serialize(s);
+  for (const vp of VIEWS) {
+    const { context, page, errors } = await open(save, vp);
+    await page.evaluate(([x, y]) => window.northernWars.lookAt(x, y), [f.x, f.y]);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: join(OUT, `${vp.name}-battle-map.png`) });
+    if (vp.name === 'portrait') {
+      const p = await page.evaluate(([x, y]) => window.northernWars.screenOfPoint(x, y), [f.x, f.y]);
+      await page.touchscreen.tap(p.x, p.y - 8);
+      await page.waitForTimeout(400);
+      assert.equal(await page.evaluate(() => window.northernWars.ui.route), `battle:${f.id}`);
+      await page.screenshot({ path: join(OUT, `${vp.name}-battle-map-card.png`) });
+    }
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});
+
+test('on the map: a siege camp round a town, its walls worn down', async () => {
+  const s = quiet(createState(world, 34));
+  const rng = makeRng(34);
+  startWar(s, world, rng, 'temeria', 'redania', 'claim');
+  s.armies = [];
+  const town = world.foreignByRealm.redania.find((id) => world.byId[id].type === 'town');
+  const a = newArmy(s, world, 'temeria', town, 1800, {}, { name: 'The army of Vizima', order: 'siege', target: town });
+  a.starve = true;
+  for (let d = 0; d < 24; d++) {
+    s.day += 1;
+    siegeDay(s, world, rng, a, 'redania');
+  }
+  assert.ok(a.siege && a.siege.walls < a.siege.wallsMax, 'the walls are wearing down');
+  const save = serialize(s);
+  for (const vp of VIEWS) {
+    const { context, page, errors } = await open(save, vp);
+    const o = world.byId[town];
+    await page.evaluate(([x, y]) => window.northernWars.lookAt(x, y), [o.x, o.y]);
+    // Close enough to see the tents and the walls.
+    for (let i = 0; i < 3; i++) { await page.mouse.move(vp.width / 2, vp.height / 2); await page.mouse.wheel(0, -600); await page.waitForTimeout(50); }
+    await page.evaluate(([x, y]) => window.northernWars.lookAt(x, y), [o.x, o.y]);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: join(OUT, `${vp.name}-siege-map.png`) });
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});

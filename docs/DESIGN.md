@@ -233,6 +233,13 @@ Towns that change hands now change realm for good, and what becomes of them is t
 - Armies lose men outside battle: to supply when far from a friendly town, to winter, to disease in a large army in the warm months, and to desertion when unpaid. The army card shows what the last month cost, by cause.
 - Every battle and siege leaves a report in the Chronicle: the sides, the dead, the main turns of it and what was taken.
 
+### On the map (M19 D)
+- Borders follow the towns. Every patch of land belongs to the nearest town among those of the realm whose traced outline it lies in (src/sim/territory.js, a grid of 6-unit cells worked out once). At the start every border is the atlas's; when a town changes realm, the country round it changes with it, painted in its new realm's colour with the old border cleared and the new one smoothed. Won land is explored and in sight.
+- A battle in progress is drawn where it is fought: both banners, figures clashing, each side's numbers, dust, arrows in the skirmish, the broken side fleeing. Tap it for the Battle card.
+- A siege camp: tents by the besiegers' number, a ring of works, the walls drawn as they stand with gaps where they are breached, and smoke once they fall.
+- Sacked towns smoulder for weeks; driven-out peoples walk the roads to their kin as refugee columns; a town in revolt flies the rebels' torn banners.
+- A foreign town's card says what it would be worth to the crown: its people, the taxes and trade they would bring once they took to us, a gold seam or harbour, its buildings, and whether it has stone walls, timber or none (and so falls in a day).
+
 ### Save
 - Version 16: lands, claimants and conquest records; towns held after ended wars are annexed.
 

@@ -12,6 +12,7 @@ import { armyPosition } from './armies.js';
 import { companySightCircles } from './forces.js';
 import { TEMERIA, ownerOf } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
+import { territoryOwners, territoryAt } from './territory.js';
 
 export function buildGrid(world) {
   const g = world.geography;
@@ -82,7 +83,7 @@ export function canSee(world, vision, x, y) {
   for (const rid of vision.realms) {
     if (world.geography.neighbours[rid].shapes.some((sh) => pointInPolygon(x, y, sh))) return true;
   }
-  return pointInPolygon(x, y, world.geography.temeria);
+  return pointInPolygon(x, y, world.geography.temeria) || (world.landsVersion > 0 && territoryOwners(world).any && territoryAt(world, x, y) === TEMERIA);
 }
 
 // ---- The explored map, as a bitset of grid cells in 30-bit numbers ----
@@ -125,6 +126,14 @@ export function updateIntel(state, world, vision) {
     }
   }
   for (const rid of vision.realms) for (const i of g.realmCells[rid] ?? []) setBit(intel.explored, i);
+  // Land the crown has won (M19) is known country, like its own.
+  if (world.landsVersion && territoryOwners(world).any) {
+    for (let r = 0; r < g.rows; r++) {
+      for (let col = 0; col < g.cols; col++) {
+        if (territoryAt(world, g.x0 + (col + 0.5) * g.cell, g.y0 + (r + 0.5) * g.cell) === TEMERIA) setBit(intel.explored, r * g.cols + col);
+      }
+    }
+  }
   for (const [rid, realm] of Object.entries(state.realms ?? {})) {
     for (const [id, s] of Object.entries(realm.settlements)) {
       const p = world.byId[id];

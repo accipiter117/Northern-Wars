@@ -1,5 +1,12 @@
 # Changelog
 
+## M19 D The map at war
+- Borders follow the towns. Take Bremervoord and the country round it turns Temerian on the map, with the old border gone and a new one drawn round what we hold.
+- Battles are drawn where they are fought: banners facing, men clashing, each side's numbers over its head, and the losers fleeing. Tap one to open its card.
+- Siege camps ring a besieged town with tents and works; its walls crumble as they are worn down and smoke rises once they are breached.
+- Sacked towns smoulder, driven-out peoples walk the roads to their kin, and rebel banners fly over towns that have risen.
+- A foreign town's card now says what it would be worth to the crown and what walls stand in the way.
+
 ## M19 C Battles and sieges you can watch
 - Battles last days, not an instant: a skirmish where the archers count, the melee where men-at-arms and knights decide it and the levies break first, then the rout, where horse ride the fleeing down. Ground and weather matter: woods and marsh blunt cavalry, hills favour the defender, rain spoils the bowstrings.
 - A fifth of every army waits in reserve. Commit it when the lines close for better odds and heavier losses, or sound the retreat to save what remains. Foreign captains make the same choices by their tempers.

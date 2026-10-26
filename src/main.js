@@ -558,6 +558,7 @@ async function boot() {
     if (hit?.settlement) { hideUnitLabel(); nav.push(`town:${hit.settlement}`); }
     else if (hit?.neighbour) { hideUnitLabel(); nav.push(`realm:${hit.neighbour}`); }
     else if (hit?.foreign && foreignView(hit.foreign)) { hideUnitLabel(); nav.push(`foreign:${hit.foreign}`); }
+    else if (hit?.battle) { hideUnitLabel(); nav.push(`battle:${hit.battle}`); }
     else if (hit?.company) { hideUnitLabel(); nav.push(`company:${hit.company}`); }
     else if (hit?.threat) { hideUnitLabel(); nav.push(`threat:${hit.threat}`); }
     else if (hit?.army) {

@@ -46,10 +46,11 @@ export { intentions, assess as assessRealm, deterrence, strengthOf, armyTarget }
 export { canRaiseAbroad as canBuildAbroad } from './realms.js';
 export {
   canRequisition, captureOptions, conquestDecisionText, integrationParts, fearOf as fearOfTemeria, northFear, peoplesAt, canResettle, resettleCost,
-  canPension, pensionCost, canSpyOnClaimant, canRepair, crushOdds, claimantName, optionLabel, leagueAllies,
+  canPension, pensionCost, canSpyOnClaimant, canRepair, crushOdds, claimantName, optionLabel, leagueAllies, worthOf,
 } from './conquest.js';
 export { peopleOf, livingRealms, isFallen } from './lands.js';
 export { realmNow } from './conflict.js';
 export { battleOdds, meetingOdds, lineOf, canBattleOrder, makeupOf } from './battle.js';
 export { stormOdds, wallsOf, canSiegeOrder } from './siege.js';
 export { attritionOf } from './armies.js';
+export { territoryAt, territoryOwners } from './territory.js';

@@ -1,7 +1,9 @@
 // Draws the map, settlements, labels and ambient units, and answers "what is
 // under this finger". The static map is cached in an offscreen canvas and only
 // redrawn when the camera moves, so a still map costs little battery.
-import { prepareMap, drawMap, COLOURS } from './mapLayer.js';
+import { prepareMap, drawMap, COLOURS, territoryPaths } from './mapLayer.js';
+import { territoryOwners } from '../sim/territory.js';
+import { drawBattle, drawSiege, smoke, drawRebels } from './war-art.js';
 import { createTiles } from './tiles.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
@@ -19,6 +21,7 @@ import './sprites-forces.js';
 import { visionOf, canSee, hasBit } from '../sim/vision.js';
 import { travellerPositions } from '../sim/ambient.js';
 import { armyPosition } from '../sim/armies.js';
+import { lineOf } from '../sim/battle.js';
 import { roadPath } from '../sim/world.js';
 import { TEMERIA, ownerOf, originOf, sideColours } from '../sim/conflict.js';
 
@@ -47,7 +50,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   const tiles = createTiles({
     paint: (ctx, view, L) => {
       const zoom = L / dpr;
-      drawMap(ctx, prep, world, dpr / L, tints, view, zoom < 0.45 ? 0 : zoom < 0.9 ? 1 : 2);
+      drawMap(ctx, prep, world, dpr / L, tints, view, zoom < 0.45 ? 0 : zoom < 0.9 ? 1 : 2, world.foreign ? territoryOwners(world) : null);
     },
   });
   const art = createSettlementArt(world, layoutCfg);
@@ -102,6 +105,8 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
     ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
     infraState = null;
+    // The borders follow the towns: the painted map is drawn afresh.
+    tiles.clear();
     baseDirty = true;
     dirty = true;
   }
@@ -230,6 +235,12 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     fctx.fillStyle = '#000';
     for (const rid of vision.realms) for (const p of prep.neighbours.find((n) => n.id === rid)?.paths ?? []) fctx.fill(p);
     fctx.fill(prep.temeria);
+    // And over the land the crown has won (M19).
+    const t = territoryOwners(world);
+    if (t.any) {
+      const won = territoryPaths(t).fills.temeria;
+      if (won) fctx.fill(won);
+    }
     fctx.globalCompositeOperation = 'source-over';
   }
 
@@ -725,7 +736,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (!unitInSight(w)) continue;
       const facing = Math.cos(w.angle) >= 0 ? 1 : -1;
       const colours = u.realm && u.kind !== 'export' ? world.realms?.realms[u.realm]?.colours : null;
-      getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' || u.kind === 'deal' ? 'caravan' : u.kind)
+      getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' || u.kind === 'deal' ? 'caravan' : u.kind === 'exile' ? 'refugee' : u.kind)
         .draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing, colours, good: u.good });
       // Stopped on the road where a band holds it.
       if (u.held) {
@@ -771,18 +782,55 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // crown sees its own armies everywhere, and foreign ones only in sight.
   function drawWar(state, frac, selection) {
     if (!state.armies) return;
+    // Smouldering towns, and towns in revolt (M19).
+    for (const [id, s] of Object.entries(state.settlements)) {
+      if (!(s.smoulder > state.day)) continue;
+      const st = world.byId[id];
+      const p = toScreen(cam, st.x, st.y);
+      smoke(ctx, p.x, p.y - 4, iconSize(st.type) * 0.8);
+    }
+    for (const realm of Object.values(state.realms ?? {})) {
+      for (const [id, s] of Object.entries(realm.settlements)) {
+        if (!(s.smoulder > state.day) || !unitInSight(world.byId[id])) continue;
+        const p = toScreen(cam, world.byId[id].x, world.byId[id].y);
+        smoke(ctx, p.x, p.y - 4, iconSize(world.byId[id].type) * 0.8);
+      }
+    }
+    for (const r of state.conquest?.revolts ?? []) {
+      const st = world.byId[r.town];
+      if (!st || (r.against !== TEMERIA && !unitInSight(st))) continue;
+      const p = toScreen(cam, st.x, st.y);
+      drawRebels(ctx, p.x + iconSize(st.type) * 0.4, p.y - iconSize(st.type) * 0.3, 14, sideColours(world, r.origin === TEMERIA ? TEMERIA : r.origin), r.id);
+    }
     for (const b of state.battles) {
       if (state.day - b.day > 12 || !unitInSight(b)) continue;
       const p = toScreen(cam, b.x, b.y);
       getSprite('marker', 'battle').draw(ctx, p.x + 10, p.y - 14, 18);
     }
+    // Sieges (M19): the camp round the town, its walls as they stand.
     for (const a of state.armies) {
       if (!a.siege || !unitInSight(world.byId[a.at])) continue;
       const st = world.byId[a.at];
       const p = toScreen(cam, st.x, st.y);
-      getSprite('marker', 'siege').draw(ctx, p.x, p.y, iconSize(st.type) + 22, { colours: sideColours(world, a.side), progress: a.siege.progress });
+      const r = Math.max(iconSize(st.type) / 2 + 8 * Math.min(1.6, Math.max(0.8, Math.sqrt(zoomRel()))), (footprint[st.id] ?? 0) * 1.05);
+      if (a.siege.wallsMax !== undefined) {
+        drawSiege(ctx, p.x, p.y, r, { colours: sideColours(world, a.side), men: a.soldiers, walls: a.siege.walls, wallsMax: a.siege.wallsMax, breached: a.siege.wallsMax > 0 && a.siege.walls <= 0, seed: a.id });
+      } else getSprite('marker', 'siege').draw(ctx, p.x, p.y, iconSize(st.type) + 22, { colours: sideColours(world, a.side), progress: a.siege.progress });
+    }
+    // Battles in progress, and the rout for a day or two after.
+    for (const f of state.fights ?? []) {
+      if (!unitInSight({ x: f.x, y: f.y })) continue;
+      const p = toScreen(cam, f.x, f.y);
+      if (p.x < -60 || p.y < -60 || p.x > cam.viewW + 60 || p.y > cam.viewH + 60) continue;
+      const size = 34 * Math.max(0.8, Math.min(1.5, Math.sqrt(zoomRel())));
+      const men = [0, 1].map((i) => lineOf(state, f, i) + f.reserve[i]);
+      drawBattle(ctx, p.x, p.y - 8, size, {
+        colours: f.sides.map((sd) => sideColours(world, sd)), men, phase: f.phase, over: !!f.over, loser: f.over ? 1 - f.over.winner : null, seed: f.id,
+      });
+      if (selection?.battle === f.id) ring(ctx, p.x, p.y - 8, size);
     }
     for (const a of state.armies) {
+      if (a.battle) continue;
       const w = armyAt(a, frac);
       if (!w) continue;
       const p = toScreen(cam, w.x, w.y);
@@ -842,6 +890,14 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     const force = pickForces({ ctx, cam, world, zoom: zoomRel(), frac }, state, sx, sy);
     if (force) return force;
     let best = null;
+    // A battle on the field opens its card.
+    for (const f of state.fights ?? []) {
+      if (!unitInSight({ x: f.x, y: f.y })) continue;
+      const p = toScreen(cam, f.x, f.y);
+      const d = Math.hypot(p.x - sx, p.y - 8 - sy);
+      if (d < 34 && (!best || d < best.d)) best = { d, hit: { battle: f.id } };
+    }
+    if (best) return best.hit;
     // An army is a deliberate thing to tap, so it wins over what lies under it.
     for (const a of state.armies ?? []) {
       const w = armyAt(a, frac);

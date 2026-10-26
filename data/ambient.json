@@ -92,6 +92,12 @@
       "speed": 22,
       "max": 12,
       "spawnPerDay": 1
+    },
+    "exile": {
+      "name": "People driven out",
+      "speed": 11,
+      "max": 12,
+      "spawnPerDay": 1.5
     }
   }
 }

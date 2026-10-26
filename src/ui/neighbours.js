@@ -6,7 +6,7 @@ import { cardHead, orderAttr, section } from './card.js';
 import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { portraitImg } from './audience.js';
-import { occupiedHtml, fearHtml, fearWord } from './conquest.js';
+import { occupiedHtml, fearHtml, fearWord, worthHtml } from './conquest.js';
 import { parties, rulerShort, moodWord, treatyDef, intentions } from '../sim/index.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
@@ -218,6 +218,7 @@ export function foreignCardHtml(world, state, id, view) {
       </dl>
       <h3>Buildings</h3>${built ? `<ul class="built">${built}</ul>` : '<p class="sub">Nothing of note.</p>'}
     </div>
+    ${worthHtml(world, state, id, view)}
   `;
 }
 

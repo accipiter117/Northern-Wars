@@ -222,6 +222,32 @@ function shiver(state, world, by, kind) {
   }
 }
 
+// ---- What a town would be worth ----
+
+// What a foreign town would bring the crown, as last seen: its people, what
+// they would pay in taxes and trade at the crown's rates (before any
+// sullenness), its buildings, a gold seam, a harbour, and its walls.
+export function worthOf(state, world, id, view) {
+  const type = world.byId[id].type;
+  const e = world.economy;
+  const people = view?.population ?? 0;
+  const fortune = e.taxes.prosperityBase + e.taxes.perProsperity * (view?.prosperity ?? 50);
+  const taxes = people * (e.taxes.perPersonMonth[type] ?? 0) * fortune;
+  const trade = people * (e.trade.perPersonMonth[type] ?? 0) * (0.6 + 0.008 * (view?.prosperity ?? 50));
+  const rec = placeOf(state, world, id);
+  const water = world.waterOf?.[id];
+  const walls = world.war?.sieges ? (world.war.sieges.walls[type] ?? 0) + ((view?.buildings ?? []).includes('walls') ? world.war.sieges.walls.built : 0) : 0;
+  return {
+    people,
+    monthly: Math.round(taxes + trade),
+    buildings: [...(view?.buildings ?? [])],
+    gold: !!rec?.gold,
+    harbour: water?.kind === 'sea' || (water?.navigable && type !== 'village'),
+    walls: Math.min(100, walls),
+    value: valueOf(state, world, id),
+  };
+}
+
 // ---- Occupation ----
 
 // An occupied town can be stripped of grain and coin, at a cost in unrest

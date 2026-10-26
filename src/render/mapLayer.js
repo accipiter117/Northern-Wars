@@ -187,14 +187,109 @@ export function prepareMap(world) {
     if (!onLand(x, y)) waves.push({ x, y });
   }
 
-  return { temeria: pathOf(temeria), temeriaBox: boxOf(temeria), neighbours: lands.filter((l) => !l.beyond), lands, terrain, rivers, lakes, roads, distantRoads, scatter, waves };
+  const landClip = new Path2D();
+  for (const sh of landShapes) landClip.addPath(pathOf(sh));
+  const [mx0, my0, mx1, my1] = g.bounds ?? [0, 0, g.width, g.height];
+  return { landClip, bounds: { x0: mx0, y0: my0, x1: mx1, y1: my1 }, temeria: pathOf(temeria), temeriaBox: boxOf(temeria), neighbours: lands.filter((l) => !l.beyond), lands, terrain, rivers, lakes, roads, distantRoads, scatter, waves };
 }
 
 // Draws the map in world units. `px` converts screen pixels to world units at
 // the current zoom, so strokes keep a steady on-screen weight. `view` is the
 // world rectangle being drawn (a tile), and `detail` (0 far, 1, 2 close) how
 // many marks to draw.
-export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 2) {
+// Borders that follow the towns (M19): the land that has changed realm,
+// by owner, as cells; the ground near it where the atlas's old border must
+// not show; and the new borders as smoothed lines. Built once each time
+// towns change realm.
+const territoryCache = new WeakMap();
+export function territoryPaths(t) {
+  let out = territoryCache.get(t);
+  if (out && out.version === t.ownersVersion) return out;
+  out = { version: t.ownersVersion, fills: {}, hide: new Path2D(), borders: [], any: t.any };
+  if (t.any) {
+    const { cols, rows, cell, x0, y0, owners, changed } = t;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        if (!changed[i]) continue;
+        const o = t.realms[owners[i]];
+        const path = (out.fills[o] ??= new Path2D());
+        path.rect(x0 + c * cell - 0.3, y0 + r * cell - 0.3, cell + 0.6, cell + 0.6);
+        // Reach into the shore cells, so the coastline (clipped to the
+        // land) comes out clean.
+        for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+          const rr = r + dr;
+          const cc = c + dc;
+          if (rr < 0 || cc < 0 || rr >= rows || cc >= cols || owners[rr * cols + cc] >= 0) continue;
+          path.rect(x0 + cc * cell - 0.3, y0 + rr * cell - 0.3, cell + 0.6, cell + 0.6);
+        }
+        out.hide.rect(x0 + (c - 1) * cell, y0 + (r - 1) * cell, cell * 3, cell * 3);
+      }
+    }
+    // Edges between cells of different owners, where either has changed.
+    const edges = [];
+    const differs = (a, b) => owners[a] >= 0 && owners[b] >= 0 && owners[a] !== owners[b] && (changed[a] || changed[b]);
+    const V = (r, c) => r * (cols + 1) + c;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        if (c + 1 < cols && differs(i, i + 1)) edges.push([V(r, c + 1), V(r + 1, c + 1)]);
+        if (r + 1 < rows && differs(i, i + cols)) edges.push([V(r + 1, c), V(r + 1, c + 1)]);
+      }
+    }
+    const at = new Map();
+    edges.forEach(([a, b], k) => {
+      (at.get(a) ?? at.set(a, []).get(a)).push(k);
+      (at.get(b) ?? at.set(b, []).get(b)).push(k);
+    });
+    const used = new Uint8Array(edges.length);
+    const point = (v) => [x0 + (v % (cols + 1)) * cell, y0 + Math.floor(v / (cols + 1)) * cell];
+    const walk = (start, from) => {
+      const chain = [];
+      let v = from;
+      let k = start;
+      for (;;) {
+        used[k] = 1;
+        const next = edges[k][0] === v ? edges[k][1] : edges[k][0];
+        chain.push(next);
+        const more = (at.get(next) ?? []).filter((e) => !used[e]);
+        if (more.length !== 1 || (at.get(next) ?? []).length > 2) break;
+        v = next;
+        k = more[0];
+      }
+      return chain;
+    };
+    for (let k = 0; k < edges.length; k++) {
+      if (used[k]) continue;
+      const [a, b] = edges[k];
+      const fwd = walk(k, a);
+      used[k] = 0;
+      const back = (at.get(a) ?? []).filter((e) => e !== k && !used[e]).length === 1 && (at.get(a) ?? []).length <= 2
+        ? walk((at.get(a)).find((e) => e !== k && !used[e]), a) : [];
+      used[k] = 1;
+      const chain = [...back.reverse(), a, ...fwd].map(point);
+      out.borders.push(chaikin(chaikin(chain)));
+    }
+  }
+  territoryCache.set(t, out);
+  return out;
+}
+
+// Corner cutting: the grid's steps become a gentle line.
+function chaikin(pts) {
+  if (pts.length < 3) return pts;
+  const out = [pts[0]];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, ay] = pts[i];
+    const [bx, by] = pts[i + 1];
+    out.push([ax * 0.75 + bx * 0.25, ay * 0.75 + by * 0.25], [ax * 0.25 + bx * 0.75, ay * 0.25 + by * 0.75]);
+  }
+  out.push(pts.at(-1));
+  return out;
+}
+
+export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 2, territory = null) {
+  const land = territory?.any ? territoryPaths(territory) : null;
   const g = world.geography;
   const seen = (box) => !view || overlaps(box, view);
   const v = view ?? (() => {
@@ -237,6 +332,21 @@ export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 
     ctx.fillStyle = COLOURS.land;
     ctx.fill(prep.temeria);
   }
+  // Land that has changed realm takes its new master's look (M19), never
+  // over the sea.
+  if (land) {
+    ctx.save();
+    ctx.clip(prep.landClip);
+    for (const [owner, path] of Object.entries(land.fills)) {
+      ctx.fillStyle = owner === 'temeria' ? COLOURS.land : COLOURS.neighbour;
+      ctx.fill(path);
+      if (owner !== 'temeria' && tints[owner]) {
+        ctx.fillStyle = tints[owner];
+        ctx.fill(path);
+      }
+    }
+    ctx.restore();
+  }
 
   // Terrain, each zone clipped to its own land. Temeria's frontier band goes
   // over its own country.
@@ -255,6 +365,7 @@ export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 
   if (seen(prep.temeriaBox)) {
     ctx.save();
     ctx.clip(prep.temeria);
+    if (land) clipOut(ctx, land, prep);
     // A dark band inside the border, like an old map's hand-tinted frontier.
     ctx.strokeStyle = 'rgba(110, 29, 22, 0.22)';
     ctx.lineWidth = 10 * px;
@@ -314,10 +425,41 @@ export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 
   ctx.setLineDash([]);
 
   if (seen(prep.temeriaBox)) {
+    ctx.save();
+    if (land) clipOut(ctx, land, prep);
     ctx.strokeStyle = COLOURS.ink;
     ctx.lineWidth = 2.2 * px;
     ctx.stroke(prep.temeria);
+    ctx.restore();
   }
+  // The borders as the towns now draw them.
+  if (land) {
+    ctx.save();
+    ctx.clip(prep.landClip);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    for (const line of land.borders) {
+      const p = new Path2D();
+      p.moveTo(line[0][0], line[0][1]);
+      for (let i = 1; i < line.length; i++) p.lineTo(line[i][0], line[i][1]);
+      ctx.strokeStyle = 'rgba(110, 29, 22, 0.22)';
+      ctx.lineWidth = 7 * px;
+      ctx.stroke(p);
+      ctx.strokeStyle = COLOURS.ink;
+      ctx.lineWidth = 1.8 * px;
+      ctx.stroke(p);
+    }
+    ctx.restore();
+  }
+}
+
+// Leave out the ground round changed land, where the atlas's border no
+// longer runs.
+function clipOut(ctx, land, prep) {
+  const p = new Path2D();
+  p.rect(prep.bounds.x0 - 50, prep.bounds.y0 - 50, prep.bounds.x1 - prep.bounds.x0 + 100, prep.bounds.y1 - prep.bounds.y0 + 100);
+  p.addPath(land.hide);
+  ctx.clip(p, 'evenodd');
 }
 
 // A river widening from its source to its mouth, drawn a stretch at a time.
