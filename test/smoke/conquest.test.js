@@ -166,3 +166,15 @@ test('a conquered town: its integration on its card; a rising waits at court; th
     }
   }
 });
+
+test('a foreign town card shows what the town is worth and its walls', async () => {
+  const s = quiet(createState(world, 9));
+  const o = s.realms.redania.settlements.oxenfurt;
+  s.ambient.intel.seen.oxenfurt = { day: s.day, realm: 'redania', owner: 'redania', population: o.population, prosperity: o.prosperity, garrison: o.garrison, buildings: [...o.buildings], construction: null };
+  const { context, page, errors } = await open(serialize(s));
+  await go(page, 'foreign:oxenfurt');
+  await page.waitForSelector('[data-part="worth"]');
+  assert.match(await page.textContent('[data-part="worth"]'), /Worth to the crown[\s\S]*crowns a month[\s\S]*timber walls/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});

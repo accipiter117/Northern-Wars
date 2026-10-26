@@ -83,6 +83,10 @@ const RATE = {
     for (const s of Object.values(state.settlements)) if (fleeing(state, s)) troubled++;
     return Math.min(1, troubled / 3);
   },
+  // Columns of people driven out of a town walk while the exodus lasts (M19).
+  exile(state) {
+    return (state.conquest?.exodus ?? []).some((e) => e.until > state.day && e.to) ? 1 : 0;
+  },
   // Crown caravans run in proportion to what the routes earn.
   route(state, k, world) {
     let v = 0;
@@ -199,6 +203,15 @@ const SPAWNERS = {
     const from = weightedPick(rng, ids, (id) => totalPopulation(state.settlements[id]) * state.settlements[id].faith.melitele);
     const route = roadPath(world, from, shrine);
     return route && route.length > 1 ? { route } : null;
+  },
+
+  // A people driven out of a town walk the roads towards their kin (M19).
+  exile(state, world, rng) {
+    const list = (state.conquest?.exodus ?? []).filter((e) => e.until > state.day && e.to);
+    if (!list.length) return null;
+    const e = rng.pick(list);
+    const route = roadPath(world, e.from, e.to, true);
+    return route && route.length > 1 ? { route, people: e.kind } : null;
   },
 
   // People flee a troubled or starving place for the nearest town or city
@@ -361,6 +374,10 @@ export function describeUnit(world, u) {
     const realm = world.geography.neighbours[u.realm].name;
     if (u.kind === 'abroad_patrol') return `Riders of ${realm} out of ${world.byId[u.route[0]].name}`;
     return `A caravan of ${realm} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
+  }
+  if (u.kind === 'exile') {
+    const who = world.groups?.groups[u.people]?.name ?? 'People';
+    return `${u.people === 'human' ? 'Townsfolk' : who} driven out of ${world.byId[u.route[0]].name}, on the road to ${world.byId[u.route[u.route.length - 1]].name}`;
   }
   if (u.kind === 'route') {
     return `${kind} on the crown's route, from ${world.byId[u.route[0]].name} bound for ${world.byId[u.route[u.route.length - 1]].name}`;

@@ -4,7 +4,7 @@
 // us, and the rulers we have driven into exile.
 import {
   TEMERIA, sideName, formatDate, integrationParts, canResettle, canRepair, canRequisition, peopleOf, fearOfTemeria, northFear, claimantName,
-  canPension, pensionCost, canSpyOnClaimant, crushOdds, ownerOf,
+  canPension, pensionCost, canSpyOnClaimant, crushOdds, ownerOf, worthOf,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { orderAttr } from './card.js';
@@ -84,4 +84,15 @@ export function fearHtml(world, state) {
 
 export function fearWord(state, rid) {
   return describeLevel(fearOfTemeria(state, rid), FEAR_WORDS);
+}
+
+// What a foreign town would be worth to the crown, to weigh an invasion:
+// its people, what they would pay, gold, a harbour, and the walls to take.
+export function worthHtml(world, state, id, view) {
+  if (!world.conquest) return '';
+  const w = worthOf(state, world, id, view);
+  const walls = w.walls >= 80 ? 'stone walls' : w.walls > 0 ? 'timber walls' : 'no walls';
+  const extras = [w.gold ? 'a gold seam' : '', w.harbour ? 'a harbour on the water' : ''].filter(Boolean);
+  return `<div data-part="worth"><h3>Worth to the crown</h3>
+    <p class="sub">About ${number(w.people)} people, who would pay about ${number(w.monthly)} crowns a month in taxes and trade once they took to us${extras.length ? `, with ${extras.join(' and ')}` : ''}. ${w.buildings.length ? `${w.buildings.length} building${w.buildings.length === 1 ? '' : 's'} would come with it.` : 'No buildings of note would come with it.'} It has ${walls}${w.walls ? ' to breach' : ': it would fall to an army in a day'}.</p></div>`;
 }
