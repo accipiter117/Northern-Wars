@@ -122,6 +122,10 @@ export function longPress(app, ctx, x, y) {
     return ctx.peek(page.x, page.y, escapeHtml(st.name), `<p>${escapeHtml(sideName(world, ownerOf(state, world, id)))}. ${view.visible ? 'In sight now.' : 'As last seen.'}</p>${known}`,
       [{ label: 'Open card', run: () => app.nav.push(state.settlements[id] ? `town:${id}` : `foreign:${id}`) }]);
   }
+  if (hit?.distant) {
+    const t = world.distantTowns.find((v) => v.id === hit.distant);
+    if (t) return ctx.peek(page.x, page.y, escapeHtml(t.name), `<p>A ${t.type} of ${escapeHtml(world.lands[t.land]?.name ?? t.land)}, beyond the realms the crown deals with. Our maps show where it stands; no more.</p>`);
+  }
   if (hit?.unit) {
     const u = state.ambient.units.find((v) => v.id === hit.unit);
     if (u) return ctx.peek(page.x, page.y, 'On the road', `<p>${escapeHtml(describeUnit(world, u))}</p>`);

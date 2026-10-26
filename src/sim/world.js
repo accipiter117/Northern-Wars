@@ -137,7 +137,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     // And the wild country in reach of them, where their bandits and beasts breed.
     wildOf[s.id] = {};
     for (const [kind, zones] of Object.entries(geography.terrain)) {
-      if (zones.some((z) => (z.realm === s.realm || z.realm === 'wilds') && distanceToPolygon(s.x, s.y, z.shape) < reach)) wildOf[s.id][kind] = true;
+      if (zones.some((z) => z.realm && z.realm !== TEMERIA_ID && distanceToPolygon(s.x, s.y, z.shape) < reach)) wildOf[s.id][kind] = true;
     }
   }
 
