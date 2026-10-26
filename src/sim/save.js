@@ -5,6 +5,7 @@ import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
 import { defaultDiplomacy, makeTreaty } from './diplomacy.js';
+import { upgradeStrategy } from './strategy.js';
 import { hostile } from './conflict.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
@@ -184,6 +185,15 @@ const MIGRATIONS = {
     }
     state.envoys = [];
     state.version = 14;
+    return state;
+  },
+  // v15 brings rulers who govern: each realm takes stock and chooses a
+  // posture, raises a standing army from part of its hoard, and holds no war
+  // aim yet. Wars under way keep going, each aiming at the best town its
+  // attacker has taken.
+  14(state, world) {
+    if (world.strategy) upgradeStrategy(state, world);
+    state.version = 15;
     return state;
   },
 };

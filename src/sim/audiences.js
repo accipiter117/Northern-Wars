@@ -11,7 +11,7 @@ import { canDeclare, declareCost, declareWar, hostilityTo } from './war.js';
 import { TEMERIA, hostile, atWar, warBetween, sideIndex, sideName, ownerOf, valueOf, setOwner, enemiesOf, truceUntil } from './conflict.js';
 import {
   D, parties, rulerShort, traitMult, traitSum, hasTrait, agendaOf, trustIn, changeTrust, remember, fearOf, dangerTo, powerOf,
-  treatyDef, treatiesOf, treatyBetween, partnerOf, makeTreaty, endTreaty, monthlyTreaties, monthlyTrust, monthlyMemories,
+  treatyDef, treatiesOf, treatyBetween, partnerOf, makeTreaty, endTreaty, monthlyTreaties, monthlyTrust, monthlyMemories, setRenewable,
 } from './diplomacy.js';
 import { proposeDeal, weighDeal, signDeal, describeItem, treatyValue } from './deals.js';
 
@@ -296,6 +296,10 @@ export function requestText(state, world, q) {
     const what = q.items.map((i) => describeItem(world, i, q.realm).toLowerCase()).join(' and ');
     return { title: `${name} makes demands`, text: `${name} demands ${what}, or ${realm} will take it by force.`, choices: ['Give in', 'Refuse'] };
   }
+  if (q.kind === 'renegotiate') {
+    const pay = q.items[0];
+    return { title: `${name} asks to renegotiate`, text: `${name} says the non-aggression pact with ${realm} costs them more than it gives, and asks ${pay.amount} crowns a month for ${pay.months} months to keep it. Refuse, and they will let it lapse.`, choices: ['Pay to keep the pact', 'Let it lapse'] };
+  }
   if (q.kind === 'warning') {
     return { title: `${name} sends a warning`, text: `${name} warns that our armies stand too near ${realm}'s border, and asks that they go home.`, choices: ['Pull them back', 'Ignore it'] };
   }
@@ -343,6 +347,16 @@ export function monthlyRequests(state, world, rng) {
       newRequest(state, world, pid, 'demand', items);
       continue;
     }
+    // A realm in debt brings real proposals (M18): a loan at interest, goods
+    // for crowns, and in deep trouble a town for coin.
+    const st = world.strategy;
+    if (st && !hostile(state, TEMERIA, pid) && state.realms[pid].treasury < st.debt.loanAt) {
+      const items = debtProposal(state, world, pid);
+      if (items) {
+        newRequest(state, world, pid, 'deal', items);
+        continue;
+      }
+    }
     if (!hostile(state, TEMERIA, pid) && armiesNear(state, world, pid).length && !treatyBetween(state, TEMERIA, pid, 'access')) {
       newRequest(state, world, pid, 'warning', []);
       continue;
@@ -350,6 +364,25 @@ export function monthlyRequests(state, world, rng) {
     const items = proposeDeal(state, world, pid);
     if (items?.length) newRequest(state, world, pid, 'deal', items);
   }
+}
+
+function debtProposal(state, world, pid) {
+  const st = world.strategy.debt;
+  const realm = state.realms[pid];
+  const need = Math.max(300, Math.round(-realm.treasury / 100) * 100);
+  if (realm.treasury < st.townAt) {
+    // A village for coin: the smallest place they hold.
+    const town = (world.foreignByRealm[pid] ?? []).filter((id) => ownerOf(state, world, id) === pid && world.byId[id].type === 'village')
+      .sort((a, b) => valueOf(state, world, a) - valueOf(state, world, b))[0];
+    if (town) return [{ kind: 'town', from: 'them', town }, { kind: 'coin', from: 'us', amount: Math.max(need, valueOf(state, world, town) * 150) }];
+  }
+  const makes = world.industry?.abroadMakes[pid] ?? [];
+  const good = Object.entries(world.diplomacy.goods).find(([, d]) => makes.includes(d.made ?? d.store))?.[0];
+  if (good && (realm.income ?? 0) > 0) return [{ kind: 'goods', from: 'them', good, qty: world.diplomacy.goods[good].unit, months: 6 }, { kind: 'coin', from: 'us', amount: need }];
+  // A loan: crowns now, repaid with a fifth more over a year.
+  const monthly = Math.ceil((need * 1.2) / 12);
+  if (monthly > Math.max(0, realm.income ?? 0) * st.spareShare) return null;
+  return [{ kind: 'coin', from: 'us', amount: need }, { kind: 'monthly', from: 'them', amount: monthly, months: 12 }];
 }
 
 export function resolveRequest(state, world, id, choice, ignored = false) {
@@ -372,6 +405,17 @@ export function resolveRequest(state, world, id, choice, ignored = false) {
     } else {
       remember(state, world, q.realm, 'We refused their demands', D(world).requests.demandRefused, { cause: 'we refused their demands' });
       say(state, `${ignored ? `No answer went to ${realm}` : `The crown refuses ${realm}'s demands`}. ${name} will not forget it.`);
+    }
+  } else if (q.kind === 'renegotiate') {
+    const t = treatyBetween(state, TEMERIA, q.realm, 'nonaggression');
+    if (choice === 0 && !ignored && t) {
+      state.diplomacy.deals.push({ id: state.diplomacy.nextId++, with: q.realm, since: state.day, items: q.items.map((i) => ({ ...i, left: i.months })), short: 0 });
+      say(state, `The crown pays ${realm} to keep the peace between us.`);
+    } else if (t) {
+      // Lapsed by agreement, not broken: no trust is lost.
+      endTreaty(state, world, t);
+      remember(state, world, q.realm, 'We would not pay for our pact', -5);
+      say(state, `Our non-aggression pact with ${realm} lapses. ${name} is free to choose war, if it wants it.`);
     }
   } else if (q.kind === 'warning') {
     if (choice === 0 && !ignored) {
@@ -434,6 +478,63 @@ export function affinity(state, world, a, b) {
   return v;
 }
 
+// The pact two foreign realms would sign today, if any: the closest bond
+// their affinity, fears and trust allow, worth it to both.
+export function wantedPact(state, world, a, b) {
+  const c = D(world).aiPacts;
+  let aff = affinity(state, world, a, b);
+  // Soft balancing (M18): two realms that both fear the crown's might
+  // draw together, above all for mutual defence.
+  const sp = world.strategy?.pacts;
+  const feared = sp && powerOf(state, world, TEMERIA) > sp.fearAt * Math.max(powerOf(state, world, a), powerOf(state, world, b));
+  if (feared) aff += sp.fearOfTemeria;
+  const wants = [];
+  const pd = treatyDef(world, 'protectorate');
+  for (const [big, small] of [[a, b], [b, a]]) {
+    if (pd.small.includes(small) && !pd.small.includes(big) && aff >= 20 && dangerTo(state, world, small) > 0.6 && powerOf(state, world, big) >= powerOf(state, world, small) * pd.power) wants.push(['protectorate', big, small]);
+  }
+  if (aff >= c.allianceAt) wants.push(['alliance', a, b]);
+  if (aff >= c.defensiveAt) wants.push(['defensive', a, b]);
+  if (aff >= c.tradeAt && world.neighbours.realms[a]?.trade && world.neighbours.realms[b]?.trade) wants.push(['trade', a, b]);
+  // Only rivals, or a realm that fears the other, bother with a pact
+  // against war.
+  const rivals = (world.war?.rivalries ?? []).some((r) => (r.a === a && r.b === b) || (r.a === b && r.b === a));
+  const ratio = powerOf(state, world, a) / powerOf(state, world, b);
+  if (aff >= c.nonaggressionAt && (rivals || ratio > 2.5 || ratio < 1 / 2.5)) wants.push(['nonaggression', a, b]);
+  for (const [kind, x, y] of wants) {
+    if (treatyBetween(state, x, y, kind)) continue;
+    // No re-signing a pact of the same kind soon after one was broken.
+    if ((state.diplomacy.pactCooldown?.[pactKey(x, y, kind)] ?? 0) > state.day) continue;
+    const def = treatyDef(world, kind);
+    if (trustIn(state, world, x, y) < def.minTrust || trustIn(state, world, y, x) < def.minTrust) continue;
+    if (treatyValue(state, world, x, y, kind) <= 0 || treatyValue(state, world, y, x, kind) <= 0) continue;
+    return [kind, x, y];
+  }
+  return null;
+}
+
+// The North does not begin without bonds (M18): at the start of a reign the
+// pacts the realms would sign already stand, quietly, so the first years
+// are not one long round of signings.
+export function seedPacts(state, world) {
+  if (!state.diplomacy || !world.strategy) return;
+  const ids = parties(world).filter((p) => state.realms?.[p]);
+  const chronicle = state.chronicle.length;
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const want = wantedPact(state, world, ids[i], ids[j]);
+      if (!want) continue;
+      const t = makeTreaty(state, world, want[0], want[1], want[2], want[0] === 'protectorate' ? { terms: { monthly: treatyDef(world, 'protectorate').tribute } } : {});
+      // Signed long ago: their terms run out at different times.
+      t.since -= 365 * ((i * 7 + j * 3) % 4);
+      t.until = t.since + Math.round(treatyDef(world, want[0]).years * 365);
+      if (t.until <= state.day) t.until = state.day + 365;
+    }
+  }
+  state.chronicle.length = chronicle;
+  state.diplomacy.log = [];
+}
+
 function aiPacts(state, world, rng) {
   const c = D(world).aiPacts;
   const ids = parties(world).filter((p) => state.realms?.[p]);
@@ -442,43 +543,36 @@ function aiPacts(state, world, rng) {
       const a = ids[i];
       const b = ids[j];
       if (hostile(state, a, b) || !rng.chance(c.chance)) continue;
-      const aff = affinity(state, world, a, b);
-      const wants = [];
-      const pd = treatyDef(world, 'protectorate');
-      for (const [big, small] of [[a, b], [b, a]]) {
-        if (pd.small.includes(small) && !pd.small.includes(big) && aff >= 20 && dangerTo(state, world, small) > 0.6 && powerOf(state, world, big) >= powerOf(state, world, small) * pd.power) wants.push(['protectorate', big, small]);
-      }
-      if (aff >= c.allianceAt) wants.push(['alliance', a, b]);
-      if (aff >= c.defensiveAt) wants.push(['defensive', a, b]);
-      if (aff >= c.tradeAt && world.neighbours.realms[a]?.trade && world.neighbours.realms[b]?.trade) wants.push(['trade', a, b]);
-      // Only rivals, or a realm that fears the other, bother with a pact
-      // against war.
-      const rivals = (world.war?.rivalries ?? []).some((r) => (r.a === a && r.b === b) || (r.a === b && r.b === a));
-      const ratio = powerOf(state, world, a) / powerOf(state, world, b);
-      if (aff >= c.nonaggressionAt && (rivals || ratio > 2.5 || ratio < 1 / 2.5)) wants.push(['nonaggression', a, b]);
-      for (const [kind, x, y] of wants) {
-        if (treatyBetween(state, x, y, kind)) continue;
-        const def = treatyDef(world, kind);
-        if (trustIn(state, world, x, y) < def.minTrust || trustIn(state, world, y, x) < def.minTrust) continue;
-        if (treatyValue(state, world, x, y, kind) <= 0 || treatyValue(state, world, y, x, kind) <= 0) continue;
-        makeTreaty(state, world, kind, x, y, kind === 'protectorate' ? { terms: { monthly: pd.tribute } } : {});
-        break;
-      }
+      const want = wantedPact(state, world, a, b);
+      if (want) makeTreaty(state, world, want[0], want[1], want[2], want[0] === 'protectorate' ? { terms: { monthly: treatyDef(world, 'protectorate').tribute } } : {});
     }
   }
   // Pacts that no longer suit one side are broken: soonest by opportunists,
   // or once the goodwill behind them is gone.
+  const sp = world.strategy?.pacts;
   for (const t of [...state.diplomacy.treaties]) {
     if (t.a === TEMERIA || t.b === TEMERIA) continue;
+    // A pact stands its minimum term, short of war (M18).
+    if (sp && state.day - t.since < sp.minYears * 365) continue;
     const breaker = hasTrait(world, t.b, 'opportunist') ? t.b : t.a;
-    const sour = affinity(state, world, t.a, t.b) < c.breakBelow;
+    const sour = affinity(state, world, t.a, t.b) < (sp ? sp.breakBelow : c.breakBelow);
     const fickle = hasTrait(world, breaker, 'opportunist');
     if (!sour && !fickle) continue;
     if (rng.chance(c.breakChance * (fickle ? traitMult(world, breaker, 'breakChance') : 1) * (sour ? 3 : 1))) {
       endTreaty(state, world, t, { broken: true, by: breaker, why: sour ? 'as old quarrels return' : 'when it no longer pays' });
+      if (sp) (state.diplomacy.pactCooldown ??= {})[pactKey(t.a, t.b, t.kind)] = state.day + sp.cooldownYears * 365;
     }
   }
 }
+
+const pactKey = (a, b, kind) => `${[a, b].sort().join('|')}|${kind}`;
+
+// Would two foreign realms sign this pact again today? Then it runs on.
+setRenewable((state, world, t) => {
+  const c = D(world).aiPacts;
+  const at = { alliance: c.allianceAt, defensive: c.defensiveAt, trade: c.tradeAt, nonaggression: c.nonaggressionAt, protectorate: 20, access: 99 }[t.kind] ?? 99;
+  return !hostile(state, t.a, t.b) && affinity(state, world, t.a, t.b) - c.treaty >= at - 10;
+});
 
 // ---- Calls to arms, by treaty ----
 

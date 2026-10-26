@@ -455,7 +455,7 @@
     "demandRefused": -12
   },
   "aiPacts": {
-    "chance": 0.008,
+    "chance": 0.004,
     "breakChance": 0.0015,
     "rivalry": -40,
     "treaty": 15,
@@ -463,7 +463,7 @@
     "sharedEnemy": 20,
     "trustWeight": 0.5,
     "nonaggressionAt": 0,
-    "tradeAt": 15,
+    "tradeAt": 25,
     "defensiveAt": 25,
     "allianceAt": 45,
     "breakBelow": -25

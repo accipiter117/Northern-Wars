@@ -174,6 +174,46 @@ Diplomacy as meetings with people. No story or scripted dialogue: rulers speak i
 - Rulers request audiences with real proposals, about one in fourteen a month each: a deal of their own devising (by their agenda: trade pacts, non-aggression, defensive pacts, protectorates, goods for crowns), a demand when they are hostile and stronger (crowns, or the town they want, or else), or a warning when our armies crowd their border. Requests wait in the Court inbox and the Diplomacy tab's Audiences, can be accepted, refused or bargained over at the deal table, and lapse after 30 days. They replace the random envoys.
 - Save version 14: old saves keep their stances; a friendly stance with a true ally (relation 75 or more) becomes a defensive pact for five years; trust starts from the relation; envoys still waiting take their default answer.
 
+## Rulers who govern (M18)
+The foreign realms stop rolling dice and start governing. Each month every ruler looks at their realm, chooses what to do with it, and spends their money accordingly. Numbers live in data/strategy.json; the rules in src/sim/strategy.js.
+
+### The monthly assessment
+- Three scores, each 0 to 100, with their parts kept so the reasoning can be shown:
+  - **Threat:** wars they are in (more if losing), hostile neighbours, armies massing near them, enemy camps, neighbours much stronger than they are.
+  - **Opportunity:** a weak neighbour (our strength against theirs), a neighbour busy with another war, a town their agenda wants, towns they lost, a thinly held border. Opportunity against Temeria is divided by our deterrence (below).
+  - **Purse:** months of income in the treasury, and debt.
+- From these and the ruler's traits and agenda they choose one of five postures: **Grow** (build to earn), **Arm** (soldiers and walls), **Expand** (pick a war aim and prepare), **Consolidate** (pay debts, mend) or **Scheme** (work against a stronger neighbour without open war). Honourable rulers never scheme.
+- A posture holds for at least six months unless the threat jumps by 20 or more. Debt forces Consolidate.
+
+### Money becomes power
+- Every realm keeps a standing army that costs upkeep each month and coin to recruit. How large it wants the army depends on its posture and income; it recruits only from what is left after three months' reserve. When it goes to war, the standing army marches first and the levy makes up the rest; veterans fight a little better.
+- A court that hoards pays for it: anything beyond twelve months of income costs 15% of the surplus a month, so no foreign treasury piles up past about two years of income.
+- Debt bites: soldiers desert, towns lose prosperity and garrisons thin, monthly payments and tribute stop, and the ruler offers Temeria a loan, goods or even a village for coin.
+- Verden no longer spirals into debt (a protectorate's tribute now lapses when it cannot pay, and rulers refuse monthly terms beyond a third of their income), and Kerack's garrisons recover after a war.
+
+### Building
+- Foreign rulers build from the whole catalogue, with the same land limits as Temeria (a mine needs mountains, a harbour water). Each choice is scored by how fast it pays back, the posture (earners in Grow, walls and barracks in Arm), the agenda (markets and harbours for traders) and traits. The old preferred list is now only a nudge. Large realms build two things at once.
+
+### Wars with a purpose
+- No more rivalry dice. A ruler in Expand picks a war aim: the town their agenda names, then towns they lost, then a weak town on a border. They muster an army for about six weeks (seen by our scouts), then declare with a reason. Their armies march on the aim.
+- Each month at war they decide: press on, seek peace, or call their allies again. At peace, a side that holds its aim keeps it; a modest lead settles as each keeps what it holds. Capitals always go back to their realm, so no realm is wiped out.
+
+### Deterrence and probes
+- Temeria's soldiers near their border, its garrisons and companies, a share of its whole army and its bound allies divide a ruler's appetite for war on us. A well-defended crown is probed rather than invaded.
+- Probes: sponsoring raiders on our roads, tolls on our caravans, demands, a show of force on the border, denouncing us abroad, or asking to renegotiate a pact for coin.
+- A pact with Temeria can only be broken by an ambitious or opportunist ruler while the crown is weak (low Authority or stripped garrisons); a cautious one only when it is very weak; an honourable one never.
+- Shared fear of a strong Temeria warms the neighbours to each other (soft balancing).
+
+### Pacts that last
+- Pacts between foreign realms run at least two years, break only when relations sour badly, and once broken cannot be signed again for three years. Pacts that run out are renewed in place. The North starts with the standing pacts already signed.
+
+### What we learn
+- An embassy tells us their posture and why ("Henselt is arming: a stronger neighbour on his border"). A spy tells us their war aim and planned musters. Without either, only rumour: busy markets, roads full of soldiers, a court short of coin.
+- Their posture adds a line to their mood reasons in an audience.
+
+### Save
+- Version 15: old saves gain postures, standing armies and assessments on their first month.
+
 ## War with neighbours (M9)
 This replaces "no battles in v1": the owner asked for war. The crown still governs rather than commands: it raises armies, names marshals and gives orders and a stance; marshals do the marching and battles resolve by themselves. All numbers are in data/war.json.
 

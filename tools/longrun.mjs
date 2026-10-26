@@ -38,7 +38,11 @@ function ledgerLine(s, label) {
       if (typeof v === 'number') add(`+${k}`, v);
       else for (const x of Object.values(v)) add(`+${k}`, x);
     }
-    for (const [k, v] of Object.entries(m.expenses)) if (k !== 'construction' && k !== 'decrees') add(`-${k}`, v);
+    for (const [k, v] of Object.entries(m.expenses)) {
+      if (k === 'construction' || k === 'decrees') continue;
+      if (typeof v === 'number') add(`-${k}`, v);
+      else for (const x of Object.values(v)) add(`-${k}`, x);
+    }
   }
   const net = h.reduce((a, m) => a + ledgerNet(m).net, 0) / h.length;
   const inc = h.reduce((a, m) => a + ledgerNet(m).in, 0) / h.length;

@@ -8,7 +8,7 @@ import { buildGrid } from './vision.js';
 const WORKED_RADIUS = 40;
 const TEMERIA_ID = 'temeria';
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds = null, diplomacy = null }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds = null, diplomacy = null, strategy = null }) {
   // byId knows every place on the map, at home and abroad; adjacency is
   // Temeria's own road network, which every domestic system walks.
   // fullAdjacency adds the foreign roads, for traffic that crosses borders.
@@ -89,8 +89,10 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   const waterOf = {};
   const navigable = new Set(kingdom.rivers?.navigable ?? []);
   const onLand = (x, y) => pointInPolygon(x, y, geography.temeria)
-    || Object.values(geography.neighbours).some((n) => n.shapes.some((sh) => pointInPolygon(x, y, sh)));
-  for (const s of geography.settlements) {
+    || Object.values(geography.neighbours).some((n) => n.shapes.some((sh) => pointInPolygon(x, y, sh)))
+    || Object.values(geography.lands ?? {}).some((n) => n.shapes.some((sh) => pointInPolygon(x, y, sh)));
+  // Foreign towns too, so their rulers know where a harbour can stand (M18).
+  for (const s of [...geography.settlements, ...(geography.foreignSettlements ?? [])]) {
     let best = null;
     for (const [name, pts] of Object.entries(geography.rivers)) {
       for (let i = 1; i < pts.length; i++) {
@@ -163,6 +165,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     industry,
     forces,
     diplomacy,
+    strategy,
     culture,
     petitions,
     houses,

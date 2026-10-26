@@ -275,9 +275,22 @@ export function tradeBonus(state, world, pid) {
   return m;
 }
 
+// Set by audiences.js: whether two foreign realms would sign this pact
+// again. Kept on the function itself, which is hoisted, so the import cycle
+// between the two modules cannot catch it uninitialised.
+export function setRenewable(fn) {
+  setRenewable.fn = fn;
+}
+
 export function monthlyTreaties(state, world) {
   for (const t of [...S(state).treaties]) {
     if (t.until <= state.day) {
+      // Between foreign realms a pact both still value simply runs on
+      // (M18): renewal, not a new signing.
+      if (world.strategy && t.a !== TEMERIA && t.b !== TEMERIA && setRenewable.fn?.(state, world, t)) {
+        t.until += Math.round(treatyDef(world, t.kind).years * 365);
+        continue;
+      }
       endTreaty(state, world, t);
       continue;
     }
@@ -327,6 +340,18 @@ export function moodReasons(state, world, rid) {
   if (ag?.kind === 'scoiatael') {
     if (state.laws.nonhumans?.option === 'expulsion' || (state.sympathy ?? 0) < 15) add('agenda', "We are hard on the Scoia'tael", m.scoiataelLaw);
     else if ((state.sympathy ?? 0) > 50) add('agenda', "The Scoia'tael find friends in Temeria", m.scoiataelSympathy);
+  }
+  // What their posture makes of us (M18).
+  const posture = state.realms?.[rid]?.posture;
+  const ml = world.strategy?.moodLines;
+  if (posture && ml) {
+    const aim = state.realms[rid].aim;
+    if (aim?.against === TEMERIA || (posture.kind === 'expand' && posture.against === TEMERIA)) {
+      const town = aim?.town ?? state.realms[rid].assessment?.aim;
+      add('posture', town ? `Their eyes are on ${world.byId[town].name}` : 'They look for a war with us', ml.aimOurs);
+    } else if (posture.kind === 'scheme' && posture.against === TEMERIA) add('posture', 'They scheme against us', ml.schemeUs);
+    else if (posture.kind === 'arm' && (posture.reasons ?? []).some((r) => r.text.startsWith('Temeria'))) add('posture', 'They fear our strength', ml.fearUs);
+    else if (posture.kind === 'grow' && ag?.kind === 'trade') add('posture', 'Busy with trade, they welcome ours', ml.growTrade);
   }
   // Treaties in force.
   for (const t of treatiesOf(state, rid)) {

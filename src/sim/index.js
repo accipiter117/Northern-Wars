@@ -42,3 +42,5 @@ export {
   canGift, canDenounce, canDemandTribute, tributeAsk, asksOf, canAsk, canUltimatum, warReasons, canDeclareWith, reasonCost, requestText,
   affinity, enemiesOfParty, resolve as rulerResolve,
 } from './audiences.js';
+export { intentions, assess as assessRealm, deterrence, strengthOf, armyTarget } from './strategy.js';
+export { canRaiseAbroad as canBuildAbroad } from './realms.js';

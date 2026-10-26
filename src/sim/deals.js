@@ -199,6 +199,12 @@ export function refusal(state, world, pid, items) {
       if (i.treaty === 'protectorate' && !def.small.includes(pid)) return `${name} laughs: ${realm} is no one's protectorate.`;
     }
     if (i.kind === 'embassy' && i.from === 'them' && world.realms?.intelligence.noEmbassy.includes(pid)) return `${name} receives no envoys.`;
+    // A ruler will not promise monthly payments the realm cannot meet (M18).
+    if (world.strategy && i.kind === 'monthly' && i.from === 'them' && !war) {
+      const spare = Math.max(0, state.realms?.[pid]?.income ?? 0) * world.strategy.debt.spareShare;
+      const others = items.filter((x) => x.kind === 'monthly' && x.from === 'them').reduce((a, x) => a + x.amount, 0);
+      if (others > spare) return `${name} cannot spare ${others} crowns a month: ${realm} earns too little.`;
+    }
     if (i.kind === 'town' && i.from === 'them' && world.realms?.realms[pid]?.capital === i.town && !war) return `${name} will never give up ${world.byId[i.town].name}.`;
   }
   return null;
@@ -507,6 +513,12 @@ export function dealLedger(state, world, income, expenses, deliveries) {
         if (out) {
           expenses.deals[name] = (expenses.deals[name] ?? 0) + i.amount;
           if (state.realms[deal.with]) state.realms[deal.with].treasury += i.amount;
+        } else if (world.strategy && (state.realms[deal.with]?.treasury ?? 0) < 0) {
+          // A realm in debt cannot pay what it promised (M18).
+          i.left = 0;
+          SAY(state, `${name} is in debt and stops its payments to us.`);
+          remember(state, world, deal.with, 'Payments they could not make', 0);
+          continue;
         } else {
           income.deals[name] = (income.deals[name] ?? 0) + i.amount;
           if (state.realms[deal.with]) state.realms[deal.with].treasury -= i.amount;

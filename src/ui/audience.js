@@ -9,7 +9,7 @@ import {
   partnerOf, fearOf, weighDeal, counterOffer, proposeDeal, canSign, itemProblem, describeItem, goodsInHand, ourValue,
   canGift, canDenounce, canDemandTribute, tributeAsk, asksOf, canAsk, canUltimatum, warReasons, canDeclareWith, reasonCost,
   canSetStance, canOpenEmbassy, canSendSpy, hostile, warsOf, sideIndex, sideName, ownerOf, routeValue, canDeclare, formatDate,
-  realmPotential, valueOf,
+  realmPotential, valueOf, intentions,
 } from '../sim/index.js';
 import { drawPortrait } from '../render/portraits.js';
 import { escapeHtml, number } from './format.js';
@@ -254,10 +254,18 @@ export function audienceHtml(app, cur) {
         ${pacts.length ? `<span class="aud-pacts">${escapeHtml(pacts.join(', '))}</span>` : ''}
       </div>
       <p class="aud-line" data-part="aud-line">${escapeHtml(line)}</p>
+      ${intentLine(world, state, pid)}
       <details class="aud-reasons"${cur.panel ? '' : ' open'}><summary>Why ${escapeHtml(rulerShort(world, pid))} feels this way</summary><ul class="reasons">${reasons || '<li><span>Nothing in particular.</span></li>'}</ul></details>
     </section>
     <section class="aud-bottom">${cur.panel ? PANELS[cur.panel](app, cur) : fourButtons(app, cur)}</section>
   </div>`;
+}
+
+// Their intentions, as far as our embassy and spies tell us (M18).
+function intentLine(world, state, pid) {
+  const i = intentions(state, world, pid);
+  if (!i) return '';
+  return `<p class="aud-intent">${escapeHtml(i.posture ?? i.vague)}${i.aim ? ` <b>${escapeHtml(i.aim)}</b>` : ''}</p>`;
 }
 
 const PANEL_TITLES = { trade: 'The deal table', diplomacy: 'Diplomacy', alliance: 'Alliances and treaties', war: 'War' };

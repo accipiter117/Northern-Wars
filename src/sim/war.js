@@ -37,7 +37,8 @@ export function realmPotential(state, world, rid) {
     n += Math.floor(s.garrison * ai.armyShare);
     people += s.population;
   }
-  return n + Math.round(people * ai.levyPerPeople);
+  // The standing army (M18) counts in full.
+  return n + Math.round(people * ai.levyPerPeople) + Math.round(state.realms[rid]?.army ?? 0);
 }
 
 function claimsAgainstTemeria(state, world, rid) {
@@ -118,7 +119,11 @@ export function raiseRealmArmy(state, world, rid, foes, order = 'siege') {
       n += k;
     }
   }
-  const total = n + Math.round(people * ai.levyPerPeople * (state.armies.some((a) => a.side === rid) ? 0.5 : 1));
+  // The standing army marches first (M18): paid, drilled men, better than
+  // the levy, which stays a cheaper and weaker fallback.
+  const standing = Math.round(realm.army ?? 0);
+  const levied = n + Math.round(people * ai.levyPerPeople * (state.armies.some((a) => a.side === rid) ? 0.5 : 1));
+  const total = levied + standing;
   if (total < W(world).minArmy * 2) {
     for (const [id, k] of Object.entries(levy)) realm.settlements[id].garrison += k;
     return null;
@@ -135,10 +140,14 @@ export function raiseRealmArmy(state, world, rid, foes, order = 'siege') {
   }
   if (!best) return null;
   const count = state.armies.filter((a) => a.side === rid).length;
-  return newArmy(state, world, rid, best.id, total, levy, {
+  realm.army = 0;
+  const a = newArmy(state, world, rid, best.id, total, levy, {
     order, target: null, stance: (ai.aggression[rid] ?? 0.3) >= 0.5 ? 'bold' : 'cautious',
     name: `The ${count ? 'second ' : ''}army of ${sideName(world, rid)}`,
   });
+  a.standing = standing;
+  if (world.strategy && total > 0) a.quality = (standing * 1.15 + levied * 0.9) / total;
+  return a;
 }
 
 // ---- The crown declares war ----
@@ -192,7 +201,7 @@ export function monthlyWar(state, world, rng) {
     raiseForWar(state, world, war);
     if (war.sides.flat().includes(TEMERIA)) offers(state, world, war);
     else foreignPeace(state, world, war);
-    allyCalls(state, world, war);
+    allyCalls(state, world, war, rng);
   }
   state.tributes = (state.tributes ?? []).filter((t) => t.until > state.day);
   // A long war wears on the burghers whose trade it stops.
@@ -223,6 +232,10 @@ export function hostilityTo(state, world, rid) {
 }
 
 function aiDeclarations(state, world, rng) {
+  // Since M18 rulers choose their wars (strategy.js): a realm set on
+  // expansion musters against the holder of its war aim. Only the musters
+  // are resolved here.
+  if (world.strategy) return resolveMusters(state, world, rng);
   const ai = W(world).ai;
   const ours = soldiersOf(state, world, TEMERIA);
   for (const rid of Object.keys(state.realms)) {
@@ -263,6 +276,43 @@ function aiDeclarations(state, world, rng) {
   }
 }
 
+// A muster's day has come: war on the holder of the aim, if the aim is
+// still worth it; otherwise the host goes home. A show of force always does.
+function resolveMusters(state, world, rng) {
+  for (const m of [...state.musters]) {
+    if (m.day > state.day) continue;
+    state.musters = state.musters.filter((x) => x !== m);
+    const army = state.armies.find((a) => a.id === m.army);
+    const against = m.against ?? TEMERIA;
+    const realm = state.realms[m.realm];
+    const still = !m.show && army && realm?.posture?.kind === 'expand' && m.aim && ownerOf(state, world, m.aim) === against
+      && !hostile(state, m.realm, against) && truceUntil(state, m.realm, against) <= state.day;
+    if (!still) {
+      if (army) disbandArmy(state, world, army, true);
+      if (realm) realm.aim = null;
+      if (against === TEMERIA) say(state, `The host gathered in ${sideName(world, m.realm)} on our border disperses.`);
+      else if (informed(state, world, m.realm)) abroad(state, `The host gathered in ${sideName(world, m.realm)} disperses. Whatever they meant, they thought better of it.`);
+      continue;
+    }
+    const pact = keptPact(state, m.realm, against);
+    if (pact) endTreaty(state, world, pact, { broken: true, by: m.realm, why: 'and marches to war' });
+    const war = startWar(state, world, rng, m.realm, against, m.reason ?? 'none');
+    war.aims = { [m.realm]: m.aim };
+    war.reason = m.reason ?? 'none';
+    // A war without a reason costs the aggressor trust in every court.
+    if (war.reason === 'none' && state.diplomacy) {
+      for (const p of [TEMERIA, ...Object.keys(state.realms)]) {
+        if (p === m.realm || p === against) continue;
+        changeTrust(state, world, p, m.realm, world.diplomacy.trust.noCause);
+      }
+    }
+    if (against === TEMERIA) {
+      const price = Math.round(400 + realmPotential(state, world, m.realm) * 0.3);
+      state.warDecisions.push({ id: state.nextWarDecisionId++, kind: 'declared', war: war.id, realm: m.realm, price, day: state.day });
+    }
+  }
+}
+
 // A pact that forbids war between two parties.
 function keptPact(state, a, b) {
   if (!state.diplomacy) return null;
@@ -270,6 +320,8 @@ function keptPact(state, a, b) {
 }
 
 function rivalries(state, world, rng) {
+  // Since M18 rivalries only colour hostility and affinity: no dice.
+  if (world.strategy) return;
   for (const r of W(world).rivalries) {
     if (!state.realms[r.a] || !state.realms[r.b] || hostile(state, r.a, r.b) || truceUntil(state, r.a, r.b) > state.day) continue;
     if (!rng.chance(r.chance)) continue;
@@ -285,8 +337,18 @@ function rivalries(state, world, rng) {
   }
 }
 
-function allyCalls(state, world, war) {
-  if (state.diplomacy) crownCall(state, world, war);
+function allyCalls(state, world, war, rng) {
+  if (!state.diplomacy) return;
+  crownCall(state, world, war);
+  // A side losing its war calls on its treaty partners once more (M18).
+  if (world.strategy && !war.recalled && rng && months(state, war) >= 2) {
+    for (const side of [0, 1]) {
+      if (warScore(state, world, war, side) <= -20) {
+        war.recalled = true;
+        treatyCalls(state, world, rng, war);
+      }
+    }
+  }
 }
 
 // ---- Peace ----
@@ -345,11 +407,20 @@ export function offerPeace(state, world, warId, key) {
 
 // Settle a war: towns handed back or kept, tribute, a truce, and everyone
 // home.
-export function applyPeace(state, world, war, { towns, prize = null, tribute = null, lump = null }) {
+export function applyPeace(state, world, war, { towns, prize = null, tribute = null, lump = null, keep = [] }) {
   const p = W(world).peace;
   if (towns === 'white' || towns === 'prize') {
+    // `keep`: war aims their takers hold, which stay with them (M18).
     const kept = towns === 'prize' ? prizeOf(state, world, war, prize) : null;
-    for (const t of war.taken) if (t.id !== kept && ownerOf(state, world, t.id) !== t.from) setOwner(state, world, t.id, t.from);
+    for (const t of war.taken) if (t.id !== kept && !keep.includes(t.id) && ownerOf(state, world, t.id) !== t.from) setOwner(state, world, t.id, t.from);
+  }
+  // A capital always goes home at the peace (M18): a realm may lose towns,
+  // never its seat, so no realm vanishes from the map.
+  if (world.strategy) {
+    for (const t of war.taken) {
+      const capital = t.from === TEMERIA ? world.kingdom.capital === t.id : world.realms?.realms[t.from]?.capital === t.id;
+      if (capital && ownerOf(state, world, t.id) !== t.from) setOwner(state, world, t.id, t.from);
+    }
   }
   if (tribute) state.tributes.push(tribute);
   if (lump) pay(state, lump.from, lump.to, lump.coin);
@@ -378,7 +449,8 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
   }
   if (tribute) text += ` ${sideName(world, tribute.from)} pays ${sideName(world, tribute.to)} ${tribute.monthly} crowns a month for ${p.tributeMonths} months.`;
   if (lump) text += ` ${sideName(world, lump.from)} pays ${lump.coin} crowns.`;
-  state.warHistory.push({ sides: war.sides, since: war.since, until: state.day, towns, taken: war.taken.length });
+  const changed = [...new Set(war.taken.map((t) => t.id))].filter((id) => ownerOf(state, world, id) !== originOf(world, id)).map((id) => ({ id, to: ownerOf(state, world, id) }));
+  state.warHistory.push({ sides: war.sides, since: war.since, until: state.day, towns, taken: war.taken.length, aims: war.aims ?? null, reason: war.reason ?? war.cause, changed });
   if (state.warHistory.length > 20) state.warHistory.shift();
   if (war.sides.flat().includes(TEMERIA)) {
     const me = sideIndex(war, TEMERIA);
@@ -436,10 +508,30 @@ function foreignPeace(state, world, war) {
   const p = W(world).peace;
   const m = months(state, war);
   if (m < p.minMonths) return;
+  if (world.strategy) return foreignPeaceM18(state, world, war, m);
   const tired = Math.max(exhaustion(state, world, war, 0), exhaustion(state, world, war, 1));
   if (tired < p.foreignEndsAt && m < p.foreignMaxMonths) return;
   const score = warScore(state, world, war, 0);
   applyPeace(state, world, war, Math.abs(score) >= p.prizeAt ? { towns: 'prize', prize: war.sides[score > 0 ? 0 : 1][0] } : { towns: 'white' });
+}
+
+// Since M18 a foreign war ends when one side is spent, when the aggressor
+// holds its aim and the defender has had enough, or sooner when either side
+// is in debt. A side holding its aim keeps it; a modest lead settles as each
+// keeps what it holds; a rout takes a prize as before.
+function foreignPeaceM18(state, world, war, m) {
+  const p = W(world).peace;
+  const c = world.strategy.war;
+  const tired = Math.max(exhaustion(state, world, war, 0), exhaustion(state, world, war, 1));
+  const held = Object.entries(war.aims ?? {}).filter(([side, town]) => ownerOf(state, world, town) === side);
+  const aimDone = held.some(([side]) => m >= c.aimMonths && exhaustion(state, world, war, 1 - sideIndex(war, side)) >= c.aimHeldPeace);
+  const debt = c.debtPeace && war.sides.flat().some((r) => (state.realms[r]?.treasury ?? 0) < 0);
+  if (!aimDone && tired < p.foreignEndsAt - (debt ? 20 : 0) && m < p.foreignMaxMonths) return;
+  const score = warScore(state, world, war, 0);
+  const keep = held.map(([, town]) => town);
+  if (Math.abs(score) >= p.prizeAt) applyPeace(state, world, war, { towns: 'prize', prize: war.sides[score > 0 ? 0 : 1][0], keep });
+  else if (Math.abs(score) >= c.keepAt) applyPeace(state, world, war, { towns: 'keep' });
+  else applyPeace(state, world, war, { towns: 'white', keep });
 }
 
 // The crown leaves a friend's war: it hands back what it took and makes its

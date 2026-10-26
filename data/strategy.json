@@ -1,0 +1,239 @@
+{
+  "note": "Rulers who govern (M18). Each month every foreign realm scores Threat, Opportunity and Purse (0 to 100 each, with their parts kept for display), chooses a posture, and acts on it: building, recruiting a standing army, choosing a war aim, or scheming against a stronger neighbour. Every number here.",
+  "postures": {
+    "grow": {
+      "name": "Grow",
+      "verb": "is growing",
+      "army": 0.2,
+      "line": "busy with trade and building"
+    },
+    "arm": {
+      "name": "Arm",
+      "verb": "is arming",
+      "army": 0.55,
+      "line": "raising soldiers and walls"
+    },
+    "expand": {
+      "name": "Expand",
+      "verb": "means to expand",
+      "army": 0.6,
+      "line": "gathering strength for a war"
+    },
+    "consolidate": {
+      "name": "Consolidate",
+      "verb": "is consolidating",
+      "army": 0.08,
+      "line": "paying off debts and mending"
+    },
+    "scheme": {
+      "name": "Scheme",
+      "verb": "is scheming",
+      "army": 0.3,
+      "line": "working against a stronger neighbour"
+    }
+  },
+  "choose": {
+    "growBase": 45,
+    "growPurse": 0.35,
+    "growThreat": 0.6,
+    "growOpportunity": 0.25,
+    "armThreat": 1.0,
+    "armBase": -5,
+    "expandOpportunity": 1.0,
+    "expandBase": -30,
+    "consolidatePurse": 1.1,
+    "consolidateBase": 45,
+    "afterWar": 20,
+    "afterWarDays": 365,
+    "schemeOpportunity": 0.75,
+    "schemeBase": -20,
+    "minMonths": 6,
+    "threatJump": 20
+  },
+  "traits": {
+    "ambitious": {
+      "expand": 15,
+      "scheme": 4
+    },
+    "cautious": {
+      "arm": 12,
+      "consolidate": 8,
+      "expand": -12
+    },
+    "greedy": {
+      "grow": 10,
+      "scheme": 8
+    },
+    "opportunist": {
+      "scheme": 12,
+      "expand": 8
+    },
+    "honourable": {
+      "scheme": -60
+    },
+    "zealous": {
+      "agendaPull": 1.5
+    }
+  },
+  "aggressionExpand": 20,
+  "greedScheme": 15,
+  "threat": {
+    "war": 40,
+    "warLosing": 30,
+    "hostile": 15,
+    "muster": 30,
+    "camp": 3,
+    "campMax": 15,
+    "stronger": 12,
+    "strongerAt": 2.2,
+    "hostileRelation": -25,
+    "rivalAffinity": -20
+  },
+  "opportunity": {
+    "weakAt": 1.2,
+    "weak": 20,
+    "weakMax": 30,
+    "distracted": 1.5,
+    "agendaTown": 30,
+    "lostTown": 18,
+    "lostMax": 36,
+    "thinBorder": 10,
+    "thinAt": 0.6,
+    "allyCut": 0.3
+  },
+  "purse": {
+    "monthsFull": 18,
+    "debt": 10
+  },
+  "army": {
+    "upkeep": 0.15,
+    "recruitCost": 1.2,
+    "recruitRate": 0.15,
+    "recruitMin": 20,
+    "hoardYears": 2,
+    "smithyUpkeep": 0.7,
+    "potentialShare": 0.9,
+    "desertion": 0.12,
+    "reserveMonths": 3
+  },
+  "court": {
+    "freeMonths": 12,
+    "share": 0.15
+  },
+  "debt": {
+    "prosperity": 1,
+    "garrison": 0.85,
+    "loanAt": -400,
+    "townAt": -2000,
+    "spareShare": 0.35
+  },
+  "build": {
+    "bigRealm": 45000,
+    "military": {
+      "walls": 30,
+      "barracks": 25,
+      "armoury": 25,
+      "smithy": 12,
+      "watchtower": 6
+    },
+    "postureWeight": {
+      "grow": {
+        "earn": 1.4,
+        "military": 0.5
+      },
+      "arm": {
+        "earn": 0.6,
+        "military": 2.0
+      },
+      "expand": {
+        "earn": 0.8,
+        "military": 1.6
+      },
+      "consolidate": {
+        "earn": 0.7,
+        "military": 0.3
+      },
+      "scheme": {
+        "earn": 1.0,
+        "military": 0.9
+      }
+    },
+    "tradeAgenda": {
+      "market": 1.6,
+      "harbour": 1.6,
+      "guildhall": 1.4,
+      "inn": 1.3,
+      "warehouse": 1.3
+    },
+    "preference": 1.2,
+    "craftScale": 1.0,
+    "goodsYieldShare": 0.15,
+    "foodValue": 20,
+    "prosperityValue": 0.012,
+    "unrestValue": 0.6
+  },
+  "war": {
+    "musterDays": 45,
+    "aimWeight": 5,
+    "pactBreak": 0.3,
+    "keepAt": 15,
+    "aimHeldPeace": 40,
+    "aimMonths": 6,
+    "debtPeace": true,
+    "minRatio": 1.3
+  },
+  "deterrence": {
+    "near": 260,
+    "garrison": 0.6,
+    "companies": 1.0,
+    "armies": 1.0,
+    "allies": 0.5,
+    "whole": 0.35
+  },
+  "probes": {
+    "chance": 0.1,
+    "cooldown": 365,
+    "raiderDays": 240,
+    "raiderBoost": 3,
+    "showDays": 60,
+    "slander": -4,
+    "weights": {
+      "raiders": 3,
+      "tolls": 2,
+      "demand": 3,
+      "muster": 2,
+      "denounce": 2,
+      "renegotiate": 1
+    },
+    "renegotiate": 30,
+    "at": 8
+  },
+  "pactBreak": {
+    "weakAuthority": 25,
+    "strippedShare": 0.5,
+    "veryWeakFactor": 2,
+    "chance": 0.25
+  },
+  "pacts": {
+    "minYears": 2,
+    "cooldownYears": 3,
+    "breakBelow": -45,
+    "fearOfTemeria": 15,
+    "fearAt": 2.5
+  },
+  "intel": {
+    "vague": {
+      "grow": "Merchants say its markets are busy and its builders busier.",
+      "arm": "Travellers say its roads are full of soldiers.",
+      "expand": "Travellers say its roads are full of soldiers, and talk is of war.",
+      "consolidate": "Merchants say its court is short of coin.",
+      "scheme": "Little is said openly; rumours abound."
+    }
+  },
+  "moodLines": {
+    "aimOurs": -10,
+    "fearUs": -5,
+    "schemeUs": -5,
+    "growTrade": 3
+  }
+}
