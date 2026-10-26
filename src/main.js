@@ -175,7 +175,7 @@ async function boot() {
 
   function looseThreats() {
     const hunted = new Set(freeCompanies(state).map((c) => c.task?.threat).filter(Boolean));
-    return (state.threats?.list ?? []).filter((t) => (t.sighted || t.campSeen) && !hunted.has(t.id) && !state.threats.contracts.some((c) => c.threat === t.id)).length;
+    return (state.threats?.list ?? []).filter((t) => !t.abroad && (t.sighted || t.campSeen) && !hunted.has(t.id) && !state.threats.contracts.some((c) => c.threat === t.id)).length;
   }
 
   function updateBadges() {
@@ -691,6 +691,7 @@ async function boot() {
     get speed() { return speed; },
     get renderStats() { return renderer.stats; },
     get artStats() { return renderer.artStats; },
+    get tileStats() { return renderer.tileStats; },
     // p95Calm leaves out the frames that also ran a day of the realm, to see
     // what the interface alone costs.
     get frameStats() {

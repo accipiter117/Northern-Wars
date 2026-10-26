@@ -174,6 +174,11 @@
       "id": "install",
       "title": "Install and play offline",
       "text": "Add the game to your home screen from the browser's menu (Share, then Add to Home Screen on an iPhone). It opens full screen, starts at once and plays without a connection. When a new version is ready, a small prompt offers to restart. Switching away saves and pauses the reign."
+    },
+    {
+      "id": "beyond",
+      "title": "The North and the lands beyond",
+      "text": "Eleven realms border our dealings: Redania, Kaedwen, Aedirn, Mahakam, Cidaris, Kerack, Brokilon, Verden, Brugge, Sodden and Cintra. Further off lie the lands beyond (Kovir, Poviss, Hengfors, Lyria and Rivia, Dol Blathanna, Angren, Nazair, Mag Turga, Toussaint, Tir Tochair, Metinna, Korath and Skellige), drawn lighter: the crown knows their towns from its maps and nothing more. Camps and lairs over the border are that realm's to deal with; our companies and witchers do not cross after them."
     }
   ]
 }

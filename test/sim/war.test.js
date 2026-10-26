@@ -58,20 +58,20 @@ test('an army besieges and takes a foreign town, which then pays the crown', () 
   s = act(s, { type: 'declare', realm: 'cidaris' });
   s = act(s, { type: 'raise', muster: 'gors_velen', levy: 'half', nobles: false, companies: 3, marshal: 'captain', stance: 'bold' });
   const id = s.armies.find((a) => a.side === 'temeria').id;
-  s = act(s, { type: 'army', army: id, order: 'siege', target: 'saltmarsh' });
+  s = act(s, { type: 'army', army: id, order: 'siege', target: 'caelf' });
   let taken = false;
   for (let d = 0; d < 120 && !taken; d += 5) {
     s = run(s, 5);
-    taken = ownerOf(s, world, 'saltmarsh') === 'temeria';
+    taken = ownerOf(s, world, 'caelf') === 'temeria';
   }
-  assert.ok(taken, 'Saltmarsh falls');
-  assert.equal(s.realms.cidaris.settlements.saltmarsh.owner, 'temeria');
-  assert.ok(s.chronicle.some((c) => /Saltmarsh has fallen to Temeria/.test(c.text)));
+  assert.ok(taken, 'Caelf falls');
+  assert.equal(s.realms.cidaris.settlements.caelf.owner, 'temeria');
+  assert.ok(s.chronicle.some((c) => /Caelf has fallen to Temeria/.test(c.text)));
   const war = warsOf(s, 'temeria')[0];
-  assert.ok(war.taken.some((t) => t.id === 'saltmarsh' && t.from === 'cidaris'));
+  assert.ok(war.taken.some((t) => t.id === 'caelf' && t.from === 'cidaris'));
   // Its army holds it and awaits orders; the crown can now see round it.
-  assert.equal(s.armies.find((a) => a.id === id).target, 'saltmarsh');
-  const p = world.byId.saltmarsh;
+  assert.equal(s.armies.find((a) => a.id === id).target, 'caelf');
+  const p = world.byId.caelf;
   assert.ok(canSee(world, visionOf(s, world), p.x, p.y));
   s = run(s, 31);
   assert.ok(s.ledger.history.at(-1).income.conquests > 0);
@@ -93,15 +93,15 @@ test('peace: as we were hands towns back; each keeps what it holds lets them sta
   const rng = makeRng(9);
   let s = createState(world, 5);
   const war = startWar(s, world, rng, 'temeria', 'cidaris', 'test');
-  s.realms.cidaris.settlements.saltmarsh.owner = 'temeria';
-  war.taken.push({ id: 'saltmarsh', from: 'cidaris', to: 'temeria', day: s.day });
+  s.realms.cidaris.settlements.caelf.owner = 'temeria';
+  war.taken.push({ id: 'caelf', from: 'cidaris', to: 'temeria', day: s.day });
   const keep = structuredClone(s);
   applyPeace(s, world, s.wars[0], { towns: 'white' });
-  assert.equal(ownerOf(s, world, 'saltmarsh'), 'cidaris');
+  assert.equal(ownerOf(s, world, 'caelf'), 'cidaris');
   assert.equal(s.wars.length, 0);
   assert.match(applyAction(s, world, { type: 'declare', realm: 'cidaris' }).error, /truce/);
   applyPeace(keep, world, keep.wars[0], { towns: 'keep', tribute: { from: 'cidaris', to: 'temeria', monthly: 50, until: keep.day + 720 } });
-  assert.equal(ownerOf(keep, world, 'saltmarsh'), 'temeria');
+  assert.equal(ownerOf(keep, world, 'caelf'), 'temeria');
   const later = run(keep, 31);
   assert.equal(later.ledger.history.at(-1).income.tribute, 50);
   // Cidaris resents the loss of its town.

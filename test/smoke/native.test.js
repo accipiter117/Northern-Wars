@@ -163,6 +163,7 @@ test('no browser menus on the map or the interface; fields stay selectable', asy
 test('map gestures: momentum comes to rest, double-tap zooms in, two-finger tap zooms out', async () => {
   const { context, page, errors } = await open(null, '?seed=3&fresh&paused&nohints');
   const at = () => page.evaluate(() => window.northernWars.screenOf('vizima'));
+  await page.waitForFunction(() => !window.northernWars.tileStats.pending);
   // A flick: the map glides on after the finger lifts, then stops.
   await page.mouse.move(200, 500);
   await page.mouse.down();
@@ -186,7 +187,7 @@ test('map gestures: momentum comes to rest, double-tap zooms in, two-finger tap 
     for (let y = 160; y < innerHeight - 160; y += 7) for (let x = 30; x < innerWidth - 30; x += 7) if (!window.northernWars.pickAt(x, y)) return { x, y };
     return null;
   });
-  assert.ok(empty, 'open land to double tap ' + JSON.stringify(await page.evaluate(() => [window.northernWars.pickAt(200, 400), window.northernWars.pickAt(60, 700), window.northernWars.ui])));
+  assert.ok(empty, 'open land to double tap');
   const scale = () => page.evaluate(() => { const nw = window.northernWars; const p = nw.screenOfPoint(0, 0); const q = nw.screenOfPoint(100, 0); return (q.x - p.x) / 100; });
   const s0 = await scale();
   await page.touchscreen.tap(empty.x, empty.y);
@@ -227,6 +228,8 @@ test('put away, the reign is saved and paused, and stays paused on return', asyn
 
 test('paused with nothing moving, the map is not redrawn', async () => {
   const { context, page, errors } = await open(null, '?seed=3&fresh&paused&nohints');
+  // The painted map's tiles fill in over the first moments; then it rests.
+  await page.waitForFunction(() => !window.northernWars.tileStats.pending);
   await page.waitForTimeout(500);
   const a = await page.evaluate(() => window.northernWars.renderStats.draws);
   await page.waitForTimeout(1000);

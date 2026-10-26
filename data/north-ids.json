@@ -1,0 +1,21 @@
+{
+  "note": "Old foreign town ids (before M15) and the towns that now stand for them, for the save upgrade. Written by tools/north.mjs.",
+  "renamed": {
+    "spalla": "hoshberg",
+    "stonegate": "carbon",
+    "deepdelve": "carbon",
+    "saltmarsh": "cidaris_city",
+    "palmyra": "tiberghien",
+    "lowmarsh": "kernow",
+    "sodden_hill": "sodden_keep",
+    "fordham": "riedbrune",
+    "riverwatch": "riedbrune",
+    "marnadal": "ortagor",
+    "ardwind": "attre",
+    "hollowmere": "ortagor"
+  },
+  "seats": {
+    "verden_town": "Hamm",
+    "sodden_keep": "Kagen"
+  }
+}

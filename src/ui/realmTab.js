@@ -78,7 +78,7 @@ export function alertsOf(app) {
   const raided = Object.keys(state.settlements).filter((id) => (state.settlements[id].raided ?? 0) > state.day);
   if (raided.length) out.push({ text: `Raids on ${raided.length === 1 ? world.byId[raided[0]].name : `${raided.length} places`}`, go: raided.length === 1 ? `town:${raided[0]}` : null, tab: raided.length === 1 ? null : 'military:threats', ic: 'shield', bad: true });
   const hunted = new Set(freeCompanies(state).map((c) => c.task?.threat).filter(Boolean));
-  const loose = (state.threats?.list ?? []).filter((t) => (t.sighted || t.campSeen) && !hunted.has(t.id) && !state.threats.contracts.some((c) => c.threat === t.id));
+  const loose = (state.threats?.list ?? []).filter((t) => !t.abroad && (t.sighted || t.campSeen) && !hunted.has(t.id) && !state.threats.contracts.some((c) => c.threat === t.id));
   if (loose.length) out.push({ text: `${loose.length} threat${loose.length === 1 ? '' : 's'} sighted, nobody sent`, tab: 'military:threats', ic: 'target' });
   return out;
 }

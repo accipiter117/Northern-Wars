@@ -3,14 +3,20 @@
 How the realm behaves over a long reign, and the dials that shape it. Every number lives in `data/`; nothing here needs code changed.
 
 ## Thirty years, four crowns
-From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded. Since M13.
+From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded down. Rerun for M15 on the retraced North; M13 figures in brackets.
 
 | Crown | What it does | People after 30 years | Treasury | Raids suffered | Depositions | Wars |
 | --- | --- | --- | --- | --- | --- | --- |
-| Idle | Nothing; every decision left to its default; no companies | about 52,300 (from 54,240) | about 37,600, levelled off (M12: 40,200) | about 1,050 | 0 | 1 to 2 |
-| Steward | As in M12 (builds an earner and a food building in turn, opens routes, answers generously, honours sulking lords, grants an equal charter, hires witchers), and keeps a standing army that grows with its income: light horse riding the two worst roads, foot and archers standing ready (Respond, 150 miles) in the towns nearest danger, sighted camps and lairs hunted when the odds are Favourable or better, witchers hired for the rest | about 79,600 (+47%) | about 185,000 | about 140 | 0 | 2 to 3 |
-| Spendthrift | As the steward but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 71,000 | at the limit for a decade, then rich | about 380 | about 3 | 0 to 4 |
-| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies | about 46,300 | about 25,800 | about 1,220 | about 6 | 3 to 8 |
+| Idle | Nothing; every decision left to its default; no companies | about 52,200 from 54,240 (52,300) | about 36,300, levelled off (37,600) | about 1,040 (1,050) | 0 | 1 to 3 |
+| Steward | As in M12 (builds an earner and a food building in turn, opens routes, answers generously, honours sulking lords, grants an equal charter, hires witchers), and keeps a standing army that grows with its income: light horse riding the two worst roads, foot and archers standing ready (Respond, 150 miles) in the towns nearest danger, sighted camps and lairs hunted when the odds are Favourable or better, witchers hired for the rest | about 83,700, +54% (79,600) | about 211,000 (185,000) | about 120 (140) | 0 | 4 to 5 (2 to 3) |
+| Spendthrift | As the steward but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 66,600 (71,000) | at the limit for a decade, then about 135,000 | about 400 (380) | about 3 | 1 to 9 (0 to 4) |
+| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies | about 48,000 (46,300) | about 25,000 (25,800) | about 1,230 (1,220) | about 3 (6) | 3 to 5 |
+
+### What the retraced North changed (M15)
+- **Temeria's own life is as it was.** Its land, towns, roads and threats are untouched, so the idle and tyrant crowns land within a few hundred people and raids of their M13 figures. The tyrant's depositions fall from about six to about three, within the spread of three seeds rather than a real change.
+- **The neighbours are richer, and fight more.** Foreign towns now earn from their ground (timber, stone, iron) and some strike gold, and they lose a little to their own camps and lairs. Richer realms raise bigger armies, so the crowns that build up (and so tempt or anger their neighbours) see more wars: the steward 4 to 5 in thirty years against 2 to 3 before.
+- **The steward copes; the spendthrift pays.** The steward's companies and full treasury see its wars off with about five places lost and retaken, and it ends richer and bigger than before. The spendthrift, in debt for its first decade, loses 11 to 16 places across up to nine wars on two of the three seeds, which is why its people fall by about 4,400 against M13. That is the risk of borrowing to the limit in a harder North, and a fair one; no dial changed for it.
+- **The steward's income still triples** (year 1 about 1,140 a month, year 10 about 3,640, 3.1, 3.4 and 3.1 times on the three seeds).
 
 ## A realm under arms (M13)
 Ten years, from `node tools/longrun.mjs 10 <crown> 1,2,3`:
@@ -19,6 +25,8 @@ Ten years, from `node tools/longrun.mjs 10 <crown> 1,2,3`:
 | --- | --- | --- | --- | --- | --- | --- |
 | Idle | about 300 (M12: about 115) | about 525 | about 2,450 | 0 | 0 | 0 |
 | Steward | about 120 | about 160 | about 1,070 | about 15 | 8 to 9 | about 520 a month, 15% of its income (14.6%, 15.7% and 14.6%) |
+| M15 rerun: idle | about 315 | about 532 | about 2,555 | 0 | 0 | 0 |
+| M15 rerun: steward | about 113 | about 160 | about 1,003 | about 20 | 9 | about 560 a month |
 
 - **The idle crown feels it.** Raids come more than twice as often as before M13, because nothing stops a camp from growing and nothing clears it. Over thirty years the untended realm shrinks a little and loses about 1,600 people to raiders and beasts.
 - **A modest standing army pays for itself.** The steward's eight or nine companies cut raids by three fifths and deaths by more than two thirds. They clear about fifteen camps and lairs in ten years and halve the days bands hold the roads. Their pay, about 520 a month, is 15% of a developed realm's income, the bottom of the 15 to 25% the brief set.

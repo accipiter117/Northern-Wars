@@ -413,6 +413,8 @@ test('steady play does not redraw the painted map', async () => {
   const page = await context.newPage();
   await page.goto(`${base}?seed=7&fresh&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  // The painted map's tiles fill in over the first moments; then it rests.
+  await page.waitForFunction(() => !window.northernWars.tileStats.pending);
   await page.waitForTimeout(500);
   const before = await page.evaluate(() => ({ ...window.northernWars.renderStats }));
   await page.evaluate(() => window.northernWars.setSpeed(4));
@@ -719,6 +721,42 @@ test('a busy Vizima close up, within a sixtieth of a second a frame on a slowed 
     assert.deepEqual(errors, []);
     await context.close();
   }
+});
+
+// The whole North on screen at once: every forest, peak, river and town of
+// twenty-four lands. The terrain is painted once into cached tiles, so a pan
+// across the continent on a slowed CPU still fits in a sixtieth of a second.
+test('the whole North zoomed out, within a sixtieth of a second a frame on a slowed CPU', async () => {
+  const context = await browser.newContext({ viewport: VIEWPORTS[0], deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  await page.goto(`${base}?paused&nohints`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  await page.mouse.move(195, 420);
+  for (let i = 0; i < 12; i++) { await page.mouse.wheel(0, 800); await page.waitForTimeout(40); }
+  // Let the coarse tiles fill in, as they would in the first moment of play.
+  await page.waitForTimeout(600);
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.evaluate(() => window.northernWars.setSpeed(1));
+  await page.waitForTimeout(300);
+  await page.evaluate(() => window.northernWars.resetFrameStats());
+  await page.mouse.move(195, 420);
+  await page.mouse.down();
+  for (let i = 0; i < 40; i++) { await page.mouse.move(195 + Math.sin(i / 6) * 120, 420 + Math.cos(i / 6) * 160); await page.waitForTimeout(30); }
+  await page.mouse.up();
+  const f = await page.evaluate(() => window.northernWars.frameStats);
+  assert.ok(f.frames > 30, `${f.frames} frames drawn`);
+  assert.ok(f.mean < 8, `${f.mean.toFixed(1)} ms a frame on average`);
+  assert.ok(f.p95 < 1000 / 60, `${f.p95.toFixed(1)} ms for the slowest frames`);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  await page.evaluate(() => window.northernWars.setSpeed(0));
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: join(OUT, 'portrait-north.png') });
+  assert.deepEqual(errors, []);
+  await context.close();
 });
 
 // A working economy: the red-treasury hint leads to the Treasury, which

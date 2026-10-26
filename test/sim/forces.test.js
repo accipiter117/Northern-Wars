@@ -34,13 +34,14 @@ test('threats appear and grow where the country is poor, restless and wild, and 
     rough.settlements[id].unrest = 80;
   }
   rough = run(rough, 120);
-  const camps = rough.threats.list.filter((t) => t.kind === 'bandits');
+  // Temeria's own camps (the neighbours' wilds breed their own, abroad).
+  const camps = rough.threats.list.filter((t) => t.kind === 'bandits' && !t.abroad);
   assert.ok(camps.length > 0, 'bandit camps appear near the poor wild villages');
   for (const c of camps) assert.ok(threatLevel(rough, world, c.near, 'bandits') >= world.forces.threats.bandits.fadeBelow);
   // In wild country only: every camp stands in forest, marsh or hills.
   for (const c of camps) assert.ok(world.forces.threats.bandits.terrain.includes(c.terrain));
   // Left alone, a camp grows.
-  const t = rough.threats.list.find((x) => x.kind === 'bandits');
+  const t = rough.threats.list.find((x) => x.kind === 'bandits' && !x.abroad);
   const men = t.men;
   for (let i = 0; i < 6; i++) {
     for (const id of ['anchor', 'dorian', 'tegmond', 'acorn_bay', 'napeys', 'vorune']) rough.settlements[id].prosperity = 10;
@@ -62,7 +63,14 @@ test('threats appear and grow where the country is poor, restless and wild, and 
     }
     calm = run(calm, 30);
   }
-  assert.equal(calm.threats.list.filter((x) => x.kind === 'bandits').length, 0);
+  // At most a stray camp in the deepest woods (Gors Velen sits between
+  // forest and marsh, wild enough for one now and then), and far fewer than
+  // the poor and restless realm breeds.
+  const calmCamps = calm.threats.list.filter((x) => x.kind === 'bandits' && !x.abroad);
+  assert.ok(calmCamps.length <= 1, `${calmCamps.length} camps in a calm realm`);
+  // And the country breeds them far less: the realm's mean bandit level.
+  const mean = (x) => Object.keys(x.settlements).reduce((a, id) => a + threatLevel(x, world, id, 'bandits'), 0) / Object.keys(x.settlements).length;
+  assert.ok(mean(calm) < mean(rough) - 5, `calm ${mean(calm).toFixed(1)} against rough ${mean(rough).toFixed(1)}`);
 });
 
 test('a band holding a road robs the crown route over it, and stops the caravans on the map', () => {

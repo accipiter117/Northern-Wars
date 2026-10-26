@@ -136,6 +136,7 @@ export function applyAction(state, world, action) {
     const t = state.threats?.list.find((x) => x.id === action.threat);
     if (!t || t.kind !== 'monsters') return { state, error: 'No such lair.' };
     if (!t.sighted) return { state, error: 'No witcher takes a contract on a rumour.' };
+    if (t.abroad) return { state, error: 'It lies over the border: no Temerian contract runs there.' };
     if (state.threats.contracts.some((c) => c.threat === t.id)) return { state, error: 'A witcher is already on the trail.' };
     const cost = witcherCost(state, world, t);
     if (state.treasury - cost < -creditLimit(state, world)) return { state, error: 'The bankers will not lend that much.' };

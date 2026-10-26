@@ -151,7 +151,81 @@ const MIGRATIONS = {
     state.version = 12;
     return state;
   },
+  // v13 redraws the North from the atlas: new foreign towns, some old ones
+  // gone. The same places keep what they had; every vanished town hands its
+  // holder, works, sieges, routes and armies to the town that stands for it
+  // now (data/north-ids.json).
+  12(state, world) {
+    upgradeNorth(state, world);
+    state.version = 13;
+    return state;
+  },
 };
+
+// Swap every reference to a vanished foreign town for its replacement: as a
+// value anywhere in the state, and as a key (what the crown last saw of it).
+function remapIds(value, map) {
+  if (typeof value === 'string') return map[value] ?? value;
+  if (Array.isArray(value)) return value.map((v) => remapIds(v, map));
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      const key = map[k] ?? k;
+      // Two old towns may stand for one new one: the first kept wins.
+      if (key in out && key !== k) continue;
+      out[key] = remapIds(v, map);
+    }
+    return out;
+  }
+  return value;
+}
+
+export function upgradeNorth(state, world) {
+  const map = world.northIds?.renamed ?? {};
+  // Each realm's towns are laid out afresh, then what each old town had is
+  // carried to its own place, or to the place that now stands for it.
+  const old = {};
+  for (const realm of Object.values(state.realms ?? {})) Object.assign(old, realm.settlements);
+  const fresh = defaultRealms(world);
+  for (const [rid, realm] of Object.entries(fresh)) {
+    realm.treasury = state.realms?.[rid]?.treasury ?? realm.treasury;
+  }
+  const placeOf = (id) => fresh[world.realmOf[id]]?.settlements[id];
+  for (const [id, s] of Object.entries(old)) {
+    const target = placeOf(id);
+    if (target) Object.assign(target, s);
+  }
+  for (const [id, s] of Object.entries(old)) {
+    const nid = map[id];
+    if (!nid || placeOf(id)) continue;
+    const target = placeOf(nid);
+    if (!target) continue;
+    if (s.owner && !target.owner) target.owner = s.owner;
+    for (const b of s.buildings ?? []) if (!target.buildings.includes(b)) target.buildings.push(b);
+    if (s.construction && !target.construction) target.construction = s.construction;
+  }
+  // A town held by its own realm needs no owner mark.
+  for (const [rid, realm] of Object.entries(fresh)) for (const s of Object.values(realm.settlements)) if (s.owner === rid) delete s.owner;
+  const { realms: _old, ...rest } = state;
+  const next = remapIds(rest, map);
+  Object.assign(state, next, { realms: fresh });
+  // Armies march on from where they stand, along the new roads.
+  for (const a of state.armies ?? []) {
+    a.to = null;
+    a.along = 0;
+    a.path = [];
+  }
+  // The crown's ledger names its routes by their ends.
+  for (const h of state.ledger?.history ?? []) {
+    if (!h.income?.routes) continue;
+    h.income.routes = Object.fromEntries(Object.entries(h.income.routes).map(([k, v]) => [k.split('>').map((x) => map[x] ?? x).join('>'), v]));
+  }
+  // Travellers on foreign roads are replaced by new ones on the new roads.
+  if (state.ambient?.units) {
+    state.ambient.units = state.ambient.units.filter((u) => !(u.route ?? []).some((id) => !state.settlements[id]));
+  }
+  return state;
+}
 
 export function deserialize(text, world) {
   let data;

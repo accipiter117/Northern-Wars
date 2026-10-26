@@ -1,5 +1,14 @@
 # Changelog
 
+## M15 B A detailed North
+- The North is retraced from an atlas: 24 lands with their true shapes. The eleven realms we deal with keep their rulers and ways; the thirteen further off (Kovir, Poviss, Hengfors, Lyria and Rivia, Dol Blathanna, Angren, Nazair, Mag Turga, Toussaint, Tir Tochair, Metinna, Korath and Skellige) appear as the lands beyond, named, with their towns and roads.
+- 65 real towns abroad replace the invented ones (Novigrad, Oxenfurt, Gors Velen, Ban Ard, Aldersberg, Hamm, Dillingen and the rest). Temeria is unchanged.
+- The country abroad is the country of the atlas: the Blue Mountains, the Kestrel Mountains, Brokilon, the Amell range, 19 rivers that wind and taper to the sea, and the lakes. Roads run round the mountains and cross the rivers near towns.
+- Life abroad follows the same rules: bandit camps and monster lairs in foreign wilds that bleed the towns near them until that realm's soldiers clear them (ours do not cross the border after them); foreign villages cut timber, quarry stone or mine iron by their country, and hill and mountain towns can strike gold.
+- Richer terrain everywhere: massed forests, shaded peaks, mounds, reeds and pools, lakes with shorelines, rivers named along their course. It stays visible under the fog.
+- The map is painted once into tiles at several levels of detail, so the whole North pans smoothly even zoomed right out.
+- Old saves carry over: towns that no longer exist hand their buildings, owners, routes, sieges and armies to the new town nearest them. Save version 13.
+
 ## M15 A Native feel
 - The game behaves like an installed app: no selecting text, no copy or save menus on a long press, no dragging images, no right-click menu, no page zoom or pull-to-refresh. Buttons look pressed the instant they are touched.
 - Long press is a game gesture, with a ring filling under your finger. On one of your towns, a ring of quick actions: Build, Recruit, Garrison, Trade route, Open card. On a company, its orders; on an army, Hold and Besiege; on a threat, Send nearest. On anything foreign, what is known of it; on open land, what's here. On a row in a list, a quick look without leaving the list.

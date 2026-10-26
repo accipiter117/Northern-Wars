@@ -56,7 +56,13 @@ test('heavy taxes bring in more coin but sour the villages', () => {
   const taxed = run(decree(createState(world, 2), 'taxation', 'heavy').state, 120);
   assert.ok(taxed.ledger.history.at(-1).income.taxes > base.ledger.history.at(-1).income.taxes * 1.25);
   assert.ok(taxed.opinion.peasants < 45);
-  assert.ok(taxed.settlements.tegmond.unrest > base.settlements.tegmond.unrest);
+  // The villages as a whole, so one village's luck with raids or events
+  // does not decide it.
+  const villages = (x) => {
+    const v = world.geography.settlements.filter((st) => st.type === 'village');
+    return v.reduce((a, st) => a + x.settlements[st.id].unrest, 0) / v.length;
+  };
+  assert.ok(villages(taxed) > villages(base), `${villages(taxed).toFixed(1)} vs ${villages(base).toFixed(1)}`);
 });
 
 test('opinion settles where the laws put it', () => {

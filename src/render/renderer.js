@@ -2,6 +2,7 @@
 // under this finger". The static map is cached in an offscreen canvas and only
 // redrawn when the camera moves, so a still map costs little battery.
 import { prepareMap, drawMap, COLOURS } from './mapLayer.js';
+import { createTiles } from './tiles.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
 import './sprites-war.js';
@@ -9,7 +10,7 @@ import { createSettlementArt, seasonLook } from './settlementArt.js';
 import { dateOf } from '../sim/calendar.js';
 import { totalPopulation } from '../sim/state.js';
 import { houseCount } from './layout.js';
-import { toScreen, toWorld } from './camera.js';
+import { toScreen, toWorld, worldBounds } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
 import { plagueActive } from '../sim/military.js';
@@ -40,6 +41,15 @@ const MAX_FIGURES = 5;
 
 export function createRenderer(canvas, world, cam, layoutCfg) {
   const prep = prepareMap(world);
+  // The static map, cut into tiles at a few levels of detail (tiles.js).
+  // Lines keep their on-screen weight at every level; the far levels draw
+  // fewer marks.
+  const tiles = createTiles({
+    paint: (ctx, view, L) => {
+      const zoom = L / dpr;
+      drawMap(ctx, prep, world, dpr / L, tints, view, zoom < 0.45 ? 0 : zoom < 0.9 ? 1 : 2);
+    },
+  });
   const art = createSettlementArt(world, layoutCfg);
   // How far each settlement's ground reaches on screen, for labels and taps.
   let footprint = {};
@@ -106,6 +116,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       c.style.height = `${h + margin * 2}px`;
     }
     lc = null;
+    tiles.clear();
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     dirty = true;
@@ -132,6 +143,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (b >= 2) tints[id] = `rgba(80, 130, 60, ${Math.min(0.3, b * 0.03)})`;
       if (b <= -2) tints[id] = `rgba(150, 40, 30, ${Math.min(0.3, -b * 0.03)})`;
     }
+    tiles.clear();
     dirty = true;
     baseDirty = true;
   }
@@ -162,7 +174,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
         img.data[i * 4] = seen ? 48 : 26;
         img.data[i * 4 + 1] = seen ? 41 : 21;
         img.data[i * 4 + 2] = seen ? 33 : 15;
-        img.data[i * 4 + 3] = seen ? 120 : 242;
+        // The crown has maps: the lie of the land shows through even where
+        // no one of ours has been; only what stands there now is hidden.
+        img.data[i * 4 + 3] = seen ? 60 : 118;
       }
       mctx.putImageData(img, 0, 0);
     }
@@ -185,7 +199,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // Fog lies only over land: the sea is no secret.
     fctx.save();
     const land = new Path2D();
-    for (const n of prep.neighbours) for (const p of n.paths) land.addPath(p);
+    for (const n of prep.lands) for (const p of n.paths) land.addPath(p);
     fctx.clip(land);
     fctx.imageSmoothingEnabled = true;
     fctx.drawImage(mask, g.x0, g.y0, g.cols * g.cell, g.rows * g.cell);
@@ -368,18 +382,37 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     marks.slice(0, 3).forEach((m, i) => getSprite('marker', m).draw(c, p.x + r * 0.7 + i * 16, p.y - r - 6, m === 'riot' ? 20 : 16));
   }
 
-  function drawStatic(selectedId) {
+  const layerTransform = () => {
     const s = cam.scale * dpr;
-    const worldTransform = [s, 0, 0, s, dpr * (margin + cam.viewW / 2 - cam.x * cam.scale), dpr * (margin + cam.viewH / 2 - cam.y * cam.scale)];
-    if (baseDirty) {
+    return [s, 0, 0, s, dpr * (margin + cam.viewW / 2 - cam.x * cam.scale), dpr * (margin + cam.viewH / 2 - cam.y * cam.scale)];
+  };
+
+  // The painted map, from tiles. When some fine tiles are still to come it
+  // stays dirty, and the next frames fill them in.
+  function drawBase() {
+    const worldTransform = layerTransform();
+    {
       bctx.setTransform(1, 0, 0, 1, 0, 0);
       bctx.clearRect(0, 0, base.width, base.height);
       bctx.setTransform(...worldTransform);
-      drawMap(bctx, prep, world, 1 / cam.scale, tints);
+      const half = { x: (cam.viewW / 2 + margin) / cam.scale, y: (cam.viewH / 2 + margin) / cam.scale };
+      // Beyond the edge of the world is open sea: one fill, no tiles.
+      const b = worldBounds(world);
+      const view = { x0: Math.max(b.x0, cam.x - half.x), x1: Math.min(b.x1, cam.x + half.x), y0: Math.max(b.y0, cam.y - half.y), y1: Math.min(b.y1, cam.y + half.y) };
+      bctx.fillStyle = COLOURS.sea;
+      bctx.fillRect(cam.x - half.x, cam.y - half.y, half.x * 2, half.y * 2);
+      bctx.imageSmoothingEnabled = true;
+      const complete = tiles.draw(bctx, view, cam.scale * dpr);
       drawOwnership(bctx);
-      baseDirty = false;
+      // Fine tiles not yet drawn come in over the next frames.
+      baseDirty = !complete;
       stats.base += 1;
     }
+  }
+
+  function drawStatic(selectedId) {
+    const worldTransform = layerTransform();
+    if (baseDirty) drawBase();
     stats.overlay += 1;
     cctx.setTransform(1, 0, 0, 1, 0, 0);
     cctx.clearRect(0, 0, cache.width, cache.height);
@@ -415,10 +448,34 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     drawSettlementLabels(cctx, selectedId);
   }
 
+  // What a foreign place works, from the country round it: villages by the
+  // woods cut timber, in the hills quarry stone, in the mountains mine iron.
+  const WORK = { forest: 'timber', hills: 'stone', mountains: 'iron' };
+  function foreignWork(st) {
+    if (st.type !== 'village') return 'other';
+    return WORK[world.terrainOf[st.id]] ?? 'food';
+  }
+
+  // Towns the crown knows only from its maps: where they stand and what
+  // they are called, nothing of how they fare.
+  const distantOrdered = [...(world.distantTowns ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
+  function drawMapped(c, st) {
+    const p = toScreen(cam, st.x, st.y);
+    if (p.x < -60 - margin || p.y < -60 - margin || p.x > cam.viewW + 60 + margin || p.y > cam.viewH + 60 + margin) return;
+    c.globalAlpha = 0.45;
+    getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type) * 0.85, {});
+    c.globalAlpha = 1;
+    footprint[st.id] = iconSize(st.type) * 0.42;
+  }
+
   function drawForeign(c, z) {
+    for (const st of distantOrdered.slice().reverse()) if (z >= LABEL_ZOOM[st.type] * 0.8 || st.type === 'city') drawMapped(c, st);
     for (const st of foreignOrdered.slice().reverse()) {
       const f = foreignView[st.id];
-      if (!f) continue;
+      if (!f) {
+        if (z >= LABEL_ZOOM[st.type] * 0.8 || st.type === 'city') drawMapped(c, st);
+        continue;
+      }
       const p = toScreen(cam, st.x, st.y);
       if (p.x < -60 - margin || p.y < -60 - margin || p.x > cam.viewW + 60 + margin || p.y > cam.viewH + 60 + margin) continue;
       // Remembered places are drawn faded: this is how they were, not how they are.
@@ -428,7 +485,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       let reach = iconSize(st.type) / 2;
       if (full || z >= LABEL_ZOOM[st.type] || st.type === 'city') {
         reach = Math.max(reach, art.draw(c, st, {
-          people: f.population, production: st.type === 'village' ? 'food' : 'other', buildings: f.buildings, construction: f.construction,
+          people: f.population, production: foreignWork(st), buildings: f.buildings, construction: f.construction,
         }, infraState.seed, artView(p, st, colours[0])));
       }
       if (!full) getSprite('settlement', st.id, st.type).draw(c, p.x, p.y, iconSize(st.type), { capital: world.realms?.realms[st.realm]?.capital === st.id });
@@ -444,43 +501,110 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     const z = zoomRel();
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    for (const n of prep.neighbours) {
+    const inView = (p, pad = 120) => p.x > -pad - margin && p.y > -pad - margin && p.x < cam.viewW + pad + margin && p.y < cam.viewH + pad + margin;
+    regionBoxes = [];
+    const box = (p, text, size, gap) => {
+      const w = text.length * (size * 0.72 + gap);
+      regionBoxes.push({ x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - size * 0.7, y1: p.y + size * 0.7 });
+    };
+    // The heartland's own name is kept clear first: no neighbour writes over
+    // Temeria.
+    const home = toScreen(cam, 520, 470);
+    if (z < 2.2) box(home, world.kingdom.name, 18 + z * 4, 8);
+    // The biggest lands are named first; a smaller one whose name would
+    // run into theirs waits until the view is close enough.
+    for (const n of [...prep.lands].sort((a, b) => b.size - a.size)) {
       const p = toScreen(cam, n.label.x, n.label.y);
+      if (!inView(p, 200)) continue;
+      const size = n.beyond ? 10 + Math.min(5, z * 1.3) : 12 + Math.min(6, z * 1.5);
+      const w = n.name.length * (size * 0.72 + (n.beyond ? 2 : 3));
+      const mine = { x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - size * 0.7, y1: p.y + size * 0.7 };
+      if (regionBoxes.some((b) => mine.x0 < b.x1 && mine.x1 > b.x0 && mine.y0 < b.y1 && mine.y1 > b.y0)) continue;
+      // The lands beyond our dealings are named smaller and fainter, and
+      // the smallest only when close enough to read.
+      if (n.beyond) {
+        if (n.size < 60 && z < 1.2) continue;
+        c.font = `italic 600 ${Math.round(10 + Math.min(5, z * 1.3))}px ${SERIF}`;
+        box(p, n.name, 10 + Math.min(5, z * 1.3), 2);
+        c.fillStyle = 'rgba(52, 40, 28, 0.5)';
+        spaced(c, n.name.toUpperCase(), p.x, p.y, 2, 'rgba(236, 224, 194, 0.45)');
+        continue;
+      }
       c.font = `600 ${Math.round(12 + Math.min(6, z * 1.5))}px ${SERIF}`;
+      box(p, n.name, 12 + Math.min(6, z * 1.5), 3);
       // A pale halo keeps realm names readable over parchment and fog alike.
       c.fillStyle = 'rgba(52, 40, 28, 0.75)';
       spaced(c, n.name.toUpperCase(), p.x, p.y, 3, 'rgba(236, 224, 194, 0.55)');
     }
-    if (z >= 1.8) {
-      c.font = `italic 12px ${SERIF}`;
-      c.fillStyle = 'rgba(43, 33, 22, 0.7)';
-      for (const t of prep.terrain) {
-        // Foreign country is only named once someone has seen it.
-        if (t.realm && !exploredAt(t.label.x, t.label.y)) continue;
-        const p = toScreen(cam, t.label.x, t.label.y);
-        haloText(c, t.name, p.x, p.y + 16);
-      }
-      c.fillStyle = 'rgba(34, 64, 76, 0.85)';
-      for (const r of prep.rivers) {
-        const p = toScreen(cam, r.label.x, r.label.y);
-        c.save();
-        c.translate(p.x, p.y);
-        let a = r.label.angle;
-        if (a > Math.PI / 2 || a < -Math.PI / 2) a += Math.PI;
-        c.rotate(a);
-        haloText(c, r.name, 0, -8);
-        c.restore();
-      }
+    // The crown has maps: country and rivers are named everywhere, the
+    // great ranges and rivers from further out than the rest.
+    c.font = `italic 12px ${SERIF}`;
+    c.fillStyle = 'rgba(43, 33, 22, 0.7)';
+    for (const t of prep.terrain) {
+      if (z < (t.size >= 1.6 ? 0.9 : 1.8)) continue;
+      const p = toScreen(cam, t.label.x, t.label.y);
+      if (!inView(p)) continue;
+      haloText(c, t.name, p.x, p.y + 16);
+    }
+    c.fillStyle = 'rgba(34, 64, 76, 0.85)';
+    for (const r of prep.rivers) {
+      if (z < (r.main ? 0.7 : 1.5)) continue;
+      riverName(c, r);
     }
     // The realm's own name, faint across the heartland when zoomed out.
     if (z < 2.2) {
-      const p = toScreen(cam, 520, 470);
       c.font = `600 ${Math.round(18 + z * 4)}px ${SERIF}`;
       c.fillStyle = 'rgba(110, 29, 22, 0.35)';
-      spaced(c, world.kingdom.name.toUpperCase(), p.x, p.y, 8);
+      spaced(c, world.kingdom.name.toUpperCase(), home.x, home.y, 8);
     }
   }
 
+  // Where the realms' names stand, so towns abroad do not write over them.
+  let regionBoxes = [];
+
+  // A river's name set along its curve, over the middle of its course.
+  function riverName(c, r) {
+    const pts = r.pts.map(([x, y]) => toScreen(cam, x, y));
+    const lens = [0];
+    for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+    const total = lens.at(-1);
+    c.font = `italic ${r.main ? 14 : 12}px ${SERIF}`;
+    const text = r.main ? r.name.split('').join(' ') : r.name;
+    const width = c.measureText(text).width;
+    if (total < width * 1.4) return;
+    // Read left to right, whichever way the river runs.
+    const forward = pts.at(-1).x >= pts[0].x;
+    const at = (d) => {
+      const dd = forward ? d : total - d;
+      let i = 1;
+      while (i < lens.length - 1 && lens[i] < dd) i++;
+      const t = (dd - lens[i - 1]) / ((lens[i] - lens[i - 1]) || 1);
+      const a = pts[i - 1];
+      const b = pts[i];
+      let angle = Math.atan2(b.y - a.y, b.x - a.x);
+      if (!forward) angle += Math.PI;
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, angle };
+    };
+    // Several times along a long river seen whole, once along a short one.
+    const copies = Math.max(1, Math.min(3, Math.floor(total / (width * 6))));
+    for (let k = 0; k < copies; k++) {
+      let d = (total * (k + 1)) / (copies + 1) - width / 2;
+      const mid = at(d + width / 2);
+      if (mid.x < -margin || mid.y < -margin || mid.x > cam.viewW + margin || mid.y > cam.viewH + margin) continue;
+      for (const ch of text) {
+        const w = c.measureText(ch).width;
+        const p = at(d + w / 2);
+        c.save();
+        c.translate(p.x, p.y);
+        c.rotate(p.angle);
+        haloText(c, ch, 0, -7);
+        c.restore();
+        d += w;
+      }
+    }
+  }
+
+  const state0 = (st) => !!infraState?.settlements[st.id];
   function drawSettlementLabels(c, selectedId) {
     const z = zoomRel();
     const placed = [];
@@ -488,8 +612,11 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     c.textBaseline = 'top';
     c.lineJoin = 'round';
     const known = foreignOrdered.filter((st) => foreignView[st.id]);
+    // Then the towns known only from maps, fainter, where there is room.
+    const mapped = [...foreignOrdered.filter((st) => !foreignView[st.id]), ...distantOrdered];
+    const mappedSet = new Set(mapped.map((st) => st.id));
     const capitals = new Set([world.kingdom.capital, ...Object.values(world.realms?.realms ?? {}).map((r) => r.capital)]);
-    for (const st of [...ordered, ...known]) {
+    for (const st of [...ordered, ...known, ...mapped]) {
       if (z < LABEL_ZOOM[st.type] && st.id !== selectedId) continue;
       // Pulled right back, only capitals keep their names.
       if (z < 0.8 && !capitals.has(st.id) && st.id !== selectedId) continue;
@@ -500,12 +627,14 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const y = p.y + Math.max(iconSize(st.type) / 2, (footprint[st.id] ?? 0) * 1.08) + 2;
       const box = { x0: p.x - w / 2 - 2, x1: p.x + w / 2 + 2, y0: y, y1: y + 15 };
       if (st.id !== selectedId && placed.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0)) continue;
+      // A foreign town gives way to its realm's own name; Temeria's never do.
+      if (!state0(st) && st.id !== selectedId && regionBoxes.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0)) continue;
       placed.push(box);
       c.strokeStyle = 'rgba(236, 224, 194, 0.9)';
       c.lineWidth = 3.5;
       c.strokeText(st.name, p.x, y);
       const remembered = foreignView[st.id] && !foreignView[st.id].visible;
-      c.fillStyle = st.id === world.kingdom.capital ? COLOURS.border : remembered ? 'rgba(43, 33, 22, 0.55)' : COLOURS.ink;
+      c.fillStyle = st.id === world.kingdom.capital ? COLOURS.border : mappedSet.has(st.id) ? 'rgba(43, 33, 22, 0.42)' : remembered ? 'rgba(43, 33, 22, 0.55)' : COLOURS.ink;
       c.fillText(st.name, p.x, y);
     }
   }
@@ -540,7 +669,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
         drawStatic(selectedId);
         dirty = false;
         lastSelected = selectedId;
-      }
+      } else if (baseDirty) drawBase();
       if (fogDirty) {
         drawFog();
         lastFog = performance.now();
@@ -715,8 +844,12 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const score = d * 0.5;
       if (d < reach && (!best || score < best.d)) best = { d: score, hit: { settlement: st.id } };
     }
+    for (const st of distantOrdered) {
+      const p = toScreen(cam, st.x, st.y);
+      const d = Math.hypot(p.x - sx, p.y - sy);
+      if (d < 18 && (!best || d * 0.6 < best.d)) best = { d: d * 0.6, hit: { distant: st.id } };
+    }
     for (const st of foreignOrdered) {
-      if (!foreignView[st.id]) continue;
       const p = toScreen(cam, st.x, st.y);
       const d = Math.hypot(p.x - sx, p.y - sy);
       const score = d * 0.5;
@@ -743,6 +876,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 
   return {
     resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
+    get tileStats() { return { size: tiles.size, drawn: tiles.stats.drawn, pending: baseDirty }; },
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     // The camera jumped (centred on a place): draw the cached layers round
     // where it landed, so the next pan has the whole margin to slide in.

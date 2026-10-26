@@ -54,7 +54,11 @@ export function monthlyRealms(state, world, rng) {
       const owner = ownerOf(state, world, id);
       const fx = effectsOf(world, s);
       if (state.realms[owner]) {
-        purse[owner] = (purse[owner] ?? 0) + s.population * e.taxPerPersonMonth * prosperityMult(s) * (1 + fx.trade) - s.garrison * e.garrisonPayMonth;
+        // Taxes, plus what the country round the town gives (timber, stone,
+        // iron) and any gold seam it works, less the garrison's pay.
+        const tax = s.population * e.taxPerPersonMonth * prosperityMult(s) * (1 + fx.trade);
+        const ground = tax * (e.terrainIncome?.[world.terrainOf[id]] ?? 0);
+        purse[owner] = (purse[owner] ?? 0) + tax + ground + goldMonth(world, s) - s.garrison * e.garrisonPayMonth;
       }
       const food = s.buildings.filter((b) => world.buildings[b].effects.foodYield).length;
       const growth = e.growthPerMonth * prosperityMult(s) * (1 + food * e.foodBuildingGrowth);
@@ -87,6 +91,27 @@ export function monthlyRealms(state, world, rng) {
     realm.treasury = Math.max(e.debtFloor, realm.treasury + (purse[rid] ?? 0));
     aiBuild(state, world, rng, rid, realm);
     incident(state, world, rng, rid, realm);
+    prospect(state, world, rng, rid, realm);
+  }
+}
+
+// A working seam pays its realm each month until it is worked out.
+function goldMonth(world, s) {
+  if (!s.gold || s.gold.months <= 0) return 0;
+  s.gold.months -= 1;
+  return R(world).gold.monthly;
+}
+
+// The neighbours' hills hide gold as Temeria's do; now and then a town in
+// hill or mountain country strikes its seam.
+function prospect(state, world, rng, rid, realm) {
+  const g = R(world).gold;
+  if (!g) return;
+  for (const [id, s] of Object.entries(realm.settlements)) {
+    if (s.gold || !g.ground.includes(world.terrainOf[id]) || ownerOf(state, world, id) !== rid) continue;
+    if (!rng.chance(g.chance)) continue;
+    s.gold = { found: state.day, months: g.months };
+    if (informed(state, world, rid)) say(state, `Word from ${world.geography.neighbours[rid].name}: gold has been struck in the hills by ${world.byId[id].name}. Their treasury will be the fuller for it.`);
   }
 }
 

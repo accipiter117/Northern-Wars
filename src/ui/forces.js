@@ -1,7 +1,7 @@
 // The Forces screen, the company and threat cards, and a town's companies.
 import {
   TEMERIA, freeCompanies, crownArmies, describeArmy, describeCompany, companyUpkeep, huntOdds, bestCompanyFor, canRecruit, recruitCost,
-  companySlots, threatPos, threatName, threatSize, isCamp, nearestPlace, witcherCost, speciesOf, ledgerNet, targetOf, hostile,
+  companySlots, threatPos, threatName, threatSize, isCamp, nearestPlace, witcherCost, speciesOf, ledgerNet, targetOf, hostile, sideName,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -78,13 +78,16 @@ export function forcesHtml(app) {
 
 export function threatsHtml(app) {
   const { world, state } = app;
-  const sighted = state.threats.list.filter((t) => t.sighted || t.campSeen);
-  const rumours = state.threats.list.filter((t) => !t.sighted && !t.campSeen && t.rumour).length;
+  const home = state.threats.list.filter((t) => !t.abroad);
+  const sighted = home.filter((t) => t.sighted || t.campSeen);
+  const rumours = home.filter((t) => !t.sighted && !t.campSeen && t.rumour).length;
+  const abroad = state.threats.list.filter((t) => t.abroad && (t.sighted || t.campSeen)).length;
   const foes = (state.armies ?? []).filter((a) => a.side !== TEMERIA && hostile(state, TEMERIA, a.side));
   return `
     <div data-part="threats">
       ${sighted.length ? sighted.map((t) => threatRow(world, state, t)).join('') : '<p class="sub">Nothing in sight.</p>'}
       ${rumours ? `<p class="sub">And ${rumours} rumour${rumours === 1 ? '' : 's'} of something further off: send a company or build watchtowers to see.</p>` : ''}
+      ${abroad ? `<p class="sub">${abroad} camp${abroad === 1 ? '' : 's'} and lair${abroad === 1 ? '' : 's'} seen over the border. Theirs to deal with, so long as they stay there.</p>` : ''}
       ${foes.length ? `<p class="warn">Enemy armies in the field: ${foes.map((a) => escapeHtml(a.name)).join(', ')}.</p>` : ''}</div>`;
 }
 
@@ -97,7 +100,7 @@ export function companyCard(app, id) {
   const t = world.forces.companies[c.type];
   const route = `company:${id}`;
   const radius = c.order.radius ?? world.forces.respond.default;
-  const hunts = state.threats.list.filter((x) => x.sighted || x.campSeen).map((x) => {
+  const hunts = state.threats.list.filter((x) => !x.abroad && (x.sighted || x.campSeen)).map((x) => {
     const o = huntOdds(state, world, [c], x);
     return `<button type="button" class="build" data-hunt="${x.id}" ${orderAttr({ type: 'company', id, order: { kind: 'hunt', threat: x.id } })}><span class="build-name">Hunt: ${escapeHtml(threatLabel(world, x))}</span>
       <span class="build-cost">${o.word}. ${escapeHtml(distanceWord(world, threatPos(x)))}.</span></button>`;
@@ -143,6 +146,13 @@ export function threatCard(app, id) {
   const { world, state } = app;
   const t = state.threats.list.find((x) => x.id === id);
   if (!t) return '<div data-part="head"><p class="sub">Whatever was there is gone.</p></div>';
+  if (t.abroad) {
+    return cardHead({
+      status: `<span>Over the border in ${escapeHtml(sideName(world, t.abroad))}. Theirs to deal with: no company or witcher of ours crosses after it.</span>`,
+      infoText: 'Wild country abroad breeds its own outlaws and beasts. They prey on that realm\'s roads and towns, which grow poorer while they last. A strong garrison there clears them in time.',
+      chips: [{ icon: 'target', label: 'Size', value: threatSize(t) }],
+    });
+  }
   const best = bestCompanyFor(state, world, t);
   const kind = {
     bandits: t.band ? 'A raiding band out of a camp in the wilds. It holds the roads, robbing what passes, and falls on weak villages.' : 'Outlaws camped in the wilds. The camp grows while the country round it is poor and restless, and sends bands to the roads.',
