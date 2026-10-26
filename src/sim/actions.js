@@ -17,6 +17,12 @@ import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy } from './armies.
 import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision } from './war.js';
 import { TEMERIA, sideIndex } from './conflict.js';
 import { addDispatch as note } from './realm.js';
+import { canSign, signDeal } from './deals.js';
+import {
+  canGift, giveGift, canDenounce, denounce, canDemandTribute, demandTribute, canAsk, askStop, canUltimatum, ultimatum,
+  canDeclareWith, declareWithReason, warReasons, resolveRequest,
+} from './audiences.js';
+import { treatyBetween, endTreaty } from './diplomacy.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -175,6 +181,7 @@ export function applyAction(state, world, action) {
     if (!resolveEvent(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
     return { state: next };
   }
+  if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
   if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision'].includes(action.type)) return warAction(state, world, action);
   if (action.type === 'route') {
     if (action.close) {
@@ -204,10 +211,15 @@ function warAction(state, world, action) {
   const next = structuredClone(state);
   const army = next.armies.find((a) => a.id === action.army);
   if (action.type === 'declare') {
-    const check = canDeclare(state, world, action.realm);
+    // Every war is declared with a reason; without one given, the best the
+    // crown has (a claim, a broken treaty, refused terms), or none at all.
+    const reason = action.reason ?? (state.diplomacy
+      ? (warReasons(state, world, action.realm).find((r) => r.ok && r.key !== 'ally')?.key ?? 'none') : null);
+    const check = reason ? canDeclareWith(state, world, action.realm, reason) : canDeclare(state, world, action.realm);
     if (!check.ok) return { state, error: check.reason };
     const rng = makeRng(next.rng.game);
-    declareWar(next, world, rng, action.realm);
+    if (reason) declareWithReason(next, world, rng, action.realm, reason);
+    else declareWar(next, world, rng, action.realm);
     next.rng.game = rng.seed;
   } else if (action.type === 'raise') {
     const check = canRaise(state, world, action);
@@ -232,6 +244,48 @@ function warAction(state, world, action) {
     if (!resolveWarDecision(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
   }
   return { state: next };
+}
+
+// Audiences: deals, gifts, denunciations, demands, terms before war,
+// breaking a treaty, and answering a ruler's request.
+function diplomacyAction(state, world, action) {
+  if (!state.diplomacy) return { state, error: 'No audiences in this realm.' };
+  const pid = action.realm;
+  const next = structuredClone(state);
+  let note = null;
+  if (action.type === 'deal') {
+    const check = canSign(state, world, pid, action.items ?? []);
+    if (!check.ok) return { state, error: check.reason };
+    signDeal(next, world, pid, action.items);
+    next.diplomacy.requests = next.diplomacy.requests.filter((q) => !(q.realm === pid && q.kind === 'deal'));
+  } else if (action.type === 'gift') {
+    const check = canGift(state, world, pid, action.size);
+    if (!check.ok) return { state, error: check.reason };
+    giveGift(next, world, pid, action.size);
+  } else if (action.type === 'denounce') {
+    const check = canDenounce(state, world, pid);
+    if (!check.ok) return { state, error: check.reason };
+    denounce(next, world, pid);
+  } else if (action.type === 'tribute') {
+    const check = canDemandTribute(state, world, pid);
+    if (!check.ok) return { state, error: check.reason };
+    note = demandTribute(next, world, pid).text;
+  } else if (action.type === 'ask') {
+    const check = canAsk(state, world, pid, action.what);
+    if (!check.ok) return { state, error: check.reason };
+    note = askStop(next, world, pid, action.what).text;
+  } else if (action.type === 'ultimatum') {
+    const check = canUltimatum(state, world, pid, action.demand ?? {});
+    if (!check.ok) return { state, error: check.reason };
+    note = ultimatum(next, world, pid, action.demand).text;
+  } else if (action.type === 'breakTreaty') {
+    const t = treatyBetween(next, 'temeria', pid, action.treaty);
+    if (!t) return { state, error: 'No such treaty.' };
+    endTreaty(next, world, t, { broken: true, by: 'temeria' });
+  } else if (action.type === 'request') {
+    if (!resolveRequest(next, world, action.id, action.choice)) return { state, error: 'That has been settled.' };
+  }
+  return { state: next, note };
 }
 
 function startBuilding(state, world, id, buildingId) {

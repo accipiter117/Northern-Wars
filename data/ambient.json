@@ -69,6 +69,12 @@
       "spawnPerDay": 0.8,
       "reach": 2
     },
+    "deal": {
+      "name": "A caravan under treaty",
+      "speed": 22,
+      "max": 6,
+      "spawnPerDay": 0.6
+    },
     "export": {
       "name": "Temerian merchants",
       "speed": 24,

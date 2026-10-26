@@ -11,6 +11,7 @@ import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats } from './threats.js';
 import { defaultGold } from './gold.js';
+import { defaultDiplomacy } from './diplomacy.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -20,7 +21,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 13;
+export const STATE_VERSION = 14;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -62,6 +63,7 @@ export function createState(world, seed = 1) {
     realms: defaultRealms(world),
     embassies: {},
     spies: {},
+    diplomacy: defaultDiplomacy(),
     ...defaultWar(),
     routes: [],
     nextRouteId: 1,

@@ -16,6 +16,7 @@ import { TEMERIA, ownerOf, leviedMap, besieged } from './conflict.js';
 import { tradeLedger, routeKey } from './trade.js';
 import { goldLedger } from './gold.js';
 import { industryLedger, saltStorage } from './industry.js';
+import { dealLedger } from './deals.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -214,7 +215,7 @@ export function monthlyLedger(state, world, rng = null) {
   const tradeMult = Math.max(0, 1 + law.trade + (state.opinion.burghers - 50) * g.burgherTrade);
   const income = {
     taxes: 0, trade: 0, sales: 0, foreign: foreignTrade(state, world).total, conquests: 0, tribute: 0,
-    crafts: {}, customs: 0, gold: 0, silver: 0, tolls: 0, rents: 0, donations: 0, contracts: 0, goods: {}, routes: {},
+    crafts: {}, customs: 0, gold: 0, silver: 0, tolls: 0, rents: 0, donations: 0, contracts: 0, goods: {}, routes: {}, deals: {},
   };
   // What each place earned for the crown and cost it, for its card.
   const places = {};
@@ -233,6 +234,7 @@ export function monthlyLedger(state, world, rng = null) {
     armies: 0,
     occupation: 0,
     tribute: 0,
+    deals: {},
     routes: 0,
     interest: 0,
     construction: state.ledger.construction,
@@ -313,6 +315,9 @@ export function monthlyLedger(state, world, rng = null) {
     }
   }
   goldLedger(state, world, income, put);
+  // Deals struck in audiences: payments and goods, month by month.
+  const deliveries = [];
+  dealLedger(state, world, income, expenses, deliveries);
   // The standing companies, paid where they are stationed.
   for (const c of state.forces?.companies ?? []) {
     const pay = companyUpkeep(world, c);
@@ -328,7 +333,10 @@ export function monthlyLedger(state, world, rng = null) {
     else for (const j of Object.keys(income[k])) income[k][j] = Math.round(income[k][j]);
   }
   state.ledger.places = Object.fromEntries(Object.entries(places).map(([id, v]) => [id, { in: Math.round(v.in), out: Math.round(v.out) }]));
-  for (const k of Object.keys(expenses)) expenses[k] = Math.round(expenses[k]);
+  for (const k of Object.keys(expenses)) {
+    if (typeof expenses[k] === 'number') expenses[k] = Math.round(expenses[k]);
+    else for (const j of Object.keys(expenses[k])) expenses[k][j] = Math.round(expenses[k][j]);
+  }
   const net = ledgerNet({ income, expenses });
   const totalIn = net.in;
   const totalOut = net.out;
@@ -367,7 +375,7 @@ export function monthlyLedger(state, world, rng = null) {
   }
 
   const date = dateOf(state.day - 1);
-  state.ledger.history.push({ year: date.year, month: date.month, income, expenses, treasury: Math.round(state.treasury) });
+  state.ledger.history.push({ year: date.year, month: date.month, income, expenses, treasury: Math.round(state.treasury), ...(deliveries.length ? { deliveries } : {}) });
   if (state.ledger.history.length > 12) state.ledger.history.shift();
   state.ledger.construction = 0;
   state.ledger.decrees = 0;

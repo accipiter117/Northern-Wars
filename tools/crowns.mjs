@@ -3,7 +3,7 @@
 // tyrant, and the plain answering of whatever the realm asks.
 import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
-  canRecruit, sightedThreats, bestCompanyFor,
+  canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -55,8 +55,35 @@ export function makeCrowns(world) {
   ];
   const FOOD = ['fields', 'mill', 'granary'];
 
+  // Audiences: a trade pact with every realm that trades, a non-aggression
+  // pact with any that might invade, each signed when the ruler accepts it as
+  // it stands or for a modest price; rulers' own proposals taken when they
+  // pay, demands refused, warnings heeded.
+  function diplomacy(s, month) {
+    for (const q of [...(s.diplomacy?.requests ?? [])]) {
+      const choice = q.kind === 'warning' ? 0 : q.kind === 'demand' ? 1 : ourValue(s, world, q.realm, q.items) >= 0 ? 0 : 1;
+      s = act(s, { type: 'request', id: q.id, choice });
+    }
+    if (month % 6 !== 3 || !s.diplomacy) return s;
+    for (const pid of parties(world)) {
+      if (hostile(s, 'temeria', pid)) continue;
+      for (const treaty of ['trade', 'nonaggression']) {
+        if (treatyBetween(s, 'temeria', pid, treaty)) continue;
+        if (treaty === 'trade' && !world.neighbours.realms[pid]?.trade) continue;
+        const ask = [{ kind: 'treaty', from: 'us', treaty }];
+        const c = counterOffer(s, world, pid, ask);
+        if (!c.items) continue;
+        const price = c.items.filter((i) => i.kind === 'coin').reduce((a, i) => a + i.amount, 0);
+        if (price > 300 || s.treasury - price < 800) continue;
+        s = act(s, { type: 'deal', realm: pid, items: c.items });
+      }
+    }
+    return s;
+  }
+
   function steward(s, month, spend) {
     s = answer(s, true);
+    s = diplomacy(s, month);
     s = warPolicy(s);
     // Open the most lucrative trade route the crown can, before building.
     if (month % 6 === 1 && s.treasury > 900) {

@@ -49,16 +49,17 @@ test('borders close to trade when relations sour', () => {
   assert.equal(foreignTrade(s, world).by.redania, 0);
 });
 
-test('envoys arrive, and unanswered ones are settled by default within their time', () => {
+test('rulers ask for audiences, and unanswered requests lapse within their time', () => {
+  // Since M17 the old random envoys give way to rulers' own proposals.
   let s = createState(world, 2);
   let seen = 0;
   for (let m = 0; m < 36; m++) {
     s = run(s, 30);
-    seen += s.envoys.length;
-    for (const e of s.envoys) assert.ok(s.day - e.day < world.neighbours.envoyDefaultDays);
+    seen += s.diplomacy.requests.length;
+    assert.equal(s.envoys.length, 0);
+    for (const q of s.diplomacy.requests) assert.ok(s.day - q.day < world.diplomacy.requests.expireDays);
   }
   assert.ok(seen > 0);
-  assert.ok(s.chronicle.some((d) => /no answer came from Vizima/.test(d.text)));
 });
 
 test('answering an envoy applies its effects', () => {

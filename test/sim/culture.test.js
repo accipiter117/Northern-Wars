@@ -77,8 +77,9 @@ test('a pogrom kills and scatters non-humans and angers Mahakam', () => {
 test('petitions arrive, can be answered, and settle themselves if ignored', () => {
   let s = createState(world, 1);
   let seen = 0;
-  for (let m = 0; m < 36; m++) {
-    s = run(s, 30);
+  // Looked at every ten days, so a petition settled within the month is not missed.
+  for (let m = 0; m < 108; m++) {
+    s = run(s, 10);
     seen += s.petitions.length;
     for (const p of s.petitions) assert.ok(s.day - p.day < world.culture.petitionDefaultDays);
   }

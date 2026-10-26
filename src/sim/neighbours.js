@@ -6,6 +6,7 @@ import { realmProsperity } from './realms.js';
 import { totalPopulation } from './state.js';
 import { TEMERIA, hostile, placesHeldBy, originOf } from './conflict.js';
 import { mahakamGrudge } from './gold.js';
+import { moodTarget, tradeBonus } from './diplomacy.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 
@@ -16,6 +17,8 @@ export function defaultNeighbours(world) {
 }
 
 export function relationTarget(state, world, id) {
+  // Since M17 the relation is a ruler's mood, the sum of its reasons.
+  if (state.diplomacy && world.diplomacy) return moodTarget(state, world, id);
   const r = world.neighbours.realms[id];
   // At war, nothing warms them; towns of theirs we hold rankle long after.
   if (world.war && hostile(state, TEMERIA, id)) return world.war.atWarRelation;
@@ -55,7 +58,7 @@ export function foreignTrade(state, world) {
   let total = 0;
   for (const [id, r] of Object.entries(world.neighbours.realms)) {
     const wealth = state.realms ? clamp(realmProsperity(state, id) / 55, 0.6, 1.5) : 1;
-    by[id] = r.trade * tradeFactor(world, state.neighbours[id].relation) * wealth;
+    by[id] = r.trade * tradeFactor(world, state.neighbours[id].relation) * wealth * (state.diplomacy ? tradeBonus(state, world, id) : 1);
     total += by[id];
   }
   return { total, by };

@@ -7,6 +7,8 @@ import { addDispatch, clamp } from './realm.js';
 import { goldGreed } from './gold.js';
 import { informed } from './realms.js';
 import { newArmy, disbandArmy, crownArmies } from './armies.js';
+import { treatyBetween, treatiesOf, partnerOf, endTreaty, hasTrait, changeTrust } from './diplomacy.js';
+import { treatyCalls, crownBound } from './audiences.js';
 import {
   TEMERIA, ownerOf, originOf, placeOf, placesHeldBy, valueOf, hostile, warBetween, sideIndex, sideName, warsOf, atWar,
   heldValue, warScore, exhaustion, setOwner, truceUntil, setTruce,
@@ -18,7 +20,7 @@ const abroad = (state, text) => addDispatch(state, text, 'abroad');
 
 // ---- Strength of a side ----
 
-function soldiersOf(state, world, side) {
+export function soldiersOf(state, world, side) {
   let n = 0;
   for (const id of placesHeldBy(state, world, side)) n += placeOf(state, world, id).garrison;
   for (const a of state.armies) if (a.side === side) n += a.soldiers;
@@ -55,26 +57,22 @@ export function startWar(state, world, rng, attacker, defender, cause) {
   if (attacker === TEMERIA || defender === TEMERIA) say(state, text);
   else if (informed(state, world, attacker) || informed(state, world, defender)) abroad(state, text);
 
-  // Temeria's true friends may come to its aid; a friend attacked asks for ours.
-  const v = world.realms.vision;
-  if (defender === TEMERIA) {
-    for (const [rid, n] of Object.entries(state.neighbours)) {
-      if (rid === attacker || W(world).noWar.includes(rid) || n.stance !== 'friendly' || n.relation < v.allyAt) continue;
-      if (rng.chance(W(world).ai.allyJoin)) {
-        war.sides[1].push(rid);
-        say(state, `${sideName(world, rid)} honours its friendship: its banners march against ${sideName(world, attacker)}.`);
-      }
-    }
-  } else if (attacker !== TEMERIA && isAlly(state, world, defender) && truceUntil(state, TEMERIA, attacker) <= state.day) {
-    callToArms(state, world, war, defender, attacker);
+  // Treaties bring their partners in: foreign rulers answer by temper and
+  // trust; a partner of ours attacked (or an ally attacking) asks for us.
+  if (state.diplomacy) {
+    treatyCalls(state, world, rng, war);
+    if (attacker !== TEMERIA && defender !== TEMERIA) crownCall(state, world, war);
   }
   raiseForWar(state, world, war);
   return war;
 }
 
-function isAlly(state, world, rid) {
-  const n = state.neighbours[rid];
-  return !!n && n.stance === 'friendly' && n.relation >= world.realms.vision.allyAt;
+// Is the crown bound by treaty to join this war, and on whose side?
+function crownCall(state, world, war) {
+  if (war.called || war.sides.flat().includes(TEMERIA)) return;
+  const [att, def] = [war.sides[0][0], war.sides[1][0]];
+  if (crownBound(state, def, false) && truceUntil(state, TEMERIA, att) <= state.day) callToArms(state, world, war, def, att);
+  else if (crownBound(state, att, true) && truceUntil(state, TEMERIA, def) <= state.day) callToArms(state, world, war, att, def);
 }
 
 function hostility(state, world, rid) {
@@ -167,9 +165,8 @@ export function canDeclare(state, world, rid) {
   return { ok: true, cost };
 }
 
-export function declareWar(state, world, rng, rid) {
+export function declareWar(state, world, rng, rid, { cost = declareCost(state, world, rid), cause = 'declared' } = {}) {
   const d = W(world).declare;
-  const cost = declareCost(state, world, rid);
   state.authority = clamp(state.authority - cost, 0, 100);
   const traits = (hid) => world.houses.houses[hid].traits;
   for (const hid of Object.keys(state.houses ?? {})) {
@@ -182,7 +179,7 @@ export function declareWar(state, world, rng, rid) {
   say(state, cost
     ? `The crown declares war on ${sideName(world, rid)}. The lords ask what cause there is; ${cost} Authority is spent quieting them.`
     : `The crown declares war on ${sideName(world, rid)} to win back what is ours.`);
-  return startWar(state, world, rng, TEMERIA, rid, 'declared');
+  return startWar(state, world, rng, TEMERIA, rid, cause);
 }
 
 // ---- The month ----
@@ -233,11 +230,15 @@ function aiDeclarations(state, world, rng) {
     if (truceUntil(state, rid, TEMERIA) > state.day || state.musters.some((m) => m.realm === rid)) continue;
     const hostilityLevel = hostilityTo(state, world, rid);
     if (hostilityLevel <= 0) continue;
+    // A pact holds them back; only an opportunist breaks it, and seldom.
+    const pact = keptPact(state, rid, TEMERIA);
+    if (pact && !(hasTrait(world, rid, 'opportunist') && rng.chance(0.15))) continue;
     if (realmPotential(state, world, rid) < ours * 0.13) continue;
     const chance = ai.declareChance * (ai.aggression[rid] ?? 0.3) * Math.min(1.5, hostilityLevel) * (atWar(state, TEMERIA) ? ai.atWarOpportunism : 1);
     if (!rng.chance(chance)) continue;
     const army = raiseRealmArmy(state, world, rid, [TEMERIA], 'muster');
     if (!army) continue;
+    if (pact) endTreaty(state, world, pact, { broken: true, by: rid, why: 'and gathers an army' });
     state.musters.push({ realm: rid, army: army.id, day: state.day + ai.musterDays });
     // So great a gathering cannot be hidden; those who watch them know
     // where and how many.
@@ -262,19 +263,30 @@ function aiDeclarations(state, world, rng) {
   }
 }
 
+// A pact that forbids war between two parties.
+function keptPact(state, a, b) {
+  if (!state.diplomacy) return null;
+  return treatiesOf(state, a).find((t) => partnerOf(t, a) === b && ['nonaggression', 'defensive', 'alliance', 'protectorate'].includes(t.kind)) ?? null;
+}
+
 function rivalries(state, world, rng) {
   for (const r of W(world).rivalries) {
     if (!state.realms[r.a] || !state.realms[r.b] || hostile(state, r.a, r.b) || truceUntil(state, r.a, r.b) > state.day) continue;
     if (!rng.chance(r.chance)) continue;
     const [att, def] = rng.chance(0.5) ? [r.a, r.b] : [r.b, r.a];
+    // Bound by a pact, they keep the peace, unless the attacker is an
+    // opportunist who decides it no longer pays.
+    const pact = keptPact(state, att, def);
+    if (pact) {
+      if (!hasTrait(world, att, 'opportunist') || !rng.chance(0.3)) continue;
+      endTreaty(state, world, pact, { broken: true, by: att, why: 'and marches to war' });
+    }
     startWar(state, world, rng, att, def, 'rivalry');
   }
 }
 
 function allyCalls(state, world, war) {
-  if (war.called || war.sides.flat().includes(TEMERIA)) return;
-  const def = war.sides[1][0];
-  if (isAlly(state, world, def) && truceUntil(state, TEMERIA, war.sides[0][0]) <= state.day) callToArms(state, world, war, def, war.sides[0][0]);
+  if (state.diplomacy) crownCall(state, world, war);
 }
 
 // ---- Peace ----
@@ -459,7 +471,7 @@ export function warDecisionText(state, world, d) {
   if (d.kind === 'call') {
     return {
       kicker: `An envoy from ${realm}`, title: 'A friend calls us to arms',
-      text: `${sideName(world, d.enemy)} has attacked ${realm}. Their envoy reminds us of our friendship and asks whether Temerian banners will march with theirs.`,
+      text: `${sideName(world, d.enemy)} and ${realm} are at war. Their envoy reminds us of our treaty and asks whether Temerian banners will march with theirs. To refuse is to break the treaty.`,
       choices: ['Join the war', 'Stay out of it'],
     };
   }
@@ -495,10 +507,14 @@ export function resolveWarDecision(state, world, id, choice, ignored = false) {
       war.sides[sideIndex(war, d.realm)].push(TEMERIA);
       hostility(state, world, d.enemy);
       state.neighbours[d.realm].relation = clamp(state.neighbours[d.realm].relation + 10, -100, 100);
+      if (state.diplomacy) changeTrust(state, world, d.realm, TEMERIA, 5);
       say(state, `Temeria joins ${realm} in its war against ${sideName(world, d.enemy)}.`);
     } else {
       state.neighbours[d.realm].relation = clamp(state.neighbours[d.realm].relation + W(world).callRelation, -100, 100);
       say(state, `${ignored ? 'No answer came from Vizima' : 'The crown declines'}. ${realm} will remember who stood by it.`);
+      const t = state.diplomacy && treatyBetween(state, TEMERIA, d.realm);
+      const binding = t && (crownBound(state, d.realm, false) || crownBound(state, d.realm, true));
+      if (binding) endTreaty(state, world, binding, { broken: true, by: TEMERIA, why: 'by refusing the call to arms' });
     }
   } else if (d.kind === 'offer') {
     if (choice === 0) {

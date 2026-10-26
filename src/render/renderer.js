@@ -701,7 +701,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (!unitInSight(w)) continue;
       const facing = Math.cos(w.angle) >= 0 ? 1 : -1;
       const colours = u.realm && u.kind !== 'export' ? world.realms?.realms[u.realm]?.colours : null;
-      getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' ? 'caravan' : u.kind)
+      getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' || u.kind === 'deal' ? 'caravan' : u.kind)
         .draw(ctx, p.x, p.y - 4, UNIT_SIZE, { facing, colours, good: u.good });
       // Stopped on the road where a band holds it.
       if (u.held) {
