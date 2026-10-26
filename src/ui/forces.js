@@ -124,7 +124,7 @@ export function companyCard(app, id) {
     <div data-part="disband"><button type="button" class="act danger" data-disband-company ${orderAttr({ type: 'company', id, disband: true }, 'Stand this company down? Its men go home.')} data-then="back"><span class="act-label">Stand the company down</span></button></div>`;
   return `
     ${cardHead({
-      status: `<span>${escapeHtml(describeCompany(state, world, c))}.${target ? ` Odds against its quarry: ${huntOdds(state, world, [c], target).word}.` : ''}</span>`,
+      status: `<span>${escapeHtml(describeCompany(state, world, c).replace(`${c.name}, `, ''))}.${target ? ` Odds against its quarry: ${huntOdds(state, world, [c], target).word}.` : ''}</span>`,
       infoText: t.blurb + ' Respond: stay at its station, ride out to any threat sighted within that distance when the odds are fair, then come home.',
       chips: [
         { icon: 'people', label: 'Men', value: `${number(c.men)} of ${c.max}${c.wounded >= 1 ? `, ${number(c.wounded)} hurt` : ''}` },

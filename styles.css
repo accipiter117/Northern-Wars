@@ -273,8 +273,9 @@ details.sec .count { font-family: system-ui, sans-serif; font-size: 12px; backgr
 .chronicle li { padding: 8px 0; border-bottom: 1px dotted var(--line); line-height: 1.4; }
 .chronicle time { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
+/* Toasts sit under the top bar, over the map, never over the panel's buttons. */
 .toast {
-  position: fixed; z-index: 20; left: 50%; bottom: calc(var(--tab-h, 60px) + 14px);
+  position: fixed; z-index: 20; left: 50%; top: calc(var(--bar-h, 100px) + 10px);
   transform: translateX(-50%);
   background: var(--panel-2); border: 1px solid var(--gold); border-radius: 8px;
   padding: 10px 16px; max-width: 90vw; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
@@ -306,7 +307,7 @@ details.sec .count { font-family: system-ui, sans-serif; font-size: 12px; backgr
   }
   .sheet-head { cursor: default; min-height: 50px; padding-top: 4px; }
   .grabber { display: none; }
-  .toast { bottom: calc(var(--safe-b) + 14px); }
+  .toast { left: calc(var(--safe-l) + 72px + (100vw - var(--safe-l) - 72px - min(400px, 48vw)) / 2); max-width: calc(100vw - min(400px, 48vw) - 100px); }
   .more-menu { top: calc(var(--bar-h, 52px) - 2px); }
 }
 @media (orientation: landscape) and (max-height: 500px) {
