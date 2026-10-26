@@ -187,6 +187,7 @@ test('screenshots: an audience, the deal table and the web of pacts', async () =
       await page.waitForTimeout(300);
       await page.evaluate(() => document.querySelector('#sheet-body')?.scrollTo(0, 0));
     }
+    if (vp.name === 'landscape') await page.evaluate(() => document.querySelector('svg.web').scrollIntoView({ block: 'start' }));
     await page.screenshot({ path: join(OUT, `${vp.name}-pacts.png`) });
     await page.click('[data-sub="realms"]');
     await page.click('.rulers-row [data-audience="cintra"]');

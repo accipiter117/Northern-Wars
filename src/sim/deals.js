@@ -135,6 +135,8 @@ export function treatyValue(state, world, p, q, kind, years = null) {
   if (kind === 'nonaggression') {
     val = tv.base + fear * tv.fear * 0.5 * safety * (ag?.kind === 'borders' ? 1.5 : 1) * binding;
     if (ag?.kind === 'town' && ownerOf(state, world, ag.town) === q) val -= tv.agendaTown;
+    // A ruler who wants war with us gives up something real by promising peace.
+    if (q === TEMERIA) val -= Math.max(0, hostilityTo(state, world, p)) * tv.hostility * traitMult(world, p, 'town');
   } else if (kind === 'trade') {
     const trade = q === TEMERIA ? foreignTrade(state, world).by[p] ?? 0 : (world.neighbours.realms[p]?.trade ?? 0) * 0.5;
     val = tv.base + trade * 12 * (years ?? def.years) * tv.tradeYears * (ag?.kind === 'trade' ? 2 : 1) * traitMult(world, p, 'coin');

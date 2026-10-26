@@ -3,14 +3,22 @@
 How the realm behaves over a long reign, and the dials that shape it. Every number lives in `data/`; nothing here needs code changed.
 
 ## Thirty years, four crowns
-From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded down. Rerun for M15 on the retraced North; M13 figures in brackets.
+From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and rounded down. Rerun for M17 (audiences with rulers); M15 figures in brackets.
 
 | Crown | What it does | People after 30 years | Treasury | Raids suffered | Depositions | Wars |
 | --- | --- | --- | --- | --- | --- | --- |
-| Idle | Nothing; every decision left to its default; no companies | about 52,200 from 54,240 (52,300) | about 36,300, levelled off (37,600) | about 1,040 (1,050) | 0 | 1 to 3 |
-| Steward | As in M12 (builds an earner and a food building in turn, opens routes, answers generously, honours sulking lords, grants an equal charter, hires witchers), and keeps a standing army that grows with its income: light horse riding the two worst roads, foot and archers standing ready (Respond, 150 miles) in the towns nearest danger, sighted camps and lairs hunted when the odds are Favourable or better, witchers hired for the rest | about 83,700, +54% (79,600) | about 211,000 (185,000) | about 120 (140) | 0 | 4 to 5 (2 to 3) |
-| Spendthrift | As the steward but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 66,600 (71,000) | at the limit for a decade, then about 135,000 | about 400 (380) | about 3 | 1 to 9 (0 to 4) |
-| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies | about 48,000 (46,300) | about 25,000 (25,800) | about 1,230 (1,220) | about 3 (6) | 3 to 5 |
+| Idle | Nothing; every decision left to its default; no companies; rulers' requests left to lapse | about 52,700 from 54,240 (52,200) | about 37,800, levelled off (36,300) | about 1,150 (1,040) | 0 | 0 to 2 (1 to 3) |
+| Steward | As in M15 (builds earners and food in turn, opens routes, answers generously, keeps a standing army that grows with its income, hunts what it sees), and since M17 holds audiences: a trade pact with every realm that trades and a non-aggression pact with every realm, each signed when the ruler accepts it as it stands or for 300 crowns or less; rulers' proposals taken when they are worth it to us, demands refused, warnings heeded | about 85,900, +58% (83,700) | about 270,000 (211,000) | about 113 (120) | 0 | 0 (4 to 5) |
+| Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 71,900 (66,600) | at the limit for a decade, then about 190,600 (135,000) | about 354 (400) | about 2 (3) | 0 to 2 (1 to 9) |
+| Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 48,800 (48,000) | about 29,100 (25,000) | about 1,230 (1,230) | about 5 (3) | 3 to 6 (3 to 5) |
+
+### What audiences changed (M17)
+- **Peace can be bought, and the steward buys it.** Within its first years the steward holds a non-aggression pact with all eleven realms and a trade pact with the ten that trade; over thirty years it fights no war at all, against four or five before. Kaedwen, which wants war with a weak Temeria, asks a price for the pact (a hundred crowns or two); the rest sign for nothing. Without wars to lose, the steward ends with about 2,200 more people and a quarter more in the treasury than in M15. A player who will not deal (the idle crown and the tyrant) sees no change: their numbers move only with the shifted random draws.
+- **Trade pacts pay.** With every trader's pact, the steward's border trade at year 10 is about 165 crowns a month, against about 93 before: a quarter more from the pacts, and more again because warmer neighbours (mood about +31 on average, trust about 67) trade more. The steward's income still more than triples (year 1 about 1,205 a month, year 10 about 4,040, 3.3, 3.3 and 3.5 times on the three seeds).
+- **The small realms seek protection.** Kerack, Cidaris, Verden or Brugge ask the steward to take them under protection once or twice in ten years, for 40 crowns a month, and the steward accepts. Their requests for deals bring in a few hundred crowns over ten years.
+- **The spendthrift is spared its wars.** In M15 it lost 11 to 16 places in up to nine wars while in debt; signing the same pacts, it now fights at most two and keeps its people (about 71,900, back above its M13 figure).
+- **The North keeps its quarrels.** Left alone, the foreign realms hold 10 to 17 pacts among themselves at any time, mostly non-aggression between rivals and the fearful, with trade pacts among friends and the odd defensive pact or alliance, and break two to six of them in thirty years, opportunists first. Wars between them still come (two to ten in thirty years), fewer where a pact holds.
+- **A dial to watch:** if peace proves too cheap in play, `treatyValue.hostility` in data/diplomacy.json is what a hostile ruler charges for a non-aggression pact (700 crowns per point of hostility), and `treaties.nonaggression.minTrust` how far they must believe us.
 
 ### What the retraced North changed (M15)
 - **Temeria's own life is as it was.** Its land, towns, roads and threats are untouched, so the idle and tyrant crowns land within a few hundred people and raids of their M13 figures. The tyrant's depositions fall from about six to about three, within the spread of three seeds rather than a real change.
@@ -27,6 +35,8 @@ Ten years, from `node tools/longrun.mjs 10 <crown> 1,2,3`:
 | Steward | about 120 | about 160 | about 1,070 | about 15 | 8 to 9 | about 520 a month, 15% of its income (14.6%, 15.7% and 14.6%) |
 | M15 rerun: idle | about 315 | about 532 | about 2,555 | 0 | 0 | 0 |
 | M15 rerun: steward | about 113 | about 160 | about 1,003 | about 20 | 9 | about 560 a month |
+| M17 rerun: idle | about 321 | about 567 | about 2,589 | 0 | 0 | 0 |
+| M17 rerun: steward | about 97 | about 127 | about 930 | about 18 | 9 to 10 | about 560 a month |
 
 - **The idle crown feels it.** Raids come more than twice as often as before M13, because nothing stops a camp from growing and nothing clears it. Over thirty years the untended realm shrinks a little and loses about 1,600 people to raiders and beasts.
 - **A modest standing army pays for itself.** The steward's eight or nine companies cut raids by three fifths and deaths by more than two thirds. They clear about fifteen camps and lairs in ten years and halve the days bands hold the roads. Their pay, about 520 a month, is 15% of a developed realm's income, the bottom of the 15 to 25% the brief set.

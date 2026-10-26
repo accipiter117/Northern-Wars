@@ -400,7 +400,8 @@
     "accessCost": 250,
     "protectBenefit": 900,
     "protectFear": 300,
-    "protectPride": 500
+    "protectPride": 500,
+    "hostility": 700
   },
   "actions": {
     "gift": {
