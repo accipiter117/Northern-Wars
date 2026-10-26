@@ -15,6 +15,7 @@
   "industry": "data/industry.json",
   "forces": "data/forces.json",
   "diplomacy": "data/diplomacy.json",
+  "strategy": "data/strategy.json",
   "northIds": "data/north-ids.json",
   "start": {
     "year": 1262,

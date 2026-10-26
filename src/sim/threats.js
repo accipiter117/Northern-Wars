@@ -337,7 +337,9 @@ function spawnRaiders(state, world, rng) {
   const cfg = T(world).raiders;
   for (const [rid, n] of Object.entries(state.neighbours ?? {})) {
     const war = atWar(state, rid) && hostile(state, rid, TEMERIA);
-    const chance = war ? cfg.warChance : n.relation <= cfg.below ? cfg.chance * Math.min(1, (cfg.below - n.relation + 10) / 50) : 0;
+    let chance = war ? cfg.warChance : n.relation <= cfg.below ? cfg.chance * Math.min(1, (cfg.below - n.relation + 10) / 50) : 0;
+    // A ruler probing the crown shelters and pays raiders (M18).
+    if (!war && (state.diplomacy?.sponsor?.[rid] ?? 0) > state.day) chance = Math.max(chance, cfg.chance) * (world.strategy?.probes.raiderBoost ?? 1);
     if (!chance || !rng.chance(chance)) continue;
     if (state.threats.list.some((t) => t.kind === 'raiders' && t.realm === rid)) continue;
     // A ruler who promised to stop them keeps the promise for a while.

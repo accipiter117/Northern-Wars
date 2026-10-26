@@ -12,6 +12,7 @@ import { defaultForces } from './forces.js';
 import { defaultThreats } from './threats.js';
 import { defaultGold } from './gold.js';
 import { defaultDiplomacy } from './diplomacy.js';
+import { seedPacts } from './audiences.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -21,7 +22,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 14;
+export const STATE_VERSION = 15;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -76,6 +77,8 @@ export function createState(world, seed = 1) {
     chronicle: [],
   };
   applyHoldings(state, world);
+  // The North's standing pacts, as they stand when the reign begins (M18).
+  seedPacts(state, world);
   if (world.grid) {
     state.ambient.intel = newIntel(world);
     updateIntel(state, world, visionOf(state, world));

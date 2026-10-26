@@ -6,6 +6,7 @@ import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { ownerOf, leviedMap, besieged } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
+import { monthlyStrategy, armyUpkeep } from './strategy.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 const R = (world) => world.realms;
@@ -28,9 +29,27 @@ function prosperityMult(s) {
 }
 
 function effectsOf(world, s) {
-  const fx = { foodYield: 0, trade: 0, prosperity: 0, unrest: 0 };
-  for (const b of s.buildings) for (const [k, v] of Object.entries(world.buildings[b].effects)) if (k in fx) fx[k] += v;
+  const fx = { foodYield: 0, trade: 0, prosperity: 0, unrest: 0, taxBonus: 0, craft: 0, customs: 0, goodsYield: 0, gold: 0, garrisonBonus: 0, upkeep: 0 };
+  for (const b of s.buildings) {
+    for (const [k, v] of Object.entries(world.buildings[b].effects)) if (k in fx && typeof v === 'number') fx[k] += v;
+    fx.upkeep += world.buildings[b].upkeep ?? 0;
+  }
   return fx;
+}
+
+const SIZE = { village: 0.5, town: 1, city: 1.5, castle: 0.6, temple: 0.4 };
+
+// What a foreign town yields its realm in a month, and what its buildings
+// add (M18): taxes, the ground's goods, crafts, customs and gold, less the
+// buildings' upkeep. The garrison's pay is reckoned apart.
+export function townIncome(world, id, s, fx = effectsOf(world, s)) {
+  const e = R(world).economy;
+  const pm = prosperityMult(s);
+  const tax = s.population * e.taxPerPersonMonth * pm * (1 + fx.trade + fx.taxBonus);
+  const ground = tax * (e.terrainIncome?.[world.terrainOf[id]] ?? 0) * (1 + fx.goodsYield * 2);
+  const craft = fx.craft * pm * (SIZE[world.byId[id].type] ?? 1) * (world.strategy?.build.craftScale ?? 1);
+  const customs = world.waterOf?.[id] ? fx.customs : 0;
+  return tax + ground + craft + customs - fx.upkeep;
 }
 
 // Whether word of a realm reaches Vizima: an embassy, a spy in place, a
@@ -47,31 +66,41 @@ export function informed(state, world, rid) {
 
 export function monthlyRealms(state, world, rng) {
   const e = R(world).economy;
+  const st = world.strategy;
   const levied = leviedMap(state);
   // Towns taken from one realm pay their new masters; Temeria's conquests
   // are reckoned in the crown's own ledger.
   const purse = {};
+  const gross = {};
   for (const [rid, realm] of Object.entries(state.realms)) {
+    const inDebt = st && realm.treasury < 0;
     for (const [id, s] of Object.entries(realm.settlements)) {
       const owner = ownerOf(state, world, id);
       const fx = effectsOf(world, s);
       if (state.realms[owner]) {
-        // Taxes, plus what the country round the town gives (timber, stone,
-        // iron) and any gold seam it works, less the garrison's pay.
-        const tax = s.population * e.taxPerPersonMonth * prosperityMult(s) * (1 + fx.trade);
-        const ground = tax * (e.terrainIncome?.[world.terrainOf[id]] ?? 0);
-        purse[owner] = (purse[owner] ?? 0) + tax + ground + goldMonth(world, s) - s.garrison * e.garrisonPayMonth;
+        // Taxes, the ground, crafts, customs and any gold seam (doubled by a
+        // gold mine), less the garrison's pay.
+        const income = townIncome(world, id, s, fx) + goldMonth(world, s) * (1 + fx.gold);
+        gross[owner] = (gross[owner] ?? 0) + income;
+        purse[owner] = (purse[owner] ?? 0) + income - s.garrison * e.garrisonPayMonth;
       }
       const food = s.buildings.filter((b) => world.buildings[b].effects.foodYield).length;
       const growth = e.growthPerMonth * prosperityMult(s) * (1 + food * e.foodBuildingGrowth);
       s.population = Math.max(0, Math.round(s.population * (1 + growth)));
       const base = { ...R(world).startByType[world.byId[id].type], ...(R(world).overrides[id] ?? {}) };
       const aim = clamp(base.prosperity + fx.prosperity * 1.5 + fx.trade * 10, 0, 100);
-      s.prosperity = clamp(s.prosperity + (aim - s.prosperity) * e.prosperityDrift + (rng.next() - 0.5) * 1.2, 0, 100);
+      s.prosperity = clamp(s.prosperity + (aim - s.prosperity) * e.prosperityDrift + (rng.next() - 0.5) * 1.2 - (inDebt ? st.debt.prosperity : 0), 0, 100);
       const walls = s.buildings.includes('walls') ? e.wallsGarrison : 0;
-      // An occupier keeps a lighter hold; no fresh men reach a town under siege.
-      const target = Math.max(0, base.garrison * (1 + walls) * (owner === rid ? 1 : 0.5) - (levied[id] ?? 0));
-      if (!besieged(state, id)) s.garrison = Math.max(0, Math.round(s.garrison + (target - s.garrison) * e.garrisonDrift));
+      // An occupier keeps a lighter hold; no fresh men reach a town under siege;
+      // a realm in debt cannot pay them all.
+      const target = Math.max(0, base.garrison * (1 + walls + fx.garrisonBonus) * (owner === rid ? 1 : 0.5) * (inDebt ? st.debt.garrison : 1) - (levied[id] ?? 0));
+      if (!besieged(state, id)) {
+        // At least one man a month either way, so a small garrison is never
+        // stuck short by rounding (Kerack's villages, M18).
+        const step = (target - s.garrison) * e.garrisonDrift;
+        const move = Math.abs(step) < 1 && Math.abs(target - s.garrison) >= 1 ? Math.sign(step) : Math.round(step);
+        s.garrison = Math.max(0, s.garrison + move);
+      }
       if (s.construction) {
         s.construction.daysLeft -= 30;
         if (s.construction.daysLeft <= 0) {
@@ -82,16 +111,52 @@ export function monthlyRealms(state, world, rng) {
     }
   }
   for (const s of Object.values(state.settlements)) {
-    if (state.realms[s.occupier]) purse[s.occupier] = (purse[s.occupier] ?? 0) + Object.values(s.population).reduce((a, b) => a + b, 0) * e.taxPerPersonMonth * prosperityMult(s);
+    if (state.realms[s.occupier]) {
+      const v = Object.values(s.population).reduce((a, b) => a + b, 0) * e.taxPerPersonMonth * prosperityMult(s);
+      purse[s.occupier] = (purse[s.occupier] ?? 0) + v;
+      gross[s.occupier] = (gross[s.occupier] ?? 0) + v;
+    }
   }
   for (const t of state.tributes ?? []) {
     if (t.until <= state.day) continue;
+    // A realm in debt can pay no tribute: it lapses.
+    if (st && state.realms[t.from] && state.realms[t.from].treasury < 0) {
+      t.until = state.day;
+      if (t.to === 'temeria' || informed(state, world, t.from)) say(state, `${world.geography.neighbours[t.from]?.name ?? t.from} is in debt and can pay its tribute no longer.`);
+      continue;
+    }
     if (state.realms[t.from]) purse[t.from] = (purse[t.from] ?? 0) - t.monthly;
-    if (state.realms[t.to]) purse[t.to] = (purse[t.to] ?? 0) + t.monthly;
+    if (state.realms[t.to]) {
+      purse[t.to] = (purse[t.to] ?? 0) + t.monthly;
+      gross[t.to] = (gross[t.to] ?? 0) + t.monthly;
+    }
   }
   for (const [rid, realm] of Object.entries(state.realms)) {
-    realm.treasury = Math.max(e.debtFloor, realm.treasury + (purse[rid] ?? 0));
-    aiBuild(state, world, rng, rid, realm);
+    realm.income = Math.round(gross[rid] ?? 0);
+    let net = purse[rid] ?? 0;
+    if (st) {
+      // The standing army's pay, in the field or at home.
+      const field = (state.armies ?? []).filter((a) => a.side === rid).reduce((x, a) => x + a.soldiers, 0);
+      net -= ((realm.army ?? 0) + field) * armyUpkeep(world, realm);
+      // Courtiers and hangers-on: a hoard beyond a year's income is spent.
+      const free = st.court.freeMonths * Math.max(0, realm.income);
+      if (realm.treasury > free) net -= (realm.treasury - free) * st.court.share;
+    }
+    realm.treasury = Math.max(e.debtFloor, realm.treasury + net);
+    if (st) {
+      if (realm.treasury < 0) {
+        // Unpaid soldiers desert, at home and in the field.
+        realm.debtMonths = (realm.debtMonths ?? 0) + 1;
+        realm.army = Math.floor((realm.army ?? 0) * (1 - st.army.desertion));
+        for (const a of state.armies ?? []) if (a.side === rid) a.soldiers *= 1 - st.army.desertion / 2;
+      } else realm.debtMonths = 0;
+    }
+  }
+  // Rulers take stock and choose their course before they build or arm.
+  if (st) monthlyStrategy(state, world, rng);
+  for (const [rid, realm] of Object.entries(state.realms)) {
+    if (st) aiBuildM18(state, world, rid, realm);
+    else aiBuild(state, world, rng, rid, realm);
     incident(state, world, rng, rid, realm);
     prospect(state, world, rng, rid, realm);
   }
@@ -135,6 +200,89 @@ function aiBuild(state, world, rng, rid, realm) {
     s.construction = { building: b, daysLeft: def.days, days: def.days };
     return;
   }
+}
+
+// ---- Building like a real realm (M18) ----
+
+const WORK = { forest: 'timber', hills: 'stone', mountains: 'iron' };
+export function workOf(world, id) {
+  return WORK[world.terrainOf[id]] ?? 'food';
+}
+
+// Whether a foreign town could raise a building, by the same limits of
+// place and land as Temeria's: kind of place, room, prerequisites, what the
+// land gives, borders, water, roads, dwarves and gold.
+export function canRaiseAbroad(state, world, rid, id, b) {
+  const def = world.buildings[b];
+  const s = state.realms[rid]?.settlements[id];
+  if (!def || !s || ownerOf(state, world, id) !== rid) return false;
+  const type = world.byId[id].type;
+  if (!def.types.includes(type) || s.buildings.includes(b) || def.sites) return false;
+  if (def.requires && !s.buildings.includes(def.requires)) return false;
+  if (s.buildings.length >= (world.buildingSlots?.[type] ?? 99)) return false;
+  const work = workOf(world, id);
+  if (def.needs && work !== def.needs) return false;
+  if (def.produces && !def.produces.includes(work) && !def.orProduces?.includes(work)) return false;
+  if (def.needsWater && !world.waterOf?.[id]) return false;
+  if (def.needsRoad && (world.fullAdjacency[id] ?? []).length < def.needsRoad) return false;
+  if (def.needsDwarves && rid !== 'mahakam') return false;
+  if (def.needsDeposit && !(s.gold?.months > 0)) return false;
+  if (def.terrain && !def.terrain.includes(world.terrainOf[id])) return false;
+  if (def.wild && !def.wild.some((k) => world.wildOf[id]?.[k]) && !def.orProduces?.includes(work)) return false;
+  if (def.needsBorder && !(world.fullAdjacency[id] ?? []).some((e) => ownerOf(state, world, e.to) !== rid)) return false;
+  return true;
+}
+
+// What a building is worth to a foreign realm: its monthly return on the
+// coin it costs, and its worth in war, weighted by the ruler's posture,
+// agenda and old preferences.
+export function buildScore(state, world, rid, id, b) {
+  const c = world.strategy.build;
+  const def = world.buildings[b];
+  const realm = state.realms[rid];
+  const s = realm.settlements[id];
+  const kind = realm.posture?.kind ?? 'grow';
+  const pw = c.postureWeight[kind];
+  const before = townIncome(world, id, s);
+  const after = townIncome(world, id, { ...s, buildings: [...s.buildings, b] });
+  let gain = after - before;
+  const fx = def.effects;
+  gain += (fx.prosperity ?? 0) * c.prosperityValue * s.population * 0.012 + (fx.foodYield ?? 0) * c.foodValue + -(fx.unrest ?? 0) * c.unrestValue;
+  if (fx.gold && s.gold?.months > 0) gain += R(world).gold.monthly;
+  const cost = Math.max(1, def.cost.coin ?? 0);
+  const earn = Math.max(0, gain) / cost * 1000;
+  const military = c.military[b] ?? 0;
+  let score = earn * pw.earn + military * pw.military;
+  if (agendaOfRealm(world, rid) === 'trade') score *= c.tradeAgenda[b] ?? 1;
+  if ((R(world).realms[rid]?.builds ?? []).includes(b)) score *= c.preference;
+  return score;
+}
+
+function agendaOfRealm(world, rid) {
+  return world.diplomacy?.rulers[rid]?.agenda?.kind ?? null;
+}
+
+function aiBuildM18(state, world, rid, realm) {
+  const c = world.strategy.build;
+  const people = Object.values(realm.settlements).reduce((a, s) => a + s.population, 0);
+  const slots = people >= c.bigRealm ? 2 : 1;
+  const building = Object.values(realm.settlements).filter((s) => s.construction).length;
+  if (building >= slots) return;
+  let best = null;
+  for (const id of Object.keys(realm.settlements)) {
+    if (realm.settlements[id].construction) continue;
+    for (const b of Object.keys(world.buildings)) {
+      if (!canRaiseAbroad(state, world, rid, id, b)) continue;
+      const score = buildScore(state, world, rid, id, b);
+      if (score > 2 && (!best || score > best.score)) best = { id, b, score };
+    }
+  }
+  if (!best) return;
+  const def = world.buildings[best.b];
+  const cost = def.cost.coin ?? 0;
+  if (realm.treasury < cost * R(world).economy.buildMargin) return;
+  realm.treasury -= cost;
+  realm.settlements[best.id].construction = { building: best.b, daysLeft: def.days, days: def.days };
 }
 
 function incident(state, world, rng, rid, realm) {

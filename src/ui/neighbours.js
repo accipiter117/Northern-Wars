@@ -6,7 +6,7 @@ import { cardHead, orderAttr, section } from './card.js';
 import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { portraitImg } from './audience.js';
-import { parties, rulerShort, moodWord, treatyDef } from '../sim/index.js';
+import { parties, rulerShort, moodWord, treatyDef, intentions } from '../sim/index.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 
@@ -166,6 +166,7 @@ export function realmCard(app, id) {
     })}
     <div data-part="envoys">${envoys.length ? inboxHtml(envoys).replace(/data-part="[^"]*"/g, '') : ''}</div>
     <div data-part="stance"><h3>Our stance</h3><div class="build-list">${stances}</div></div>
+    ${intentionsHtml(world, state, id)}
     ${world.war ? `<div data-part="war">${realmWarHtml(world, state, id)}</div>` : ''}
     ${world.realms ? `<div data-part="intel">${intelligenceHtml(world, state, id)}</div>` : ''}
     ${section(memory, route, 'cares', 'What they care about', cares ? `<ul class="cares">${cares}</ul>` : '')}
@@ -236,4 +237,18 @@ export function intelligenceHtml(world, state, rid) {
   return `<h3>What we see</h3><p class="sub">${sight}</p>
     <div class="build-list">${embassy}${spy}</div>
     <h3>Places we know</h3><div class="chips">${known || '<p class="sub">None yet. Their land lies under the fog.</p>'}</div>`;
+}
+
+// What the crown knows of a ruler's intentions (M18): an embassy shows the
+// posture and its main reason, a spy the war aim and any muster planned;
+// otherwise only what merchants and travellers say.
+export function intentionsHtml(world, state, rid) {
+  const i = intentions(state, world, rid);
+  if (!i) return '';
+  const lines = [];
+  if (i.posture) lines.push(`<p>${escapeHtml(i.posture)}</p>`);
+  else lines.push(`<p class="sub">${escapeHtml(i.vague)} An embassy would tell us more.</p>`);
+  if (i.aim) lines.push(`<p class="warn">${escapeHtml(i.aim)}</p>`);
+  else if (i.posture) lines.push('<p class="sub">Only a spy would learn what war they mean to make.</p>');
+  return `<div data-part="intent"><h3>Their intentions</h3>${lines.join('')}</div>`;
 }

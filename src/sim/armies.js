@@ -125,6 +125,8 @@ export function disbandArmy(state, world, a, quiet = false) {
   for (const [id, n] of Object.entries(a.levy)) {
     if (ownerOf(state, world, id) === a.side) placeOf(state, world, id).garrison += round(n * f);
   }
+  // A realm's standing men go back to its standing army (M18).
+  if (a.standing && state.realms?.[a.side]) state.realms[a.side].army = (state.realms[a.side].army ?? 0) + round(a.standing * f);
   // The standing companies march home to their stations, with what they
   // learned on the way.
   const pos = armyPosition(world, a);
@@ -424,7 +426,9 @@ function pickTarget(state, world, a, pos) {
     if (d > 900) continue;
     if (originOf(world, id) !== a.side && !own.some((o) => Math.hypot(o.x - p.x, o.y - p.y) <= reach)) continue;
     const feasible = mine >= placeDefence(state, world, id) ? 1 : 0.2;
-    const score = valueOf(state, world, id) * (originOf(world, id) === a.side ? 2 : 1) * feasible / (d + 100) ** 1.5;
+    // The war aim (M18) draws the army above all else.
+    const aim = (state.wars ?? []).some((w) => w.aims?.[a.side] === id) ? (world.strategy?.war.aimWeight ?? 1) : 1;
+    const score = valueOf(state, world, id) * (originOf(world, id) === a.side ? 2 : 1) * feasible * aim / (d + 100) ** 1.5;
     if ((!best || score > best.score) && roadPath(world, a.to ?? a.at, id, true)) best = { id, score };
   }
   return best?.id ?? null;
