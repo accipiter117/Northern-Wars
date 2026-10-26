@@ -5,8 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { execSync } from 'node:child_process';
-import { nodeWorld, ROOT } from '../helpers.js';
+import { nodeWorld } from '../helpers.js';
 import { createState, step, serialize, deserialize, ownerOf } from '../../src/sim/index.js';
 import { pointInPolygon } from '../../src/sim/geometry.js';
 import { buildNorth, MODELLED } from '../../tools/north.mjs';
@@ -78,8 +77,9 @@ test('every town is reachable by road, and roads go round the mountains', () => 
   }
 });
 
-test('Temeria itself is unchanged', () => {
-  const old = JSON.parse(execSync('git show 9aa2048:data/geography.json', { cwd: ROOT, encoding: 'utf8' }));
+test('Temeria itself is unchanged', async () => {
+  // A snapshot of Temeria from before M15 (CI checks out without history).
+  const old = JSON.parse(await readFile(new URL('../fixtures/temeria-before-m15.json', import.meta.url), 'utf8'));
   assert.deepEqual(g.temeria, old.temeria);
   assert.deepEqual(g.settlements, old.settlements);
   assert.deepEqual(g.roads, old.roads);
