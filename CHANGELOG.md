@@ -1,5 +1,15 @@
 # Changelog
 
+## M18 Rulers who govern
+- The rulers of the North now govern. Each month they weigh the danger they face, the chances before them and the state of their purse, and settle on a course: growing, arming, preparing a war, mending their debts or scheming against a stronger neighbour. They keep to it for at least six months unless danger jumps.
+- Foreign realms keep standing armies that cost them every month, and courts that sit on gold pay for it. A realm in debt sees soldiers desert and towns suffer, and its ruler may offer Temeria a loan, goods or a village for coin. Verden no longer drowns in debt, and Kerack's garrisons recover after a war.
+- Foreign rulers build from the whole catalogue (markets, harbours, barracks, mines and the rest) where their land allows, choosing what pays and what suits their course. Big realms build two at once.
+- Wars have a purpose: a ruler picks a town to take, gathers an army on the border for six weeks, then declares with a reason. Peace lets them keep what they came for.
+- A well-defended Temeria is probed rather than invaded: sponsored raiders, tolls, demands, a show of force, slander abroad, or a pact they want paid to keep. Honourable rulers never break a pact with us; others do only when the crown looks weak.
+- Pacts between the realms last longer and are not signed and broken in a single season.
+- An embassy tells you a ruler's course and why; a spy tells you their war aim. Without either, you hear only rumour.
+- Save version 15.
+
 ## M17 Audiences with rulers
 - Meet the rulers of the North face to face. An audience opens from the row of portraits on the Diplomacy tab, a realm's card, a ruler's request in the Court inbox, or a long press on their capital. The realm waits while you talk.
 - Every ruler has a temper (greedy, honourable, ambitious, cautious, opportunist, zealous) and an agenda: Henselt wants Vergen, Calanthe wants Dillingen, Demavend wants busy roads, Ervyll wants the Scoia'tael crushed. Their mood is now a list of reasons you can read, and their trust in Temeria's word is a memory of its own.

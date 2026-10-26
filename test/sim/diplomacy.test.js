@@ -117,12 +117,13 @@ test('treaties trigger calls to arms; friendship alone does not', () => {
   let broke = 0;
   for (let i = 0; i < 20; i++) {
     const t = quiet(createState(world, 10 + i));
-    makeTreaty(t, world, 'defensive', 'temeria', 'mahakam');
+    // (Cintra, unlike Mahakam, has no standing pact with Kaedwen to keep it out.)
+    makeTreaty(t, world, 'defensive', 'temeria', 'cintra');
     const war = startWar(t, world, makeRng(100 + i), 'kaedwen', 'temeria', 'test');
-    if (war.sides[1].includes('mahakam')) joined++;
-    else if (!treatyBetween(t, 'temeria', 'mahakam')) broke++;
+    if (war.sides[1].includes('cintra')) joined++;
+    else if (!treatyBetween(t, 'temeria', 'cintra')) broke++;
   }
-  assert.ok(joined >= 12, `Mahakam joined ${joined} times`);
+  assert.ok(joined >= 12, `Cintra joined ${joined} times`);
   assert.equal(joined + broke, 20);
 });
 

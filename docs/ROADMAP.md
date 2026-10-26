@@ -18,6 +18,7 @@
 | M14 Interface overhaul | A persistent tab bar (Realm, Court, Treasury, Military, Diplomacy) with sub-tabs and badges, an overflow menu, a navigation stack tied to the back gesture, a three-height sheet that a map tap lowers instead of closing (a side panel in landscape), screens that remember their place and forms across saves, decisions in a Court inbox answered inline with a banner only for what cannot wait, one card template, town cards in four tabs, compact laws, searchable help, meter cards, and map pick mode for every target | Done |
 | M15 Native feel and a detailed North | A: no browser gestures, long press as a game gesture (quick-action rings, what's here, list previews), momentum and zoom gestures, an installable offline app with a versioned service worker, save and pause when put away, haptics and wake lock settings. B: the North retraced (24 lands, terrain, 19 rivers, lakes, 92 towns, new roads, same rules and life abroad, richer terrain art, cached terrain tiles) | Done |
 | M17 Audiences with rulers | A full-screen audience with any ruler (portrait, mood and its reasons, trust); a deal table with live verdicts, counter-offers and deals carried out through the ledger and caravans; gifts, denunciations, tribute, asks and intelligence; treaties (non-aggression, trade, defensive, alliance, access, protectorate) that bind calls to arms and cost trust to break; war declared with a reason and terms before war; rulers with traits and agendas who request audiences and make and break pacts among themselves | Done |
+| M18 Rulers who govern | Foreign rulers assess threat, opportunity and purse each month and choose a posture (Grow, Arm, Expand, Consolidate, Scheme); standing armies with upkeep, a court that taxes hoards, debt with desertion and offers to Temeria; building from the full catalogue; wars with aims, musters and reasons in place of rivalry dice; deterrence, probes and harder-to-break pacts with Temeria; pacts between realms that last; posture and war aims learnt through embassies and spies | Done |
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.
@@ -27,6 +28,16 @@
 - Ambient caravans and patrols travel the road network and barges move on the Pontar and Ismena; tapping a unit shows what it is.
 - Save and load work via localStorage, plus JSON export and import.
 - npm test passes: sim tests, the 10-year headless run, and Playwright smoke tests with screenshots in portrait and landscape.
+
+## M18 acceptance criteria
+- Each foreign realm scores Threat, Opportunity and Purse (0 to 100, with parts) monthly and holds one of five postures for at least six months unless threat jumps; trait and agenda weights in data/strategy.json; the posture stored on the realm.
+- Standing armies with upkeep and recruiting; raiseRealmArmy uses the standing army first; no foreign treasury beyond 24 months of income; debt brings desertion, a forced Consolidate and loan, goods or town offers; Verden's debt spiral and Kerack's lost garrisons fixed, each with a test.
+- Foreign building from the full catalogue with Temeria's land limits, scored by payback, posture, agenda and traits; large realms build two at once.
+- No rivalry dice: Expand picks a war aim, musters, declares with a reason; armies target the aim; held aims kept at peace; monthly press on, seek peace or call allies.
+- Deterrence divides opportunity against Temeria; probes (raiders, tolls, demands, a show of force, denouncing, renegotiating); pacts with Temeria broken only by ambitious or opportunist rulers when the crown is weak, cautious ones when very weak, honourable ones never; soft balancing.
+- Pacts between realms: two-year minimum, a lower break threshold, three years before re-signing.
+- An embassy shows posture and reason, a spy the war aim and musters, otherwise rumour; posture in the audience mood reasons.
+- Save version 15 with an upgrade from 14. tools/realms.mjs measures the targets (treasury, towns changing hands, probes and invasions, pact churn, debt floor); the M7 and M12 targets still hold.
 
 ## M17 acceptance criteria
 - A full-screen audience with any ruler from their realm card, the Diplomacy tab's portraits or a long press on their capital, in portrait and landscape: portrait, name, realm, traits, mood in a word and a number with its reasons, and four buttons (Trade, Diplomacy, Alliance, War) each opening a panel; back to the buttons, close to where the player came from.

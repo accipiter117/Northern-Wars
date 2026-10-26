@@ -7,7 +7,7 @@
 // realm in data/realms.json and a ruler in data/diplomacy.json.
 import { addDispatch, clamp } from './realm.js';
 import { informed } from './realms.js';
-import { realmPotential, raiseRealmArmy } from './war.js';
+import { realmPotential, raiseRealmArmy, soldiersOf } from './war.js';
 import { TEMERIA, hostile, atWar, warsOf, sideIndex, warScore, ownerOf, originOf, valueOf, sideName, placesHeldBy, leviedMap } from './conflict.js';
 import {
   D, parties, rulerShort, hasTrait, agendaOf, trustIn, changeTrust, remember, powerOf, treatiesOf, treatyBetween, partnerOf, bindingTreaty, endTreaty,
@@ -57,7 +57,7 @@ export function deterrence(state, world, rid) {
   for (const co of state.forces?.companies ?? []) if (!co.army && world.byId[co.station] && near(world.byId[co.station])) v += co.men * c.companies;
   for (const a of state.armies ?? []) if (a.side === TEMERIA && near(world.byId[a.at])) v += a.soldiers * c.armies;
   // The rest of the crown's strength could march to the border in time.
-  v += powerOf(state, world, TEMERIA) * c.whole;
+  v += soldiersOf(state, world, TEMERIA) * c.whole;
   for (const p of parties(world)) {
     if (p === rid || !state.realms?.[p]) continue;
     if (bindingTreaty(state, p, TEMERIA, false)) v += strengthOf(state, world, p) * c.allies;
@@ -325,6 +325,9 @@ function planWar(state, world, rng, rid, a) {
   const against = a.opportunity.against;
   const aim = a.opportunity.aim;
   if (!against || !aim || atWar(state, rid) || (state.musters ?? []).some((m) => m.realm === rid)) return;
+  // Only a realm clearly stronger than what it would face marches (against
+  // the crown, its defences at that border).
+  if (a.opportunity.ratio < ST(world).war.minRatio) return;
   if ((world.war?.noWar ?? []).includes(rid) || (world.war?.noWar ?? []).includes(against)) return;
   if ((state.truces?.[[rid, against].sort().join('|')] ?? 0) > state.day) return;
   const allow = pactAllows(state, world, rid, against, rng);

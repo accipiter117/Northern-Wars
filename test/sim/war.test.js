@@ -50,7 +50,8 @@ test('raising an army thins the garrisons; standing it down sends the survivors 
   assert.ok(s.settlements.vizima.garrison < g0 * 0.6);
   assert.ok(s.ledger.history.at(-1).expenses.armies > 0);
   s = act(s, { type: 'disband', army: a.id });
-  assert.equal(s.armies.length, 0);
+  // (A neighbour's show of force may stand on the border meanwhile.)
+  assert.equal(s.armies.filter((x) => x.side === 'temeria').length, 0);
   assert.ok(s.settlements.vizima.garrison > g0 * 0.9);
 });
 
@@ -123,23 +124,27 @@ test('peace terms are refused early and accepted once the enemy is beaten and ti
   assert.equal(next.wars.length, 0);
 });
 
-test('a soured neighbour gathers an army, gives warning, then invades', () => {
+test('a weakly held crown is warned, then invaded by a soured neighbour', () => {
+  // Since M18 rulers choose their wars: a neighbour with bad blood and the
+  // strength to win gathers an army, the crown hears the drums, then war.
   let invaded = 0;
-  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+  for (const seed of [1, 2, 3, 4, 5]) {
     let s = quiet(createState(world, seed));
-    s.neighbours.kaedwen.stance = 'cold';
-    s.neighbours.kaedwen.relation = -90;
+    s.diplomacy.treaties = s.diplomacy.treaties.filter((t) => !(t.a === 'temeria' || t.b === 'temeria'));
     for (let m = 0; m < 48; m++) {
-      s.neighbours.kaedwen.relation = Math.min(s.neighbours.kaedwen.relation, -70);
+      s.neighbours.redania.relation = Math.min(s.neighbours.redania.relation, -70);
+      s.authority = 15;
+      for (const x of Object.values(s.settlements)) x.garrison = Math.min(x.garrison, 30);
       s = run(s, 30);
-      if (s.wars.some((w) => w.sides[0][0] === 'kaedwen' && w.sides[1][0] === 'temeria')) {
-        assert.ok(s.chronicle.some((c) => /War drums in Kaedwen/.test(c.text)), 'warning came first');
+      s.warDecisions = s.warDecisions.filter((d) => d.kind !== 'offer');
+      if (s.wars.some((w) => w.sides[0][0] === 'redania' && w.sides[1][0] === 'temeria')) {
+        assert.ok(s.chronicle.some((c) => /War drums in Redania/.test(c.text)), 'warning came first');
         invaded++;
         break;
       }
     }
   }
-  assert.ok(invaded >= 3, `invaded in ${invaded} of 10 reigns`);
+  assert.ok(invaded >= 3, `invaded in ${invaded} of 5 reigns`);
 });
 
 test('an ally attacked calls on the crown; answering puts Temeria at its side', () => {

@@ -48,7 +48,7 @@
     "schemeOpportunity": 0.75,
     "schemeBase": -20,
     "minMonths": 6,
-    "threatJump": 25
+    "threatJump": 20
   },
   "traits": {
     "ambitious": {
@@ -78,7 +78,7 @@
   "aggressionExpand": 20,
   "greedScheme": 15,
   "threat": {
-    "war": 25,
+    "war": 40,
     "warLosing": 30,
     "hostile": 15,
     "muster": 30,
@@ -179,7 +179,8 @@
     "keepAt": 15,
     "aimHeldPeace": 40,
     "aimMonths": 6,
-    "debtPeace": true
+    "debtPeace": true,
+    "minRatio": 1.3
   },
   "deterrence": {
     "near": 260,
@@ -187,7 +188,7 @@
     "companies": 1.0,
     "armies": 1.0,
     "allies": 0.5,
-    "whole": 0.6
+    "whole": 0.35
   },
   "probes": {
     "chance": 0.1,
