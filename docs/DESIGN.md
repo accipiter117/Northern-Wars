@@ -208,6 +208,21 @@ Numbers live in data/labour.json; the rules in src/sim/labour.js.
 - The Labour screen (Realm, Labour): the year with this month marked, the fields' months and first frost; the grain the realm will hold at first frost (no more than its stores can keep) against what November to February will eat; fuel in store against a winter's burning; each kind of work with its hands, its need and a line on its season, with + and − to move five in a hundred; and the three calls. Kinds short of hands, or standing idle out of season, are flagged.
 - Save version 18: the opening split, the winter turn not yet called, and a month and a half of fuel.
 
+### One map, two levels (M20 D)
+The rules in src/render/board.js and src/sim/board.js.
+- One camera. Pulled back past about two thirds of the opening zoom, the kingdom view cross-fades into the board of the North: fully the kingdom at 0.76 of the opening zoom and above, fully the board at 0.56 and below (`BOARD` in src/render/board.js). The tiled land stays underneath both; towns, roads, people and armies fade out as the board fades in.
+- The kingdom view, up close: each Temerian place carries a pip for each of its works (up to ten): green when sound and manned, blue when short of hands, red below half its condition, amber while being mended; its card shows its land tags, the hands within a day's walk, and each works' condition and staffing. The top bar shows the meters, date, season and one line of seasonal pressure (first frost, grain and fuel for winter), which opens the Labour screen.
+- The board, far off, is a light overlay on a canvas of its own: each realm tinted in its colours over its land and named large; a marker on its seat with its men in hundreds (garrisons, standing army and armies in the field; a question mark where the crown has no eyes) and five pips for its works (red for the share worn or ruined); thin routes between neighbours (shared borders and the foreign roads); armies marching from one realm into another as dashed lines with an arrow. Names that would cover a marker or another name move above or below their marker, shrink, or wait for a closer zoom.
+- The board's top bar reads "The North", the month and "2 of 3 orders set", and opens the month's orders.
+- Tapping a realm opens its short card; tapping Temeria, or a double tap on any realm, glides back into the kingdom view. Zooming in does the same.
+- Frames: on the board the hidden settlement layer is not redrawn, so a pan across the board on a CPU four times slower fits in a sixtieth of a second.
+
+### Orders on the board (M20 E)
+- Three orders a month, each for a realm: **March** (a Temerian army into a realm we are at war with, or have leave to cross, on its nearest town by road), **Trade** (send one good for another, a month's worth each way for six months, if the ruler agrees or names terms close enough) and **Envoy** (relations warm a little, and an audience waits at their court for twenty days, in the Court inbox). One of each kind per realm.
+- Orders wait until the turn of the month and go out together with the rulers' own moves. The month's orders screen lists what is set (each can be withdrawn), what came of last month's, and what the rulers did at its turn (marches and wars declared).
+- No rule changes: a march is the existing siege order, a trade the existing deal table, so armies, battles and deals behave as before.
+- Save version 19: an empty set of orders.
+
 ### Conquest under M20
 - A captured town comes with its spaces and their condition. Occupation stops its works for its owner and lets the occupier requisition; a sacked town's works stand in ruins; an annexed town is mended like any other, and mending what war broke there (not merely holding it) wins it over.
 

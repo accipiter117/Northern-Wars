@@ -31,6 +31,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
   }
 
   let last = '';
+  let lastPressure = '';
   return {
     update(state, onBoard = board) {
       board = onBoard;
@@ -41,14 +42,24 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
       last = key;
       const d = dateOf(state.day);
       document.getElementById('topbar')?.classList.toggle('on-board', board);
+      el.pressure?.classList.toggle('on-board', board);
       if (board) {
         el.date.textContent = 'The North';
         el.season.textContent = `${MONTHS[d.month - 1].name} ${d.year}`;
         if (el.pressure) el.pressure.textContent = `${orders} of ${ORDERS_A_MONTH} orders set this month. Tap a realm to give one.`;
+        lastPressure = '';
       } else {
         el.date.textContent = formatDate(state.day);
         el.season.textContent = SEASON_NAMES[seasonOf(state.day)];
-        if (el.pressure) el.pressure.textContent = pressureLine(state, world, { foodYield, foodNeed, foodCapacity });
+        // The outlook walks every day to first frost, so it is worked out
+        // afresh every ten days, at the turn of the month and when the crown
+        // moves its hands or makes a call, not every day.
+        const lab = state.labour;
+        const when = `${Math.floor(state.day / 10)}|${d.month}|${lab ? `${Object.values(lab.split).join(',')}|${lab.winterTurn}|${Object.keys(lab.calls ?? {}).join(',')}` : ''}`;
+        if (el.pressure && when !== lastPressure) {
+          lastPressure = when;
+          el.pressure.textContent = pressureLine(state, world, { foodYield, foodNeed, foodCapacity });
+        }
       }
       // A minus sign rather than a hyphen, and red, so debt is never missed.
       el.treasury.textContent = state.treasury < 0 ? `\u2212${number(-state.treasury)}` : number(state.treasury);

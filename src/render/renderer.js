@@ -733,7 +733,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // One map, two levels (M20 D): the settlements, their life and the
     // things that move fade out as the board of the North fades in.
     const b = boardness(cam);
-    const fade = String(Math.round((1 - b) * 100) / 100);
+    // Fully opaque, the opacity is cleared rather than set, so the layer is
+    // composited exactly as it was before the board existed.
+    const fade = b > 0 ? String(Math.round((1 - b) * 100) / 100) : '';
     if (cache.style.opacity !== fade) cache.style.opacity = fade;
     board.draw(state, cam, b, { selected: selection?.realm ?? null, orders: state.orders?.list ?? [] });
     if (b >= 0.99) return;
@@ -774,6 +776,23 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // Each Temerian place's works as small pips beside it (M20 D): working,
   // short of hands, damaged, being mended.
   const PIP = { ok: '#8fbf62', short: '#7f9bc4', damaged: '#c0392b', repairing: '#e0a040' };
+  // Each place's pips change at most once a day, so they are worked out once
+  // per state and kept for every frame drawn from it.
+  let pipState = null;
+  let pipKinds = new Map();
+  function pipsOf(state, id) {
+    if (pipState !== state) {
+      pipState = state;
+      pipKinds = new Map();
+    }
+    let kinds = pipKinds.get(id);
+    if (!kinds) {
+      kinds = spacesOf(state, world, id).flatMap((sp) => sp.works).slice(0, 10)
+        .map((w) => (w.repair ? 'repairing' : w.cond < 50 ? 'damaged' : w.staff < 70 ? 'short' : 'ok'));
+      pipKinds.set(id, kinds);
+    }
+    return kinds;
+  }
   function drawPips(state) {
     if (zoomRel() < 1.2) return;
     for (const st of world.geography.settlements) {
@@ -781,13 +800,12 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (!s || s.occupier) continue;
       const p = toScreen(cam, st.x, st.y);
       if (p.x < -40 || p.y < -40 || p.x > cam.viewW + 40 || p.y > cam.viewH + 40) continue;
-      const works = spacesOf(state, world, st.id).flatMap((sp) => sp.works);
-      if (!works.length) continue;
+      const kinds = pipsOf(state, st.id);
+      if (!kinds.length) continue;
       const r = Math.max(iconSize(st.type) / 2, (footprint[st.id] ?? 0) * 0.7) + 5;
-      const n = Math.min(10, works.length);
+      const n = kinds.length;
       for (let i = 0; i < n; i++) {
-        const w = works[i];
-        const kind = w.repair ? 'repairing' : w.cond < 50 ? 'damaged' : w.staff < 70 ? 'short' : 'ok';
+        const kind = kinds[i];
         const x = p.x + r + 2 + (i % 5) * 6;
         const y = p.y - 6 + Math.floor(i / 5) * 6;
         ctx.beginPath();

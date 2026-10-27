@@ -227,6 +227,12 @@ const MIGRATIONS = {
     state.version = 18;
     return state;
   },
+  // v19 (M20 E): orders on the board, none yet set.
+  18(state) {
+    state.orders = { list: [], last: [], theirs: [], envoys: [] };
+    state.version = 19;
+    return state;
+  },
 };
 
 // Swap every reference to a vanished foreign town for its replacement: as a

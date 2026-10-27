@@ -1,5 +1,13 @@
 # Changelog
 
+## M20 D and E One map, the board of the North
+- Pull the map back and the kingdom fades into the board of the North: every realm in its colours, named large, with a marker showing its men in hundreds (where we have eyes there) and pips for the state of its works, routes between neighbours, and dashed lines where armies march.
+- Up close, every town carries pips for its works, red where something is broken.
+- The top bar follows: on the board it reads "The North", the month and how many of its three orders are set; up close it gives one line on the season ahead (first frost, grain and fuel), which opens the Labour screen.
+- Tap a realm on the board for its short card, and give it an order: march an army on it, offer a trade, or send an envoy. Three orders a month, sent at its turn alongside the rulers' own moves. An envoy who arrives waits at court with an audience.
+- Tap Temeria, or double tap any realm, to glide back into the kingdom.
+- Save version 19.
+
 ## M20 C Labour through the seasons
 - The kingdom's hands go where the crown sends them, by kind of work: the fields, the woods and turf cuts, the mines, the pastures, the boats, the workshops, the masons mending what is broken, and the levies. A works yields only as well as it is manned.
 - Villages a day's walk from a town lend it their hands; townsfolk go out to the villages at harvest.

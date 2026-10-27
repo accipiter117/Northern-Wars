@@ -13,6 +13,7 @@ export function createBoardLayer(parent, world) {
   const canvas = document.createElement('canvas');
   canvas.className = 'map-board';
   canvas.setAttribute('aria-hidden', 'true');
+  canvas.style.display = 'none';
   parent.appendChild(canvas);
   const ctx = canvas.getContext('2d');
   let dpr = 1;
@@ -38,13 +39,19 @@ export function createBoardLayer(parent, world) {
   }
 
   function draw(state, cam, alpha, { selected = null, orders = [] } = {}) {
-    canvas.style.opacity = String(alpha);
+    // Unseen, the layer leaves the page altogether, so the kingdom view pays
+    // nothing for it (an invisible full-screen canvas still costs compositing).
     if (alpha <= 0.01) {
-      if (shown) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (shown) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.display = 'none';
+      }
       shown = false;
       markers = [];
       return;
     }
+    if (!shown) canvas.style.display = 'block';
+    canvas.style.opacity = String(alpha);
     shown = true;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);

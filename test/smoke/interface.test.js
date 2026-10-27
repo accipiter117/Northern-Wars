@@ -88,7 +88,9 @@ async function emptySpot(page) {
     const bottom = sheet.hidden || side ? innerHeight - 40 : sheet.getBoundingClientRect().top - 20;
     const right = sheet.hidden || sheet.dataset.snap !== 'side' ? innerWidth - 20 : sheet.getBoundingClientRect().left - 20;
     for (let y = top; y < bottom; y += 17) {
-      for (let x = 100; x < right; x += 23) if (!window.northernWars.pickAt(x, y)) return { x, y };
+      // Open map, with nothing else (the pressure strip, a banner) within a few pixels.
+      const bare = (x, y) => [[0, 0], [-8, 0], [8, 0], [0, -8], [0, 8]].every(([dx, dy]) => document.elementFromPoint(x + dx, y + dy)?.id === 'map');
+      for (let x = 100; x < right; x += 23) if (!window.northernWars.pickAt(x, y) && bare(x, y)) return { x, y };
     }
     return null;
   });

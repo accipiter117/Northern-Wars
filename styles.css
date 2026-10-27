@@ -95,6 +95,19 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .m-val { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .m-val.low { color: #e0745e; }
 
+/* One line of seasonal pressure (or the board's orders), a quiet strip at
+   the top of the map, under the panel: it leaves the map its full size and
+   is cut short rather than wrapped. */
+.pressure {
+  position: absolute; z-index: 5; top: 6px; left: 8px; max-width: calc(100% - 16px);
+  min-height: 28px; padding: 3px 10px;
+  background: rgba(29, 22, 16, 0.82); border: 1px solid rgba(210, 171, 95, 0.35); border-radius: 14px;
+  color: #d9ccb0; font-size: 13px; font-style: italic; text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pressure:empty { display: none; }
+.pressure.on-board { color: var(--gold); font-style: normal; }
+
 /* The urgent banner and the pick banner sit under the top bar. */
 .urgent, .pickbar { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; border-radius: 8px; padding: 2px 2px 2px 10px; }
 .urgent[hidden], .pickbar[hidden] { display: none; }
