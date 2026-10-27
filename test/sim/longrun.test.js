@@ -70,8 +70,9 @@ test('thirty untended years: the hoard levels off, Authority is not left at the 
   assert.ok(s.treasury < 70000, `treasury ${s.treasury}`);
   assert.ok(s.authority < 90, `authority ${s.authority}`);
   const pop = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
-  // Since M20 an untended realm's works fall to ruin and its people dwindle.
-  assert.ok(pop / pop0 > 0.55 && pop / pop0 < 0.95, `population ratio ${pop / pop0}`);
+  // Since M20 an untended realm's works fall to ruin, its woodpiles run
+  // dry once its lumber camps are gone, and its people dwindle.
+  assert.ok(pop / pop0 > 0.35 && pop / pop0 < 0.95, `population ratio ${pop / pop0}`);
   const conds = Object.values(s.settlements).flatMap((x) => x.buildings.map((b) => x.cond?.[b] ?? 100));
   assert.ok(conds.reduce((a, b) => a + b, 0) / conds.length < 25, 'its works lie in ruins');
 });

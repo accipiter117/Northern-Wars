@@ -57,3 +57,6 @@ export { territoryAt, territoryOwners } from './territory.js';
 export {
   spacesOf, condOf, staffOf, worksFactor, repairOptions, canRepairWorks, worksDecisionText, worksSummary, spaceKindOf,
 } from './works.js';
+export {
+  KINDS as LABOUR_KINDS, splitNow, districtOf, handsOf, kindOfWorks, needOf, canSetSplit, shiftSplit, canCall, canPin, winterOutlook, pressureLine, fuelNeed, farmFactor,
+} from './labour.js';

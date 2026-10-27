@@ -75,7 +75,8 @@ test('each chain\'s goods flow and sell', () => {
   // The suppliers are credited their share on their own accounts.
   assert.ok(s.ledger.places.white_orchard.in > plain.ledger.places.white_orchard.in + 15);
   // Carts are ready to carry the flows.
-  assert.ok(s.industry.flows.some((f) => f.good === 'wool' && f.from === 'white_orchard' && f.to === 'white_bridge'));
+  // (Since M20 Maribor's weavers may take it before White Bridge's.)
+  assert.ok(s.industry.flows.some((f) => f.good === 'wool' && f.from === 'white_orchard' && ['white_bridge', 'maribor'].includes(f.to)));
   assert.ok(s.industry.flows.some((f) => f.good === 'charcoal' && f.from === 'findetann'));
   // Grain went into the stills.
   assert.ok(s.settlements.ellander.stock.food < plain.settlements.ellander.stock.food);

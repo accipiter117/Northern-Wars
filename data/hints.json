@@ -123,7 +123,7 @@
       "id": "repairs",
       "trigger": "worksWorn",
       "title": "Mending, not building",
-      "text": "The crown does not build: every place already has the works its land gives it. They wear with use, and raids, armies, storms and fire break them. A broken works asks the crown at court: rebuild it (whole, but idle while the masons work), patch it (cheaper, but it may give way again) or leave it (free, but the place goes without and remembers)."
+      "text": "The crown does not build: every place has the works its land gives it. They wear, and raids, storms and fire break them. Rebuild (whole, idle meanwhile), patch (cheaper, may fail again) or leave it (the place goes without, and remembers)."
     },
     {
       "id": "sighted",
@@ -132,6 +132,12 @@
       "text": "A threat has been sighted: a bandit camp, a beast's lair, a commando or a war party. Tap it on the map, or open Military, Threats, and send the nearest suitable company in one tap, with the odds in plain words. Beasts are best left to a witcher. Companies are recruited from a town's card under Military; give them orders by tapping the map: hunt, patrol a road, hold a station, or stand ready to answer whatever is sighted near them.",
       "open": "military:threats",
       "openLabel": "Open Threats"
+    },
+    {
+      "id": "labour",
+      "trigger": "day60",
+      "title": "The kingdom's hands",
+      "text": "Realm, Labour: where the kingdom's hands work, season by season. Before first frost, call the winter turn, or the field hands sit idle while the woodpiles run low."
     }
   ],
   "topics": [
@@ -152,8 +158,8 @@
     },
     {
       "id": "pick",
-      "title": "Picking on the map",
-      "text": "Orders that need a place or a target (a hunt, a patrol, a station, a trade route, an army's march, where to muster) are given by tapping the map. A banner says what to tap; once you tap, it shows the odds or what it would earn, and you confirm or tap elsewhere."
+      "title": "Moving about and picking on the map",
+      "text": "Drag to pan, and flick to send the map gliding. Pinch to zoom, double tap open land to zoom in, and tap with two fingers to zoom out. Orders that need a place or a target (a hunt, a patrol, a station, a trade route, an army's march, where to muster) are given by tapping the map. A banner says what to tap; once you tap, it shows the odds or what it would earn, and you confirm or tap elsewhere."
     },
     {
       "id": "urgent",
@@ -163,12 +169,7 @@
     {
       "id": "longpress",
       "title": "Long press",
-      "text": "Hold a finger on the map for half a second, until the ring under it fills. On one of your towns it offers Build, Recruit, Garrison, Trade route and Open card; on a company or army, its orders; on a threat, sending the nearest company. On anything foreign it says what is known, and on open land what's here: the ground, whose land, the nearest place and how dangerous it is. Hold a row in a list for a quick look without leaving it."
-    },
-    {
-      "id": "gestures",
-      "title": "Moving about the map",
-      "text": "Drag to pan, and flick to send the map gliding. Pinch to zoom, double tap open land to zoom in, and tap with two fingers to zoom out."
+      "text": "Hold a finger on the map for half a second, until the ring under it fills. On one of your towns it offers Works, Recruit, Garrison, Trade route and Open card; on a company or army, its orders; on a threat, sending the nearest company. On anything foreign it says what is known, and on open land what's here: the ground, whose land, the nearest place and how dangerous it is. Hold a row in a list for a quick look without leaving it."
     },
     {
       "id": "install",

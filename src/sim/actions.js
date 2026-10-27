@@ -32,6 +32,7 @@ import {
 } from './audiences.js';
 import { treatyBetween, endTreaty } from './diplomacy.js';
 import { canRepairWorks, startRepair, resolveWorksDecision } from './works.js';
+import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin } from './labour.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -200,6 +201,30 @@ export function applyAction(state, world, action) {
   }
   if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
   if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege'].includes(action.type)) return warAction(state, world, action);
+  // Labour (M20 C): the split of the kingdom's hands, a shift of a few in
+  // a hundred, royal calls, and works pinned to be manned first.
+  if (action.type === 'labour' || action.type === 'labourShift') {
+    const split = action.type === 'labour' ? action.split : shiftSplit(state.labour?.split ?? {}, action.kind, action.step);
+    const check = canSetSplit(state, world, split);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    setSplit(next, world, split);
+    return { state: next };
+  }
+  if (action.type === 'call') {
+    const check = canCall(state, world, action.call);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    makeCall(next, world, action.call);
+    return { state: next };
+  }
+  if (action.type === 'pin') {
+    const check = canPin(state, world, action.settlement, action.building);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    togglePin(next, world, action.settlement, action.building);
+    return { state: next };
+  }
   if (world.spaces && (action.type === 'repair' || action.type === 'worksDecision')) {
     if (action.type === 'repair') {
       const kind = action.kind ?? 'rebuild';

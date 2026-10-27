@@ -11,6 +11,7 @@ import { chips, segs, section, cardHead } from './card.js';
 import { form } from './memory.js';
 import { INCOME, EXPENSES } from './menu.js';
 import { pendingDecisions } from './inbox.js';
+import { labourHtml } from './labour.js';
 
 const signed = (n) => (n < 0 ? `−${number(-n)}` : `+${number(n)}`);
 const UNREST_WORDS = ['Quiet', 'Grumbling', 'Restless', 'Angry', 'On the brink'];
@@ -181,10 +182,10 @@ function placesHtml(app) {
 
 export function realmTab(app) {
   const sub = app.memory.sub.realm;
-  const body = sub === 'places' ? placesHtml(app) : overviewHtml(app);
+  const body = sub === 'places' ? placesHtml(app) : sub === 'labour' ? labourHtml(app) : overviewHtml(app);
   return {
     title: `The Realm of ${escapeHtml(app.world.kingdom.name)}`,
-    html: `${segs([['overview', 'Overview'], ['places', 'Places']], sub)}${body}`,
+    html: `${segs([['overview', 'Overview'], ['labour', 'Labour'], ['places', 'Places']], sub)}${body}`,
   };
 }
 

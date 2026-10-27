@@ -1,5 +1,15 @@
 # Changelog
 
+## M20 C Labour through the seasons
+- The kingdom's hands go where the crown sends them, by kind of work: the fields, the woods and turf cuts, the mines, the pastures, the boats, the workshops, the masons mending what is broken, and the levies. A works yields only as well as it is manned.
+- Villages a day's walk from a town lend it their hands; townsfolk go out to the villages at harvest.
+- The seasons rule the work: the fields from spring to the end of harvest, the boats laid up when ice and storms close the water, the most hands to the pastures at the shearing.
+- Three royal calls: the harvest muster (every hand to the fields for six weeks), the winter turn (at first frost the field hands go to the woods, the turf and the workshops) and raising the levies (fuller garrisons, emptier works).
+- Fuel: wood, charcoal and turf to keep the hearths lit through winter. When the woodpiles run out, people grow angry and the poorest die of cold.
+- The Labour screen, in the Realm tab, shows the year, the grain and fuel for winter, and where every hand is working.
+- A works on a town's card can be kept fully manned before the rest.
+- Save version 18.
+
 ## M20 A and B A kingdom already built
 - The crown no longer builds. Every town, village and castle, at home and abroad, starts with the works its land gives it: a watermill on the river, boats on the lake, a quarry in the hills, peat in the marsh, the market and smithy in the town square, walls and a watchtower on the border. Vizima strikes the king's coin at its royal mint; Maribor grinds the harvest on the Ina; Flotsam and Houtborg dig silver.
 - A town's card shows the land it stands on and a Works tab: each space, what stands in it, and how well.

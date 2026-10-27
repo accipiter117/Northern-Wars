@@ -18,11 +18,11 @@
       0.1
     ],
     "farmBase": {
-      "village": 15.4,
-      "town": 18.48,
-      "city": 27.72,
-      "castle": 4.62,
-      "temple": 3.08
+      "village": 16.4,
+      "town": 19.68,
+      "city": 29.52,
+      "castle": 4.92,
+      "temple": 3.28
     },
     "farmingFocus": {
       "food": 1.3,

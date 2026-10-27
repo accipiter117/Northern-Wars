@@ -625,3 +625,25 @@ body.in-audience .tabbar, body.in-audience .sheet { visibility: hidden; }
 .pip.damaged { background: #b8553f; }
 .pip.repairing { background: #b8553f; box-shadow: 0 0 0 2px #d9c89b inset; }
 .pip.short { background: #6a7f9a; }
+
+/* Labour (M20 C): the year at a glance, and where the hands go. */
+.season-strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin: 6px 0 10px; }
+.season-strip .mon { position: relative; display: flex; flex-direction: column; align-items: center; padding: 4px 0 8px; border-radius: 4px; font-size: 12px; color: var(--muted); background: rgba(0, 0, 0, 0.2); }
+.season-strip .mon.spring { background: rgba(110, 150, 80, 0.22); }
+.season-strip .mon.summer { background: rgba(190, 160, 60, 0.22); }
+.season-strip .mon.autumn { background: rgba(170, 100, 50, 0.22); }
+.season-strip .mon.winter { background: rgba(120, 140, 170, 0.2); }
+.season-strip .mon.now { outline: 2px solid var(--gold); color: var(--text); }
+.season-strip .fld { position: absolute; bottom: 2px; left: 15%; right: 15%; height: 3px; border-radius: 2px; background: #b8a050; }
+.season-strip .frost { position: absolute; top: 2px; right: 3px; width: 6px; height: 6px; border-radius: 3px; background: #cfe0f2; }
+.labour-rows { display: flex; flex-direction: column; gap: 6px; }
+.labour-row { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--line); }
+.lr-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lr-name { font-weight: 600; }
+.lr-hands { font-size: 13px; font-variant-numeric: tabular-nums; }
+.lr-note { font-size: 12px; color: var(--muted); font-style: italic; }
+.lr-share { display: flex; align-items: center; gap: 6px; flex: none; }
+.lr-share b { min-width: 26px; text-align: center; font-variant-numeric: tabular-nums; }
+.step { min-width: 44px; min-height: 44px; border-radius: 22px; font-size: 20px; padding: 0; }
+.warn-t { color: #c9a03e; font-style: normal; }
+.build.on { border-color: var(--gold); }

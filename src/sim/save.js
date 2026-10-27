@@ -15,6 +15,7 @@ import { defaultGold } from './gold.js';
 import { syncWorld, settleOwnership } from './lands.js';
 import { upgradeConquest } from './conquest.js';
 import { upgradeWorks } from './works.js';
+import { upgradeLabour } from './labour.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
 
@@ -217,6 +218,13 @@ const MIGRATIONS = {
   16(state, world) {
     upgradeWorks(state, world);
     state.version = 17;
+    return state;
+  },
+  // v18 (M20 C): the kingdom's hands. The crown starts from the default
+  // split, the winter turn not yet called, and a month and a half of fuel.
+  17(state, world) {
+    upgradeLabour(state, world);
+    state.version = 18;
     return state;
   },
 };

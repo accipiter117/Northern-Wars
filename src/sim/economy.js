@@ -19,6 +19,7 @@ import { goldLedger } from './gold.js';
 import { industryLedger, saltStorage } from './industry.js';
 import { dealLedger } from './deals.js';
 import { worksFactor, upkeepFactor } from './works.js';
+import { farmFactor, levyFactor } from './labour.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -92,7 +93,8 @@ export function foodYield(world, id, s, month, law = null) {
   const focus = s.production === 'food' ? f.farmingFocus.food : f.farmingFocus.other;
   const terrain = f.terrainYield[world.terrainOf[id]] ?? 1;
   const fx = buildingEffects(world, s);
-  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield + (law?.foodYield ?? 0)) * (f.monthWeights[month - 1] / mean);
+  // As many hands as the fields need bring the harvest in (M20 C).
+  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield + (law?.foodYield ?? 0)) * (f.monthWeights[month - 1] / mean) * farmFactor(world, s);
 }
 
 // Timber, stone or iron per day, for settlements whose trade is one of those.
@@ -381,7 +383,8 @@ export function monthlyLedger(state, world, rng = null) {
       // Barracks quarter more men for their ordinary pay.
       const barracks = 1 + buildingEffects(world, s).garrisonBonus;
       const willing = integrationFactor(world, s, 'levyAt');
-      const target = Math.max(0, world.settlementData[id].garrison * Math.max(0, 1 + law.garrison) * level * barracks * willing - (levied[id] ?? 0));
+      // The levies' share of the kingdom's hands fills or thins them (M20 C).
+      const target = Math.max(0, world.settlementData[id].garrison * Math.max(0, 1 + law.garrison) * level * barracks * willing * levyFactor(state, world) - (levied[id] ?? 0));
       s.garrison = Math.max(0, Math.round(s.garrison + (target - s.garrison) * 0.1));
     }
   }
