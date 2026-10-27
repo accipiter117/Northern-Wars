@@ -180,7 +180,9 @@ test('buildings and garrisons show beside their settlements', async () => {
   const s = step(createState(world, 1262), 20, world);
   s.envoys = [];
   s.settlements.vizima.buildings = ['mill', 'granary', 'market', 'workshop', 'walls'];
-  s.settlements.vizima.construction = { building: 'shrine', daysLeft: 20, days: 30 };
+  // A works being mended (M20): the masons are in at the market hall.
+  s.settlements.vizima.cond = { market: 40 };
+  s.settlements.vizima.repair = { market: { kind: 'rebuild', days: 30, daysLeft: 20, to: 100, hands: 40, since: s.day } };
   s.settlements.vizima.garrison = 1100;
   s.settlements.white_orchard.buildings = ['fields', 'mill', 'shrine'];
   s.unpaid = true;
@@ -201,7 +203,7 @@ test('buildings and garrisons show beside their settlements', async () => {
   const z = await page.evaluate(() => window.northernWars.screenOf('vizima'));
   await page.touchscreen.tap(z.x - 34, z.y + 2);
   await page.waitForSelector('#sheet:not([hidden])');
-  assert.match(await page.textContent('#sheet'), /Vizima[\s\S]*unpaid[\s\S]*Raising: Shrine/);
+  assert.match(await page.textContent('#sheet'), /Vizima[\s\S]*unpaid[\s\S]*Market hall\s*40/);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -844,6 +846,9 @@ test('threats and companies on the map, the Forces screen and a Hunt order', asy
   let s = sim.step(sim.createState(world, 1262), 62, world);
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.treasury = 8000;
+  // Without the watchtowers and inns every place has since M20 (they see
+  // further), so the wolves stay a rumour.
+  for (const t of Object.values(s.settlements)) t.buildings = t.buildings.filter((b) => b !== 'watchtower' && b !== 'inn');
   const marsh = sim.wildSites(world, 'anchor').find((x) => x.terrain === 'marsh');
   const forest = sim.wildSites(world, 'anchor').find((x) => x.terrain === 'forest');
   const base0 = { morale: 70, born: s.day, band: null, sighted: false, alerted: true, rumour: null };

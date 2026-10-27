@@ -128,10 +128,12 @@ export function worksFactor(s, b) {
 }
 
 // What a works costs to keep: never less than a share of its upkeep, even
-// in ruins (watchmen, the roof over the wreck).
-export function upkeepFactor(world, s, b) {
+// in ruins (watchmen, the roof over the wreck). The crown's works cost
+// `upkeepScale` times their old upkeep (its ledger was calibrated for a
+// realm that built a few at a time); foreign realms pay the plain rate.
+export function upkeepFactor(world, s, b, crown = true) {
   const c = C(world);
-  return Math.max(c?.upkeepFloor ?? 0.3, worksFactor(s, b)) * (c?.upkeepScale ?? 1);
+  return Math.max(c?.upkeepFloor ?? 0.3, worksFactor(s, b)) * (crown ? c?.upkeepScale ?? 1 : 1);
 }
 
 // ---- Damage ----
