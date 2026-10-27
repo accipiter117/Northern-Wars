@@ -4,6 +4,8 @@
 import { prepareMap, drawMap, COLOURS, territoryPaths } from './mapLayer.js';
 import { territoryOwners } from '../sim/territory.js';
 import { drawBattle, drawSiege, smoke, drawRebels } from './war-art.js';
+import { createBoardLayer, boardness } from './board.js';
+import { spacesOf } from '../sim/works.js';
 import { createTiles } from './tiles.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
@@ -83,6 +85,8 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     layer.setAttribute('aria-hidden', 'true');
     canvas.parentNode?.insertBefore(layer, canvas);
   }
+  // The board of the North, over everything, faded in as the camera pulls back.
+  const board = createBoardLayer(canvas.parentNode ?? document.body, world);
   const mask = document.createElement('canvas');
   const mctx = mask.getContext('2d');
   let baseDirty = true;
@@ -133,6 +137,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
     lc = null;
     tiles.clear();
+    board.resize(w, h, dpr);
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     dirty = true;
@@ -720,7 +725,16 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    // One map, two levels (M20 D): the settlements, their life and the
+    // things that move fade out as the board of the North fades in.
+    const b = boardness(cam);
+    const fade = String(Math.round((1 - b) * 100) / 100);
+    if (cache.style.opacity !== fade) cache.style.opacity = fade;
+    board.draw(state, cam, b, { selected: selection?.realm ?? null, orders: state.orders?.list ?? [] });
+    if (b >= 0.99) return;
+    ctx.globalAlpha = 1 - b;
     drawLifeLayer(state, frac);
+    if (b < 0.3) drawPips(state);
     if (selectedId) {
       const st = world.byId[selectedId];
       const p = toScreen(cam, st.x, st.y);
@@ -749,6 +763,37 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
     drawWar(state, frac, selection);
     drawForces(forceView, state, 'tokens');
+    ctx.globalAlpha = 1;
+  }
+
+  // Each Temerian place's works as small pips beside it (M20 D): working,
+  // short of hands, damaged, being mended.
+  const PIP = { ok: '#8fbf62', short: '#7f9bc4', damaged: '#c0392b', repairing: '#e0a040' };
+  function drawPips(state) {
+    if (zoomRel() < 1.2) return;
+    for (const st of world.geography.settlements) {
+      const s = state.settlements[st.id];
+      if (!s || s.occupier) continue;
+      const p = toScreen(cam, st.x, st.y);
+      if (p.x < -40 || p.y < -40 || p.x > cam.viewW + 40 || p.y > cam.viewH + 40) continue;
+      const works = spacesOf(state, world, st.id).flatMap((sp) => sp.works);
+      if (!works.length) continue;
+      const r = Math.max(iconSize(st.type) / 2, (footprint[st.id] ?? 0) * 0.7) + 5;
+      const n = Math.min(10, works.length);
+      for (let i = 0; i < n; i++) {
+        const w = works[i];
+        const kind = w.repair ? 'repairing' : w.cond < 50 ? 'damaged' : w.staff < 70 ? 'short' : 'ok';
+        const x = p.x + r + 2 + (i % 5) * 6;
+        const y = p.y - 6 + Math.floor(i / 5) * 6;
+        ctx.beginPath();
+        ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+        ctx.fillStyle = PIP[kind];
+        ctx.fill();
+        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = 'rgba(29, 22, 16, 0.8)';
+        ctx.stroke();
+      }
+    }
   }
 
   // The layers are drawn as seen from the camera they were started from.
@@ -886,6 +931,11 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // Nearest thing under the finger wins, with settlements favoured: carts
   // crowd the roads into towns, and a tap on a town means the town.
   function pick(sx, sy, state, frac) {
+    // On the board a tap picks a realm (M20 D).
+    if (boardness(cam) >= 0.5) {
+      const rid = board.pick(cam, sx, sy);
+      return rid ? { realm: rid } : null;
+    }
     // The crown's companies and what they hunt are deliberate things to tap.
     const force = pickForces({ ctx, cam, world, zoom: zoomRel(), frac }, state, sx, sy);
     if (force) return force;
@@ -956,6 +1006,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 
   return {
     resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
+    get boardness() { return boardness(cam); },
     get tileStats() { return { size: tiles.size, drawn: tiles.stats.drawn, pending: baseDirty }; },
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     // The camera jumped (centred on a place): draw the cached layers round

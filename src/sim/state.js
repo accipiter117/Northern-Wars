@@ -88,6 +88,7 @@ export function createState(world, seed = 1) {
     conquest: defaultConquest(),
     works: defaultWorks(),
     labour: defaultLabour(world),
+    orders: { list: [], last: [], theirs: [], envoys: [] },
   };
   applyHoldings(state, world);
   if (state.labour) state.labour.fuel = startingFuel(state, world);

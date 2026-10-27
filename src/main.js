@@ -66,7 +66,11 @@ async function boot() {
   const memory = loadMemory();
   memory.open = false;
 
-  const topbar = createTopbar(world, { onSpeed: setSpeed, onMore: toggleMore, onMeter: (route) => nav.push(route) });
+  const topbar = createTopbar(world, {
+    onSpeed: setSpeed, onMore: toggleMore, onMeter: (route) => nav.push(route),
+    // The line under the meters: the Labour screen up close, the month's orders on the board.
+    onPressure: (board) => (board ? nav.push('orders') : openTab('realm', 'labour')),
+  });
 
   // One context for every screen and control.
   const app = {
@@ -750,6 +754,7 @@ async function boot() {
       }
     }
     renderer.draw(state, frac, nav.open || label || pick.active ? selection : null);
+    topbar.update(state, renderer.boardness >= 0.5);
     if (now - lastHintCheck > 1000) {
       lastHintCheck = now;
       hints.check(state, world);

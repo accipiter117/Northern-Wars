@@ -33,6 +33,7 @@ import {
 import { treatyBetween, endTreaty } from './diplomacy.js';
 import { canRepairWorks, startRepair, resolveWorksDecision } from './works.js';
 import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin } from './labour.js';
+import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -209,6 +210,20 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     setSplit(next, world, split);
+    return { state: next };
+  }
+  // Orders on the board (M20 E): three a month, sent at its turn.
+  if (action.type === 'order') {
+    const check = canGiveOrder(state, world, action.order);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    giveOrder(next, world, action.order);
+    return { state: next };
+  }
+  if (action.type === 'cancelOrder') {
+    if (!state.orders?.list[action.index]) return { state, error: 'No such order.' };
+    const next = structuredClone(state);
+    cancelOrder(next, action.index);
     return { state: next };
   }
   if (action.type === 'call') {

@@ -24,6 +24,8 @@ export function resizeCamera(cam, world, viewW, viewH, first) {
   cam.minScale = Math.min(viewW / b.w, viewH / b.h) * 0.95;
   cam.maxScale = cover * 7;
   cam.contain = contain;
+  // The opening zoom, against which the board's cross-fade is measured (M20 D).
+  cam.cover = cover;
   // Start filling the screen with the home realm rather than letterboxed.
   if (first) cam.scale = cover;
   clampCamera(cam, world);
