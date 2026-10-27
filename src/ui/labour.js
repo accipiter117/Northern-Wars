@@ -33,8 +33,8 @@ function outlookHtml(world, state) {
     <div class="gauge${o.short ? ' bad' : ''}"><span style="width:${pct(o.atFrost, o.winter)}%"></span></div>
     <p class="sub">First frost in ${o.days} days. ${o.short ? 'Grain is short for winter: more hands in the fields, or a harvest muster.' : 'Enough grain for the winter, as things stand.'}</p></div>`;
   const fuel = `<div class="gauge-row" data-part="fuel"><div class="lbl"><span>Fuel in store, against a winter's burning</span><span>${number(o.fuel)} of ${number(o.fuelNeed)}</span></div>
-    <div class="gauge${o.fuel < o.fuelNeed * 0.6 ? ' bad' : ''}"><span style="width:${pct(o.fuel, o.fuelNeed)}%"></span></div>
-    <p class="sub">${state.labour.short > 0.05 ? 'The woodpiles are empty: hearths are going cold, and the poorest are dying.' : 'Wood, charcoal and turf, cut by the woods hands. Hearths burn it from November to March.'}${state.labour.made !== undefined ? ` Last month ${number(state.labour.made)} cut, ${number(state.labour.burned ?? 0)} burned.` : ''}</p></div>`;
+    <div class="gauge${(wintry ? o.fuel : o.fuelAtFrost) < o.fuelNeed * 0.6 ? ' bad' : ''}"><span style="width:${pct(o.fuel, o.fuelNeed)}%"></span></div>
+    <p class="sub">${state.labour.short > 0.05 ? 'The woodpiles are empty: hearths are going cold, and the poorest are dying.' : `Wood, charcoal and turf, cut by the woods hands. Hearths burn it from November to March.${wintry ? '' : ` About ${number(o.fuelAtFrost)} by first frost at this rate.`}`}${state.labour.made !== undefined ? ` Last month ${number(state.labour.made)} cut, ${number(state.labour.burned ?? 0)} burned.` : ''}</p></div>`;
   return `${grain}${fuel}`;
 }
 
