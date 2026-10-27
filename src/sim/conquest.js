@@ -16,6 +16,7 @@ import { hasTrait, remember, changeTrust, treatyBetween } from './diplomacy.js';
 import { transferTown, peopleOf, livingRealms, syncWorld } from './lands.js';
 import { creditLimit } from './economy.js';
 import { roadPath } from './world.js';
+import { damageWorks, worksSummary } from './works.js';
 
 const C = (world) => world.conquest;
 const say = (state, text) => addDispatch(state, text, 'military');
@@ -150,9 +151,15 @@ function sack(state, world, id, by) {
   if (p.unrest !== undefined) p.unrest = clamp(p.unrest + s.unrest, 0, 100);
   // The best of what stood there is burned or pulled down.
   const worth = (b) => world.buildings[b]?.cost.coin ?? 0;
-  const burn = [...p.buildings].filter((b) => b !== 'walls').sort((x, y) => worth(y) - worth(x)).slice(0, s.damaged);
-  p.buildings = p.buildings.filter((b) => !burn.includes(b));
-  p.damaged = [...(p.damaged ?? []), ...burn];
+  const k = world.works?.sack;
+  const burn = [...p.buildings].filter((b) => b !== 'walls').sort((x, y) => worth(y) - worth(x)).slice(0, k ? k.works : s.damaged);
+  if (k) {
+    // Since M20 nothing is unbuilt: the works stand in ruins, to be mended.
+    burn.forEach((b, i) => damageWorks(state, world, id, b, 100 - (k.to[0] + ((k.to[1] - k.to[0]) * i) / Math.max(1, burn.length - 1)), 'Burned in the sack'));
+  } else {
+    p.buildings = p.buildings.filter((b) => !burn.includes(b));
+    p.damaged = [...(p.damaged ?? []), ...burn];
+  }
   p.smoulder = state.day + s.smoulderDays;
   p.treated = 'sacked';
   addFear(state, world, by, id, C(world).fear.sack);
@@ -385,8 +392,16 @@ export function integrationParts(state, world, id) {
   const target = world.settlementData[id]?.garrison ?? 0;
   if (target && s.garrison >= target * m.garrisonAt) add('A garrison keeps the peace', m.garrison);
   add(s.prosperity >= 50 ? 'Prosperity' : 'Hard times', (s.prosperity - 50) * m.prosperity);
-  const built = s.buildings.filter((b) => !(s.conquered?.found ?? []).includes(b)).length;
-  if (built) add('What the crown has built there', Math.min(m.buildingMax, built * m.building));
+  if (world.works) {
+    // Since M20 the crown wins a town over by mending what war broke there.
+    const w = worksSummary(s);
+    const mended = w.mean - (s.conquered?.works ?? w.mean);
+    if (mended >= 5) add('What the crown has mended there', Math.min(m.buildingMax, (mended / 10) * m.buildingMax));
+    if (w.mean < 50) add('Its works left in ruins', -m.buildingMax * Math.min(1, (50 - w.mean) / 30));
+  } else {
+    const built = s.buildings.filter((b) => !(s.conquered?.found ?? []).includes(b)).length;
+    if (built) add('What the crown has built there', Math.min(m.buildingMax, built * m.building));
+  }
   const law = (k, o) => state.laws[k]?.option === o;
   const non = 1 - (s.population.human / Math.max(1, totalPopulation(s)));
   if (law('taxation', 'heavy')) add('Heavy taxes', -m.heavyTax);

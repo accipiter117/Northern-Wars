@@ -140,14 +140,14 @@
     ]
   },
   "silver": {
-    "amount": 62
+    "amount": 40
   },
   "salt": {
     "storagePer": 0.06,
     "storageMax": 0.18
   },
   "quarter": {
-    "rentPerPerson": 0.0045
+    "rentPerPerson": 0.003
   },
   "hostel": {
     "base": 30,

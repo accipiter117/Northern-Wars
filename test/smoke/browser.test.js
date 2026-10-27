@@ -79,21 +79,27 @@ for (const vp of VIEWPORTS) {
     await page.touchscreen.tap(viz.x, viz.y);
     await page.waitForSelector('#sheet:not([hidden])');
     assert.match(await page.textContent('#sheet-title'), /Vizima/);
-    assert.match(await page.textContent('#sheet-body'), /Population[\s\S]*Crown demesne[\s\S]*Overview[\s\S]*Build[\s\S]*Stores/);
+    assert.match(await page.textContent('#sheet-body'), /Population[\s\S]*Crown demesne[\s\S]*Overview[\s\S]*Works[\s\S]*Stores/);
     await page.screenshot({ path: join(OUT, `${vp.name}-card.png`) });
 
-    // Order a market hall in Vizima from the Build tab: coin leaves the
-    // treasury, works begin.
+    // Mend Vizima's fire-damaged brewery from the Works tab (M20): coin
+    // leaves the treasury, the masons go in.
+    await page.evaluate(() => {
+      const s = window.northernWars.state.settlements.vizima;
+      s.cond = { ...(s.cond ?? {}), brewery: 40 };
+      s.worn = { ...(s.worn ?? {}), brewery: { why: 'Gutted by fire in March', day: 0 } };
+    });
     const treasury = await page.evaluate(() => window.northernWars.state.treasury);
-    await page.click('.segs [data-tsub="build"]');
-    await page.click('[data-build-row="market"]');
-    await page.click('[data-build="market"]');
-    await page.waitForFunction(() => window.northernWars.state.settlements.vizima.construction, null, { timeout: 5000 });
-    assert.match(await page.textContent('[data-part="built"]'), /Raising: Market hall/);
-    const market = await page.evaluate(() => window.northernWars.world.buildings.market.cost.coin);
-    assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - market);
-    assert.equal(await page.evaluate(() => window.northernWars.state.settlements.vizima.construction.building), 'market');
-    await page.screenshot({ path: join(OUT, `${vp.name}-building.png`) });
+    await page.click('.segs [data-tsub="works"]');
+    assert.match(await page.textContent('[data-part="spaces"]'), /Lake Vizima[\s\S]*The Ismena[\s\S]*City square/i);
+    await page.click('[data-works="brewery"]');
+    assert.match(await page.textContent('[data-part="repair"]'), /Rebuild it[\s\S]*crowns[\s\S]*days[\s\S]*hands[\s\S]*Patch it up/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-repair.png`) });
+    const cost = await page.evaluate(() => window.northernWars.repairOptions('vizima', 'brewery').rebuild.coin);
+    await page.click('[data-repair="rebuild"]');
+    await page.waitForFunction(() => window.northernWars.state.settlements.vizima.repair?.brewery, null, { timeout: 5000 });
+    assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - cost);
+    await page.screenshot({ path: join(OUT, `${vp.name}-works.png`) });
     await page.click('#sheet-close');
     assert.equal(await page.isHidden('#sheet'), true);
 
@@ -174,7 +180,9 @@ test('buildings and garrisons show beside their settlements', async () => {
   const s = step(createState(world, 1262), 20, world);
   s.envoys = [];
   s.settlements.vizima.buildings = ['mill', 'granary', 'market', 'workshop', 'walls'];
-  s.settlements.vizima.construction = { building: 'shrine', daysLeft: 20, days: 30 };
+  // A works being mended (M20): the masons are in at the market hall.
+  s.settlements.vizima.cond = { market: 40 };
+  s.settlements.vizima.repair = { market: { kind: 'rebuild', days: 30, daysLeft: 20, to: 100, hands: 40, since: s.day } };
   s.settlements.vizima.garrison = 1100;
   s.settlements.white_orchard.buildings = ['fields', 'mill', 'shrine'];
   s.unpaid = true;
@@ -195,7 +203,7 @@ test('buildings and garrisons show beside their settlements', async () => {
   const z = await page.evaluate(() => window.northernWars.screenOf('vizima'));
   await page.touchscreen.tap(z.x - 34, z.y + 2);
   await page.waitForSelector('#sheet:not([hidden])');
-  assert.match(await page.textContent('#sheet'), /Vizima[\s\S]*unpaid[\s\S]*Raising: Shrine/);
+  assert.match(await page.textContent('#sheet'), /Vizima[\s\S]*unpaid[\s\S]*Market hall\s*40/);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -838,6 +846,9 @@ test('threats and companies on the map, the Forces screen and a Hunt order', asy
   let s = sim.step(sim.createState(world, 1262), 62, world);
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.treasury = 8000;
+  // Without the watchtowers and inns every place has since M20 (they see
+  // further), so the wolves stay a rumour.
+  for (const t of Object.values(s.settlements)) t.buildings = t.buildings.filter((b) => b !== 'watchtower' && b !== 'inn');
   const marsh = sim.wildSites(world, 'anchor').find((x) => x.terrain === 'marsh');
   const forest = sim.wildSites(world, 'anchor').find((x) => x.terrain === 'forest');
   const base0 = { morale: 70, born: s.day, band: null, sighted: false, alerted: true, rumour: null };

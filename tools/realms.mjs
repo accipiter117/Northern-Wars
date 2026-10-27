@@ -125,4 +125,4 @@ if (crown === 'idle') console.log(`reigns in which the crown lost towns: ${total
 console.log(`foreign pact signings plus breaks per decade: ${avg(totals.signBreakPerDecade).toFixed(1)} (highest ${Math.max(...totals.signBreakPerDecade)}; target 10 or fewer)`);
 console.log(`longest run at the debt floor: ${totals.maxFloorRun} months (target 24 or fewer)`);
 console.log(`conquest at year ${years} (per seed): ${totals.conquest.map((c) => `ours ${c.ours}, lost ${c.lost}, between foreign realms ${c.abroad}, realms fallen ${c.fallen}, risings ${c.risings}${c.league ? ', a league' : ''}`).join(' | ')}`);
-console.log(`buildings beyond the basics raised abroad: ${[...totals.newKinds].sort().join(', ')}`);
+console.log(`works beyond the basics held abroad: ${[...totals.newKinds].sort().join(', ')}`);

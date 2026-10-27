@@ -7,7 +7,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadWorld, createState, step, totalPopulation, ledgerNet, realmFaith, holdingsOf } from '../src/sim/index.js';
+import { loadWorld, createState, step, totalPopulation, ledgerNet, realmFaith, holdingsOf, worksSummary } from '../src/sim/index.js';
 import { makeCrowns } from './crowns.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -22,8 +22,12 @@ function report(s, label, totals) {
   const loyalty = Object.values(s.houses).reduce((a, h) => a + h.loyalty, 0) / Object.keys(s.houses).length;
   const lands = Object.keys(s.houses).map((id) => holdingsOf(s, id).length).join('/');
   const last = s.ledger.history.at(-1);
+  // The realm's works (M20): mean condition and how many lie in ruins.
+  const ws = Object.values(s.settlements).filter((x) => !x.occupier).map(worksSummary);
+  const wn = ws.reduce((a, x) => a + x.n, 0);
+  const works = `works ${wn ? Math.round(ws.reduce((a, x) => a + x.mean * x.n, 0) / wn) : 100} ruins ${ws.reduce((a, x) => a + x.ruined, 0)}`;
   console.log(`${label.padEnd(10)} pop ${String(pop).padStart(6)} treasury ${String(Math.round(s.treasury)).padStart(7)} net ${String(last ? ledgerNet(last).net : 0).padStart(5)}`
-    + ` auth ${s.authority.toFixed(0).padStart(3)} stab ${s.stability.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
+    + ` ${works} auth ${s.authority.toFixed(0).padStart(3)} stab ${s.stability.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
     + ` annexed ${Object.values(s.lands ?? {}).filter((l) => l.realm === 'temeria').length} ceded ${Object.keys(s.lands ?? {}).filter((id) => !world.homeOf?.[id] && s.lands[id].realm !== 'temeria').length}`
     + ` sacks ${s.chronicle.filter((c) => /is sacked by Temeria/.test(c.text)).length} expulsions ${s.chronicle.filter((c) => /are driven out of/.test(c.text)).length} risings ${s.chronicle.filter((c) => /rises!/.test(c.text)).length}`
     + ` routes ${s.routes.length} gold ${Math.round(last?.income.gold ?? 0)} wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`

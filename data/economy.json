@@ -18,11 +18,11 @@
       0.1
     ],
     "farmBase": {
-      "village": 20,
-      "town": 24,
-      "city": 36,
-      "castle": 6,
-      "temple": 4
+      "village": 15.4,
+      "town": 18.48,
+      "city": 27.72,
+      "castle": 4.62,
+      "temple": 3.08
     },
     "farmingFocus": {
       "food": 1.3,
@@ -94,7 +94,9 @@
       "castle": 0,
       "temple": 0
     },
-    "coinFocus": 1.5
+    "coinFocus": 1.5,
+    "worksScale": 0.35,
+    "note": "Trade a head a month by kind of place, more where coin is the place's trade; the works' trade bonuses (markets, workshops, quays) count at worksScale since M20, when every town has them."
   },
   "upkeep": {
     "garrisonPerSoldierMonth": 0.1,
@@ -137,6 +139,7 @@
       "temple": 0.7
     },
     "crowding": 0.07,
-    "note": "A craft building earns its craft value x placeScale for the kind of place x the place's fortunes. Each further building of the same craft in the realm cuts every one's takings: 1 / (1 + crowding x (count - 1))."
+    "note": "A craft building earns its craft value x placeScale for the kind of place x the place's fortunes. Each further building of the same craft in the realm cuts every one's takings: 1 / (1 + crowding x (count - 1)). Since M20 every place starts with its works, so each craft earns `works` of that (the whole realm's crafts at once would otherwise outearn its taxes).",
+    "works": 0.35
   }
 }

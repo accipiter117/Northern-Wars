@@ -16,6 +16,7 @@ import { TEMERIA, ownerOf, hostile, atWar, sideName } from './conflict.js';
 import { totalPopulation } from './state.js';
 import { threatStrength, speciesOf, winChance, groundAt, companyStrength } from './combat.js';
 import { companiesAt, stationedStrength } from './forces.js';
+import { damagePlace, outside } from './works.js';
 
 const F = (world) => world.forces;
 const T = (world) => world.forces.threats;
@@ -498,6 +499,12 @@ function raidVillage(state, world, rng, t, id) {
   s.garrison = Math.max(0, round(s.garrison * 0.85));
   s.raided = state.day + l.raidedDays;
   s.raidKind = t.kind === 'monsters' ? 'monsters' : 'bandits';
+  // The works out in the fields and woods take the worst of it (M20).
+  const hurt = world.works?.raid?.[t.kind];
+  if (hurt) {
+    const why = { bandits: 'Burned by bandits', monsters: 'Torn up by monsters', scoiatael: "Wrecked by the Scoia'tael", raiders: 'Burned by raiders' }[t.kind];
+    damagePlace(state, world, rng, id, { count: 1, amount: hurt, why, pick: outside });
+  }
   if (t.kind === 'bandits') b.men += b.men * l.loot * 0.2;
   tally(state).raids += 1;
   tally(state).dead += dead;

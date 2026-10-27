@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createState, step, serialize, deserialize, canBuild, applyAction,
-  realmStock, foodYield, foodNeed, foodCapacity, totalPopulation, ledgerNet,
+  createState, step, serialize, deserialize, canRepairWorks,
+  foodYield, foodNeed, foodCapacity, totalPopulation, ledgerNet,
 } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
+import { startingWorks } from '../../src/sim/works.js';
 import { nodeWorld } from '../helpers.js';
 
 const world = await nodeWorld();
@@ -29,7 +30,8 @@ test('a starving town goes hungry, grows restless and loses people', () => {
   const unrestBefore = s.settlements.vizima.unrest;
   s = run(s, 35);
   assert.ok(s.settlements.vizima.hunger > 0.3, `hunger ${s.settlements.vizima.hunger}`);
-  assert.ok(s.settlements.vizima.unrest > unrestBefore + 5);
+  // Its walls and shrines (M20) steady it a little, but hunger still tells.
+  assert.ok(s.settlements.vizima.unrest > unrestBefore + 3);
   assert.ok(pop(s) < before);
   assert.ok(s.chronicle.some((d) => /Hunger stalks/.test(d.text)));
 });
@@ -49,41 +51,20 @@ test('food beyond a settlement\'s stores spoils', () => {
   assert.ok(s.settlements.tegmond.stock.food <= foodCapacity(world, s.settlements.tegmond) + 1e-6);
 });
 
-test('a building costs coin and materials, takes its days, then works', () => {
-  let s = createState(world, 1);
-  const before = realmStock(s);
-  const check = canBuild(s, world, 'white_orchard', 'fields');
-  assert.equal(check.ok, true);
-  const out = applyAction(s, world, { type: 'build', settlement: 'white_orchard', building: 'fields' });
-  assert.equal(out.error, undefined);
-  s = out.state;
-  assert.equal(s.treasury, 2500 - 250);
-  assert.ok(Math.abs(realmStock(s).timber - (before.timber - 30)) < 1e-6);
-  assert.equal(canBuild(s, world, 'white_orchard', 'mill').reason, 'Workers are busy on another project.');
-  const yieldBefore = foodYield(world, 'white_orchard', s.settlements.white_orchard, 9);
-  s = run(s, 45);
-  assert.deepEqual(s.settlements.white_orchard.buildings, ['fields']);
-  assert.equal(s.settlements.white_orchard.construction, null);
-  assert.ok(foodYield(world, 'white_orchard', s.settlements.white_orchard, 9) > yieldBefore * 1.2);
-  assert.equal(canBuild(s, world, 'white_orchard', 'fields').ok, false);
-});
-
-test('buildings only go where they make sense', () => {
-  const s = createState(world, 1);
-  assert.equal(canBuild(s, world, 'tegmond', 'market').ok, false);
-  assert.equal(canBuild(s, world, 'carreras', 'mine').ok, true);
-  assert.equal(canBuild(s, world, 'white_orchard', 'mine').ok, false);
-});
-
 test('the crown can borrow up to the bankers\' limit, and debt costs Authority and interest', () => {
   let s = createState(world, 1);
   s.treasury = -7500;
-  assert.equal(canBuild(s, world, 'vizima', 'walls').ok, false);
-  assert.equal(canBuild(s, world, 'tegmond', 'shrine').ok, true);
+  // Since M20 the crown mends rather than builds: a dear rebuild is beyond
+  // the bankers, a cheap patch is not.
+  s.settlements.vizima.cond = { mint: 10 };
+  s.settlements.tegmond.cond = { fields: 40 };
+  assert.equal(canRepairWorks(s, world, 'vizima', 'mint', 'rebuild').ok, false);
+  assert.equal(canRepairWorks(s, world, 'tegmond', 'fields', 'patch').ok, true);
   s = run(s, 31);
   const last = s.ledger.history.at(-1);
-  // About one per cent a month.
-  assert.ok(last.expenses.interest >= 65 && last.expenses.interest <= 90);
+  // About one per cent a month, on what is still owed when the month closes.
+  const owed = -(last.treasury - ledgerNet(last).net);
+  assert.ok(Math.abs(last.expenses.interest - owed * 0.01) <= owed * 0.003, `interest ${last.expenses.interest} on ${owed}`);
   assert.ok(s.authority < 60);
   assert.ok(s.chronicle.some((d) => d.text.includes('owes')));
 });
@@ -130,7 +111,8 @@ test('a version 1 save is brought up to date', () => {
   assert.equal(up.version, STATE_VERSION);
   assert.equal(up.granary, undefined);
   assert.ok(up.settlements.vizima.stock.food > 0);
-  assert.deepEqual(up.settlements.vizima.buildings, []);
+  // Since M20 (v17) every place gets the works its land gives it.
+  assert.deepEqual(up.settlements.vizima.buildings, startingWorks(world, 'vizima').buildings);
   const later = run(up, 60);
   assert.ok(Number.isFinite(later.treasury));
   assert.equal(deserialize(serialize(later), world).version, STATE_VERSION);

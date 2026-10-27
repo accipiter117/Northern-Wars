@@ -14,6 +14,7 @@ import { seasonOf } from './calendar.js';
 import { defaultGold } from './gold.js';
 import { syncWorld, settleOwnership } from './lands.js';
 import { upgradeConquest } from './conquest.js';
+import { upgradeWorks } from './works.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
 
@@ -208,6 +209,14 @@ const MIGRATIONS = {
     syncWorld(world, state);
     if (world.conquest) settleOwnership(state, world, { quiet: true });
     state.version = 16;
+    return state;
+  },
+  // v17 (M20): the crown no longer builds. Every place gets the spaces its
+  // land gives it and the works that stand in them; what it had built fills
+  // the space of its kind, and ruins stand to be mended (works.js).
+  16(state, world) {
+    upgradeWorks(state, world);
+    state.version = 17;
     return state;
   },
 };

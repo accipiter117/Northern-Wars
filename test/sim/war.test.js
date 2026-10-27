@@ -88,7 +88,8 @@ test('an occupied Temerian town pays no taxes and is left out of the realm\'s or
   const after = run(s, 31);
   assert.ok(after.ledger.history.at(-1).income.taxes < before * 0.9);
   assert.ok(after.stability > 50, 'occupied town does not drag stability down');
-  assert.match(applyAction(after, world, { type: 'build', settlement: 'maribor', building: 'market' }).error, /enemy holds/);
+  after.settlements.maribor.cond = { market: 40 };
+  assert.match(applyAction(after, world, { type: 'repair', settlement: 'maribor', building: 'market', kind: 'patch' }).error, /enemy flag/);
 });
 
 test('peace: as we were hands towns back; each keeps what it holds lets them stand; a truce follows', () => {

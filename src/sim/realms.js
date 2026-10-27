@@ -8,6 +8,8 @@ import { ownerOf, leviedMap, besieged } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
 import { monthlyStrategy, armyUpkeep } from './strategy.js';
 import { integrationFactor } from './conquest.js';
+import { startingWorks, worksFactor, upkeepFactor } from './works.js';
+import { giveWorks } from './state.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
 const R = (world) => world.realms;
@@ -19,6 +21,7 @@ export function defaultRealms(world) {
     for (const id of ids) {
       const base = { ...R(world).startByType[world.byId[id].type], ...(R(world).overrides[id] ?? {}) };
       settlements[id] = { population: base.population, prosperity: base.prosperity, garrison: base.garrison, buildings: [], construction: null };
+      if (world.spaces) giveWorks(settlements[id], startingWorks(world, id, rid));
     }
     out[rid] = { treasury: 1000, settlements };
   }
@@ -31,9 +34,11 @@ function prosperityMult(s) {
 
 function effectsOf(world, s) {
   const fx = { foodYield: 0, trade: 0, prosperity: 0, unrest: 0, taxBonus: 0, craft: 0, customs: 0, goodsYield: 0, gold: 0, garrisonBonus: 0, upkeep: 0 };
+  // A works yields as it stands (M20), and costs a share of its upkeep even in ruins.
   for (const b of s.buildings) {
-    for (const [k, v] of Object.entries(world.buildings[b].effects)) if (k in fx && typeof v === 'number') fx[k] += v;
-    fx.upkeep += world.buildings[b].upkeep ?? 0;
+    const f = worksFactor(s, b);
+    for (const [k, v] of Object.entries(world.buildings[b].effects)) if (k in fx && typeof v === 'number') fx[k] += v * f;
+    fx.upkeep += (world.buildings[b].upkeep ?? 0) * upkeepFactor(world, s, b, false);
   }
   return fx;
 }
@@ -86,13 +91,13 @@ export function monthlyRealms(state, world, rng) {
         gross[owner] = (gross[owner] ?? 0) + income;
         purse[owner] = (purse[owner] ?? 0) + income - s.garrison * e.garrisonPayMonth;
       }
-      const food = s.buildings.filter((b) => world.buildings[b].effects.foodYield).length;
+      const food = s.buildings.filter((b) => world.buildings[b].effects.foodYield).reduce((a, b) => a + worksFactor(s, b), 0);
       const growth = e.growthPerMonth * prosperityMult(s) * (1 + food * e.foodBuildingGrowth);
       s.population = Math.max(0, Math.round(s.population * (1 + growth)));
       const base = { ...R(world).startByType[world.byId[id].type], ...(R(world).overrides[id] ?? {}) };
       const aim = clamp(base.prosperity + fx.prosperity * 1.5 + fx.trade * 10, 0, 100);
       s.prosperity = clamp(s.prosperity + (aim - s.prosperity) * e.prosperityDrift + (rng.next() - 0.5) * 1.2 - (inDebt ? st.debt.prosperity : 0), 0, 100);
-      const walls = s.buildings.includes('walls') ? e.wallsGarrison : 0;
+      const walls = s.buildings.includes('walls') ? e.wallsGarrison * worksFactor(s, 'walls') : 0;
       // An occupier keeps a lighter hold; no fresh men reach a town under siege;
       // a realm in debt cannot pay them all.
       const target = Math.max(0, base.garrison * (1 + walls + fx.garrisonBonus) * (owner === rid ? 1 : 0.5) * (inDebt ? st.debt.garrison : 1) * integrationFactor(world, s, 'levyAt') - (levied[id] ?? 0));
@@ -158,8 +163,11 @@ export function monthlyRealms(state, world, rng) {
   if (st) monthlyStrategy(state, world, rng);
   for (const [rid, realm] of Object.entries(state.realms)) {
     if (realm.fallen) continue;
-    if (st) aiBuildM18(state, world, rid, realm);
-    else aiBuild(state, world, rng, rid, realm);
+    // Since M20 no one builds: rulers mend what their land gave them (works.js).
+    if (!world.spaces) {
+      if (st) aiBuildM18(state, world, rid, realm);
+      else aiBuild(state, world, rng, rid, realm);
+    }
     incident(state, world, rng, rid, realm);
     prospect(state, world, rng, rid, realm);
   }

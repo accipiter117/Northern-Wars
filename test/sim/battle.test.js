@@ -21,7 +21,8 @@ function meeting(seed, menA, menB, { sideA = 'redania', sideB = 'kaedwen', stand
   const rng = makeRng(seed);
   startWar(s, world, rng, sideA, sideB, 'claim');
   s.armies = [];
-  const at = world.foreignByRealm[sideB][0];
+  // Open country: since M20 towns start with their walls, which favour the defender.
+  const at = world.foreignByRealm[sideB].find((id) => world.byId[id].type === 'village');
   const a = newArmy(s, world, sideA, at, menA, {});
   const b = newArmy(s, world, sideB, at, menB, {});
   if (standard) for (const x of [a, b]) x.quality = 1;

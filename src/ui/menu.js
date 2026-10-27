@@ -89,7 +89,7 @@ export function ledgerHtml(app) {
     <dl class="ledger">${row('Total income', totalIn, true)}</dl>`;
   const expenses = `<dl class="ledger">${lines(EXPENSES, e)}${row('Total expenses', totalOut, true)}</dl>
     ${state.treasury > world.economy.upkeep.hoardFree ? '<p class="sub">A full treasury draws courtiers and hangers-on: the court costs more while the coffers stay this full.</p>' : ''}
-    <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on building works, ${number(e.decrees ?? 0)} on decrees.</p>`;
+    <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on repairs, ${number(e.decrees ?? 0)} on decrees.</p>`;
   const where = `${top ? `<h3>Where the money came from</h3><div class="place-list">${top}</div>` : ''}
     ${worst ? `<h3>Where it went</h3><p class="sub">Places that cost the crown more than they earned, mostly for their garrisons.</p><div class="place-list">${worst}</div>` : ''}`;
   return `${head}

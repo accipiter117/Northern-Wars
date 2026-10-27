@@ -1,0 +1,1795 @@
+{
+  "note": "Every settlement's spaces (M20): the land it stands on and what each space holds at the start. `settlements` is written by tools/spaces.mjs from data/geography.json; edit `kinds`, `defaults` and `overrides` by hand and re-run the tool. Each space holds one works (the town square and the defences hold several), chosen at the start and fixed: the crown repairs, it does not build.",
+  "kinds": {
+    "plain": {
+      "name": "Open ground",
+      "works": [
+        "fields",
+        "stud",
+        "pasture"
+      ],
+      "work": "fields"
+    },
+    "river": {
+      "name": "River",
+      "works": [
+        "mill",
+        "tannery",
+        "tollbridge",
+        "fishery"
+      ],
+      "work": "crafts"
+    },
+    "lake": {
+      "name": "Lake",
+      "works": [
+        "fishery",
+        "harbour",
+        "shipyard"
+      ],
+      "work": "fishing"
+    },
+    "coast": {
+      "name": "Coast",
+      "works": [
+        "fishery",
+        "harbour",
+        "shipyard",
+        "saltpans"
+      ],
+      "work": "fishing"
+    },
+    "forest": {
+      "name": "Forest",
+      "works": [
+        "lumber",
+        "charcoal",
+        "lodge"
+      ],
+      "work": "woods"
+    },
+    "hills": {
+      "name": "Hills",
+      "works": [
+        "quarry",
+        "mine",
+        "silvermine",
+        "goldmine",
+        "pasture"
+      ],
+      "work": "mines"
+    },
+    "mountain": {
+      "name": "Mountains",
+      "works": [
+        "mine",
+        "quarry",
+        "silvermine",
+        "goldmine",
+        "pasture"
+      ],
+      "work": "mines"
+    },
+    "marsh": {
+      "name": "Marsh",
+      "works": [
+        "peat",
+        "herbalists"
+      ],
+      "work": "woods"
+    },
+    "seam": {
+      "name": "Gold seam",
+      "works": [
+        "goldmine"
+      ],
+      "work": "mines"
+    },
+    "square": {
+      "name": "Town square",
+      "works": "civic",
+      "work": "crafts"
+    },
+    "defences": {
+      "name": "Defences",
+      "works": [
+        "walls",
+        "watchtower",
+        "barracks",
+        "armoury"
+      ],
+      "work": "crafts"
+    }
+  },
+  "defaults": {
+    "plain": {
+      "any": "fields"
+    },
+    "river": {
+      "any": "mill"
+    },
+    "lake": {
+      "any": "fishery"
+    },
+    "coast": {
+      "village": "fishery",
+      "castle": "fishery",
+      "any": "harbour"
+    },
+    "forest": {
+      "any": "lumber"
+    },
+    "hills": {
+      "village": "pasture",
+      "any": "quarry"
+    },
+    "mountain": {
+      "any": "mine"
+    },
+    "marsh": {
+      "any": "peat"
+    },
+    "seam": {
+      "any": "goldmine"
+    },
+    "square": {
+      "town": [
+        "market",
+        "workshop",
+        "smithy",
+        "granary",
+        "shrine"
+      ],
+      "city": [
+        "market",
+        "workshop",
+        "smithy",
+        "granary",
+        "brewery",
+        "guildhall",
+        "bathhouse",
+        "paving",
+        "inn"
+      ],
+      "temple": [
+        "hospice",
+        "hostel"
+      ]
+    },
+    "defences": {
+      "city": [
+        "walls",
+        "barracks"
+      ],
+      "castle": [
+        "walls"
+      ],
+      "town": []
+    }
+  },
+  "start": {
+    "note": "Condition at the start, where it is not 100: old gold workings lie flooded until the crown reopens them; the border places of the last war are worn.",
+    "seam": 0,
+    "realms": {
+      "sodden": 70,
+      "brugge": 75
+    },
+    "why": {
+      "seam": "Old workings, flooded and abandoned",
+      "war": "Worn by the last war"
+    }
+  },
+  "overrides": {
+    "vizima": {
+      "lake": "harbour",
+      "squareAdd": [
+        "mint",
+        "bank",
+        "quarter",
+        "sewers",
+        "alchemist"
+      ],
+      "defences": [
+        "walls",
+        "barracks",
+        "armoury"
+      ]
+    },
+    "maribor": {
+      "addSpaces": [
+        {
+          "kind": "river",
+          "name": "the Ina"
+        }
+      ],
+      "squareAdd": [
+        "weavers",
+        "distillery",
+        "quarter"
+      ]
+    },
+    "gors_velen": {
+      "squareAdd": [
+        "warehouse",
+        "tannery"
+      ]
+    },
+    "carreras": {
+      "addSpaces": [
+        {
+          "kind": "mountain",
+          "name": "Mahakam foothills"
+        }
+      ],
+      "squareAdd": [
+        "weaponsmith",
+        "armoury"
+      ]
+    },
+    "ellander": {
+      "squareAdd": [
+        "hospice",
+        "brewery"
+      ]
+    },
+    "pontaria": {
+      "river": "tannery"
+    },
+    "white_bridge": {
+      "river": "tollbridge",
+      "squareAdd": [
+        "inn"
+      ]
+    },
+    "la_valette": {
+      "river": "tollbridge"
+    },
+    "flotsam": {
+      "dropSpaces": [
+        "coast"
+      ],
+      "mountain": "silvermine"
+    },
+    "houtborg": {
+      "mountain": "silvermine"
+    },
+    "razwan": {
+      "addSpaces": [
+        {
+          "kind": "hills",
+          "name": "Pass of Klamat"
+        }
+      ],
+      "hills": "silvermine"
+    },
+    "vorune": {
+      "hills": "silvermine"
+    },
+    "napeys": {
+      "hills": "silvermine"
+    },
+    "cleves": {
+      "plain": "stud"
+    },
+    "old_bottoms": {
+      "plain": "stud"
+    },
+    "tegmond": {
+      "river": "fishery"
+    },
+    "dorian": {
+      "marsh": "herbalists"
+    },
+    "burdorff": {
+      "addSpaces": [
+        {
+          "kind": "plain",
+          "name": "the open fields"
+        }
+      ],
+      "forest": "charcoal"
+    },
+    "anchor": {
+      "forest": "lodge"
+    },
+    "petrelsteyn": {
+      "forest": "lodge"
+    },
+    "dorndal": {
+      "river": "fishery"
+    },
+    "murky_waters": {
+      "lake": "fishery"
+    },
+    "carbon": {
+      "mountain": "silvermine",
+      "addSpaces": [
+        {
+          "kind": "hills",
+          "name": "the Mahakam galleries"
+        }
+      ],
+      "hills": "mine",
+      "squareAdd": [
+        "weaponsmith"
+      ]
+    },
+    "hagge": {
+      "dropSpaces": [
+        "coast"
+      ]
+    },
+    "cidaris_city": {
+      "coast": "shipyard"
+    },
+    "caelf": {
+      "coast": "saltpans"
+    },
+    "tiberghien": {
+      "coast": "saltpans"
+    },
+    "novigrad": {
+      "squareAdd": [
+        "bank",
+        "quarter",
+        "cathedral"
+      ]
+    },
+    "oxenfurt": {
+      "squareAdd": [
+        "alchemist"
+      ]
+    },
+    "vengerberg": {
+      "squareAdd": [
+        "quarter"
+      ]
+    },
+    "kaer_morhen": {
+      "forest": "lodge"
+    },
+    "duen_canell": {
+      "forest": [],
+      "square": [],
+      "defences": []
+    }
+  },
+  "settlements": {
+    "vizima": [
+      {
+        "kind": "river",
+        "name": "the Ismena"
+      },
+      {
+        "kind": "lake",
+        "name": "Lake Vizima"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "maribor": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "river",
+        "name": "the Ina"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "gors_velen": [
+      {
+        "kind": "marsh",
+        "name": "Velen marshes"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "ellander": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "carreras": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "mountain",
+        "name": "Mahakam foothills"
+      },
+      {
+        "kind": "seam",
+        "name": "The Carreras seam"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "pontaria": [
+      {
+        "kind": "river",
+        "name": "the Embla"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "anchor": [
+      {
+        "kind": "marsh",
+        "name": "Velen marshes"
+      },
+      {
+        "kind": "forest",
+        "name": "Jay Forest"
+      }
+    ],
+    "dorian": [
+      {
+        "kind": "marsh",
+        "name": "Velen marshes"
+      },
+      {
+        "kind": "forest",
+        "name": "Jay Forest"
+      }
+    ],
+    "tegmond": [
+      {
+        "kind": "river",
+        "name": "the Embla"
+      },
+      {
+        "kind": "marsh",
+        "name": "Velen marshes"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "acorn_bay": [
+      {
+        "kind": "marsh",
+        "name": "Velen marshes"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "findetann": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "windley": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "murky_waters": [
+      {
+        "kind": "lake",
+        "name": "Lake Vizima"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "white_orchard": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "burdorff": [
+      {
+        "kind": "forest",
+        "name": "Vizima woods"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "zavada": [
+      {
+        "kind": "river",
+        "name": "the Ina"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "seam",
+        "name": "Zavada spur"
+      }
+    ],
+    "cleves": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "old_bottoms": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "brenna": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "mayena": [
+      {
+        "kind": "river",
+        "name": "the Ina"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "razwan": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "hills",
+        "name": "Pass of Klamat"
+      },
+      {
+        "kind": "seam",
+        "name": "The Klamat reef"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "armeria": [
+      {
+        "kind": "river",
+        "name": "the Ina"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "carcano": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "vidort": [
+      {
+        "kind": "river",
+        "name": "the Ina"
+      },
+      {
+        "kind": "hills",
+        "name": "Turlough Hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "red_fort": [
+      {
+        "kind": "river",
+        "name": "the Yaruga"
+      },
+      {
+        "kind": "forest",
+        "name": "Riverdell woods"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "dregsdon": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "seam",
+        "name": "Dregsdon lode"
+      }
+    ],
+    "bondar": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "moen": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "white_bridge": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "flotsam": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "mountain",
+        "name": "Mahakam foothills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "houtborg": [
+      {
+        "kind": "river",
+        "name": "the Ismena"
+      },
+      {
+        "kind": "mountain",
+        "name": "Mahakam foothills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "dorndal": [
+      {
+        "kind": "river",
+        "name": "the Ismena"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "la_valette": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "temple_melitele": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the temple precinct"
+      }
+    ],
+    "petrelsteyn": [
+      {
+        "kind": "hills",
+        "name": "Tukaj Hills"
+      },
+      {
+        "kind": "forest",
+        "name": "Jay Forest"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "seam",
+        "name": "Tukaj diggings"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "rissberg": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "seam",
+        "name": "Rissberg workings"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "napeys": [
+      {
+        "kind": "hills",
+        "name": "Tukaj Hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "seam",
+        "name": "The Napeys vein"
+      }
+    ],
+    "vorune": [
+      {
+        "kind": "hills",
+        "name": "Tukaj Hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "mortara": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "novigrad": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "oxenfurt": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "tretogor": [
+      {
+        "kind": "river",
+        "name": "the Duppa"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "rinde": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "drakenborg": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "gelibol": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "montecalvo": [
+      {
+        "kind": "forest",
+        "name": "Kestrel woods"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "murivel": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "blaviken": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "luton": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "denesle": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "roggeven": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "baldhorn": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "coppertown": [
+      {
+        "kind": "river",
+        "name": "the Duppa"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "pindal": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "knotgrass_meadow": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "jamurlak": [
+      {
+        "kind": "river",
+        "name": "the Buina"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "egremont": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "forest",
+        "name": "Kestrel woods"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "ard_carraigh": [
+      {
+        "kind": "river",
+        "name": "the Buina"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "vattweir": [
+      {
+        "kind": "river",
+        "name": "the Buina"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "daevon": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "leyda": [
+      {
+        "kind": "forest",
+        "name": "Shaerrawedd forest"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "ban_glean": [
+      {
+        "kind": "river",
+        "name": "the Lixela"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "ban_ard": [
+      {
+        "kind": "mountain",
+        "name": "Blue Mountains"
+      },
+      {
+        "kind": "river",
+        "name": "the Lixela"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "kaer_morhen": [
+      {
+        "kind": "mountain",
+        "name": "Kaer Morhen range"
+      },
+      {
+        "kind": "river",
+        "name": "the Gwenllech"
+      },
+      {
+        "kind": "forest",
+        "name": "Kaer Morhen woods"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "loc_muinne": [
+      {
+        "kind": "mountain",
+        "name": "Blue Mountains"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "est_haemlet": [
+      {
+        "kind": "mountain",
+        "name": "Blue Mountains"
+      },
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      }
+    ],
+    "tiel": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "kalkar": [
+      {
+        "kind": "river",
+        "name": "the Pontar"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "vengerberg": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "vergen": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "hagge": [
+      {
+        "kind": "river",
+        "name": "the Dyfne"
+      },
+      {
+        "kind": "mountain",
+        "name": "Mahakam foothills"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "asheberg": [
+      {
+        "kind": "river",
+        "name": "the Dyfne"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "gulet": [
+      {
+        "kind": "mountain",
+        "name": "Dol Blathanna heights"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "eysenlaan": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "aldersberg": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "hoshberg": [
+      {
+        "kind": "mountain",
+        "name": "Dol Blathanna heights"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "carbon": [
+      {
+        "kind": "mountain",
+        "name": "Mahakam foothills"
+      },
+      {
+        "kind": "hills",
+        "name": "the Mahakam galleries"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "cidaris_city": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "bremervoord": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "vole": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "ravelin": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "caelf": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "vartburg": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "kerack_city": [
+      {
+        "kind": "river",
+        "name": "the Adalatte"
+      },
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "tiberghien": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "ansegis": [
+      {
+        "kind": "forest",
+        "name": "Brokilon"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "nastrog": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "verden_town": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "rozrog": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "bodrog": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "brugge_city": [
+      {
+        "kind": "hills",
+        "name": "Turlough Hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "dillingen": [
+      {
+        "kind": "hills",
+        "name": "Owl Hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "kernow": [
+      {
+        "kind": "hills",
+        "name": "Owl Hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "burnt_stump": [
+      {
+        "kind": "river",
+        "name": "the Ribbon"
+      },
+      {
+        "kind": "hills",
+        "name": "Owl Hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "sodden_keep": [
+      {
+        "kind": "forest",
+        "name": "Riverdell woods"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "riedbrune": [
+      {
+        "kind": "marsh",
+        "name": "Dankwood Wild"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "smallton": [
+      {
+        "kind": "mountain",
+        "name": "Armush Mountains"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "cintra_city": [
+      {
+        "kind": "river",
+        "name": "the Yaruga"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "attre": [
+      {
+        "kind": "river",
+        "name": "the Marnadal"
+      },
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "coldwater": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "hochebuz": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "tigg": [
+      {
+        "kind": "forest",
+        "name": "Erlenwald"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "ortagor": [
+      {
+        "kind": "mountain",
+        "name": "Amell Range"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "duen_canell": [
+      {
+        "kind": "forest",
+        "name": "Brokilon"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ]
+  },
+  "condition": {
+    "note": "How works wear, break and are mended (M20). Condition runs 0 to 100; a works yields by the lower of its condition and its staffing.",
+    "decideBelow": 70,
+    "decisionDays": 30,
+    "wear": 0.45,
+    "unpaidWear": 2.5,
+    "rebuild": {
+      "coin": 0.35,
+      "materials": 0.5,
+      "days": 0.7,
+      "minDays": 10,
+      "hands": 40,
+      "buyFactor": 2
+    },
+    "patch": {
+      "coin": 0.12,
+      "days": 0.25,
+      "minDays": 4,
+      "share": 0.5,
+      "hands": 15,
+      "failChance": 0.3,
+      "failLoss": [
+        20,
+        40
+      ]
+    },
+    "leave": {
+      "unrest": 3,
+      "grudge": 1.5
+    },
+    "grudgeDecay": 0.92,
+    "grudgeUnrest": 1,
+    "ruinUnrest": 4,
+    "crews": 4,
+    "raid": {
+      "bandits": [
+        12,
+        30
+      ],
+      "monsters": [
+        8,
+        22
+      ],
+      "scoiatael": [
+        15,
+        32
+      ],
+      "raiders": [
+        18,
+        36
+      ]
+    },
+    "forage": {
+      "chance": 0.08,
+      "amount": [
+        6,
+        14
+      ]
+    },
+    "siege": {
+      "chance": 0.12,
+      "amount": [
+        5,
+        12
+      ]
+    },
+    "sack": {
+      "works": 4,
+      "to": [
+        5,
+        25
+      ]
+    },
+    "capture": {
+      "amount": [
+        10,
+        25
+      ],
+      "works": 2
+    },
+    "storm": {
+      "months": [
+        11,
+        12,
+        1,
+        2
+      ],
+      "chance": 0.07,
+      "amount": [
+        15,
+        35
+      ],
+      "works": [
+        "fishery",
+        "harbour",
+        "shipyard",
+        "saltpans"
+      ]
+    },
+    "fire": {
+      "chance": 0.012,
+      "amount": [
+        20,
+        45
+      ]
+    },
+    "flood": {
+      "months": [
+        3,
+        4
+      ],
+      "chance": 0.05,
+      "amount": [
+        15,
+        35
+      ],
+      "works": [
+        "mill",
+        "tannery",
+        "tollbridge",
+        "fishery"
+      ]
+    },
+    "upkeepFloor": 0.3,
+    "abroad": {
+      "repairBelow": 60,
+      "perMonth": 35,
+      "costShare": 0.6
+    },
+    "upkeepScale": 2.0,
+    "askAgain": 25
+  }
+}

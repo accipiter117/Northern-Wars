@@ -12,6 +12,35 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### A kingdom already built (M20 A and B)
+The crown no longer builds: every place starts with the works its land gives it, they wear and break, and the crown mends them. From `node tools/longrun.mjs 30 <crown> 1,2,3` and `node tools/realms.mjs 30 steward 1,2,3,4`, at year 30 (M19 figures in brackets):
+
+| Crown | What it does about its works | People after 30 years | Works (mean condition) | Treasury | Depositions | Wars |
+| --- | --- | --- | --- | --- | --- | --- |
+| Idle | Nothing: every repair question is left | about 40,000 (52,800) | 34 by year 10, 0 by year 20 | about 40,000 at year 10, in debt by 30 | 2 to 3 (0) | 0 to 3 |
+| Steward | Rebuilds what falls below 75 while the treasury holds 2,500 over the cost, patches when it cannot | about 56,700 (78,300) | 77 to 86, no ruins | 1,000 to 9,100 | 0 | 0 to 1 |
+| Spendthrift | Rebuilds everything, on credit if need be | about 56,300 (59,300) | 86 to 87, no ruins | about 0 to 4,300 | 0 (3 to 19) | 0 |
+| Tyrant | Leaves everything | about 25,300 (19,400) | 0 | in debt | 15 to 16 | 3 to 6 |
+
+- **The idle crown now visibly declines.** Its works wear out (about a third left by year 10, ruins everywhere by year 20); its income falls by two fifths in ten years and its treasury, which still piles up to about 40,000 in the first decade, runs into debt in the third. It loses a quarter of its people and is deposed two or three times. This answers the old complaint that an idle crown simply hoarded.
+- **The steward holds what it was given, no more.** With nothing to build, its people stay about where they began (about 56,700, against M19's 78,300, which came from building fields, mills and granaries). Its works stay at 77 to 86 for thirty years; its treasury runs down slowly as the gold seams it reopens are worked out. Never invaded in the four realms-tool seeds (M18 target: one or fewer).
+- **The spendthrift no longer collapses.** With nothing to borrow for but repairs, it behaves as a slightly more generous steward. The tyrant still pays most: its works fall to nothing and it is deposed fifteen times, but it keeps more of its people than in M19 (its kingdom starts richer).
+- **Where the money comes from.** A realm with every works standing from the start would earn far more than the M12 crown did, so: crafts earn 35% of their old value (`economy.json crafts.works`), the works' trade bonus counts at 35% (`trade.worksScale`), silver mines yield 40 (was 62), merchants' rents are 0.003 a head (was 0.0045), the crown's works cost twice their old upkeep (`spaces.json condition.upkeepScale`; foreign realms pay the plain rate), and the base farm yield is 0.77 of before, so the realm grows about 6% more food than it eats, as in M19. The start nets about +800 a month before repairs (M19: +250, with nothing to repair).
+- **Repairs.** Rebuilding costs 35% of a works' old price for the share that is missing (patching 12%), and everything wears 0.45 a month (2.5 more while the bills go unpaid). Keeping a whole kingdom standing costs the steward about 250 to 400 a month. At first (60%, 0.55 a month) the steward could not keep up and collapsed by year 30 in two seeds of three.
+- **Foreign realms** no longer build; they mend their worst works from what they can spare. Their incomes at year 10 are in the range M18's builders reached (Redania about 2,700 a month, Cintra about 700). Sodden and Verden, the poorest, stay out of debt (longest run at the floor: 0 months).
+
+The dials, in data/spaces.json (`condition`) unless named:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| `wear` | 0.45 a month | Faster decay, dearer upkeep of a kingdom |
+| `unpaidWear` | 2.5 a month more | A crown in debt falls apart faster |
+| `rebuild.coin`, `patch.coin` | 35% and 12% of the old price for what is missing | Dearer repairs |
+| `decideBelow` | 70 | Repair questions come sooner |
+| `upkeepScale` | 2 (the crown only) | Dearer works, a poorer crown |
+| `crews` | 4 | More repairs at once (replaced by the Repairs share of hands in Part C) |
+| economy.json `crafts.works`, `trade.worksScale` | 0.35 and 0.35 | A richer realm |
+
 ### The map (M19 D)
 No balance change. Part D draws what the simulation already decides (borders, battles, sieges, smoke, refugees, rebels) and adds the town's worth to the foreign card. The one rule it touches is sight: land Temeria has won counts as explored and in view, as its own always has, which only changes what the crown can see. The steward and idle crown figures above were rerun and match.
 

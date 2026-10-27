@@ -66,13 +66,13 @@ test('a long press on the map opens quick actions, and selects nothing', async (
   await page.waitForTimeout(400);
   await page.mouse.up();
   const ring = await page.textContent('#quick-ring');
-  for (const label of ['Build', 'Recruit', 'Garrison', 'Trade route', 'Open card']) assert.match(ring, new RegExp(label));
+  for (const label of ['Works', 'Recruit', 'Garrison', 'Trade route', 'Open card']) assert.match(ring, new RegExp(label));
   assert.equal(await page.evaluate(() => getSelection().toString()), '', 'no text selected');
   assert.equal(await page.isHidden('#sheet'), true, 'a long press is not a tap');
   await page.screenshot({ path: join(OUT, 'm15-quick-ring.png') });
-  await page.click('.quick-btn:has-text("Build")');
+  await page.click('.quick-btn:has-text("Works")');
   assert.equal(await page.evaluate(() => window.northernWars.ui.route), 'town:vizima');
-  assert.match(await page.textContent('.segs .seg.on'), /Build/);
+  assert.match(await page.textContent('.segs .seg.on'), /Works/);
   await page.click('#sheet-close');
 
   // A crown company: its orders.

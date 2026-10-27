@@ -15,6 +15,7 @@ import { defaultDiplomacy } from './diplomacy.js';
 import { seedPacts } from './audiences.js';
 import { syncWorld } from './lands.js';
 import { defaultConquest } from './conquest.js';
+import { startingWorks, defaultWorks } from './works.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -24,7 +25,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 16;
+export const STATE_VERSION = 17;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -36,6 +37,8 @@ export function createState(world, seed = 1) {
     const d = world.settlementData[s.id];
     if (!d) throw new Error(`No starting data for settlement ${s.id}`);
     settlements[s.id] = newSettlement(world, d, seasonOf(day));
+    // Every place starts with the works its land gives it (M20).
+    if (world.spaces) giveWorks(settlements[s.id], startingWorks(world, s.id));
   }
   const state = {
     version: STATE_VERSION,
@@ -82,6 +85,7 @@ export function createState(world, seed = 1) {
     lands: {},
     claimants: [],
     conquest: defaultConquest(),
+    works: defaultWorks(),
   };
   applyHoldings(state, world);
   // The North's standing pacts, as they stand when the reign begins (M18).
@@ -95,6 +99,15 @@ export function createState(world, seed = 1) {
   state.stability = computeStability(state);
   if (k.opening) addDispatch(state, k.opening);
   return state;
+}
+
+// A place's starting works and the condition of those not whole.
+export function giveWorks(s, w) {
+  s.buildings = [...w.buildings];
+  if (Object.keys(w.cond).length) {
+    s.cond = { ...w.cond };
+    s.worn = { ...w.worn };
+  }
 }
 
 export function newSettlement(world, d, season) {

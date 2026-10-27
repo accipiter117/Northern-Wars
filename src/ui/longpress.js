@@ -1,5 +1,5 @@
 // What a long press on the map offers. A town of ours: a ring of quick
-// actions (Build, Recruit, Garrison, Trade route, Open card). A crown
+// actions (Works, Recruit, Garrison, Trade route, Open card). A crown
 // company or army: its orders. A threat: send the nearest suitable company.
 // Anything foreign: what is known of it. Open land: what is here.
 import {
@@ -69,7 +69,7 @@ export function longPress(app, ctx, x, y) {
   if (hit?.settlement && state.settlements[hit.settlement] && !state.settlements[hit.settlement].occupier) {
     const id = hit.settlement;
     const list = [
-      { label: 'Build', icon: 'hammer', run: () => ctx.openTown(id, 'build') },
+      { label: 'Works', icon: 'hammer', run: () => ctx.openTown(id, 'works') },
       { label: 'Recruit', icon: 'sword', run: () => ctx.openTown(id, 'military', 'recruit') },
       { label: 'Garrison', icon: 'shield', run: () => ctx.openTown(id, 'military') },
     ];

@@ -11,6 +11,7 @@ import { foodNeed } from './economy.js';
 import { seasonOf } from './calendar.js';
 import { TEMERIA, placeOf, peopleAt, hasWalls, sideName, hostile, warBetween, sideIndex } from './conflict.js';
 import { armyStrength, armyPosition, placeDefence, capture } from './armies.js';
+import { damagePlace, outside } from './works.js';
 
 const S = (world) => world.war.sieges;
 
@@ -100,7 +101,12 @@ export function siegeDay(state, world, rng, a, owner) {
     // Stone holds out longer than timber.
     s.walls = Math.max(0, s.walls - sg.wear * Math.sqrt(a.soldiers / sg.wearMen) * (s.wallsMax >= 80 ? sg.stoneWear : 1));
     if (before > 0 && s.walls === 0) note(state, s, `The walls of ${name} are breached.`);
+    // The town's own walls stand as the siege leaves them (M20).
+    if (p.buildings?.includes('walls') && s.wallsMax > 0) (p.cond ??= {}).walls = Math.min(p.cond.walls ?? 100, Math.round((100 * s.walls) / s.wallsMax));
   }
+  // The camp lives off the fields round the walls.
+  const sw = world.works?.siege;
+  if (sw && rng.chance(sw.chance)) damagePlace(state, world, rng, a.at, { count: 1, amount: sw.amount, why: 'Trampled by the siege camp', pick: outside });
   // The stores run down; then the garrison starves.
   const relief = reliefNear(state, world, a);
   if (relief && !s.reliefSeen) {

@@ -63,7 +63,7 @@ test('ambient traffic spawns every kind on roads and rivers', () => {
     s = step(s, 1, world);
     for (const u of s.ambient.units) seen.add(u.kind);
   }
-  assert.deepEqual([...seen].sort(), ['abroad', 'abroad_patrol', 'barge', 'caravan', 'export', 'foreign', 'grain', 'patrol', 'pilgrim', 'refugee']);
+  assert.deepEqual([...seen].sort(), ['abroad', 'abroad_patrol', 'barge', 'caravan', 'export', 'foreign', 'goods', 'grain', 'patrol', 'pilgrim', 'refugee']);
   for (const u of s.ambient.units) {
     if (u.river) assert.ok(['Pontar', 'Ismena'].includes(u.river));
     if (u.entry) assert.ok(world.neighbours.realms[u.entry].trade > 0);

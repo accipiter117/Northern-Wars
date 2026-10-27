@@ -4,7 +4,7 @@
 import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
-  strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf,
+  strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -173,7 +173,8 @@ export function makeCrowns(world) {
       }
       if (best) s = act(s, { type: 'route', from: best.a, to: best.b });
     }
-    for (let i = 0; i < (spend ? 3 : 1); i++) {
+    if (world.spaces) s = mend(s, spend);
+    for (let i = 0; i < (world.spaces ? 0 : spend ? 3 : 1); i++) {
       let built = false;
       const order = (month + i) % 2 ? [...FOOD, ...EARNERS] : [...EARNERS, ...FOOD];
       for (const b of order) {
@@ -242,8 +243,40 @@ export function makeCrowns(world) {
     return s;
   }
 
+  // Since M20 the crown mends instead of building: the steward rebuilds
+  // what is badly worn while the treasury allows, patches what it cannot
+  // yet afford, and keeps the repair crews busy; the spendthrift rebuilds
+  // everything on credit.
+  function mend(s, spend) {
+    for (const d of [...(s.works?.decisions ?? [])]) {
+      const rebuild = canRepairWorks(s, world, d.town, d.works, 'rebuild');
+      const choice = rebuild.ok && (spend || (!rebuild.borrow && s.treasury - rebuild.coin > 1500)) ? 0
+        : canRepairWorks(s, world, d.town, d.works, 'patch').ok && s.treasury > 800 ? 1 : 2;
+      s = act(s, { type: 'worksDecision', id: d.id, choice });
+    }
+    // Then the worst of the rest, while crews are free.
+    const busy = Object.values(s.settlements).reduce((a, t) => a + Object.keys(t.repair ?? {}).length, 0);
+    let free = Math.max(0, (world.works?.crews ?? 4) - busy);
+    const worn = [];
+    for (const [id, t] of Object.entries(s.settlements)) {
+      if (t.occupier) continue;
+      for (const b of t.buildings) if ((t.cond?.[b] ?? 100) < 75 && !t.repair?.[b]) worn.push({ id, b, c: t.cond?.[b] ?? 100 });
+    }
+    worn.sort((x, y) => x.c - y.c);
+    for (const w of worn) {
+      if (free <= 0) break;
+      const c = canRepairWorks(s, world, w.id, w.b, 'rebuild');
+      if (!c.ok || (!spend && (c.borrow || s.treasury - c.coin < 2500))) continue;
+      s = act(s, { type: 'repair', settlement: w.id, building: w.b, kind: 'rebuild' });
+      free -= 1;
+    }
+    return s;
+  }
+
   function tyrant(s, month) {
     s = answer(s, false);
+    // The tyrant leaves what breaks.
+    for (const d of [...(s.works?.decisions ?? [])]) s = act(s, { type: 'worksDecision', id: d.id, choice: 2 });
     s = warPolicy(s, 'harsh');
     // The tyrant goes looking for plunder whenever its coffers allow.
     s = campaign(s, month, -8000);
