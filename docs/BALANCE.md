@@ -12,6 +12,9 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### The board of the North (M20 D and E)
+No balance change. Orders on the board go through the rules that already exist (a march is a siege order, a trade the deal table, an envoy a small warming and an audience), so the crowns' figures above stand. The board's markers count a realm's garrisons as well as its armies.
+
 ### Labour through the seasons (M20 C)
 The kingdom's works are now manned from a pool of hands (about three in ten of the people), split by the crown between eight kinds of work, with seasons, royal calls and a fuel stock for the winter. From `node tools/longrun.mjs 30 <crown> 1,2,3`, at year 30 (Part A and B figures in brackets):
 

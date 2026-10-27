@@ -21,7 +21,7 @@
 | M18 Music and sound | A looping soundtrack that starts on the first tap, fades when put away and ducks under alerts; synthesised interface sounds for taps, sheets, tabs, speed, orders, laws, coin, refusals, alerts, war and long presses; music and effects volume and mute in Help; music cached by the service worker with Range support | Done |
 | M18 Rulers who govern | Foreign rulers assess threat, opportunity and purse each month and choose a posture (Grow, Arm, Expand, Consolidate, Scheme); standing armies with upkeep, a court that taxes hoards, debt with desertion and offers to Temeria; building from the full catalogue; wars with aims, musters and reasons in place of rivalry dice; deterrence, probes and harder-to-break pacts with Temeria; pacts between realms that last; posture and war aims learnt through embassies and spies | Done |
 | M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | Done |
-| M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | In progress (A, B and C done) |
+| M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
 
 ## M20 acceptance criteria
 Part A, spaces from the land:
@@ -43,6 +43,16 @@ Part C, labour through the seasons:
 - Fuel from timber, charcoal and peat; a cold winter brings unrest and deaths in the poorest places.
 - The Labour screen in the Realm tab: season strip, grain at first frost against winter's need, fuel, hands by kind with notes, the calls, warnings for hands short or idle.
 - Save version 18.
+
+Part D, one map, two levels:
+- One camera with a level-of-detail switch at about two thirds of the opening zoom and a cross-fade between the kingdom view and the board.
+- Kingdom view: works pips beside settlements; the settlement card shows land tags, hands within a day's walk and each works' condition and staffing; the top bar shows meters, date, season and one pressure line.
+- Board: large realm names, markers with men in hundreds (only where seen) and works pips (red when damaged), routes between neighbours (shared borders and foreign roads), tints by owner, dashed lines for marches; "The North", the month and its orders in the top bar.
+- Tapping a realm opens a short card; tapping Temeria or zooming in returns to the kingdom view; a double tap zooms in. The board is a light overlay on its own layer within the frame budget.
+
+Part E, orders on the board:
+- Three orders a month (March, Trade, Envoy), shown as "2 of 3 orders set"; they resolve at the turn of the month together with the rulers' own moves; marches show as dashed lines; existing rules unchanged.
+- Save version 19.
 
 ## M1 acceptance criteria
 - The page loads on GitHub Pages and runs on a phone in portrait and landscape.

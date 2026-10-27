@@ -20,6 +20,7 @@ import { stepThreatsDay } from './threats.js';
 import { stepCompaniesDay, monthlyCompanies } from './forces.js';
 import { stepWorksDay, monthlyWorks, worksUnrest } from './works.js';
 import { stepLabourDay, monthlyLabour } from './labour.js';
+import { resolveOrders, noteTheirMoves, marchingNow } from './board.js';
 
 const CHRONICLE_LIMIT = 400;
 
@@ -118,12 +119,17 @@ export function stepRealmDay(state, world, rng) {
     monthlyHouses(state, world, rng);
     monthlyThreats(state, world, rng);
     monthlyEvent(state, world, rng, date.season);
+    // The turn of the month on the board (M20 E): the crown's orders go out
+    // with the rulers' own moves.
+    const marching = state.orders ? marchingNow(state, world) : null;
+    if (state.orders) resolveOrders(state, world);
     monthlyRealms(state, world, rng);
     if (state.works) monthlyWorks(state, world, rng);
     if (state.labour) monthlyLabour(state, world, rng);
     monthlyDiplomacy(state, world, rng);
     if (state.wars) monthlyWar(state, world, rng);
     if (state.wars) monthlyConquest(state, world, rng);
+    if (state.orders) noteTheirMoves(state, world, marching);
   }
 }
 

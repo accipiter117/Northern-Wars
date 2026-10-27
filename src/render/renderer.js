@@ -4,6 +4,8 @@
 import { prepareMap, drawMap, COLOURS, territoryPaths } from './mapLayer.js';
 import { territoryOwners } from '../sim/territory.js';
 import { drawBattle, drawSiege, smoke, drawRebels } from './war-art.js';
+import { createBoardLayer, boardness } from './board.js';
+import { spacesOf } from '../sim/works.js';
 import { createTiles } from './tiles.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
@@ -83,6 +85,8 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     layer.setAttribute('aria-hidden', 'true');
     canvas.parentNode?.insertBefore(layer, canvas);
   }
+  // The board of the North, over everything, faded in as the camera pulls back.
+  const board = createBoardLayer(canvas.parentNode ?? document.body, world);
   const mask = document.createElement('canvas');
   const mctx = mask.getContext('2d');
   let baseDirty = true;
@@ -133,6 +137,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
     lc = null;
     tiles.clear();
+    board.resize(w, h, dpr);
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     dirty = true;
@@ -681,9 +686,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     followLands();
     updateTints(state);
     updateInfra(state);
-    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, company: selection?.company ?? null, threat: selection?.threat ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
+    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, company: selection?.company ?? null, threat: selection?.threat ?? null, realm: selection?.realm ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
     if (!dirty && !baseDirty && !fogDirty && !fogPending && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
-      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army && lastFrame.company === frame.company && lastFrame.threat === frame.threat
+      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army && lastFrame.company === frame.company && lastFrame.threat === frame.threat && lastFrame.realm === frame.realm
       && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale) return;
     lastFrame = frame;
     stats.draws += 1;
@@ -699,8 +704,13 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       baseDirty = true;
       fogDirty = true;
     }
+    // On the board the settlements' layer is hidden, so it waits to be
+    // redrawn until the camera comes back in; only the land and fog follow.
+    const onBoard = boardness(cam) >= 0.99;
     withLayerCam(() => {
-      if (dirty || selectedId !== lastSelected) {
+      if (onBoard) {
+        if (baseDirty) drawBase();
+      } else if (dirty || selectedId !== lastSelected) {
         drawStatic(selectedId);
         dirty = false;
         lastSelected = selectedId;
@@ -720,7 +730,18 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    // One map, two levels (M20 D): the settlements, their life and the
+    // things that move fade out as the board of the North fades in.
+    const b = boardness(cam);
+    // Fully opaque, the opacity is cleared rather than set, so the layer is
+    // composited exactly as it was before the board existed.
+    const fade = b > 0 ? String(Math.round((1 - b) * 100) / 100) : '';
+    if (cache.style.opacity !== fade) cache.style.opacity = fade;
+    board.draw(state, cam, b, { selected: selection?.realm ?? null, orders: state.orders?.list ?? [] });
+    if (b >= 0.99) return;
+    ctx.globalAlpha = 1 - b;
     drawLifeLayer(state, frac);
+    if (b < 0.3) drawPips(state);
     if (selectedId) {
       const st = world.byId[selectedId];
       const p = toScreen(cam, st.x, st.y);
@@ -749,6 +770,53 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
     drawWar(state, frac, selection);
     drawForces(forceView, state, 'tokens');
+    ctx.globalAlpha = 1;
+  }
+
+  // Each Temerian place's works as small pips beside it (M20 D): working,
+  // short of hands, damaged, being mended.
+  const PIP = { ok: '#8fbf62', short: '#7f9bc4', damaged: '#c0392b', repairing: '#e0a040' };
+  // Each place's pips change at most once a day, so they are worked out once
+  // per state and kept for every frame drawn from it.
+  let pipState = null;
+  let pipKinds = new Map();
+  function pipsOf(state, id) {
+    if (pipState !== state) {
+      pipState = state;
+      pipKinds = new Map();
+    }
+    let kinds = pipKinds.get(id);
+    if (!kinds) {
+      kinds = spacesOf(state, world, id).flatMap((sp) => sp.works).slice(0, 10)
+        .map((w) => (w.repair ? 'repairing' : w.cond < 50 ? 'damaged' : w.staff < 70 ? 'short' : 'ok'));
+      pipKinds.set(id, kinds);
+    }
+    return kinds;
+  }
+  function drawPips(state) {
+    if (zoomRel() < 1.2) return;
+    for (const st of world.geography.settlements) {
+      const s = state.settlements[st.id];
+      if (!s || s.occupier) continue;
+      const p = toScreen(cam, st.x, st.y);
+      if (p.x < -40 || p.y < -40 || p.x > cam.viewW + 40 || p.y > cam.viewH + 40) continue;
+      const kinds = pipsOf(state, st.id);
+      if (!kinds.length) continue;
+      const r = Math.max(iconSize(st.type) / 2, (footprint[st.id] ?? 0) * 0.7) + 5;
+      const n = kinds.length;
+      for (let i = 0; i < n; i++) {
+        const kind = kinds[i];
+        const x = p.x + r + 2 + (i % 5) * 6;
+        const y = p.y - 6 + Math.floor(i / 5) * 6;
+        ctx.beginPath();
+        ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+        ctx.fillStyle = PIP[kind];
+        ctx.fill();
+        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = 'rgba(29, 22, 16, 0.8)';
+        ctx.stroke();
+      }
+    }
   }
 
   // The layers are drawn as seen from the camera they were started from.
@@ -886,6 +954,11 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // Nearest thing under the finger wins, with settlements favoured: carts
   // crowd the roads into towns, and a tap on a town means the town.
   function pick(sx, sy, state, frac) {
+    // On the board a tap picks a realm (M20 D).
+    if (boardness(cam) >= 0.5) {
+      const rid = board.pick(cam, sx, sy);
+      return rid ? { realm: rid } : null;
+    }
     // The crown's companies and what they hunt are deliberate things to tap.
     const force = pickForces({ ctx, cam, world, zoom: zoomRel(), frac }, state, sx, sy);
     if (force) return force;
@@ -956,6 +1029,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 
   return {
     resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
+    get boardness() { return boardness(cam); },
     get tileStats() { return { size: tiles.size, drawn: tiles.stats.drawn, pending: baseDirty }; },
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     // The camera jumped (centred on a place): draw the cached layers round
