@@ -120,12 +120,13 @@ export function seesRealm(state, world, rid) {
   return rid === TEMERIA || informed(state, world, rid);
 }
 
-// The men under a realm's banners: its standing army and its armies in
-// the field (the crown's own: its garrisons' companies and field armies).
+// The men under a realm's banners: its garrisons, its standing army and its
+// armies in the field (the crown's own: garrisons, companies and armies).
 export function realmMen(state, world, rid) {
   const field = (state.armies ?? []).filter((a) => a.side === rid).reduce((s, a) => s + a.soldiers, 0);
-  if (rid === TEMERIA) return field + (state.forces?.companies ?? []).reduce((s, c) => s + (c.army ? 0 : c.men), 0);
-  return field + (state.realms[rid]?.army ?? 0);
+  const held = (places) => Object.values(places ?? {}).reduce((s, t) => s + (t.garrison ?? 0), 0);
+  if (rid === TEMERIA) return field + held(state.settlements) + (state.forces?.companies ?? []).reduce((s, c) => s + (c.army ? 0 : c.men), 0);
+  return field + held(state.realms[rid]?.settlements) + (state.realms[rid]?.army ?? 0);
 }
 
 // A realm's works at a glance: how many, their mean condition, how many
@@ -185,7 +186,7 @@ function orders(state) {
   return state.orders;
 }
 
-const GIVE = ['grain', 'timber', 'stone', 'iron', 'cloth', 'spirit'];
+export const TRADE_GIVE = ['grain', 'timber', 'stone', 'iron', 'cloth', 'spirit'];
 
 export function canGiveOrder(state, world, o) {
   const list = orders(state).list;
@@ -203,7 +204,7 @@ export function canGiveOrder(state, world, o) {
   if (o.kind === 'trade') {
     if (hostile(state, TEMERIA, o.realm)) return { ok: false, reason: 'No trade with an enemy.' };
     if (!(world.neighbours.realms[o.realm]?.trade > 0)) return { ok: false, reason: `${sideName(world, o.realm)} does not trade with Temeria.` };
-    if (!GIVE.includes(o.give) || !world.diplomacy?.goods?.[o.take] || o.give === o.take) return { ok: false, reason: 'Choose what to send and what to ask for.' };
+    if (!TRADE_GIVE.includes(o.give) || !world.diplomacy?.goods?.[o.take] || o.give === o.take) return { ok: false, reason: 'Choose what to send and what to ask for.' };
     const problem = itemProblem(state, world, o.realm, tradeItems(world, o)[0]);
     if (problem) return { ok: false, reason: problem };
     return { ok: true };

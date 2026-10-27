@@ -686,9 +686,9 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     followLands();
     updateTints(state);
     updateInfra(state);
-    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, company: selection?.company ?? null, threat: selection?.threat ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
+    const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, company: selection?.company ?? null, threat: selection?.threat ?? null, realm: selection?.realm ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
     if (!dirty && !baseDirty && !fogDirty && !fogPending && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
-      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army && lastFrame.company === frame.company && lastFrame.threat === frame.threat
+      && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army && lastFrame.company === frame.company && lastFrame.threat === frame.threat && lastFrame.realm === frame.realm
       && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale) return;
     lastFrame = frame;
     stats.draws += 1;
@@ -704,8 +704,13 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       baseDirty = true;
       fogDirty = true;
     }
+    // On the board the settlements' layer is hidden, so it waits to be
+    // redrawn until the camera comes back in; only the land and fog follow.
+    const onBoard = boardness(cam) >= 0.99;
     withLayerCam(() => {
-      if (dirty || selectedId !== lastSelected) {
+      if (onBoard) {
+        if (baseDirty) drawBase();
+      } else if (dirty || selectedId !== lastSelected) {
         drawStatic(selectedId);
         dirty = false;
         lastSelected = selectedId;

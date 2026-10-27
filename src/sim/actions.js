@@ -220,6 +220,12 @@ export function applyAction(state, world, action) {
     giveOrder(next, world, action.order);
     return { state: next };
   }
+  if (action.type === 'envoyAway') {
+    if (!state.orders?.envoys?.some((e) => e.realm === action.id)) return { state, error: 'No envoy waits there.' };
+    const next = structuredClone(state);
+    next.orders.envoys = next.orders.envoys.filter((e) => e.realm !== action.id);
+    return { state: next };
+  }
   if (action.type === 'cancelOrder') {
     if (!state.orders?.list[action.index]) return { state, error: 'No such order.' };
     const next = structuredClone(state);

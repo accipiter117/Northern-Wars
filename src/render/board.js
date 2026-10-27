@@ -101,20 +101,38 @@ export function createBoardLayer(parent, world) {
       ctx.closePath();
       ctx.fill();
     }
-    // Names, large over each land.
+    // Names, large over each land: over its middle, else above or below its
+    // marker. The biggest realms are named first, and a name that would cover
+    // another, or a marker, is made smaller, moved, or left out.
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (const rid of realms) {
+    const taken = realms.map((rid) => { const p = at(rid); return { x0: p.x - MARKER - 30, x1: p.x + MARKER + 30, y0: p.y - MARKER, y1: p.y + MARKER + 10 }; });
+    const hits = (b) => taken.some((t) => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
+    for (const rid of [...realms].sort((a, b) => (b === TEMERIA) - (a === TEMERIA) || views[b].towns - views[a].towns)) {
       const c = realmGeometry(world, rid).centre;
-      const p = toScreen(cam, c.x, c.y);
-      const size = rid === TEMERIA ? 22 : 17;
-      ctx.font = `600 ${size}px "Palatino Linotype", Palatino, Georgia, serif`;
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = 'rgba(29, 22, 16, 0.75)';
+      const m = at(rid);
+      const mid = toScreen(cam, c.x, c.y);
+      const spots = [mid, { x: m.x, y: m.y - MARKER - 14 }, { x: m.x, y: m.y + MARKER + 22 }];
+      if (Math.hypot(mid.x - m.x, mid.y - m.y) < MARKER * 3) spots.shift();
       const name = views[rid].name.toUpperCase();
-      ctx.strokeText(name, p.x, p.y - MARKER * 2.4);
-      ctx.fillStyle = '#efe2c2';
-      ctx.fillText(name, p.x, p.y - MARKER * 2.4);
+      let placed = false;
+      for (const size of rid === TEMERIA ? [22, 17] : [17, 13]) {
+        ctx.font = `600 ${size}px "Palatino Linotype", Palatino, Georgia, serif`;
+        const w = ctx.measureText(name).width / 2 + 2;
+        for (const p of spots) {
+          const box = { x0: p.x - w, x1: p.x + w, y0: p.y - size / 2, y1: p.y + size / 2 };
+          if (hits(box)) continue;
+          taken.push(box);
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = 'rgba(29, 22, 16, 0.75)';
+          ctx.strokeText(name, p.x, p.y);
+          ctx.fillStyle = '#efe2c2';
+          ctx.fillText(name, p.x, p.y);
+          placed = true;
+          break;
+        }
+        if (placed) break;
+      }
     }
     // Markers: banner disc, men in hundreds, works pips; pending orders.
     markers = [];

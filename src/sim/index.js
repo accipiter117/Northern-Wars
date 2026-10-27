@@ -61,5 +61,5 @@ export {
   KINDS as LABOUR_KINDS, splitNow, districtOf, handsOf, kindOfWorks, needOf, canSetSplit, shiftSplit, canCall, canPin, winterOutlook, pressureLine, fuelNeed, farmFactor,
 } from './labour.js';
 export {
-  ORDERS_A_MONTH, boardRealms, boardRealm, boardLinks, neighboursOnBoard, realmGeometry, markerAt, realmAtPoint, marches, canGiveOrder, marchTarget, envoysWaiting, seesRealm, realmWorks,
+  ORDERS_A_MONTH, boardRealms, boardRealm, boardLinks, neighboursOnBoard, realmGeometry, markerAt, realmAtPoint, marches, canGiveOrder, marchTarget, envoysWaiting, seesRealm, realmWorks, TRADE_GIVE, tradeItems,
 } from './board.js';

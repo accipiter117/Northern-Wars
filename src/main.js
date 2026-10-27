@@ -1,6 +1,6 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions } from './sim/index.js';
-import { createCamera, resizeCamera, panBy, toWorld } from './render/camera.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions, markerAt } from './sim/index.js';
+import { createCamera, resizeCamera, panBy, toWorld, toScreen, zoomAt } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createTopbar } from './ui/topbar.js';
@@ -69,7 +69,7 @@ async function boot() {
   const topbar = createTopbar(world, {
     onSpeed: setSpeed, onMore: toggleMore, onMeter: (route) => nav.push(route),
     // The line under the meters: the Labour screen up close, the month's orders on the board.
-    onPressure: (board) => (board ? nav.push('orders') : openTab('realm', 'labour')),
+    onPressure: (board) => (board ? nav.push('orders') : goTab('realm:labour')),
   });
 
   // One context for every screen and control.
@@ -178,6 +178,7 @@ async function boot() {
     ...state.demands.map((d) => `demand:${d.id}`),
     ...state.envoys.map((d) => `envoy:${d.id}`),
     ...state.petitions.map((d) => `petition:${d.id}`),
+    ...(state.orders?.envoys ?? []).map((e) => `envoyAway:${e.realm}`),
   ];
   let decisionsSeen = new Set(decisionKeys());
   function newDecisions() {
@@ -195,9 +196,9 @@ async function boot() {
     const d = fresh[0];
     toast(`${d.kicker}: ${d.title}. It waits at court.${fresh.length > 1 ? ` (${fresh.length} new)` : ''}`);
     updateBadges();
-    // Repairs (M20) come often and keep: they wait at court without
-    // stopping the clock.
-    return fresh.some((x) => x.kind !== 'worksDecision');
+    // Repairs (M20) come often and keep, and our own envoys' audiences were
+    // asked for: both wait at court without stopping the clock.
+    return fresh.some((x) => x.kind !== 'worksDecision' && x.kind !== 'envoyAway');
   }
 
   // Battle pace (M19): when one of our armies gives battle, the game drops
@@ -411,6 +412,7 @@ async function boot() {
     else if (kind === 'company') selection = { company: Number(arg) };
     else if (kind === 'threat') selection = { threat: Number(arg) };
     else if (kind === 'army') selection = { army: Number(arg) };
+    else if (kind === 'board') selection = { realm: arg };
     else if (!label) selection = null;
   }
 
@@ -562,7 +564,11 @@ async function boot() {
       return;
     }
     const hit = renderer.pick(x, y, state, frac);
-    if (hit?.settlement) { hideUnitLabel(); nav.push(`town:${hit.settlement}`); }
+    // On the board: Temeria takes the crown back to its kingdom, any other
+    // realm opens its short card.
+    if (hit?.realm === TEMERIA) { hideUnitLabel(); toKingdom(x, y); }
+    else if (hit?.realm) { hideUnitLabel(); nav.push(`board:${hit.realm}`); }
+    else if (hit?.settlement) { hideUnitLabel(); nav.push(`town:${hit.settlement}`); }
     else if (hit?.neighbour) { hideUnitLabel(); nav.push(`realm:${hit.neighbour}`); }
     else if (hit?.foreign && foreignView(hit.foreign)) { hideUnitLabel(); nav.push(`foreign:${hit.foreign}`); }
     else if (hit?.battle) { hideUnitLabel(); nav.push(`battle:${hit.battle}`); }
@@ -583,6 +589,12 @@ async function boot() {
       lowerPanel();
       hideUnitLabel();
     }
+  }
+
+  // From the board back to the kingdom view: a glide in to the opening zoom.
+  function toKingdom(x, y) {
+    const f = (cam.cover || cam.scale) / cam.scale;
+    if (f > 1.01) mapInput.animateZoom(x, y, f, 420);
   }
 
   // Open a town's card on one of its tabs, scrolled to a part if asked.
@@ -614,7 +626,11 @@ async function boot() {
 
   // Two quick taps on open land zoom in; on anything else they are taps.
   function onDoubleTap(x, y, zoom) {
-    if (pick.active || renderer.pick(x, y, state, frac)) return false;
+    if (pick.active) return false;
+    const hit = renderer.pick(x, y, state, frac);
+    // A double tap on a realm of the board zooms into it.
+    if (hit?.realm) { toKingdom(x, y); return true; }
+    if (hit) return false;
     zoom(2);
     return true;
   }
@@ -791,6 +807,11 @@ async function boot() {
     get heard() { return [...audio.heard]; },
     // Give an order as a tap would, for browser tests.
     order: (a) => order(a),
+    // The two levels of the map (M20 D): zoom to a share of the opening
+    // zoom, how far the board has faded in, and where a realm's marker sits.
+    zoomTo: (rel) => { zoomAt(cam, world, cam.viewW / 2, cam.viewH / 2, (rel * cam.cover) / cam.scale); },
+    get boardness() { return renderer.boardness; },
+    markerOf: (rid) => { const m = markerAt(state, world, rid); const p = toScreen(cam, m.x, m.y); const r = canvas.getBoundingClientRect(); return { x: r.left + p.x, y: r.top + p.y }; },
     get audio() { return { unlocked: audio.unlocked, musicPlaying: audio.musicPlaying, src: audio.music?.getAttribute('src') ?? null }; },
     get renderStats() { return renderer.stats; },
     get artStats() { return renderer.artStats; },

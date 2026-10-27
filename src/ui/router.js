@@ -16,9 +16,10 @@ import { warHtml, armyCard } from './war.js';
 import { neighboursHtml, intelListHtml, envoysHtml, realmCard, foreignCardHtml, pactsHtml } from './neighbours.js';
 import { townCard } from './townCard.js';
 import { helpHtml } from './hints.js';
+import { boardCard, boardTitle, ordersHtml } from './board.js';
 
 export const SUBS = {
-  realm: [['overview', 'Overview'], ['places', 'Places']],
+  realm: [['overview', 'Overview'], ['labour', 'Labour'], ['places', 'Places']],
   court: [['inbox', 'Decisions'], ['laws', 'Laws'], ['houses', 'Great houses'], ['faith', 'Faith']],
   treasury: [['ledger', 'Ledger'], ['routes', 'Trade routes'], ['industry', 'Mines and industry']],
   military: [['forces', 'Forces'], ['threats', 'Threats'], ['garrisons', 'Garrisons'], ['war', 'War']],
@@ -74,6 +75,8 @@ export function renderRoute(app, route) {
     case 'tab': return tabScreen(app, arg);
     case 'town': return world.byId[arg] && state.settlements[arg] ? { title: escapeHtml(world.byId[arg].name), html: townCard(app, arg) } : gone('Gone', 'No such place.');
     case 'house': return world.houses.houses[arg] ? { title: `${swatch(world, arg)} ${escapeHtml(world.houses.houses[arg].name)}`, html: houseCard(app, arg) } : gone('Gone', 'No such house.');
+    case 'board': return state.realms?.[arg] && !state.realms[arg].fallen ? { title: boardTitle(app, arg), html: boardCard(app, arg) } : gone('Gone', 'No such realm.');
+    case 'orders': return { title: 'The month\'s orders', html: ordersHtml(app) };
     case 'realm': return world.neighbours.realms[arg] ? { title: escapeHtml(world.geography.neighbours[arg].name), html: realmCard(app, arg) } : gone('Gone', 'No such realm.');
     case 'foreign': {
       const view = app.foreignView(arg);
