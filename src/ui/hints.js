@@ -69,8 +69,9 @@ export function createHints(data, { disabled = false, onOpen = () => {} } = {}) 
         case 'lowAuthority': return state.authority < 20;
         case 'day45': return state.day - state.reign.since > 45;
         case 'day150NoRoutes': return state.day - state.reign.since > 150 && !(state.routes ?? []).length;
-        case 'goldWaiting': return state.day - state.reign.since > 240 && !Object.values(state.settlements).some((s) => s.buildings.includes('goldmine'));
+        case 'goldWaiting': return state.day - state.reign.since > 240 && !Object.values(state.settlements).some((s) => s.buildings.includes('goldmine') && (s.cond?.goldmine ?? 100) > 0);
         case 'placeFull': return !!world && Object.entries(state.settlements).some(([id, s]) => s.buildings.length >= (world.buildingSlots[world.byId[id].type] ?? 99));
+        case 'worksWorn': return (state.works?.decisions ?? []).length > 0;
         case 'atWar': return (state.wars ?? []).some((w) => w.sides.flat().includes('temeria'));
         case 'warDrums': return (state.musters ?? []).length > 0;
         case 'townLost': return Object.values(state.settlements).some((s) => s.occupier);

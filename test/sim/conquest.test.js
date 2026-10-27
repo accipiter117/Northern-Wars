@@ -96,7 +96,9 @@ test('the capture choice: sparing, sacking and driving a people out', () => {
     resolveConquestDecision(s, world, d.id, d.options.indexOf('sack'));
     assert.ok(s.treasury - before > 1000, `loot ${s.treasury - before}`);
     assert.ok(rec.population < pop && rec.prosperity < prosperity);
-    assert.ok(rec.damaged.length >= 2 && rec.buildings.includes('walls'));
+    // Since M20 the works stand in ruins rather than vanish.
+    assert.ok(rec.buildings.filter((b) => (rec.cond?.[b] ?? 100) < 30).length >= 2 && rec.buildings.includes('walls'));
+    assert.ok(rec.buildings.length === 4);
     assert.ok(rec.smoulder > s.day);
     assert.equal(rec.treated, 'sacked');
     assert.ok(fearOf(s, 'kerack') > 0);

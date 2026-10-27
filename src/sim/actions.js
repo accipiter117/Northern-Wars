@@ -31,6 +31,7 @@ import {
   canDeclareWith, declareWithReason, warReasons, resolveRequest,
 } from './audiences.js';
 import { treatyBetween, endTreaty } from './diplomacy.js';
+import { canRepairWorks, startRepair, resolveWorksDecision } from './works.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -45,6 +46,9 @@ export function canBuild(state, world, settlementId, buildingId) {
     return { ok: false, reason: 'Only occupied: nothing is built there until a peace makes it ours.' };
   }
   if (!b || !s) return { ok: false, reason: 'Unknown building.' };
+  // Since M20 the crown builds nothing new: every place has the works its
+  // land gives it, and the crown mends them.
+  if (world.spaces) return { ok: false, reason: 'The crown does not build: it mends what the land gave it.', hidden: true };
   if (s.occupier) return { ok: false, reason: 'The enemy holds it.' };
   if ((s.damaged ?? []).includes(buildingId)) return { ok: false, reason: 'It lies in ruins: rebuild it instead.' };
   if (!b.types.includes(type)) return { ok: false, reason: `Not for a ${type}.`, hidden: true };
@@ -196,6 +200,20 @@ export function applyAction(state, world, action) {
   }
   if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
   if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege'].includes(action.type)) return warAction(state, world, action);
+  if (world.spaces && (action.type === 'repair' || action.type === 'worksDecision')) {
+    if (action.type === 'repair') {
+      const kind = action.kind ?? 'rebuild';
+      const check = canRepairWorks(state, world, action.settlement, action.building, kind);
+      if (!check.ok) return { state, error: check.reason };
+      const next = structuredClone(state);
+      startRepair(next, world, action.settlement, action.building, kind);
+      return { state: next };
+    }
+    const next = structuredClone(state);
+    const out = resolveWorksDecision(next, world, action.id, action.choice);
+    if (out.error) return { state, error: out.error };
+    return { state: next };
+  }
   if (['conquestDecision', 'requisition', 'resettle', 'pension', 'claimantSpy', 'repair'].includes(action.type)) return conquestAction(state, world, action);
   if (action.type === 'route') {
     if (action.close) {

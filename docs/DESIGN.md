@@ -1,7 +1,7 @@
 # Northern Wars: Kingdom of Temeria (v1 design)
 
 ## Fantasy
-You are the crown of Temeria. You never place buildings tile by tile or march individual soldiers. You set laws, fund projects, appoint and manage lords, balance faiths and peoples, and respond to crises. Underneath you the kingdom visibly lives: carts on the roads, patrols, pilgrims, refugees, barges on the rivers.
+You are the crown of Temeria. You never place buildings tile by tile or march individual soldiers. Since M20 you do not build at all: the kingdom is already built, as the North is, and the crown's work is to keep it standing and to choose where its hands go. You set laws, fund projects, appoint and manage lords, balance faiths and peoples, and respond to crises. Underneath you the kingdom visibly lives: carts on the roads, patrols, pilgrims, refugees, barges on the rivers.
 
 ## Structure
 - Sandbox: no fixed goal, rule as long as you like.
@@ -37,7 +37,7 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 ### Economy and production
 - Goods: food, timber, stone, iron, coin.
 - Each settlement produces according to type, terrain and buildings; consumption by population; surplus flows to the crown via taxes and markets.
-- Buildings: a short list per settlement type (farms, mills, mines, markets, workshops, walls, granaries, temples). Built from the settlement card with crown funds; take days to complete.
+- Works: what each place has comes from the land it stands on (see "One map, a kingdom already built (M20)"). The crown repairs them; it no longer builds.
 - Trade traffic between settlements is shown as caravans; volume reflects prosperity and road safety.
 
 #### As built in M2
@@ -174,6 +174,34 @@ Diplomacy as meetings with people. No story or scripted dialogue: rulers speak i
 - Rulers request audiences with real proposals, about one in fourteen a month each: a deal of their own devising (by their agenda: trade pacts, non-aggression, defensive pacts, protectorates, goods for crowns), a demand when they are hostile and stronger (crowns, or the town they want, or else), or a warning when our armies crowd their border. Requests wait in the Court inbox and the Diplomacy tab's Audiences, can be accepted, refused or bargained over at the deal table, and lapse after 30 days. They replace the random envoys.
 - Save version 14: old saves keep their stances; a friendly stance with a true ally (relation 75 or more) becomes a defensive pact for five years; trust starts from the relation; envoys still waiting take their default answer.
 
+## One map, a kingdom already built (M20)
+The crown does not build. Every realm starts the game fully developed, as the Witcher North is: towns already have their mills, mines, fisheries and markets, and what each place has comes from the land it stands on. The crown's levers are repairs after raids and war, where the kingdom's hands work through the seasons (Part C), laws, the court and war. Numbers live in data/spaces.json; the rules in src/sim/works.js.
+
+### Spaces from the land
+- Every settlement, Temerian and foreign, has a few spaces, each tagged by its land: coast, lake, river, plain, hills, forest, marsh, mountain; towns and cities add a town square, walled places and castles their defences, and a known gold deposit its seam. Most places have one to three spaces of land; cities up to four.
+- `node tools/spaces.mjs` proposes them from the traced geography and writes data/spaces.json: a river within 35 map units gives a river space named for it; a lake within its outline plus 25 a lake space; a terrain zone within 45 a space of that terrain, named for the zone (the Jay Forest, the Tukaj Hills); the sea within 35 a coast space; open ground a plain space. The rules (`kinds`), the default works (`defaults`) and lore exceptions (`overrides`) are written by hand and kept when the tool is re-run.
+- Temeria has no sea coast in the traced map, by design: no salt pans or shipyards of its own, and a reason to want Cidaris. (Gors Velen, Anchor and Acorn Bay still count as ports for routes and customs.)
+- Each space holds one works, fixed at the start: plain (fields, horse stud, pasture), river (watermill, tannery, toll bridge, fishery), lake and coast (fishery, harbour, shipyard; salt pans on the coast), forest (lumber camp, charcoal burners, hunting lodge), hills and mountains (quarry, iron mine, silver mine, pasture), marsh (peat cutting, herbalists: new in M20), seam (gold mine). The town square holds a place's civic works as one space with a list (market hall, workshops, smithy, granary and shrine in a town; brewery, guildhall, bathhouse, paved streets and an inn more in a city). Defences hold walls, watchtower (on a border) and barracks.
+- Starting works are the obvious ones for each kind of land, with lore exceptions: Vizima's royal mint (new in M20), dwarven bank, merchants' quarter and armoury, Maribor's watermill on the Ina and its weavers and distillery, Carreras's weaponsmiths, the toll bridges at White Bridge and La Valette, silver at Flotsam, Houtborg, Razwan, Vorune and Napeys, studs at Cleves and Old Bottoms, Mahakam's silver and iron, Cidaris's shipyard. Brokilon's dryads keep no works. Foreign realms get their spaces the same way, so they differ by their land, not by special rules.
+- Gold deposits (M11) are seams: unique spaces whose old workings start flooded (condition 0) until the crown rebuilds the mine. A hidden seam shows as a space only once prospectors find it.
+
+### Condition and damage
+- Every works has a condition from 0 to 100. A works yields by the lower of its condition and its staffing (Part C): a brewery at 50 earns half, a market hall at 50 adds half its trade, ruined walls barely count. It costs at least 30% of its upkeep even in ruins, and since every works now stands from the start, upkeep runs at twice the old rate (`upkeepScale`).
+- Condition falls from: raids by bandits, monsters, Scoia'tael and raiders (12 to 36 off a works out in the fields or woods); armies foraging in enemy country; sieges (the camp tramples the fields, and the town's walls stand as the siege leaves them); the taking of a town and plunder; sacks (M19), which leave the four best works in ruins; winter storms on boats and quays; spring floods on the river works; fire in a crowded town square; and wear (0.55 a month for everything, 2.5 more while the crown cannot pay its bills). Cards and decisions say why ("Burned by bandits in July").
+- A place's mood suffers with its ruins (works below 25) and with grudges from works the crown chose to leave.
+
+### Repair, never build
+- A works falling below 70 asks the crown at court (badged, toasted, but never pausing the game): Rebuild it (whole again; costs 60% of its old price for what is missing, with timber, stone and iron from the realm's stocks or bought in dearer; takes weeks; yields nothing while the masons work), Patch it up (a fifth of the price and a quarter of the time; back about half way, working throughout; may give way again under the strain of winter), or Leave it (nothing spent; the place goes without, its unrest rises by 3 and it holds a grudge that fades over a year). Each choice shows its cost, time, hands and result before it is taken. Unanswered after 30 days, the works is left. A works once left is asked about again only after it has fallen 25 further.
+- The town card's Works tab shows each space, what stands in it, its condition and why, and repairs under way; any worn works can be mended from there at any time. The overview shows the works as pips.
+- Four crews mend at once (from Part C, the Repairs share of the kingdom's hands); the rest wait their turn.
+- An idle crown watches its kingdom decay: after ten years its works stand at about a quarter, its income has fallen by two fifths and its treasury has stopped growing.
+
+### Conquest under M20
+- A captured town comes with its spaces and their condition. Occupation stops its works for its owner and lets the occupier requisition; a sacked town's works stand in ruins; an annexed town is mended like any other, and mending what war broke there (not merely holding it) wins it over.
+
+### Save
+- Version 17: every place gets its spaces; what it had built fills the space of its kind (a pasture takes the place of the fields), civic buildings join the town square, anything under construction is finished, ruins from M19 sacks stand again at 15, occupied towns' works are worn to 75.
+
 ## Conquest and battles (M19)
 Towns that change hands now change realm for good, and what becomes of them is the crown's choice and the crown's problem. Numbers live in data/conquest.json; the rules in src/sim/lands.js (who rules what) and src/sim/conquest.js (what it costs).
 
@@ -260,8 +288,8 @@ The foreign realms stop rolling dice and start governing. Each month every ruler
 - Debt bites: soldiers desert, towns lose prosperity and garrisons thin, monthly payments and tribute stop, and the ruler offers Temeria a loan, goods or even a village for coin.
 - Verden no longer spirals into debt (a protectorate's tribute now lapses when it cannot pay, and rulers refuse monthly terms beyond a third of their income), and Kerack's garrisons recover after a war.
 
-### Building
-- Foreign rulers build from the whole catalogue, with the same land limits as Temeria (a mine needs mountains, a harbour water). Each choice is scored by how fast it pays back, the posture (earners in Grow, walls and barracks in Arm), the agenda (markets and harbours for traders) and traits. The old preferred list is now only a nudge. Large realms build two things at once.
+### Mending (since M20)
+- Foreign rulers no longer build. Their realms start with the works their land gives them, as Temeria's do, and each month a ruler mends its worst works (anything below 60) out of what is left after two months' income, up to 35 points a works. A realm in debt mends nothing and its works wear faster. (Until M20 they built from the whole catalogue, scored by payback, posture, agenda and traits.)
 
 ### Wars with a purpose
 - No more rivalry dice. A ruler in Expand picks a war aim: the town their agenda names, then towns they lost, then a weak town on a border. They muster an army for about six weeks (seen by our scouts), then declare with a reason. Their armies march on the aim.
@@ -313,7 +341,7 @@ All numbers are in data/trade.json, data/gold.json, data/buildings.json and data
 - A gold mine yields 60 crowns a month (a lord takes his share in his lands) until less than a third is left, then less and less (never under a tenth), until the seam is worked out.
 - Side effects: 0.4% more people a month at the mine (three in ten of them dwarves); +20 bandit threat within 70 units; each working mine makes greedy neighbours greedier; each mine within 170 of Mahakam costs 8 relation with it.
 
-### New buildings
+### What the works do (M11, built from the start since M20)
 - Harbour (on a river, the lake or the sea; Gors Velen, Anchor and Acorn Bay count as ports): food from the water, trade, customs on navigable water, route value, one more route.
 - Warehouse: stores 200 more timber, stone and iron; surplus sells for a quarter more.
 - Smithy: soldiers here cost 30% less to keep; uses iron. Armoury (needs a smithy): its garrison fights 30% harder, and armies raised while it stands fight 5% harder (up to 30%); uses iron.
@@ -325,7 +353,7 @@ All numbers are in data/trade.json, data/gold.json, data/buildings.json and data
 - Dwarven bank (cities with 300 dwarves): the bankers lend 3,000 more and charge a quarter less interest.
 - Barracks: 40% more crown soldiers kept here at the ordinary pay.
 - Paved streets: prosperity, a little less plague, faster carts.
-- Places hold villages 5, castles 5, temples 3, towns 8, cities 12 buildings.
+- (Until M20 places held villages 5, castles 5, temples 3, towns 8, cities 12 buildings. Since M20 a place holds what its spaces hold.)
 
 ### The map as a living place
 - Each settlement's layout (src/render/layout.js) is planned from the game's seed: a landmark (keep, hall, chapel, temple) at the heart; houses in rings round it, more as the people grow (a city from 12 up to 44), spilling outside the walls once the heart is full; buildings by kind (core, edge, by a road, on the river, on the water, towards the hills, the forest or the gold seam); fields as patchwork in a ring outside, pastures for villages; walls round the whole. Nothing is placed on a road, a river, the lake, the sea, or nearer another settlement than its own. Pieces are drawn back to front.

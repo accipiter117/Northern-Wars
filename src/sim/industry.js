@@ -14,6 +14,7 @@ import { atWar } from './conflict.js';
 import { routePath, routeKey } from './trade.js';
 import { foreignTrade } from './neighbours.js';
 import { intersectSegments } from './geometry.js';
+import { worksFactor } from './works.js';
 
 const I = (world) => world.industry;
 const MATERIALS = ['timber', 'stone', 'iron'];
@@ -52,7 +53,7 @@ export function goodPrice(state, world, good) {
 export function saltStorage(state, world) {
   const c = I(world)?.salt;
   if (!c) return 0;
-  return Math.min(c.storageMax, withBuilding(state, 'saltpans').length * c.storagePer);
+  return Math.min(c.storageMax, withBuilding(state, 'saltpans').reduce((a, id) => a + worksFactor(state.settlements[id], 'saltpans'), 0) * c.storagePer);
 }
 
 // Hunters thin out the beasts in the country round their lodge.
@@ -63,7 +64,7 @@ export function lodgeCut(state, world, id) {
   let v = 0;
   for (const sid of withBuilding(state, 'lodge')) {
     const q = world.byId[sid];
-    if (Math.hypot(q.x - p.x, q.y - p.y) <= c.reach) v += c.monsterCut;
+    if (Math.hypot(q.x - p.x, q.y - p.y) <= c.reach) v += c.monsterCut * worksFactor(state.settlements[sid], 'lodge');
   }
   return v;
 }
@@ -201,6 +202,8 @@ export function industryLedger(state, world, income, put, season) {
   const i = I(world);
   if (!i) return;
   const share = (id) => crownShare(state, world, state.settlements[id]);
+  // Each works yields as it stands and is manned (M20).
+  const wf = (id, b) => worksFactor(state.settlements[id], b);
   const pool = {};
   for (const g of Object.keys(i.goods)) pool[g] = [];
   const flows = [];
@@ -212,14 +215,14 @@ export function industryLedger(state, world, income, put, season) {
 
   // Makers.
   for (const [b, m] of Object.entries(i.makers)) {
-    for (const id of withBuilding(state, b)) make(m.good, id, m.amount * prosperityMult(world, state.settlements[id]));
+    for (const id of withBuilding(state, b)) make(m.good, id, m.amount * prosperityMult(world, state.settlements[id]) * wf(id, b));
   }
   // Workers, in order, so charcoal is burnt before the forges want it.
   for (const b of i.order) {
     const w = i.workers[b];
     for (const id of withBuilding(state, b)) {
       const s = state.settlements[id];
-      let qty = w.amount * prosperityMult(world, s);
+      let qty = w.amount * prosperityMult(world, s) * wf(id, b);
       for (const [k, per] of Object.entries(w.uses)) {
         const have = pool[k] ? pool[k].reduce((a, e) => a + e.qty, 0)
           : k === 'grain' ? availableGrain(state, world, season) : stockOf(state, id, k);
@@ -303,28 +306,28 @@ export function industryLedger(state, world, income, put, season) {
 
   // Silver, tolls, rents, donations and contracts.
   for (const id of withBuilding(state, 'silvermine')) {
-    const v = i.silver.amount * share(id);
+    const v = i.silver.amount * share(id) * wf(id, 'silvermine');
     income.silver += v;
     put(id, v);
   }
   for (const id of withBuilding(state, 'tollbridge')) {
-    const v = tollsAt(state, world, id).value * share(id);
+    const v = tollsAt(state, world, id).value * share(id) * wf(id, 'tollbridge');
     income.tolls += v;
     put(id, v);
   }
   for (const id of withBuilding(state, 'quarter')) {
     const s = state.settlements[id];
-    const v = totalPopulation(s) * i.quarter.rentPerPerson * prosperityMult(world, s) * share(id);
+    const v = totalPopulation(s) * i.quarter.rentPerPerson * prosperityMult(world, s) * share(id) * wf(id, 'quarter');
     income.rents += v;
     put(id, v);
   }
   for (const id of withBuilding(state, 'hostel')) {
-    const v = (i.hostel.base + i.hostel.perShare * (realmFaith(state).melitele ?? 0) / 100) * share(id);
+    const v = (i.hostel.base + i.hostel.perShare * (realmFaith(state).melitele ?? 0) / 100) * share(id) * wf(id, 'hostel');
     income.donations += v;
     put(id, v);
   }
   for (const id of withBuilding(state, 'shipyard')) {
-    const v = i.shipyard.contracts * prosperityMult(world, state.settlements[id]) * share(id);
+    const v = i.shipyard.contracts * prosperityMult(world, state.settlements[id]) * share(id) * wf(id, 'shipyard');
     income.contracts += v;
     put(id, v);
   }

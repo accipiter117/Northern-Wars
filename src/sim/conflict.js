@@ -54,7 +54,9 @@ export function peopleAt(state, world, id) {
 }
 
 export function hasWalls(state, world, id) {
-  return !!placeOf(state, world, id)?.buildings.includes('walls');
+  // Walls brought below a third of their strength no longer count (M20).
+  const p = placeOf(state, world, id);
+  return !!p?.buildings.includes('walls') && (p.cond?.walls ?? 100) >= 35;
 }
 
 // Every place a side holds, at home and abroad.

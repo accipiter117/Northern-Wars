@@ -1,5 +1,14 @@
 # Changelog
 
+## M20 A and B A kingdom already built
+- The crown no longer builds. Every town, village and castle, at home and abroad, starts with the works its land gives it: a watermill on the river, boats on the lake, a quarry in the hills, peat in the marsh, the market and smithy in the town square, walls and a watchtower on the border. Vizima strikes the king's coin at its royal mint; Maribor grinds the harvest on the Ina; Flotsam and Houtborg dig silver.
+- A town's card shows the land it stands on and a Works tab: each space, what stands in it, and how well.
+- Works wear with use and break under raids, armies, sieges, storms, floods and fire, and faster when the crown cannot pay its bills. A works yields only as well as it stands.
+- A broken works asks the crown what to do: rebuild it (whole again, but idle while the masons work), patch it up (cheaper, but it may give way in a hard winter) or leave it (free, but the place goes without and remembers).
+- The old gold workings lie flooded: rebuild a gold mine to reopen its seam.
+- Temeria has no sea coast. Salt and ships are Cidaris's.
+- Save version 17. Old saves keep what they built, in the space where it belongs.
+
 ## M19 D The map at war
 - Borders follow the towns. Take Bremervoord and the country round it turns Temerian on the map, with the old border gone and a new one drawn round what we hold.
 - Battles are drawn where they are fought: banners facing, men clashing, each side's numbers over its head, and the losers fleeing. Tap one to open its card.

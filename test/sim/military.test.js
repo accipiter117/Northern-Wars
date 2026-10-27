@@ -47,7 +47,8 @@ test('a company is recruited from the people, paid each month, and stood down', 
   const c = s.forces.companies[0];
   assert.equal(c.men, world.forces.companies.menatarms.men);
   assert.equal(s.settlements.maribor.population.human, people - c.men);
-  assert.match(act(s, { type: 'recruit', settlement: 'maribor', kind: 'knights' }).error, /barracks/);
+  // Maribor has barracks from the start (M20); Ellander has none.
+  assert.match(act(s, { type: 'recruit', settlement: 'ellander', kind: 'knights' }).error, /barracks/);
   assert.match(act(s, { type: 'recruit', settlement: 'mayena', kind: 'militia' }).error, /lord/i);
   s = run(s, 35);
   assert.equal(s.ledger.history.at(-1).expenses.companies, Math.round(c.men * world.forces.companies.menatarms.upkeep));

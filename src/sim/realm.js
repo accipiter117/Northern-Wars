@@ -18,6 +18,7 @@ import { leviedMap } from './conflict.js';
 import { monthlyGold, stepGoldDay } from './gold.js';
 import { stepThreatsDay } from './threats.js';
 import { stepCompaniesDay, monthlyCompanies } from './forces.js';
+import { stepWorksDay, monthlyWorks, worksUnrest } from './works.js';
 
 const CHRONICLE_LIMIT = 400;
 
@@ -59,6 +60,7 @@ export function stepRealmDay(state, world, rng) {
   stepHousesDay(state, world);
   stepEventsDay(state, world, rng);
   if (state.gold) stepGoldDay(state, world, rng);
+  if (state.works) stepWorksDay(state, world);
   if (state.wars) {
     stepArmiesDay(state, world, rng);
     stepWarDecisionsDay(state, world);
@@ -83,7 +85,7 @@ export function stepRealmDay(state, world, rng) {
     // by hunger, winter, unpaid soldiers and what the crown has built there.
     const type = world.byId[id].type;
     let unrestTarget = start.unrest + fx.unrest + s.hunger * m.hungerUnrest + law.unrest[type] + opinionUnrest(state, world, id, s) + tensionUnrest(world, s) + holderUnrest(state, world, s)
-      + (plagueActive(state, s) ? world.military.plague.unrest : 0) + integrationUnrest(world, s);
+      + (plagueActive(state, s) ? world.military.plague.unrest : 0) + integrationUnrest(world, s) + worksUnrest(world, s);
     if (date.season === 'winter') unrestTarget += m.winterUnrest;
     // A long war, an occupier's yoke, and sons marched off with the levy.
     unrestTarget += s.occupier ? 30 : weary;
@@ -114,6 +116,7 @@ export function stepRealmDay(state, world, rng) {
     monthlyThreats(state, world, rng);
     monthlyEvent(state, world, rng, date.season);
     monthlyRealms(state, world, rng);
+    if (state.works) monthlyWorks(state, world, rng);
     monthlyDiplomacy(state, world, rng);
     if (state.wars) monthlyWar(state, world, rng);
     if (state.wars) monthlyConquest(state, world, rng);

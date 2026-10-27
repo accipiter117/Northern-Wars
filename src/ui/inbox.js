@@ -4,7 +4,7 @@
 // wait (war declared on Temeria, a siege, a rebellion, a deposition) also
 // raise a banner across the top.
 import {
-  TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText,
+  TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText, worksDecisionText,
 } from '../sim/index.js';
 import { escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
@@ -33,6 +33,15 @@ export function pendingDecisions(state, world, acked = Infinity) {
     out.push({
       key: `conquestDecision:${d.id}`, kind: 'conquestDecision', id: d.id, urgent: d.kind !== 'grant', daysLeft: left(d.day, waits[d.kind] ?? 10),
       kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: 0, town: d.town,
+    });
+  }
+  // A works badly worn or broken: rebuild, patch or leave it (M20).
+  for (const d of state.works?.decisions ?? []) {
+    if (!state.settlements[d.town]) continue;
+    const t = worksDecisionText(state, world, d);
+    out.push({
+      key: `worksDecision:${d.id}`, kind: 'worksDecision', id: d.id, daysLeft: left(d.day, world.works?.decisionDays ?? 30),
+      kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: 2, town: d.town,
     });
   }
   for (const p of state.events ?? []) {

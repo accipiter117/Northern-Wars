@@ -18,6 +18,7 @@ import { tradeLedger, routeKey } from './trade.js';
 import { goldLedger } from './gold.js';
 import { industryLedger, saltStorage } from './industry.js';
 import { dealLedger } from './deals.js';
+import { worksFactor, upkeepFactor } from './works.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -29,13 +30,15 @@ const EFFECTS = [
   'authority', 'tension', 'creditLimit', 'interest', 'traffic', 'gold', 'silver', 'taxBonus',
 ];
 
-// What a place's buildings add up to. Numbers stack; `opinion` and `faith`
-// (per group or faith) are gathered separately where they are used.
+// What a place's works add up to, each as it stands (M20: the lower of its
+// condition and its staffing). Numbers stack; `opinion` and `faith` (per
+// group or faith) are gathered separately where they are used.
 export function buildingEffects(world, s) {
   const fx = {};
   for (const k of EFFECTS) fx[k] = 0;
   for (const id of s.buildings) {
-    for (const [k, v] of Object.entries(world.buildings[id].effects)) if (typeof v === 'number') fx[k] = (fx[k] ?? 0) + v;
+    const f = worksFactor(s, id);
+    for (const [k, v] of Object.entries(world.buildings[id].effects)) if (typeof v === 'number') fx[k] = (fx[k] ?? 0) + v * f;
   }
   return fx;
 }
@@ -45,7 +48,7 @@ export function realmEffect(state, world, key) {
   let v = 0;
   for (const s of Object.values(state.settlements)) {
     if (s.occupier) continue;
-    for (const b of s.buildings) v += world.buildings[b].effects[key] ?? 0;
+    for (const b of s.buildings) v += (world.buildings[b].effects[key] ?? 0) * worksFactor(s, b);
   }
   return v;
 }
@@ -273,7 +276,7 @@ export function monthlyLedger(state, world, rng = null) {
     const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
     // Roads held by bandits keep the carts at home.
     const robbed = 1 - (world.forces?.roads.tradeCut ?? 0) * Math.min(1, (state.threats?.robbed[id] ?? 0) / 30);
-    const trade = pop * e.trade.perPersonMonth[type] * focus * mult * (1 + fx.trade) * tradeMult * share * robbed * (quarantined(state, s) ? 0 : 1);
+    const trade = pop * e.trade.perPersonMonth[type] * focus * mult * (1 + fx.trade * (e.trade.worksScale ?? 1)) * tradeMult * share * robbed * (quarantined(state, s) ? 0 : 1);
     income.trade += trade;
     put(id, tax + trade);
     // Each craft pays by the size and fortunes of its place, on its own
@@ -281,7 +284,7 @@ export function monthlyLedger(state, world, rng = null) {
     const scale = e.crafts.placeScale[type] * mult * share;
     for (const b of s.buildings) {
       if (!world.buildings[b].effects.craft) continue;
-      const c = world.buildings[b].effects.craft * crowd(b);
+      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1);
       income.crafts[b] = (income.crafts[b] ?? 0) + c * scale;
       put(id, c * scale);
     }
@@ -308,8 +311,9 @@ export function monthlyLedger(state, world, rng = null) {
       cost(id, pay);
     }
     for (const b of s.buildings) {
-      expenses.upkeep += world.buildings[b].upkeep;
-      cost(id, world.buildings[b].upkeep);
+      const u = world.buildings[b].upkeep * upkeepFactor(world, s, b);
+      expenses.upkeep += u;
+      cost(id, u);
     }
   }
   warLedger(state, world, income, expenses, law);

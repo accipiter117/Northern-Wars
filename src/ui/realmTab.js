@@ -141,7 +141,7 @@ function overviewHtml(app) {
     <div data-part="troubled"><h3>In most trouble</h3>${troubledHtml(app)}</div>`;
 }
 
-const FILTERS = [['all', 'All'], ['crown', 'Crown'], ['lords', "Lords'"], ['hungry', 'Hungry'], ['restless', 'Restless'], ['works', 'Building']];
+const FILTERS = [['all', 'All'], ['crown', 'Crown'], ['lords', "Lords'"], ['hungry', 'Hungry'], ['restless', 'Restless'], ['works', 'Repairing']];
 
 function placesHtml(app) {
   const { state, world } = app;
@@ -155,7 +155,7 @@ function placesHtml(app) {
     if (f.filter === 'lords') return s.holder !== 'crown';
     if (f.filter === 'hungry') { const need = foodNeed(world, s, season); return s.hunger > 0.05 || (need > 0 && s.stock.food / need < 30); }
     if (f.filter === 'restless') return s.unrest >= 40;
-    if (f.filter === 'works') return !!s.construction;
+    if (f.filter === 'works') return Object.keys(s.repair ?? {}).length > 0;
     return true;
   };
   const ids = Object.keys(state.settlements).filter(keep).sort((a, b) => world.byId[a].name.localeCompare(world.byId[b].name));
@@ -168,7 +168,7 @@ function placesHtml(app) {
       if (s.holder !== 'crown' && world.houses.houses[s.holder]) bits.push(world.houses.houses[s.holder].name);
       const t = troubleOf(app, id);
       if (t.why.length) bits.push(t.why.join(', '));
-      if (s.construction) bits.push(`raising a ${world.buildings[s.construction.building].name.toLowerCase()}`);
+      for (const b of Object.keys(s.repair ?? {})) bits.push(`mending the ${world.buildings[b].name.toLowerCase()}`);
     }
     return bits.join('; ');
   };
@@ -220,7 +220,7 @@ function treasuryCard(app) {
   return `${head}
     <div data-part="in"><h3>What came in most</h3>${linesHtml(inc, '+')}</div>
     <div data-part="out"><h3>What went out most</h3>${linesHtml(exp, '−')}</div>
-    <div data-part="works"><p class="sub">Also paid when ordered last month: ${number(last.expenses.construction)} on works, ${number(last.expenses.decrees ?? 0)} on decrees.</p></div>`;
+    <div data-part="works"><p class="sub">Also paid when ordered last month: ${number(last.expenses.construction)} on repairs, ${number(last.expenses.decrees ?? 0)} on decrees.</p></div>`;
 }
 
 function granaryCard(app) {

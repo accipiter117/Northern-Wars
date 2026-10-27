@@ -13,6 +13,7 @@ import { addDispatch, clamp } from './realm.js';
 import { roadPath, dist } from './world.js';
 import { seasonOf } from './calendar.js';
 import { informed } from './realms.js';
+import { damagePlace, outside } from './works.js';
 import {
   TEMERIA, ownerOf, originOf, placeOf, peopleAt, hasWalls, valueOf, hurtPlace, hostile, warBetween, sideIndex,
   sideName, recordCapture, setOwner, enemiesOf,
@@ -275,7 +276,7 @@ export function stepArmiesDay(state, world, rng) {
   battles(state, world, rng);
   if (battlesOn(world)) stepBattlesDay(state, world, rng);
   for (const a of [...state.armies]) if (state.armies.includes(a) && !a.battle) siegeOrRaid(state, world, rng, a);
-  wear(state, world);
+  wear(state, world, rng);
 }
 
 function nearestEnemy(state, world, a, x, y, range) {
@@ -559,7 +560,7 @@ function siegeOrRaid(state, world, rng, a) {
     return;
   }
   if (a.order === 'raid') {
-    if (a.raidTarget === a.at) raidTick(state, world, a);
+    if (a.raidTarget === a.at) raidTick(state, world, rng, a);
   } else if (a.order === 'siege' && a.target === a.at) {
     // Since M19 a siege is a camp to watch: walls, food, sickness, terms.
     if (siegesOn(world)) siegeDay(state, world, rng, a, owner);
@@ -627,7 +628,11 @@ export function capture(state, world, rng, a, id, prev, how) {
   // Since M19 a town taken is spared unless its taker chooses to sack it.
   const loot = world.conquest ? 0 : round(peopleAt(state, world, id) * c.lootPerPerson * (p.prosperity / 50));
   // Surrendered on terms (M19), the town is taken intact.
-  if (how !== 'terms') hurtPlace(state, world, id, { prosperity: c.prosperity, people: c.people, unrest: c.unrest });
+  if (how !== 'terms') {
+    hurtPlace(state, world, id, { prosperity: c.prosperity, people: c.people, unrest: c.unrest });
+    const k = world.works?.capture;
+    if (k) damagePlace(state, world, rng, id, { count: k.works, amount: k.amount, why: how === 'storm' ? 'Wrecked when the town was stormed' : 'Damaged in the taking of the town' });
+  }
   p.sacked = state.day + c.sackedDays;
   if (a.side === TEMERIA) state.treasury += loot;
   else if (state.realms[a.side]) state.realms[a.side].treasury += loot;
@@ -656,7 +661,7 @@ export function capture(state, world, rng, a, id, prev, how) {
   }
 }
 
-function raidTick(state, world, a) {
+function raidTick(state, world, rng, a) {
   const r = W(world).raid;
   a.raiding ??= { days: 0 };
   a.raiding.days += 1;
@@ -665,6 +670,7 @@ function raidTick(state, world, a) {
   const p = placeOf(state, world, id);
   const loot = round(peopleAt(state, world, id) * r.lootPerPerson * (p.prosperity / 50));
   hurtPlace(state, world, id, { prosperity: r.prosperity, food: r.food, unrest: r.unrest });
+  damagePlace(state, world, rng, id, { count: 2, amount: world.works?.capture?.amount ?? [10, 25], why: 'Plundered by an enemy army', pick: outside });
   p.sacked = state.day + W(world).capture.sackedDays;
   if (a.side === TEMERIA) state.treasury += loot;
   else if (state.realms[a.side]) state.realms[a.side].treasury += loot;
@@ -677,7 +683,7 @@ function raidTick(state, world, a) {
 
 // Marching wears an army down, in enemy country and in winter most of all;
 // an army living off the land strips it bare.
-function wear(state, world) {
+function wear(state, world, rng) {
   const w = W(world);
   const season = seasonOf(state.day);
   const winter = season === 'winter';
@@ -688,6 +694,8 @@ function wear(state, world) {
     a.morale = clamp(a.morale + w.battle.moraleRecoverPerDay, 0, 100);
     if (!own && hostile(state, a.side, ownerOf(state, world, a.at))) {
       hurtPlace(state, world, a.at, { food: w.forage.food, prosperity: w.forage.prosperity });
+      const f = world.works?.forage;
+      if (f && rng.chance(f.chance)) damagePlace(state, world, rng, a.at, { count: 1, amount: f.amount, why: 'Stripped by foraging soldiers', pick: outside });
     }
     if (a.soldiers < w.minArmy) {
       const text = `${a.name} (${sideName(world, a.side)}) has melted away: too few left to call it an army.`;

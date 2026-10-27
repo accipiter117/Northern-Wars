@@ -127,14 +127,15 @@ test('the tap targets, counted from the map', async () => {
   assert.ok(t.count <= 3, `send a company: ${t.count} taps`);
   await page.click('#sheet-close');
 
-  // Build in a town: four taps or fewer.
+  // Mend a damaged works in a town: four taps or fewer (M20).
+  await page.evaluate(() => { window.northernWars.state.settlements.vizima.cond = { brewery: 40 }; });
   t.reset();
   await t.place('vizima');
-  await t.tap('.segs [data-tsub="build"]');
-  await t.tap('[data-build-row="market"]');
-  await t.tap('[data-build="market"]');
-  assert.equal(await page.evaluate(() => window.northernWars.state.settlements.vizima.construction?.building), 'market');
-  assert.ok(t.count <= 4, `build: ${t.count} taps`);
+  await t.tap('.segs [data-tsub="works"]');
+  await t.tap('[data-works="brewery"]');
+  await t.tap('[data-repair="patch"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.settlements.vizima.repair?.brewery?.kind), 'patch');
+  assert.ok(t.count <= 4, `repair: ${t.count} taps`);
   await page.click('#sheet-close');
 
   // Change a law: four taps or fewer.

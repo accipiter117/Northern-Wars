@@ -896,6 +896,64 @@
         "craft": 40
       },
       "blurb": "Trappers, hounds and trophy walls. Pelts and monster parts for sale, and fewer beasts on the roads nearby."
+    },
+    "peat": {
+      "name": "Peat cutting",
+      "types": [
+        "village",
+        "town",
+        "city",
+        "castle"
+      ],
+      "cost": {
+        "coin": 400,
+        "timber": 10
+      },
+      "days": 30,
+      "upkeep": 2,
+      "effects": {
+        "craft": 14
+      },
+      "blurb": "Turf cut from the bog and stacked to dry. Fuel that keeps the hearths lit through winter."
+    },
+    "herbalists": {
+      "name": "Herbalists",
+      "types": [
+        "village",
+        "town",
+        "city",
+        "castle"
+      ],
+      "cost": {
+        "coin": 500,
+        "timber": 10
+      },
+      "days": 30,
+      "upkeep": 2,
+      "effects": {
+        "craft": 22,
+        "plagueDeaths": -0.1
+      },
+      "blurb": "Wise women and their gatherers in the marsh. Remedies for sale, and fewer dead when sickness comes."
+    },
+    "mint": {
+      "name": "Royal mint",
+      "types": [
+        "city"
+      ],
+      "cost": {
+        "coin": 2400,
+        "stone": 60,
+        "iron": 30
+      },
+      "days": 90,
+      "upkeep": 6,
+      "effects": {
+        "craft": 40,
+        "authority": 0.1,
+        "taxBonus": 0.04
+      },
+      "blurb": "Where the crown's orens are struck. A little profit on every coin, and the king's face in every purse."
     }
   },
   "slots": {

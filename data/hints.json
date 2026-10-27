@@ -11,7 +11,7 @@
       "id": "town",
       "trigger": "townOpened",
       "title": "A town's card",
-      "text": "A town's card opens on its summary: people, fortunes, unrest, who holds it and its garrison. Build lists only what can be raised here, one line each: tap one to see it, then build. Military holds its garrison and recruiting, People its peoples and faiths."
+      "text": "A town's card opens on its summary: people, fortunes, unrest, who holds it and its garrison, and the land it stands on. Works shows each of its spaces (the river, the fields, the town square) and what stands in each, with how well it stands: tap one to mend it. Military holds its garrison and recruiting, People its peoples and faiths."
     },
     {
       "id": "decision",
@@ -39,13 +39,13 @@
       "id": "hunger",
       "trigger": "hunger",
       "title": "Hunger",
-      "text": "Somewhere the stores are empty. Grain moves from full barns to empty ones by itself, but cities cannot feed themselves. Fields, watermills and granaries in the villages are the cure."
+      "text": "Somewhere the stores are empty. Grain moves from full barns to empty ones by itself, but cities cannot feed themselves. Fields, watermills and fisheries in good repair are the cure: mend the ones that are broken."
     },
     {
       "id": "debt",
       "trigger": "debt",
       "title": "Into the red",
-      "text": "The treasury has gone below zero. The bankers charge about one crown in a hundred each month, and the lords' respect for the crown drains while the debt stands; deep in debt, the tax farmers squeeze the towns and unrest rises. Treasury, Ledger shows every crown in and out, line by line, and what each place earned and cost: look there for what to cut and what to build.",
+      "text": "The treasury has gone below zero. The bankers charge about one crown in a hundred each month, and the lords' respect for the crown drains while the debt stands; deep in debt, the tax farmers squeeze the towns and unrest rises. Treasury, Ledger shows every crown in and out, line by line, and what each place earned and cost: look there for what to cut and what is worth mending.",
       "open": "treasury:ledger",
       "openLabel": "Open the Treasury"
     },
@@ -103,7 +103,7 @@
       "id": "zoom",
       "trigger": "day45",
       "title": "Look closer",
-      "text": "Pinch to zoom in on a town. Up close you see its houses, workshops, fields and walls, with smoke rising and workers going out to the fields. Every building you raise appears in its place, and the town spreads as it grows."
+      "text": "Pinch to zoom in on a town. Up close you see its houses, workshops, fields and walls, with smoke rising and workers going out to the fields. Every works its land gives it stands in its place, and the town spreads as it grows."
     },
     {
       "id": "trade",
@@ -117,13 +117,13 @@
       "id": "gold",
       "trigger": "goldWaiting",
       "title": "Gold in the hills",
-      "text": "Gold seams are known near Carreras, Zavada, Razwan, Petrelsteyn and Rissberg; a Gold mine on one pays the treasury every month until it runs out. Others may hide elsewhere in the hills: send prospectors from a hill town's card. Treasury, Mines and industry lists them. Gold draws miners and dwarves, but also bandits, greedy neighbours and Mahakam's frown."
+      "text": "Old gold workings lie flooded near Carreras, Zavada, Razwan, Petrelsteyn and Rissberg. Rebuild the gold mine from the town's Works and it pays the treasury every month until the seam runs out. Others may hide elsewhere in the hills: send prospectors from a hill town's card. Gold draws miners and dwarves, but also bandits and greedy neighbours."
     },
     {
-      "id": "slots",
-      "trigger": "placeFull",
-      "title": "No more room",
-      "text": "Each kind of place holds only so many buildings: a village five, a town eight, a city twelve. Choose what each place is for."
+      "id": "repairs",
+      "trigger": "worksWorn",
+      "title": "Mending, not building",
+      "text": "The crown does not build: every place already has the works its land gives it. They wear with use, and raids, armies, storms and fire break them. A broken works asks the crown at court: rebuild it (whole, but idle while the masons work), patch it (cheaper, but it may give way again) or leave it (free, but the place goes without and remembers)."
     },
     {
       "id": "sighted",

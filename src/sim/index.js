@@ -54,3 +54,6 @@ export { battleOdds, meetingOdds, lineOf, canBattleOrder, makeupOf } from './bat
 export { stormOdds, wallsOf, canSiegeOrder } from './siege.js';
 export { attritionOf } from './armies.js';
 export { territoryAt, territoryOwners } from './territory.js';
+export {
+  spacesOf, condOf, staffOf, worksFactor, repairOptions, canRepairWorks, worksDecisionText, worksSummary, spaceKindOf,
+} from './works.js';

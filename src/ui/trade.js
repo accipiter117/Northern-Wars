@@ -114,12 +114,11 @@ function goodsHtml(world, state) {
   return `<div data-part="goods"><h3>Goods ${info('Pastures, studs and salt pans make goods; weavers, distillers, charcoal burners and weaponsmiths work them into dearer ones. Crown routes carry finished goods at a premium where the far end lacks them, most of all abroad; the rest sells at home, cheaper once the home market is full.', 'goods')}</h3>${rows ? `<ul class="cares">${rows}</ul>` : '<p class="sub">No workshop or pasture of the crown makes goods yet.</p>'}</div>`;
 }
 
-// A settlement card's trade, gold and room-to-build lines.
+// A settlement card's trade and gold lines.
 export function settlementTradeHtml(world, state, id) {
   const s = state.settlements[id];
   const parts = [];
-  const used = s.buildings.length;
-  parts.push(`<p class="sub">Room for ${Math.max(0, slotsOf(world, id) - used)} more of ${slotsOf(world, id)} buildings.</p>`);
+  if (!world.spaces) parts.push(`<p class="sub">Room for ${Math.max(0, slotsOf(world, id) - s.buildings.length)} more of ${slotsOf(world, id)} buildings.</p>`);
   const mine = state.routes.filter((r) => r.from === id || r.to === id)
     .map((r) => `<li>${escapeHtml(placeName(world, state, r.from === id ? r.to : r.from))}: ${r.closed ? 'closed' : `${number(r.last)} crowns last month`}</li>`).join('');
   if (routeEndOk(state, world, id).ok) {
@@ -132,8 +131,9 @@ export function settlementTradeHtml(world, state, id) {
     const left = state.gold.deposits[d].remaining;
     const g = world.gold.deposits[d];
     if (left <= 0) return `<li>${escapeHtml(g.name)}: worked out.</li>`;
-    const working = s.buildings.includes('goldmine');
-    return `<li>${escapeHtml(g.name)}: ${working ? `yielding about ${number(goldYield(state, world, d))} crowns a month, ` : 'a known seam, waiting for a gold mine; '}${Math.round((left / g.gold) * 100)}% left.</li>`;
+    const working = s.buildings.includes('goldmine') && (s.cond?.goldmine ?? 100) > 0;
+    const idle = s.buildings.includes('goldmine') ? 'the old workings lie flooded: rebuild the mine (Works) to reopen them; ' : 'a known seam, waiting for a gold mine; ';
+    return `<li>${escapeHtml(g.name)}: ${working ? `yielding about ${number(goldYield(state, world, d))} crowns a month, ` : idle}${Math.round((left / g.gold) * 100)}% left.</li>`;
   }).join('');
   const pc = canProspect(state, world, id);
   const prospecting = state.gold.prospects.find((p) => p.settlement === id);

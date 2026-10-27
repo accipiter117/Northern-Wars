@@ -9,6 +9,7 @@ import { goldThreat } from './gold.js';
 import { lodgeCut } from './industry.js';
 import { patrolNodes } from './forces.js';
 import { monthlyThreatsSpawn } from './threats.js';
+import { worksFactor } from './works.js';
 
 const say = (state, text) => addDispatch(state, text, 'military');
 
@@ -51,7 +52,8 @@ export function threatLevel(state, world, id, kind, patrolled = patrolledSet(sta
 // The garrison's strength behind its walls; an armoury's men fight harder.
 export function localStrength(state, world, id) {
   const s = state.settlements[id];
-  return s.garrison * (s.buildings.includes('walls') ? mil(world).walls : 1) * (1 + localFx(world, s, 'soldierStrength'));
+  const walls = s.buildings.includes('walls') ? 1 + (mil(world).walls - 1) * worksFactor(s, 'walls') : 1;
+  return s.garrison * walls * (1 + localFx(world, s, 'soldierStrength'));
 }
 
 export function plagueActive(state, s) {
@@ -205,6 +207,6 @@ export function canSetGarrison(state, world, id, level) {
 
 function localFx(world, s, key) {
   let v = 0;
-  for (const b of s.buildings) v += world.buildings[b].effects[key] ?? 0;
+  for (const b of s.buildings) v += (world.buildings[b].effects[key] ?? 0) * worksFactor(s, b);
   return v;
 }

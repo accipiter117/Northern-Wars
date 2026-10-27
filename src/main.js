@@ -1,5 +1,5 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock } from './sim/index.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions } from './sim/index.js';
 import { createCamera, resizeCamera, panBy, toWorld } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
@@ -169,6 +169,7 @@ async function boot() {
     ...(state.depositions.length > acked ? ['deposition'] : []),
     ...(state.warDecisions ?? []).map((d) => `warDecision:${d.id}`),
     ...(state.conquest?.decisions ?? []).map((d) => `conquestDecision:${d.id}`),
+    ...(state.works?.decisions ?? []).map((d) => `worksDecision:${d.id}`),
     ...state.events.map((d) => `event:${d.id}`),
     ...state.demands.map((d) => `demand:${d.id}`),
     ...state.envoys.map((d) => `envoy:${d.id}`),
@@ -190,7 +191,9 @@ async function boot() {
     const d = fresh[0];
     toast(`${d.kicker}: ${d.title}. It waits at court.${fresh.length > 1 ? ` (${fresh.length} new)` : ''}`);
     updateBadges();
-    return true;
+    // Repairs (M20) come often and keep: they wait at court without
+    // stopping the clock.
+    return fresh.some((x) => x.kind !== 'worksDecision');
   }
 
   // Battle pace (M19): when one of our armies gives battle, the game drops
@@ -801,6 +804,7 @@ async function boot() {
     },
     resetFrameStats() { Object.assign(frameStats, { frames: 0, ms: 0, max: 0, recent: [], days: [] }); },
     planOf: (id) => renderer.planOf(id),
+    repairOptions: (id, b) => repairOptions(state, world, id, b),
     // What a tap at these page coordinates would pick, for browser tests.
     pickAt(x, y) {
       const r = canvas.getBoundingClientRect();

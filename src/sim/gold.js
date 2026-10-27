@@ -7,6 +7,7 @@ import { addDispatch } from './realm.js';
 import { distanceToPolygon } from './geometry.js';
 import { crownShare } from './houses.js';
 import { creditLimit } from './economy.js';
+import { worksFactor } from './works.js';
 
 const G = (world) => world.gold;
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -37,7 +38,8 @@ export function activeMines(state, world) {
   for (const [id, d] of Object.entries(G(world)?.deposits ?? {})) {
     const s = state.settlements[d.settlement];
     const left = state.gold?.deposits[id];
-    if (s && !s.occupier && s.buildings.includes('goldmine') && left?.known && left.remaining > 0) out.push({ id, settlement: d.settlement });
+    // A flooded or ruined mine (M20) brings up nothing and draws no one.
+    if (s && !s.occupier && s.buildings.includes('goldmine') && worksFactor(s, 'goldmine') > 0 && left?.known && left.remaining > 0) out.push({ id, settlement: d.settlement });
   }
   return out;
 }
@@ -48,7 +50,10 @@ export function goldYield(state, world, depositId) {
   const g = G(world);
   const left = state.gold.deposits[depositId].remaining;
   const frac = left / g.deposits[depositId].gold;
-  return Math.min(left, g.yield * Math.max(g.minShare, Math.min(1, frac / g.taper)));
+  // A flooded or half-manned mine brings up less (M20).
+  const s = state.settlements[g.deposits[depositId].settlement];
+  const f = s ? worksFactor(s, 'goldmine') : 1;
+  return Math.min(left, g.yield * f * Math.max(g.minShare, Math.min(1, frac / g.taper)));
 }
 
 export function goldLedger(state, world, income, put = () => {}) {
@@ -156,7 +161,7 @@ export function stepGoldDay(state, world, rng) {
     const hidden = depositsOf(world, p.settlement).find((d) => !state.gold.deposits[d].known);
     if (hidden && rng.chance(G(world).prospect.find)) {
       state.gold.deposits[hidden].known = true;
-      say(state, `Gold! The prospectors above ${name} have struck ${G(world).deposits[hidden].name}. A gold mine can be sunk there.`);
+      say(state, `Gold! The prospectors above ${name} have struck ${G(world).deposits[hidden].name}. ${world.spaces ? 'Old workings lie flooded there: rebuild the gold mine to open them.' : 'A gold mine can be sunk there.'}`);
     } else if (hidden) {
       say(state, `The prospectors come back from the hills above ${name} with sore backs and empty pans. The old miners swear there is gold there still.`);
     } else {

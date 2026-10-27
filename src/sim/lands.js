@@ -11,6 +11,7 @@ import { addDispatch, clamp } from './realm.js';
 import { TEMERIA, ownerOf, originOf, realmNow, sideName } from './conflict.js';
 import { affinity } from './audiences.js';
 import { askGrant } from './conquest.js';
+import { worksSummary } from './works.js';
 
 const C = (world) => world.conquest;
 
@@ -161,12 +162,16 @@ function foreignToHome(state, world, id, rid, how) {
   s.garrison = Math.round(rec.garrison);
   s.buildings = [...rec.buildings].filter((b) => world.buildings[b]);
   s.damaged = [...(rec.damaged ?? [])];
+  // Its works come with their condition, damage included (M20).
+  if (rec.cond) s.cond = { ...rec.cond };
+  if (rec.worn) s.worn = { ...rec.worn };
+  if (rec.grudge) s.grudge = rec.grudge;
   s.unrest = rec.unrest ?? 25;
   s.holder = 'crown';
   s.origin = origin;
   if (origin !== TEMERIA) {
     s.integration = rec.integration ?? integrationStart(state, world, id, origin, rec);
-    s.conquered = { day: state.day, from: rid, how: rec.treated ?? 'spared', found: [...s.buildings] };
+    s.conquered = { day: state.day, from: rid, how: rec.treated ?? 'spared', found: [...s.buildings], works: worksSummary(s).mean };
   }
   if (rec.smoulder) s.smoulder = rec.smoulder;
   if (rec.expelled) s.expelled = rec.expelled;
@@ -193,6 +198,8 @@ function homeToForeign(state, world, id, rid) {
     unrest: s.unrest,
     integration: s.origin === rid ? 90 : C(world).integration.start,
     ...(s.damaged?.length ? { damaged: [...s.damaged] } : {}),
+    ...(s.cond ? { cond: { ...s.cond } } : {}),
+    ...(s.worn ? { worn: { ...s.worn } } : {}),
     ...(s.smoulder ? { smoulder: s.smoulder } : {}),
   };
   delete state.settlements[id];

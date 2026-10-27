@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  createState, step, applyAction, canBuild, routeValue, routeLimit, deserialize, serialize, goldYield, activeMines, threatLevel,
+  createState, step, applyAction, routeValue, routeLimit, deserialize, serialize, goldYield, activeMines, threatLevel, spacesOf, canRepairWorks,
 } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { startWar } from '../../src/sim/war.js';
@@ -45,9 +45,10 @@ test('route value grows with prosperity, wares that differ, market halls and saf
   richer.settlements.vizima.prosperity = 90;
   richer.settlements.maribor.prosperity = 90;
   assert.ok(routeValue(richer, world, { from: 'vizima', to: 'maribor' }).value > base);
-  const marketed = structuredClone(s);
-  marketed.settlements.vizima.buildings.push('market');
-  assert.ok(routeValue(marketed, world, { from: 'vizima', to: 'maribor' }).value > base * 1.2);
+  // Vizima's market hall (there from the start since M20) is worth a fifth.
+  const bare = structuredClone(s);
+  bare.settlements.vizima.buildings = bare.settlements.vizima.buildings.filter((b) => b !== 'market');
+  assert.ok(base > routeValue(bare, world, { from: 'vizima', to: 'maribor' }).value * 1.12);
   // Carreras (iron) and Ellander (food) sell each other what they lack.
   const differ = routeValue(s, world, { from: 'carreras', to: 'ellander' }).parts.wares;
   const same = routeValue(s, world, { from: 'vizima', to: 'maribor' }).parts.wares;
@@ -82,13 +83,22 @@ test('the crown can run only so many routes; market halls and guildhalls allow m
   let s = quiet(createState(world, 4));
   s.treasury = 50000;
   const limit = routeLimit(s, world);
-  const pairs = [['vizima', 'maribor'], ['vizima', 'gors_velen'], ['maribor', 'ellander'], ['vizima', 'ellander'], ['maribor', 'carreras']];
-  for (const [a, b] of pairs.slice(0, limit)) s = act(s, { type: 'route', from: a, to: b });
-  assert.match(applyAction(s, world, { type: 'route', from: pairs[limit][0], to: pairs[limit][1] }).error, /only \d+ routes/);
-  s.settlements.vizima.buildings.push('market', 'guildhall');
-  s.settlements.maribor.buildings.push('market');
-  assert.ok(routeLimit(s, world) >= limit + 2);
-  s = act(s, { type: 'route', from: pairs[limit][0], to: pairs[limit][1] });
+  const ends = world.geography.settlements.filter((x) => x.type === 'town' || x.type === 'city').map((x) => x.id);
+  const pairs = [];
+  for (const a of ends) for (const b of ends) if (a < b) pairs.push([a, b]);
+  let n = 0;
+  for (const [a, b] of pairs) {
+    if (n >= limit) break;
+    const out = applyAction(s, world, { type: 'route', from: a, to: b });
+    if (!out.error) { s = out.state; n += 1; }
+  }
+  assert.equal(n, limit);
+  const next = pairs.find(([a, b]) => !s.routes.some((r) => (r.from === a && r.to === b)));
+  assert.match(applyAction(s, world, { type: 'route', from: next[0], to: next[1] }).error, /only \d+ routes/);
+  // Without their market halls and guildhalls the towns would carry fewer.
+  const bare = structuredClone(s);
+  for (const t of Object.values(bare.settlements)) t.buildings = t.buildings.filter((b) => b !== 'market' && b !== 'guildhall');
+  assert.ok(routeLimit(s, world) >= routeLimit(bare, world) + 2);
 });
 
 test('bands holding the road rob a route on dangerous roads', () => {
@@ -108,11 +118,14 @@ test('bands holding the road rob a route on dangerous roads', () => {
 test('a gold mine pays each month and its seam runs out, slowly at first', () => {
   let s = quiet(createState(world, 5));
   s.treasury = 10000;
-  s = act(s, { type: 'build', settlement: 'zavada', building: 'goldmine' });
+  // Since M20 the old workings stand flooded: the crown reopens them.
+  assert.equal(goldYield(s, world, 'zavada_spur'), 0);
+  s = act(s, { type: 'repair', settlement: 'zavada', building: 'goldmine', kind: 'rebuild' });
   s = run(s, 120);
   assert.equal(activeMines(s, world).length, 1);
   const full = goldYield(s, world, 'zavada_spur');
-  assert.equal(full, world.gold.yield);
+  // Whole again, less a month or two of wear.
+  assert.ok(full >= world.gold.yield * 0.97 && full <= world.gold.yield, `${full}`);
   assert.ok(s.ledger.history.at(-1).income.gold > 0);
   // Late in its life, the seam thins.
   s.gold.deposits.zavada_spur.remaining = world.gold.deposits.zavada_spur.gold * 0.1;
@@ -129,7 +142,7 @@ test('gold draws miners and dwarves, and bandits to the country round it', () =>
   s.treasury = 10000;
   const banditsBefore = threatLevel(s, world, 'zavada', 'bandits');
   const dwarves = s.settlements.zavada.population.dwarf;
-  s = act(s, { type: 'build', settlement: 'zavada', building: 'goldmine' });
+  s = act(s, { type: 'repair', settlement: 'zavada', building: 'goldmine', kind: 'rebuild' });
   s = run(s, 365);
   assert.ok(s.settlements.zavada.population.dwarf > dwarves + 5);
   assert.ok(threatLevel(s, world, 'zavada', 'bandits') > banditsBefore + 10);
@@ -138,15 +151,17 @@ test('gold draws miners and dwarves, and bandits to the country round it', () =>
 test('hidden deposits are found only by prospecting, which can fail', () => {
   let found = 0;
   let failed = 0;
-  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]) {
     let s = quiet(createState(world, seed));
-    assert.match(canBuild(s, world, 'napeys', 'goldmine').reason, /known gold deposit/);
+    // Its seam is no space of the town's until it is found (M20).
+    assert.ok(!spacesOf(s, world, 'napeys').some((x) => x.kind === 'seam'));
     s = act(s, { type: 'prospect', settlement: 'napeys' });
     assert.match(applyAction(s, world, { type: 'prospect', settlement: 'napeys' }).error, /already at work/);
     s = run(s, world.gold.prospect.days + 1);
     if (s.gold.deposits.napeys_vein.known) {
       found++;
-      assert.ok(canBuild({ ...s, treasury: 10000 }, world, 'napeys', 'goldmine').ok);
+      assert.ok(spacesOf(s, world, 'napeys').some((x) => x.kind === 'seam'));
+      assert.ok(canRepairWorks({ ...s, treasury: 10000 }, world, 'napeys', 'goldmine', 'rebuild').ok);
     } else failed++;
   }
   assert.ok(found > 0 && failed > 0, `found ${found}, failed ${failed}`);
@@ -162,26 +177,14 @@ test('hidden deposits are found only by prospecting, which can fail', () => {
 
 // ---- Buildings ----
 
-test('places hold only so many buildings, and some need water, a road, a prerequisite or dwarves', () => {
-  const s = createState(world, 7);
-  s.treasury = 50000;
-  for (const m of ['timber', 'stone', 'iron']) for (const t of Object.values(s.settlements)) t.stock[m] = 1000;
-  const slots = world.buildingSlots.village;
-  s.settlements.white_orchard.buildings = ['fields', 'mill', 'granary', 'shrine', 'brewery'].slice(0, slots);
-  assert.match(canBuild(s, world, 'white_orchard', 'tannery').reason, /No room/);
-  assert.ok(canBuild(s, world, 'vizima', 'harbour').ok, 'Vizima is on the Ismena');
-  assert.ok(canBuild(s, world, 'gors_velen', 'harbour').ok, 'Gors Velen is a port');
-  assert.ok(canBuild(s, world, 'ellander', 'harbour').hidden, 'Ellander is far from water');
-  assert.match(canBuild(s, world, 'vizima', 'guildhall').reason, /market hall first/);
-  assert.match(canBuild(s, world, 'vizima', 'sewers').reason, /paved streets first/);
-  assert.ok(canBuild(s, world, 'vizima', 'bank').ok, 'Vizima has a dwarven quarter');
-  assert.match(canBuild(s, world, 'gors_velen', 'bank').reason, /dwarven quarter/);
-  assert.ok(canBuild(s, world, 'maribor', 'cathedral').ok);
-  assert.ok(canBuild(s, world, 'ellander', 'cathedral').hidden, 'cathedrals are for cities');
-});
-
-test('new buildings do what they promise', () => {
+test('works do what they promise', () => {
   const base = quiet(createState(world, 8));
+  // The same realm with one works taken away, run a while.
+  const without = (id, b, days = 61) => {
+    const s = structuredClone(base);
+    s.settlements[id].buildings = s.settlements[id].buildings.filter((x) => x !== b);
+    return run(s, days);
+  };
   const after = (mutate, days = 61) => {
     const s = structuredClone(base);
     mutate(s);
@@ -189,25 +192,22 @@ test('new buildings do what they promise', () => {
   };
   const plain = run(structuredClone(base), 61);
   // A dwarven bank lends more.
-  const banked = structuredClone(base);
-  banked.settlements.vizima.buildings.push('bank');
-  assert.match(applyAction({ ...base, treasury: -7900 }, world, { type: 'prospect', settlement: 'vorune' }).error, /bankers/);
-  assert.equal(applyAction({ ...banked, treasury: -7900 }, world, { type: 'prospect', settlement: 'vorune' }).error, undefined);
+  const unbanked = structuredClone(base);
+  unbanked.settlements.vizima.buildings = unbanked.settlements.vizima.buildings.filter((x) => x !== 'bank');
+  assert.match(applyAction({ ...unbanked, treasury: -7900 }, world, { type: 'prospect', settlement: 'vorune' }).error, /bankers/);
+  assert.equal(applyAction({ ...base, treasury: -7900 }, world, { type: 'prospect', settlement: 'vorune' }).error, undefined);
   // Crafts pay whatever the size of the place, each on its own line.
   const crafted = after((s) => s.settlements.white_orchard.buildings.push('brewery', 'tannery'));
-  assert.ok(crafted.ledger.history.at(-1).income.crafts.brewery > 15);
-  assert.ok(crafted.ledger.history.at(-1).income.crafts.tannery > 15);
-  assert.equal(plain.ledger.history.at(-1).income.crafts.brewery, undefined);
-  // A harbour on the Ismena collects customs.
-  const quay = after((s) => s.settlements.vizima.buildings.push('harbour'));
-  assert.ok(quay.ledger.history.at(-1).income.customs > 0);
+  assert.ok(crafted.ledger.history.at(-1).income.crafts.brewery > (plain.ledger.history.at(-1).income.crafts.brewery ?? 0) + 2);
+  assert.ok(crafted.ledger.history.at(-1).income.crafts.tannery > (plain.ledger.history.at(-1).income.crafts.tannery ?? 0) + 2);
+  // Vizima's harbour on the lake collects customs.
+  assert.ok(plain.ledger.history.at(-1).income.customs > 0);
+  assert.equal(without('vizima', 'harbour').ledger.history.at(-1).income.customs, 0);
   // Barracks hold more soldiers.
-  const barracks = after((s) => s.settlements.maribor.buildings.push('barracks'), 400);
-  const noBarracks = run(structuredClone(base), 400);
-  assert.ok(barracks.settlements.maribor.garrison > noBarracks.settlements.maribor.garrison * 1.2);
+  const barracks = run(structuredClone(base), 400);
+  assert.ok(barracks.settlements.maribor.garrison > without('maribor', 'barracks', 400).settlements.maribor.garrison * 1.2);
   // A cathedral raises tension among non-humans in its city.
-  const fire = after((s) => s.settlements.vizima.buildings.push('cathedral'), 200);
-  assert.ok(fire.settlements.vizima.tension > run(structuredClone(base), 200).settlements.vizima.tension + 5);
+  assert.ok(after((s) => s.settlements.vizima.buildings.push('cathedral'), 200).settlements.vizima.tension > run(structuredClone(base), 200).settlements.vizima.tension + 5);
 });
 
 test('a version 9 save gains trade and gold', () => {

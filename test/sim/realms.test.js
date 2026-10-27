@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createState, step, applyAction, canBuild, hasBit, visionOf, canSee, serialize, deserialize } from '../../src/sim/index.js';
+import { createState, step, applyAction, hasBit, visionOf, canSee, serialize, deserialize } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { pointInPolygon } from '../../src/sim/geometry.js';
 import { nodeWorld } from '../helpers.js';
@@ -63,14 +63,15 @@ test('the fog is cosmetic: what the crown sees never changes the game', () => {
   assert.equal(strip(run(createState(world, 9), 300)), strip(run(createState(world, 9), 300, false)));
 });
 
-test('neighbouring realms grow and build over the years', () => {
+test('neighbouring realms grow over the years, and mend their works', () => {
   const s0 = createState(world, 4);
   const s = run(s0, 3650, false);
   const pop = (x, rid) => Object.values(x.realms[rid].settlements).reduce((a, t) => a + t.population, 0);
   assert.ok(pop(s, 'redania') > pop(s0, 'redania'));
-  const built = Object.values(s.realms).reduce((a, r) => a + Object.values(r.settlements).reduce((b, t) => b + t.buildings.length, 0), 0);
-  assert.ok(built >= 10, `built ${built}`);
-  assert.equal(Object.values(s.realms.brokilon.settlements)[0].buildings.length, 0, 'the dryads build nothing');
+  // Since M20 every realm starts with its works, and its ruler keeps them up.
+  const conds = Object.values(s.realms.redania.settlements).flatMap((t) => t.buildings.map((b) => t.cond?.[b] ?? 100));
+  assert.ok(conds.length >= 20 && conds.reduce((a, b) => a + b, 0) / conds.length >= 55, `Redania's works at ${conds.reduce((a, b) => a + b, 0) / conds.length}`);
+  assert.equal(Object.values(s.realms.brokilon.settlements)[0].buildings.length, 0, 'the dryads keep no works');
 });
 
 test('news from abroad reaches Vizima only through friends, trade, embassies or spies', () => {
@@ -81,13 +82,14 @@ test('news from abroad reaches Vizima only through friends, trade, embassies or 
   assert.ok(!s.chronicle.some((d) => d.kind === 'abroad' && / in (Redania|Kaedwen|Aedirn|Cintra)/.test(d.text) && /^(Fire|Bandits|Sickness|A great fair|A rich harvest)/.test(d.text)));
 });
 
-test('a watchtower can only go on the border, and sees further', () => {
+test('watchtowers stand on the border, and see further', () => {
   const s = createState(world, 1);
-  assert.equal(canBuild(s, world, 'vizima', 'watchtower').ok, false);
-  assert.equal(canBuild(s, world, 'flotsam', 'watchtower').ok, true);
-  const before = visionOf(s, world).circles.find((c) => c.x === world.byId.flotsam.x).r;
-  s.settlements.flotsam.buildings.push('watchtower');
-  assert.ok(visionOf(s, world).circles.find((c) => c.x === world.byId.flotsam.x).r > before);
+  assert.ok(!s.settlements.vizima.buildings.includes('watchtower'));
+  assert.ok(s.settlements.houtborg.buildings.includes('watchtower'));
+  const r = (x) => visionOf(x, world).circles.find((c) => c.x === world.byId.houtborg.x).r;
+  const blind = structuredClone(s);
+  blind.settlements.houtborg.buildings = blind.settlements.houtborg.buildings.filter((b) => b !== 'watchtower');
+  assert.ok(r(s) > r(blind));
 });
 
 test('embassies cost each month; a spy may be caught', () => {

@@ -79,21 +79,27 @@ for (const vp of VIEWPORTS) {
     await page.touchscreen.tap(viz.x, viz.y);
     await page.waitForSelector('#sheet:not([hidden])');
     assert.match(await page.textContent('#sheet-title'), /Vizima/);
-    assert.match(await page.textContent('#sheet-body'), /Population[\s\S]*Crown demesne[\s\S]*Overview[\s\S]*Build[\s\S]*Stores/);
+    assert.match(await page.textContent('#sheet-body'), /Population[\s\S]*Crown demesne[\s\S]*Overview[\s\S]*Works[\s\S]*Stores/);
     await page.screenshot({ path: join(OUT, `${vp.name}-card.png`) });
 
-    // Order a market hall in Vizima from the Build tab: coin leaves the
-    // treasury, works begin.
+    // Mend Vizima's fire-damaged brewery from the Works tab (M20): coin
+    // leaves the treasury, the masons go in.
+    await page.evaluate(() => {
+      const s = window.northernWars.state.settlements.vizima;
+      s.cond = { ...(s.cond ?? {}), brewery: 40 };
+      s.worn = { ...(s.worn ?? {}), brewery: { why: 'Gutted by fire in March', day: 0 } };
+    });
     const treasury = await page.evaluate(() => window.northernWars.state.treasury);
-    await page.click('.segs [data-tsub="build"]');
-    await page.click('[data-build-row="market"]');
-    await page.click('[data-build="market"]');
-    await page.waitForFunction(() => window.northernWars.state.settlements.vizima.construction, null, { timeout: 5000 });
-    assert.match(await page.textContent('[data-part="built"]'), /Raising: Market hall/);
-    const market = await page.evaluate(() => window.northernWars.world.buildings.market.cost.coin);
-    assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - market);
-    assert.equal(await page.evaluate(() => window.northernWars.state.settlements.vizima.construction.building), 'market');
-    await page.screenshot({ path: join(OUT, `${vp.name}-building.png`) });
+    await page.click('.segs [data-tsub="works"]');
+    assert.match(await page.textContent('[data-part="spaces"]'), /Lake Vizima[\s\S]*The Ismena[\s\S]*City square/i);
+    await page.click('[data-works="brewery"]');
+    assert.match(await page.textContent('[data-part="repair"]'), /Rebuild it[\s\S]*crowns[\s\S]*days[\s\S]*hands[\s\S]*Patch it up/);
+    await page.screenshot({ path: join(OUT, `${vp.name}-repair.png`) });
+    const cost = await page.evaluate(() => window.northernWars.repairOptions('vizima', 'brewery').rebuild.coin);
+    await page.click('[data-repair="rebuild"]');
+    await page.waitForFunction(() => window.northernWars.state.settlements.vizima.repair?.brewery, null, { timeout: 5000 });
+    assert.equal(await page.evaluate(() => window.northernWars.state.treasury), treasury - cost);
+    await page.screenshot({ path: join(OUT, `${vp.name}-works.png`) });
     await page.click('#sheet-close');
     assert.equal(await page.isHidden('#sheet'), true);
 

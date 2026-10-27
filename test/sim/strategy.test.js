@@ -9,7 +9,7 @@ import { nodeWorld } from '../helpers.js';
 import { createState, step, serialize, deserialize, intentions, ownerOf, applyAction } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { assess, postureScores, choosePosture, armyTarget, deterrence, strengthOf } from '../../src/sim/strategy.js';
-import { canRaiseAbroad, monthlyRealms } from '../../src/sim/realms.js';
+import { monthlyRealms } from '../../src/sim/realms.js';
 import { startWar, applyPeace } from '../../src/sim/war.js';
 import { makeTreaty, treatyBetween } from '../../src/sim/diplomacy.js';
 import { wantedPact } from '../../src/sim/audiences.js';
@@ -65,7 +65,7 @@ test('a posture holds its minimum months unless threat jumps', () => {
   const kept = choosePosture(s, world, 'cidaris', assess(s, world, 'cidaris'));
   assert.equal(kept.kind, 'grow');
   // ...but war on its border does.
-  startWar(s, world, makeRng(2), 'kerack', 'cidaris', 'test');
+  startWar(s, world, makeRng(2), 'verden', 'cidaris', 'test');
   const a = assess(s, world, 'cidaris');
   assert.ok(a.threat.value - calm >= world.strategy.choose.threatJump, `threat ${calm} to ${a.threat.value}`);
   assert.notEqual(choosePosture(s, world, 'cidaris', a).kind, 'grow');
@@ -115,25 +115,23 @@ test('Kerack\'s small garrisons recover after a war; a realm in debt pays no tri
   assert.match(w.reason ?? '', /cannot spare/);
 });
 
-test('foreign realms build where the land allows, by payback, posture and agenda', () => {
+test('foreign realms hold the works their land gives them, and build nothing new (M20)', () => {
   const s = createState(world, 7);
-  // A mine only where iron is worked; a harbour only on water.
-  // (The atlas gives Mahakam no range of its own, so any mountain town will do.)
-  const ironTown = Object.keys(world.realmOf).find((id) => world.terrainOf[id] === 'mountains' && ['village', 'town', 'castle'].includes(world.byId[id].type));
-  assert.ok(ironTown, 'a mountain town abroad');
-  assert.ok(canRaiseAbroad(s, world, world.realmOf[ironTown], ironTown, 'mine'));
-  const coast = world.foreignByRealm.cidaris.find((id) => world.waterOf[id] && ['town', 'city'].includes(world.byId[id].type));
-  assert.ok(coast, 'Cidaris has a town on the water');
-  assert.ok(canRaiseAbroad(s, world, 'cidaris', coast, 'harbour'));
-  const dry = Object.keys(world.byId).find((id) => world.realmOf[id] && !world.waterOf[id] && ['town', 'city'].includes(world.byId[id].type));
-  assert.ok(!canRaiseAbroad(s, world, world.realmOf[dry], dry, 'harbour'), `${dry} has no water`);
-  const notIron = world.foreignByRealm.redania.find((id) => world.terrainOf[id] !== 'mountains' && world.byId[id].type === 'village');
-  assert.ok(!canRaiseAbroad(s, world, 'redania', notIron, 'mine'));
-  // Over ten years the realms raise buildings from M11 and M12, not just the basics.
+  const has = (id, b) => s.realms[world.realmOf[id]].settlements[id].buildings.includes(b);
+  // A mine in the mountains, a harbour on the coast, none on dry land.
+  const mountain = Object.keys(world.realmOf).find((id) => world.spaces[id].some((x) => x.kind === 'mountain') && world.spaces[id].find((x) => x.kind === 'mountain').works.includes('mine'));
+  assert.ok(mountain && has(mountain, 'mine'), 'a mountain town abroad works iron');
+  assert.ok(has('bremervoord', 'harbour') && has('novigrad', 'harbour'));
+  const dry = world.foreignByRealm.redania.find((id) => !world.spaces[id].some((x) => ['coast', 'lake', 'river'].includes(x.kind)));
+  assert.ok(!['harbour', 'fishery', 'mill'].some((b) => has(dry, b)), `${dry} has no water`);
+  // Ten years on, nothing new has been raised: works are only mended.
   const later = step(s, 3650, world, { ambient: false });
-  const built = new Set(Object.values(later.realms).flatMap((r) => Object.values(r.settlements).flatMap((t) => t.buildings)));
-  for (const b of ['market', 'workshop', 'harbour', 'smithy']) assert.ok(built.has(b), `${b} raised abroad`);
-  assert.ok([...built].filter((b) => !['fields', 'mill', 'granary', 'walls', 'shrine', 'lumber', 'quarry', 'mine'].includes(b)).length >= 8);
+  for (const [rid, r] of Object.entries(later.realms)) {
+    for (const [id, t] of Object.entries(r.settlements)) {
+      const at = s.realms[rid]?.settlements[id] ?? s.realms[world.realmOf[id]]?.settlements[id];
+      if (at) for (const b of t.buildings) assert.ok(at.buildings.includes(b), `${b} raised at ${id}`);
+    }
+  }
 });
 
 test('a realm set on expansion declares on the holder of its aim, and its army marches on it', () => {
