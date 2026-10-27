@@ -12,6 +12,33 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### Labour through the seasons (M20 C)
+The kingdom's works are now manned from a pool of hands (about three in ten of the people), split by the crown between eight kinds of work, with seasons, royal calls and a fuel stock for the winter. From `node tools/longrun.mjs 30 <crown> 1,2,3`, at year 30 (Part A and B figures in brackets):
+
+| Crown | What it does with the hands | People after 30 years | Works (mean condition) | Treasury | Depositions |
+| --- | --- | --- | --- | --- | --- |
+| Idle | Leaves the split as it starts and calls nothing | about 29,400 (40,000) | 33 by year 10, 0 by year 20 | about 38,000 at year 10, at the debt floor by 30 | 4 |
+| Steward | Calls the winter turn every autumn and a harvest muster when grain is short; moves hands to kinds that go short, repairs from crafts | about 57,000 (56,700) | 54 to 82 | 800 to 2,500 | 0 |
+| Spendthrift | As the steward, and rebuilds everything on credit | about 56,500 (56,300) | 39 to 87 | -10,700 to -100 | 0 to 1 |
+| Tyrant | Raises the levies every six months, mends nothing | about 12,200 (25,300) | 0 | at the debt floor | 28 to 30 |
+
+- **The idle crown declines faster.** Without the winter turn its woodpiles run low in hard winters and the poorest die of cold (about 1,400 dead to raids and cold by year 30); it loses close to half its people and is deposed four times. This is the brief's "an idle crown must visibly decline".
+- **The steward holds level.** Seasonal work (more hands in the woods before winter, a muster in a lean year) is what keeps it where Parts A and B left it. In one seed of three its works slip to 54 by year 30 as the gold runs out and repairs outpace the treasury.
+- **The tyrant's levies cost it dearly.** Every levy empties the works for three months; with nothing mended its people fall to under a quarter of the start.
+- **Food.** Part C pays the fields by staffing, so the base yield (economy.json `farmBase`) went back up to 0.82 of the M19 value (0.77 in Part B): fully manned fields grow what Part B's did.
+
+The dials, in data/labour.json:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| `handsShare` | 0.3 of the people | More hands for everything |
+| `lendReach` | 110 (about a day's walk) | Villages further out lend to a town |
+| `spread` | 0.85 | Spare hands fill short districts more fully |
+| `split` | fields 47, woods 7, mines 7, pastures 3, fishing 4, crafts 22, repairs 4, levies 6 | The starting split |
+| `crew` | 160 hands to a repair crew | Fewer repairs at once |
+| `fuel.short.sickness`, `fuel.short.unrest` | 0.15% a month, 8 | A harsher cold winter |
+| `calls.levy.coin` | 300 crowns for three months | A dearer levy |
+
 ### A kingdom already built (M20 A and B)
 The crown no longer builds: every place starts with the works its land gives it, they wear and break, and the crown mends them. From `node tools/longrun.mjs 30 <crown> 1,2,3` and `node tools/realms.mjs 30 steward 1,2,3,4`, at year 30 (M19 figures in brackets):
 
