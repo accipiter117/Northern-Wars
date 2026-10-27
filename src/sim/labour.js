@@ -435,7 +435,14 @@ export function winterOutlook(state, world, { foodYield, foodNeed, foodCapacity 
   // What the hungry months (November to February) will eat.
   let winter = 0;
   for (const m of [11, 12, 1, 2]) for (const s of Object.values(state.settlements)) if (!s.occupier) winter += foodNeed(world, s, m === 11 ? 'autumn' : 'winter') * MONTHS[m - 1].days;
-  return { days: d, atFrost: Math.round(atFrost), winter: Math.round(winter), short: atFrost < winter, fuel: Math.round(state.labour.fuel), fuelNeed: Math.round(fuelNeed(state, world)) };
+  // Fuel by first frost: what is in store, and what the woods hands cut by
+  // then at this month's rate (none is burned before November).
+  const people = Object.values(state.settlements).reduce((a, s) => a + (s.occupier ? 0 : totalPopulation(s)), 0);
+  const fuelAtFrost = Math.min((people / 100) * l.fuel.capMonths, state.labour.fuel + fuelMade(state, world) * (d / 30.4));
+  return {
+    days: d, atFrost: Math.round(atFrost), winter: Math.round(winter), short: atFrost < winter,
+    fuel: Math.round(state.labour.fuel), fuelAtFrost: Math.round(fuelAtFrost), fuelNeed: Math.round(fuelNeed(state, world)),
+  };
 }
 
 // The fuel the coming winter will burn.
@@ -451,7 +458,7 @@ export function pressureLine(state, world, fns) {
   const o = winterOutlook(state, world, fns);
   const month = dateOf(state.day).month;
   const wintry = month >= 11 || month <= 2;
-  const fuel = o.fuel < o.fuelNeed * 0.6 ? ' Fuel is short.' : '';
+  const fuel = o.fuelAtFrost < o.fuelNeed * 0.6 ? ' Fuel will be short.' : '';
   if (wintry) return `Winter. ${state.labour.short > 0.05 ? 'Hearths are going cold.' : `Fuel for about ${Math.max(0, Math.round((o.fuel / Math.max(1, o.fuelNeed)) * 5))} months.`}`;
   return `First frost in ${o.days} days. ${o.short ? 'Grain is short for winter.' : 'Grain enough for winter.'}${fuel}`;
 }
