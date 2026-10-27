@@ -42,14 +42,15 @@ for (const seed of SEEDS) {
       checkInvariants(a, `seed ${seed} year ${y + 1}`);
     }
     assert.equal(JSON.stringify(a), JSON.stringify(b));
-    // An untended realm should neither starve nor boom over ten years. Towns
-    // lost to a neighbour at a peace leave the realm for good (M19), so the
-    // measure is taken over the towns it still has.
+    // An untended realm should not boom over ten years, and since M20 it
+    // declines as its works wear out, but it does not collapse. Towns lost to
+    // a neighbour at a peace leave the realm for good (M19), so the measure
+    // is taken over the towns it still has.
     const start = createState(world, seed);
     const kept = Object.keys(a.settlements).filter((id) => start.settlements[id]);
     const pop = (x) => kept.reduce((n, id) => n + Object.values(x.settlements[id].population).reduce((p, q) => p + q, 0), 0);
     const ratio = pop(a) / pop(start);
-    assert.ok(ratio > 0.9 && ratio < 1.2, `population ratio ${ratio}`);
+    assert.ok(ratio > 0.8 && ratio < 1.15, `population ratio ${ratio}`);
     assert.equal(a.day - createState(world, seed).day, 10 * YEAR_DAYS);
   });
 }
@@ -60,7 +61,7 @@ test('different seeds give different reigns', () => {
   assert.notEqual(JSON.stringify(a.settlements), JSON.stringify(b.settlements));
 });
 
-test('thirty untended years: the hoard levels off, Authority is not left at the cap, the realm holds', () => {
+test('thirty untended years: the hoard levels off, Authority is not left at the cap, the realm decays but lives', () => {
   let s = createState(world, 5);
   const pop0 = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
   // Decisions are left to take their defaults, as an absent crown would.
@@ -69,5 +70,8 @@ test('thirty untended years: the hoard levels off, Authority is not left at the 
   assert.ok(s.treasury < 70000, `treasury ${s.treasury}`);
   assert.ok(s.authority < 90, `authority ${s.authority}`);
   const pop = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
-  assert.ok(pop / pop0 > 0.85 && pop / pop0 < 1.15, `population ratio ${pop / pop0}`);
+  // Since M20 an untended realm's works fall to ruin and its people dwindle.
+  assert.ok(pop / pop0 > 0.55 && pop / pop0 < 0.95, `population ratio ${pop / pop0}`);
+  const conds = Object.values(s.settlements).flatMap((x) => x.buildings.map((b) => x.cond?.[b] ?? 100));
+  assert.ok(conds.reduce((a, b) => a + b, 0) / conds.length < 25, 'its works lie in ruins');
 });

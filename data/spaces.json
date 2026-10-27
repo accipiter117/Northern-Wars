@@ -1664,10 +1664,10 @@
     "note": "How works wear, break and are mended (M20). Condition runs 0 to 100; a works yields by the lower of its condition and its staffing.",
     "decideBelow": 70,
     "decisionDays": 30,
-    "wear": 0.55,
+    "wear": 0.45,
     "unpaidWear": 2.5,
     "rebuild": {
-      "coin": 0.6,
+      "coin": 0.35,
       "materials": 0.5,
       "days": 0.7,
       "minDays": 10,
@@ -1675,7 +1675,7 @@
       "buyFactor": 2
     },
     "patch": {
-      "coin": 0.2,
+      "coin": 0.12,
       "days": 0.25,
       "minDays": 4,
       "share": 0.5,

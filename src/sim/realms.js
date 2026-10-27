@@ -38,7 +38,7 @@ function effectsOf(world, s) {
   for (const b of s.buildings) {
     const f = worksFactor(s, b);
     for (const [k, v] of Object.entries(world.buildings[b].effects)) if (k in fx && typeof v === 'number') fx[k] += v * f;
-    fx.upkeep += (world.buildings[b].upkeep ?? 0) * upkeepFactor(world, s, b);
+    fx.upkeep += (world.buildings[b].upkeep ?? 0) * upkeepFactor(world, s, b, false);
   }
   return fx;
 }

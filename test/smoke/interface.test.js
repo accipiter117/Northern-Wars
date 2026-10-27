@@ -345,7 +345,7 @@ test('no tab or card opens longer than about two screens', async () => {
     await page.evaluate((p) => { const st = window.northernWars.world.byId[p]; window.northernWars.lookAt(st.x, st.y); }, town);
     const q = await page.evaluate((p) => window.northernWars.screenOf(p), town);
     await page.touchscreen.tap(q.x, q.y);
-    for (const sub of ['overview', 'build', 'military', 'people']) {
+    for (const sub of ['overview', 'works', 'military', 'people']) {
       await page.click(`.segs [data-tsub="${sub}"]`);
       await measure(`${town}/${sub}`);
     }
