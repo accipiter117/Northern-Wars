@@ -163,12 +163,12 @@
   "fuel": {
     "note": "Fuel in units that warm a hundred people for a winter month. Woods hands at a fuel works cut and dry it; elsewhere they gather what wood they can. Hearths burn it from November to March, most in midwinter.",
     "perWorkerMonth": {
-      "lumber": 0.17,
-      "peat": 0.2,
-      "charcoal": 0.15,
-      "lodge": 0.06,
-      "herbalists": 0.03,
-      "gather": 0.09
+      "lumber": 0.21,
+      "peat": 0.24,
+      "charcoal": 0.18,
+      "lodge": 0.07,
+      "herbalists": 0.04,
+      "gather": 0.11
     },
     "burn": {
       "11": 0.5,
@@ -180,8 +180,8 @@
     "startMonths": 1.5,
     "capMonths": 6,
     "short": {
-      "sickness": 0.004,
-      "unrest": 12,
+      "sickness": 0.0015,
+      "unrest": 8,
       "poorest": 0.4
     }
   },

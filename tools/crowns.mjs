@@ -298,14 +298,26 @@ export function makeCrowns(world) {
     }
     // Enough crews for what needs mending, never fewer than four.
     const worn = Object.values(s.settlements).reduce((a, t) => a + t.buildings.filter((b) => (t.cond?.[b] ?? 100) < 75).length, 0);
-    if (worn > 8 && s.labour.split.repairs < 8 && s.labour.split.crafts > 15) s = act(s, { type: 'labourShift', kind: 'repairs', step: 1 });
+    if (worn > 8 && s.labour.split.repairs < 8 && s.labour.split.crafts > 15) {
+      const split = { ...s.labour.split };
+      split.repairs += 1;
+      split.crafts -= 1;
+      s = act(s, { type: 'labour', split });
+    }
+    // Grain short for the winter: more hands to the fields, from the crafts.
+    if (o.short && s.labour.split.fields < 60 && s.labour.split.crafts > 12) {
+      const split = { ...s.labour.split };
+      split.fields += 2;
+      split.crafts -= 2;
+      s = act(s, { type: 'labour', split });
+    }
     return s;
   }
 
   function tyrant(s, month) {
     s = answer(s, false);
-    // The tyrant keeps the levies raised whenever it can pay for them.
-    if (world.labour && canCall(s, world, 'levy').ok) s = act(s, { type: 'call', call: 'levy' });
+    // The tyrant raises the levies every other season, whatever the works lose.
+    if (world.labour && month % 6 === 0 && canCall(s, world, 'levy').ok) s = act(s, { type: 'call', call: 'levy' });
     // The tyrant leaves what breaks.
     for (const d of [...(s.works?.decisions ?? [])]) s = act(s, { type: 'worksDecision', id: d.id, choice: 2 });
     s = warPolicy(s, 'harsh');
