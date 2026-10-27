@@ -19,6 +19,7 @@ import { monthlyGold, stepGoldDay } from './gold.js';
 import { stepThreatsDay } from './threats.js';
 import { stepCompaniesDay, monthlyCompanies } from './forces.js';
 import { stepWorksDay, monthlyWorks, worksUnrest } from './works.js';
+import { stepLabourDay, monthlyLabour } from './labour.js';
 
 const CHRONICLE_LIMIT = 400;
 
@@ -51,6 +52,8 @@ function popOf(s) {
 
 export function stepRealmDay(state, world, rng) {
   const date = dateOf(state.day);
+  // Who works where today (M20 C), before anything is made.
+  if (state.labour) stepLabourDay(state, world);
   stepEconomyDay(state, world);
   stepOpinionDay(state, world);
   stepNeighboursDay(state, world);
@@ -117,6 +120,7 @@ export function stepRealmDay(state, world, rng) {
     monthlyEvent(state, world, rng, date.season);
     monthlyRealms(state, world, rng);
     if (state.works) monthlyWorks(state, world, rng);
+    if (state.labour) monthlyLabour(state, world, rng);
     monthlyDiplomacy(state, world, rng);
     if (state.wars) monthlyWar(state, world, rng);
     if (state.wars) monthlyConquest(state, world, rng);

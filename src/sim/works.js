@@ -353,7 +353,8 @@ export function stepWorksDay(state, world) {
 
 // How many repairs can go forward at once.
 export function repairCrews(state, world) {
-  return C(world)?.crews ?? 4;
+  // The Repairs share of the kingdom's hands, a crew at a time (M20 C).
+  return state.labour?.crews ?? C(world)?.crews ?? 4;
 }
 
 // What the state of its works does to a place's mood: ruins it has to live

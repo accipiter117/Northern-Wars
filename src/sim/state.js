@@ -16,6 +16,7 @@ import { seedPacts } from './audiences.js';
 import { syncWorld } from './lands.js';
 import { defaultConquest } from './conquest.js';
 import { startingWorks, defaultWorks } from './works.js';
+import { defaultLabour, startingFuel } from './labour.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -25,7 +26,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 17;
+export const STATE_VERSION = 18;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -86,8 +87,10 @@ export function createState(world, seed = 1) {
     claimants: [],
     conquest: defaultConquest(),
     works: defaultWorks(),
+    labour: defaultLabour(world),
   };
   applyHoldings(state, world);
+  if (state.labour) state.labour.fuel = startingFuel(state, world);
   // The North's standing pacts, as they stand when the reign begins (M18).
   seedPacts(state, world);
   if (world.grid) {

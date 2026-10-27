@@ -4,7 +4,8 @@
 import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
-  strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks,
+  strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks, canCall, winterOutlook, foodYield, foodNeed, foodCapacity,
+  LABOUR_KINDS,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -174,6 +175,7 @@ export function makeCrowns(world) {
       if (best) s = act(s, { type: 'route', from: best.a, to: best.b });
     }
     if (world.spaces) s = mend(s, spend);
+    if (world.labour) s = labour(s);
     for (let i = 0; i < (world.spaces ? 0 : spend ? 3 : 1); i++) {
       let built = false;
       const order = (month + i) % 2 ? [...FOOD, ...EARNERS] : [...EARNERS, ...FOOD];
@@ -273,8 +275,37 @@ export function makeCrowns(world) {
     return s;
   }
 
+  // The steward's hands (M20 C): the winter turn standing, a harvest muster
+  // when the grain will not see the winter out, and hands moved each month
+  // from whatever stands idle to whatever is short.
+  function labour(s) {
+    if (!s.labour) return s;
+    if (!s.labour.winterTurn) s = act(s, { type: 'call', call: 'winter' });
+    const o = winterOutlook(s, world, { foodYield, foodNeed, foodCapacity });
+    if (o.short && canCall(s, world, 'harvest').ok) s = act(s, { type: 'call', call: 'harvest' });
+    const r = s.labour.report;
+    if (!r) return s;
+    const short = (k) => (r[k].need > 0 ? r[k].staffed / r[k].need : 1);
+    const want = LABOUR_KINDS.filter((k) => !['repairs', 'levies', 'fields'].includes(k) && r[k].need > 0 && short(k) < 0.9)
+      .sort((a, b) => short(a) - short(b))[0];
+    const idle = LABOUR_KINDS.filter((k) => !['repairs', 'levies', 'fields'].includes(k) && s.labour.split[k] > 2 && (r[k].need === 0 || r[k].idle > r[k].hands * 0.3))
+      .sort((a, b) => r[b].idle - r[a].idle)[0];
+    if (want && idle && want !== idle) {
+      const split = { ...s.labour.split };
+      split[want] += 1;
+      split[idle] -= 1;
+      s = act(s, { type: 'labour', split });
+    }
+    // Enough crews for what needs mending, never fewer than four.
+    const worn = Object.values(s.settlements).reduce((a, t) => a + t.buildings.filter((b) => (t.cond?.[b] ?? 100) < 75).length, 0);
+    if (worn > 8 && s.labour.split.repairs < 8 && s.labour.split.crafts > 15) s = act(s, { type: 'labourShift', kind: 'repairs', step: 1 });
+    return s;
+  }
+
   function tyrant(s, month) {
     s = answer(s, false);
+    // The tyrant keeps the levies raised whenever it can pay for them.
+    if (world.labour && canCall(s, world, 'levy').ok) s = act(s, { type: 'call', call: 'levy' });
     // The tyrant leaves what breaks.
     for (const d of [...(s.works?.decisions ?? [])]) s = act(s, { type: 'worksDecision', id: d.id, choice: 2 });
     s = warPolicy(s, 'harsh');

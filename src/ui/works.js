@@ -1,7 +1,7 @@
 // A place's works (M20): its spaces, each tagged by the land it stands on,
 // what stands in each, how well it stands, and the crown's three answers to
 // damage (rebuild, patch, or leave it), with what each costs and brings.
-import { spacesOf, repairOptions, canRepairWorks, worksSummary } from '../sim/index.js';
+import { spacesOf, repairOptions, canRepairWorks, worksSummary, kindOfWorks, districtOf, handsOf } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
 import { isOpen } from './memory.js';
@@ -38,6 +38,14 @@ function worksRow(app, id, w) {
     detail += `<div class="gauge-row"><div class="lbl"><span>${w.repair.kind === 'rebuild' ? 'Masons at work' : 'Carpenters at work'}</span><span>${w.repair.daysLeft} days</span></div><div class="gauge"><span style="width:${Math.round(done * 100)}%"></span></div></div>`;
   } else if (c < 100 && !state.settlements[id].occupier) {
     detail += repairButtons(world, state, id, w.b);
+  }
+  // Labour (M20 C): this works can be put first for hands.
+  const kind = world.labour && kindOfWorks(world, w.b);
+  if (kind && state.labour && !state.settlements[id].occupier) {
+    const pinned = state.labour.pins?.[id]?.includes(w.b);
+    detail += `<button type="button" class="act${pinned ? ' on' : ''}" data-pin="${w.b}" ${orderAttr({ type: 'pin', settlement: id, building: w.b })}>
+      <span class="act-label">${pinned ? 'Manned first: release it' : 'Keep it fully manned'}</span>
+      <span class="act-sub">${Math.round(w.staff)}% manned. ${escapeHtml(world.labour.kinds[kind].name)} hands go here before the rest.</span></button>`;
   }
   return `${row}<div class="row-detail">${detail}</div>`;
 }
@@ -76,7 +84,20 @@ export function worksTabHtml(app, id) {
     return `<div class="space" data-space="${sp.kind}"><h4><span class="space-dot" aria-hidden="true"></span>${escapeHtml(cap1(sp.name))} <small>${escapeHtml(kind)}</small></h4>
       ${rows ? `<div class="rows">${rows}</div>` : '<p class="sub">Nothing stands here.</p>'}</div>`;
   }).join('');
-  return `<div data-part="spaces">${head}<div class="tags">${landTags(world, state, id)}</div>${blocks}</div>`;
+  return `<div data-part="spaces">${head}${handsLine(world, state, id)}<div class="tags">${landTags(world, state, id)}</div>${blocks}</div>`;
+}
+
+// Hands within a day's walk (M20 C): its own, and the villages' that lend
+// theirs here; or, for a village, where its hands go.
+function handsLine(world, state, id) {
+  if (!world.labour || !state.labour) return '';
+  const district = districtOf(world);
+  const head = district[id];
+  if (head !== id) return `<p class="sub" data-part="hands">Its ${Math.round(handsOf(state, world, id))} hands work for ${escapeHtml(world.byId[head].name)}, a day's walk away.</p>`;
+  const lent = Object.keys(state.settlements).filter((x) => x !== id && district[x] === id);
+  const own = handsOf(state, world, id);
+  const more = lent.reduce((a, x) => a + handsOf(state, world, x), 0);
+  return `<p class="sub" data-part="hands">${number(Math.round(own + more))} hands within a day's walk${lent.length ? `: ${number(Math.round(own))} its own, ${number(Math.round(more))} lent by ${lent.length} village${lent.length === 1 ? '' : 's'} (${lent.map((x) => escapeHtml(world.byId[x].name)).join(', ')})` : ''}.</p>`;
 }
 
 // For the overview: the place's works at a glance, as pips.
