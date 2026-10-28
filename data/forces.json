@@ -1,12 +1,12 @@
 {
-  "note": "The crown's standing companies and the threats that roam the realm. Strength is fighting power: men x their worth a man x morale (0.5 + morale/100) x experience (1 + 0.3 x xp) x how well the troop suits the foe and the ground. Upkeep is crowns a man a month. Speeds are map units a day.",
+  "note": "The crown's standing companies and the threats that roam the realm. Strength is fighting power: men x their worth a man x morale (0.5 + morale/100) x experience (1 + 0.3 x xp) x how well the troop suits the foe and the ground. Upkeep is crowns a man a month. Speeds are map units a day. Since M21 the companies cost 0.55 of their old upkeep, so a well-run realm at peace can keep about 3,000 of them.",
   "companies": {
     "militia": {
       "name": "Militia",
       "plural": "militia",
       "men": 150,
       "perMan": 0.8,
-      "upkeep": 0.3,
+      "upkeep": 0.165,
       "coin": 100,
       "speed": 1,
       "places": [
@@ -22,7 +22,7 @@
       "plural": "archers",
       "men": 100,
       "perMan": 1.0,
-      "upkeep": 0.55,
+      "upkeep": 0.303,
       "coin": 250,
       "speed": 1,
       "places": [
@@ -37,7 +37,7 @@
       "plural": "men-at-arms",
       "men": 100,
       "perMan": 1.4,
-      "upkeep": 0.8,
+      "upkeep": 0.44,
       "coin": 400,
       "speed": 1,
       "places": [
@@ -54,7 +54,7 @@
       "plural": "crossbowmen",
       "men": 80,
       "perMan": 1.2,
-      "upkeep": 0.8,
+      "upkeep": 0.44,
       "coin": 350,
       "speed": 0.95,
       "places": [
@@ -73,7 +73,7 @@
       "plural": "light horse",
       "men": 60,
       "perMan": 1.5,
-      "upkeep": 1.1,
+      "upkeep": 0.605,
       "coin": 400,
       "speed": 1.6,
       "places": [
@@ -90,7 +90,7 @@
       "plural": "knights",
       "men": 50,
       "perMan": 2.6,
-      "upkeep": 2.2,
+      "upkeep": 1.21,
       "coin": 900,
       "speed": 1.3,
       "places": [
