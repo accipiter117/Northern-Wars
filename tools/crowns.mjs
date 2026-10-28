@@ -170,6 +170,15 @@ export function makeCrowns(world) {
     // the most lucrative trade route.
     if (world.market) {
       if (month % 3 === 1) s = trade(s);
+      // A town's focus (M21 C): the iron towns lean to the mines and smiths.
+      if (month === 0 && world.labour?.focus) {
+        for (const st of world.geography.settlements) {
+          if (s.settlements[st.id]?.production === 'iron' && ['town', 'city'].includes(st.type)) {
+            const out = applyAction(s, world, { type: 'focus', settlement: st.id, focus: 'iron' });
+            if (!out.error) s = out.state;
+          }
+        }
+      }
       // The spendthrift borrows when the coffers run low.
       if (spend && s.treasury < 800 && canBorrow(s, world, 5000).ok) s = act(s, { type: 'loan', sum: 5000 });
     } else if (month % 6 === 1 && s.treasury > 900) {

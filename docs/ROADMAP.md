@@ -22,7 +22,7 @@
 | M18 Rulers who govern | Foreign rulers assess threat, opportunity and purse each month and choose a posture (Grow, Arm, Expand, Consolidate, Scheme); standing armies with upkeep, a court that taxes hoards, debt with desertion and offers to Temeria; building from the full catalogue; wars with aims, musters and reasons in place of rivalry dice; deterrence, probes and harder-to-break pacts with Temeria; pacts between realms that last; posture and war aims learnt through embassies and spies | Done |
 | M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | Done |
 | M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
-| M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | In progress (A, B, C and D) |
+| M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | Done |
 
 ## M21 acceptance criteria
 Part A, trade in five goods:
@@ -52,6 +52,18 @@ Part D, armies of a real size:
 - Pay by men and type with field pay on campaign; unpaid armies lose morale, then desert; the Military tab shows men under arms, cost and months it can be paid.
 - Foreign realms muster by the same rules.
 - Save version 21.
+
+Part E, threats scaled to the realm:
+- Camps, commandos and raiding parties scale with the realm's people and are capped, so a city's levy or a standing company beats an ordinary threat.
+- Each threat shows its strength against the nearest force ("Bandit camp: about 120 men. Maribor's levy: 450.").
+- Walls count fully; garrisons win most raids on walled towns; villages need patrols.
+- A normal reign meets a nuisance, not a drain.
+- Save version 22 rescales threats already on the map.
+
+Part F, clearing the clutter:
+- Every screen audited: cards open with three or four lines plus Details; lists longer than eight rows are grouped or folded.
+- The Treasury is one ledger of grouped income lines (taxes by estate, trade, sales, tolls and dues, war, loans) and expense lines (armies, upkeep, repairs, court).
+- The audit is written into DESIGN.md.
 
 ## M20 acceptance criteria
 Part A, spaces from the land:

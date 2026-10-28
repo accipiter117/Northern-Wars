@@ -117,6 +117,25 @@ export function nearestPlace(world, p, filter = () => true) {
   return best;
 }
 
+// How large the realm's troubles grow (M21): with its people, within bounds,
+// so a small realm meets small bands and a great one larger, but never more
+// than its companies and levies can answer.
+export function threatScale(state, world) {
+  const sc = T(world).scale;
+  if (!sc) return 1;
+  let pop = 0;
+  for (const s of Object.values(state.settlements)) if (!s.occupier) pop += totalPopulation(s);
+  return clamp(pop / sc.basePop, sc.min, sc.max);
+}
+
+// The most men an ordinary threat of a kind may hold (raiders sent in war
+// may be larger: those are for the armies).
+export function threatCap(state, world, kind, war = false) {
+  const cfg = T(world)[kind];
+  const cap = war ? cfg.warCap ?? cfg.capMax : cfg.capMax;
+  return cap ?? Infinity;
+}
+
 function newThreat(state, kind, fields) {
   const t = { id: state.threats.nextId++, kind, born: state.day, morale: 70, band: null, sighted: false, alerted: false, rumour: null, ...fields };
   state.threats.list.push(t);
@@ -133,7 +152,8 @@ function spawnCamp(state, world, rng, id, kind, level) {
   if (state.threats.list.some((t) => t.kind === kind && near(t, p) < cfg.spacing)) return null;
   if (kind === 'bandits') {
     const [lo, hi] = cfg.start;
-    return newThreat(state, kind, { terrain: site.terrain, x: p.x, y: p.y, near: id, men: lo + rng.int(hi - lo + 1), level });
+    const men = Math.min(threatCap(state, world, kind), (lo + rng.int(hi - lo + 1)) * threatScale(state, world));
+    return newThreat(state, kind, { terrain: site.terrain, x: p.x, y: p.y, near: id, men, level });
   }
   const list = F(world).species[site.terrain] ?? [];
   if (!list.length) return null;
@@ -148,6 +168,7 @@ export function monthlyThreatsSpawn(state, world, rng) {
   const f = F(world);
   if (!f || !state.threats) return;
   const patrolled = patrolledSet(state, world);
+  const scale = threatScale(state, world);
   const levels = {};
   for (const [id, s] of Object.entries(state.settlements)) {
     if (s.occupier) continue;
@@ -173,7 +194,7 @@ export function monthlyThreatsSpawn(state, world, rng) {
     t.level = lv;
     const cfg = T(world)[t.kind];
     if (t.kind === 'bandits') {
-      const cap = cfg.capBase + cfg.capPerLevel * lv;
+      const cap = Math.min(threatCap(state, world, t.kind), (cfg.capBase + cfg.capPerLevel * lv) * scale);
       if (lv < cfg.fadeBelow) t.men -= t.men * cfg.fade;
       else t.men = Math.min(cap, t.men + t.men * cfg.growth * (lv / 50));
       if (t.men < 8 && !t.band) disperse(state, world, t, 'The bandit camp near {place} has broken up: too few left, and too little to rob.');
@@ -322,7 +343,8 @@ function spawnScoiatael(state, world, rng) {
   const st = places.find((p) => (roll -= 1 + (state.settlements[p.id].population.elf ?? 0) / 20) < 0) ?? places[0];
   const site = wildSites(world, st.id).find((s) => s.terrain === 'forest') ?? { x: st.x + 30, y: st.y + 30, terrain: 'forest' };
   const [lo, hi] = cfg.men;
-  const t = newThreat(state, 'scoiatael', { terrain: 'forest', x: site.x, y: site.y, near: st.id, men: lo + rng.int(hi - lo + 1), morale: 85 });
+  const men = Math.min(threatCap(state, world, 'scoiatael'), (lo + rng.int(hi - lo + 1)) * threatScale(state, world));
+  const t = newThreat(state, 'scoiatael', { terrain: 'forest', x: site.x, y: site.y, near: st.id, men, morale: 85 });
   const seg = pickRoad(state, world, rng, t, 140);
   if (!seg) {
     state.threats.list = state.threats.list.filter((x) => x !== t);
@@ -360,7 +382,7 @@ function spawnRaiders(state, world, rng) {
     const path = roadPath(world, c.from, c.to, true);
     if (!path) continue;
     const [lo, hi] = cfg.men;
-    const men = lo + rng.int(hi - lo + 1);
+    const men = Math.min(threatCap(state, world, 'raiders', war), (lo + rng.int(hi - lo + 1)) * threatScale(state, world) * (war ? 2 : 1));
     const [l0, l1] = cfg.lurk;
     const t = newThreat(state, 'raiders', { realm: rid, terrain: 'open', x: from.x, y: from.y, near: c.to, men: 0, morale: 75, home: c.from });
     t.band = { men, x: from.x, y: from.y, way: path.slice(1).map((id) => ({ x: world.byId[id].x, y: world.byId[id].y })), phase: 'raid', raid: c.to, lurk: l0 + rng.int(l1 - l0 + 1), until: 0 };
@@ -438,7 +460,7 @@ export function stepThreatsDay(state, world, rng) {
       raidVillage(state, world, rng, t, b.raid);
       if (state.threats.list.includes(t) && t.band) goHome(world, t);
     } else if (b.phase === 'home' && arrived) {
-      if (t.kind === 'bandits') t.men += b.men;
+      if (t.kind === 'bandits') t.men = Math.min(threatCap(state, world, 'bandits'), t.men + b.men);
       else if (t.kind === 'monsters') t.count += b.count;
       if (!isCamp(t)) state.threats.list = state.threats.list.filter((x) => x !== t);
       else t.band = null;

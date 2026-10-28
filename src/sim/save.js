@@ -1,12 +1,12 @@
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
-import { defaultThreats } from './threats.js';
+import { defaultThreats, threatCap } from './threats.js';
 import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
 import { defaultDiplomacy, makeTreaty } from './diplomacy.js';
 import { upgradeStrategy } from './strategy.js';
-import { hostile } from './conflict.js';
+import { hostile, atWar } from './conflict.js';
 import { tensionTarget } from './culture.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
@@ -265,6 +265,19 @@ const MIGRATIONS = {
       a.mercs = [];
     }
     state.version = 21;
+    return state;
+  },
+  // v22 (M21 E and F): threats already on the map are cut to the new caps,
+  // so an old save does not keep a camp larger than any could now grow.
+  21(state, world) {
+    for (const t of state.threats?.list ?? []) {
+      if (t.kind === 'monsters') continue;
+      const war = t.kind === 'raiders' && atWar(state, t.realm);
+      const cap = threatCap(state, world, t.kind, war);
+      t.men = Math.min(t.men ?? 0, cap);
+      if (t.band?.men) t.band.men = Math.min(t.band.men, cap);
+    }
+    state.version = 22;
     return state;
   },
 };

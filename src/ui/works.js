@@ -137,8 +137,13 @@ export function worksPipsHtml(world, state, id) {
     const cls = w.repair ? 'repairing' : c < 45 ? 'damaged' : c < 70 ? 'worn' : w.staff < 60 ? 'short' : 'ok';
     return `<span class="pip ${cls}" title="${escapeHtml(`${world.buildings[w.b].name}: ${Math.round(c)}`)}"></span>`;
   })).join('');
-  const names = spaces.flatMap((sp) => sp.works.map((w) => `<span class="fig">${escapeHtml(world.buildings[w.b].name)}${w.cond < 70 ? ` <small class="down">${Math.round(w.cond)}</small>` : ''}</span>`)).join('');
-  return `<h3>Works <span class="pips" aria-hidden="true">${pips}</span></h3>${names ? `<div class="figs">${names}</div>` : '<p class="sub">No works here.</p>'}<button type="button" class="act" data-tsub="works"><span class="act-label">See the works</span></button>`;
+  // Eight names at most (M21); a longer list becomes one line.
+  const all = spaces.flatMap((sp) => sp.works);
+  const hurt = all.filter((w) => w.cond < 70).length;
+  const names = all.length > 8
+    ? `<p class="sub" data-line="works">${all.length} works, ${hurt ? `${hurt} in need of repair` : 'all in good repair'}.</p>`
+    : all.length ? `<div class="figs">${all.map((w) => `<span class="fig">${escapeHtml(world.buildings[w.b].name)}${w.cond < 70 ? ` <small class="down">${Math.round(w.cond)}</small>` : ''}</span>`).join('')}</div>` : '';
+  return `<h3>Works <span class="pips" aria-hidden="true">${pips}</span></h3>${names || '<p class="sub">No works here.</p>'}<button type="button" class="act" data-tsub="works"><span class="act-label">See the works</span></button>`;
 }
 
 const cap1 = (w) => (w ? w[0].toUpperCase() + w.slice(1) : w);

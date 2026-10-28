@@ -1,5 +1,14 @@
 # Changelog
 
+## M21 E and F Threats and clutter
+- Bandits, Scoia'tael and raiders grow with the realm but stay a nuisance: no ordinary camp is larger than a town's levy or a standing company can beat. Raiders sent in war can be larger.
+- Every threat says how it measures up to the nearest force: "Bandit camp: about 45 men. Gors Velen's levy: 567, overwhelming odds."
+- Walls count in full until breached, for the garrison and any company stationed there. Villages still need patrols.
+- The Treasury is one ledger: taxes (by towns, villages and lords), trade, sales, crafts and mines, tolls and dues, war and loans coming in; armies, upkeep, the court, imports, loans and repairs going out. The full breakdown is under Details.
+- Town cards are shorter: four figures, then what the place earns, how long its food lasts and its works in one line. The full stores are under Details.
+- Long lists of threats fold after eight.
+- Save version 22.
+
 ## M21 C and D Hands and armies
 - The Realm tab shows where the kingdom's hands are and the one most pressing shortage; tap it for the Labour screen.
 - Four settings at a stroke on the Labour screen: Harvest, Winter, War footing and Rebuild, each showing what it would do before you choose ("+23 grain, −154 crowns from the crafts a month").

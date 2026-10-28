@@ -65,7 +65,7 @@
       "arms": 10,
       "armsCoin": 8,
       "barracks": true,
-      "walls": 1.5,
+      "walls": 1.8,
       "blurb": "Slow to load, deadly from a wall. They hold towns better than any other troop."
     },
     "lightcav": {
@@ -163,6 +163,7 @@
     "winter": 0.6
   },
   "engageRange": 14,
+  "wallsBonus": 1.5,
   "perPlace": {
     "village": 1,
     "temple": 0,
@@ -280,7 +281,8 @@
         12
       ],
       "speed": 16,
-      "reach": 160
+      "reach": 160,
+      "capMax": 110
     },
     "monsters": {
       "name": "Lair",
@@ -329,7 +331,8 @@
       ],
       "life": 30,
       "speed": 22,
-      "max": 2
+      "max": 2,
+      "capMax": 60
     },
     "raiders": {
       "name": "Raiding party",
@@ -345,7 +348,9 @@
       "lurk": [
         2,
         4
-      ]
+      ],
+      "capMax": 120,
+      "warCap": 300
     },
     "abroad": {
       "note": "Bandit camps and monster lairs in the neighbouring realms' own wilds: chance scales Temeria's spawn chance; at most max at once; each month a realm's soldiers clear one with chance clear (more from a strong garrison); each camp costs its town toll prosperity a month; every garrisonPerPoint soldiers in the town lower the wildness by a point (up to 15).",
@@ -354,6 +359,12 @@
       "clear": 0.1,
       "toll": 1.2,
       "garrisonPerPoint": 40
+    },
+    "scale": {
+      "note": "M21: camps, commandos and raiding parties grow with the realm's people (realm people / basePop), within min and max, and an ordinary threat never grows past its cap, so a standing company or a town's levy beats it.",
+      "basePop": 54000,
+      "min": 0.7,
+      "max": 1.3
     }
   },
   "species": {

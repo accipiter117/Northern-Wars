@@ -183,6 +183,41 @@ export function targetPos(world, target) {
   return target.kind ? threatPos(target) : armyPosition(world, target);
 }
 
+// What stands nearest against a threat (M21): the nearest free company, or
+// failing one closer, the levy of the nearest town or city of ours at a full
+// call. Gives the threat's size beside that force's and the odds, for the
+// line on the threat's card ("Bandit camp: about 120 men. Maribor's levy:
+// 450.").
+export function forceAgainst(state, world, t) {
+  const p = targetPos(world, t);
+  const ground = groundAt(world, p.x, p.y);
+  const foe = foeKind(t);
+  const theirs = threatStrength(world, t, ground);
+  const options = [];
+  for (const c of freeCompanies(state)) {
+    if (c.routed > state.day) continue;
+    options.push({ name: c.name, men: round(c.men), strength: companyStrength(world, c, foe, ground), d: near(c, p), company: c.id });
+  }
+  const share = world.war?.raise?.muster?.share;
+  const militia = F(world).companies.militia;
+  if (share && militia) {
+    const n = nearestPlace(world, p, (id) => (share[world.byId[id].type] ?? 0) > 0.05 && !state.settlements[id].occupier);
+    if (n) {
+      const st = world.byId[n.id];
+      const men = Math.floor(peopleOf(state.settlements[n.id]) * share[st.type]);
+      const strength = men * militia.perMan * (0.5 + F(world).morale.start / 100) * (F(world).suits[foe]?.militia ?? 1);
+      options.push({ name: `${st.name}'s levy`, men, strength, d: n.d, levy: n.id });
+    }
+  }
+  if (!options.length) return null;
+  options.sort((a, b) => a.d - b.d);
+  const best = options[0];
+  const chance = winChance(world, best.strength, theirs);
+  return { ...best, chance, word: oddsWord(world, chance), theirs };
+}
+
+const peopleOf = (s) => Object.values(s.population).reduce((a, b) => a + b, 0);
+
 // The odds of a group of companies against a threat or an army, from both
 // sides' strength, the ground, morale and how well the troops suit the foe.
 export function huntOdds(state, world, companies, target) {
