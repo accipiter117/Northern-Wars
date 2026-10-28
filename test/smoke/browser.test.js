@@ -810,7 +810,7 @@ test('the Treasury, town accounts and the industries close up', async () => {
     await page.click('[data-hint="open"]');
     await page.waitForSelector('#sheet:not([hidden])');
     const text = await page.textContent('#sheet-body');
-    assert.match(text, /Treasury[\s\S]*Taxes[\s\S]*Crafts[\s\S]*Market hall[\s\S]*Goods from the chains[\s\S]*Cloth sold[\s\S]*Bridge tolls[\s\S]*Rents[\s\S]*Crown trade routes[\s\S]*Where the money came from/);
+    assert.match(text, /Treasury[\s\S]*Head tax[\s\S]*Crafts[\s\S]*Market hall[\s\S]*Goods from the chains[\s\S]*Cloth sold[\s\S]*Bridge tolls[\s\S]*Rents[\s\S]*Crown trade routes[\s\S]*Where the money came from/);
     await page.screenshot({ path: join(OUT, `${vp.name}-treasury.png`), fullPage: false });
     await page.click('[data-sec="places"] > summary');
     await page.locator('.place-list').first().scrollIntoViewIfNeeded();
