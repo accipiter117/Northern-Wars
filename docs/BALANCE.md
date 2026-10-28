@@ -12,6 +12,32 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### Hands and armies (M21 C and D)
+Armies are now mustered from the people (about 8% of a city, 6% of a town, 4% of a village at a full call), the lords send retinues by their lands and loyalty, and companies cost 0.55 of their old upkeep. From `node tools/longrun.mjs 20 <crown> 1,2,3`:
+
+| Crown | What it does | Under arms | Treasury at year 20 | Net a month at year 20 |
+| --- | --- | --- | --- | --- |
+| Standing | Recruits companies until it keeps about 3,000 men, patrols and hunts with them | 27 to 29 companies (about 3,000 men) plus the garrisons | 2,800 to 14,000, still saving | +851 to +984 |
+| Steward | As in A and B, a small standing force | about 2,200 to 2,400 | 56,000 to 61,000 | +943 to +1,068 |
+| Warlord | Musters the whole levy and the lords, hires a company, pays with plunder and loans | about 5,700 to 5,800 in the field at once (about 8,000 with a standing force beside it) | 14,000 to 22,000 | +1,222 to +1,612 |
+| Idle | Nothing | none beyond the garrisons | 29,000 to 30,000, falling 258 to 300 a month | −300 to −258 |
+
+- **A peaceful realm can keep about 3,000 standing men and still save** (the target), and its works stay at 80 to 86% because companies take no hands from the fields.
+- **A full muster is about 5,800 men** (levy, retinues and a mercenary company). With the standing companies beside it the realm puts about 8,000 in the field for a season, as the brief asked, but every levied man is a hand gone from the works until he is stood down.
+- **The idle crown still slides**: its works fall to ruin by year 20 and it loses about 270 a month.
+- **Without companies the villages suffer** (the warlord, with none, sees 670 to 860 raids in 20 years against about 20 for the standing crown): Part E answers this.
+
+The dials, in data/war.json, data/labour.json and data/forces.json:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| war `raise.muster.share` | city 0.08, town 0.06, village 0.04 | Bigger levies, more hands lost |
+| war `raise.retinue.perPerson` | 0.1 of a lord's people | Bigger retinues |
+| war `raise.pay` levy, retinue, field | 0.22, 0.28 a man, ×1.5 on campaign | Dearer armies |
+| war `raise.unpaid` | morale −20 a month, desert 12% below 50 morale | Unpaid armies melt faster |
+| labour `focus.boost` | 1.6 | A town's focus pulls harder |
+| forces companies `upkeep` | 0.55 of M20 | Dearer standing companies |
+
 ### Trade and money (M21 A and B)
 More ways to earn: taxes by estate (the lords' dues and the villages' tithe are new), surplus sold at home (grain that once spoiled now sells), trade deals, war's takings and loans. From `node tools/longrun.mjs 30 <crown> 1,2,3`, at year 30 (M20 C in brackets):
 
