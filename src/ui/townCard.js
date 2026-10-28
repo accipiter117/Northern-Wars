@@ -1,5 +1,5 @@
-// A town's card: a summary head (population, prosperity, unrest, holder,
-// garrison) and the actions most often wanted, then four tabs. Works (M20)
+// A town's card: a summary head (population, prosperity, unrest, and the
+// holder or the garrison) and the actions most often wanted, then four tabs. Works (M20)
 // shows the place's spaces, what stands in each and how well, with the
 // crown's repairs; the crown no longer builds.
 import {
@@ -13,7 +13,7 @@ import { settlementTradeHtml } from './trade.js';
 import { settlementForcesHtml } from './forces.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
-import { cardHead, segs } from './card.js';
+import { cardHead, segs, section } from './card.js';
 import { worksTabHtml, worksPipsHtml, landTags } from './works.js';
 
 const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Castle', temple: 'Temple' };
@@ -37,13 +37,15 @@ export function townCard(app, id) {
     trade ? `<button type="button" class="act" data-route-from="${id}" data-pick-start='{"kind":"route","from":"${id}"}'><span class="act-label">${icon('scroll')} Trade route from here</span></button>` : '',
   ].join('');
   const head = cardHead({
-    status: `<span>${what}. ${statusBadges(state, id)}</span>${world.spaces ? `<span class="tags" data-part="land">${landTags(world, state, id)}</span>` : ''}`,
+    status: `<span>${what}${holder ? `, garrison ${number(s.garrison)}${state.unpaid ? ' unpaid' : ''}` : ', crown demesne'}. ${statusBadges(state, id)}</span>${world.spaces ? `<span class="tags" data-part="land">${landTags(world, state, id)}</span>` : ''}`,
+    // Four chips at most (M21): the holder's chip only when a house holds
+    // the place, the garrison's otherwise (it is on the Military tab too).
     chips: [
       { icon: 'people', label: 'Population', value: number(totalPopulation(s)) },
       { icon: 'sun', label: 'Prosperity', value: describeLevel(s.prosperity, PROSPERITY_WORDS), tone: s.prosperity < 30 ? 'bad' : s.prosperity >= 70 ? 'good' : '' },
       { icon: 'flame', label: 'Unrest', value: describeLevel(s.unrest, UNREST_WORDS), tone: s.unrest >= 50 ? 'bad' : '' },
-      holder ? { icon: 'crown', label: 'Holder', value: escapeHtml(world.houses.houses[holder].name), go: `house:${holder}` } : { icon: 'crown', label: 'Holder', value: 'Crown demesne' },
-      { icon: 'shield', label: 'Garrison', value: s.garrison ? `${number(s.garrison)}${state.unpaid ? ' unpaid' : ''}` : 'None', tone: state.unpaid ? 'bad' : '' },
+      holder ? { icon: 'crown', label: 'Holder', value: escapeHtml(world.houses.houses[holder].name), go: `house:${holder}` }
+        : { icon: 'shield', label: 'Garrison', value: s.garrison ? `${number(s.garrison)}${state.unpaid ? ' unpaid' : ''}` : 'None', tone: state.unpaid ? 'bad' : '' },
     ],
     extra: (world.war ? occupationHtml(world, state, id) + siegeNote(world, state, id) : '') + conquestTownHtml(world, state, id)
       + (s.troubled > 0 ? '<p class="warn">Riots or raiders have struck here lately. Some folk are leaving.</p>' : ''),
@@ -54,13 +56,26 @@ export function townCard(app, id) {
 }
 
 function overviewHtml(app, id, lookups) {
-  const { world, state } = app;
+  const { world, state, memory } = app;
   const s = state.settlements[id];
+  const made = escapeHtml(lookups.goods[s.production]?.name?.toLowerCase() ?? s.production);
   return `
-    <div data-part="accounts">${accountsHtml(state, id)}<p class="sub">Produces ${escapeHtml(lookups.goods[s.production]?.name?.toLowerCase() ?? s.production)}.</p></div>
-    <div data-part="stores">${storesHtml(world, state, id)}</div>
+    <div data-part="accounts">${accountsHtml(state, id, made)}</div>
+    <div data-part="stores">${storesLine(world, state, id)}</div>
     <div data-part="works">${worksPipsHtml(world, state, id)}</div>
-    <div data-part="trade">${world.trade ? settlementTradeHtml(world, state, id) : ''}</div>`;
+    <div data-part="trade">${world.trade ? settlementTradeHtml(world, state, id) : ''}</div>
+    ${section(memory, `town:${id}`, 'details', 'Details', storesHtml(world, state, id))}`;
+}
+
+// The stores in one line (M21); the full table is under Details.
+function storesLine(world, state, id) {
+  const s = state.settlements[id];
+  const need = foodNeed(world, s, seasonOf(state.day));
+  const days = need > 0 ? s.stock.food / need : Infinity;
+  let note = '';
+  if (s.hunger > 0.05) note = '<p class="warn">The stores are empty. People are going hungry.</p>';
+  else if (days < 30) note = '<p class="warn">Less than a month of food left.</p>';
+  return `<p class="status" data-line="food">${icon('wheat')} <span><b>Food for ${Number.isFinite(days) ? `${number(days)} days` : 'ever'}</b> (${number(s.stock.food)} in store, ${number(need)} eaten a day).</span></p>${note}`;
 }
 
 function storesHtml(world, state, id) {
@@ -70,9 +85,6 @@ function storesHtml(world, state, id) {
   const grown = foodYield(world, id, s, dateOf(state.day).month);
   const days = need > 0 ? s.stock.food / need : Infinity;
   const cap = foodCapacity(world, s);
-  let note = '';
-  if (s.hunger > 0.05) note = '<p class="warn">The stores are empty. People are going hungry.</p>';
-  else if (days < 30) note = '<p class="warn">Less than a month of food left.</p>';
   const made = goodsYield(world, id, s);
   return `
     <h3>Stores</h3>
@@ -84,17 +96,16 @@ function storesHtml(world, state, id) {
       <div><dt>Timber, stone, iron</dt><dd>${['timber', 'stone', 'iron'].map((g) => number(s.stock[g])).join(' / ')}</dd></div>
       ${made ? `<div><dt>${cap1(s.production)} a day</dt><dd>${made.toFixed(1)}</dd></div>` : ''}
     </dl>
-    ${note}
   `;
 }
 
 // What the place earned the crown last month (its taxes, trade, crafts,
 // goods and tolls) and what it cost (its garrison and upkeep).
-function accountsHtml(state, id) {
+function accountsHtml(state, id, made) {
   const p = state.ledger.places?.[id];
-  if (!p) return '';
+  if (!p) return `<p class="sub">Produces ${made}.</p>`;
   const net = p.in - p.out;
-  return `<p class="sub accounts">Last month this place earned the crown ${number(p.in)} crowns and cost it ${number(p.out)}: <b class="${net < 0 ? 'neg' : 'pos'}">${net < 0 ? 'a loss of ' : 'a gain of '}${number(Math.abs(net))}</b>.</p>`;
+  return `<p class="sub accounts">Produces ${made}. Last month it earned the crown ${number(p.in)} crowns and cost it ${number(p.out)}: <b class="${net < 0 ? 'neg' : 'pos'}">${net < 0 ? 'a loss of ' : 'a gain of '}${number(Math.abs(net))}</b>.</p>`;
 }
 
 function militaryTabHtml(app, id) {

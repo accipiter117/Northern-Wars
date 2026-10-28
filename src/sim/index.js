@@ -27,9 +27,9 @@ export { slotsOf } from './actions.js';
 export { goodOf, goodPrice, tollsAt, bridgeCrossings, saltStorage, lodgeCut } from './industry.js';
 export {
   freeCompanies, companiesAt, canRecruit, recruitCost, companySlots, canOrderCompany, huntOdds, bestCompanyFor, targetOf, targetPos,
-  describeCompany, companyUpkeep, ORDERS,
+  describeCompany, companyUpkeep, ORDERS, forceAgainst,
 } from './forces.js';
-export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites } from './threats.js';
+export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites, threatScale, threatCap } from './threats.js';
 export { companyStrength, threatStrength, winChance, oddsWord, resolve, speciesOf, groundAt } from './combat.js';
 export {
   parties, rulerOf, rulerName, rulerShort, agendaText, agendaOf, trustIn, moodReasons, moodTarget, moodWord, treatiesOf, treatyBetween, treatyDef,

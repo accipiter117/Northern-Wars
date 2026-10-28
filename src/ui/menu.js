@@ -47,6 +47,48 @@ export const EXPENSES = [
 ];
 const ALWAYS = new Set(['taxes', 'trade', 'garrisons', 'upkeep', 'court', 'interest']);
 
+// The one ledger (M21): every money line folded into a handful of groups,
+// so the month reads at a glance; the full breakdown stays under Details.
+const INCOME_GROUPS = [
+  ['taxes', 'Taxes', ['taxes', 'trade', 'tithe', 'nobles']],
+  ['trade', 'Trade deals', ['exports', 'foreign', 'routes']],
+  ['sales', 'Sales at home', ['sales', 'goods']],
+  ['crafts', 'Crafts and mines', ['crafts', 'gold', 'silver']],
+  ['tolls', 'Tolls and dues', ['customs', 'tolls', 'rents', 'donations', 'contracts']],
+  ['war', 'War', ['conquests', 'tribute', 'loot', 'ransom', 'reparations', 'requisition', 'payments']],
+  ['loans', 'Loans', ['borrowed']],
+];
+const EXPENSE_GROUPS = [
+  ['armies', 'Armies and garrisons', ['garrisons', 'companies', 'patrols', 'armies', 'occupation']],
+  ['upkeep', 'Upkeep of buildings', ['upkeep']],
+  ['court', 'The court', ['court', 'edicts', 'gifts', 'embassies', 'tribute']],
+  ['trade', 'Goods bought abroad', ['imports', 'routes']],
+  ['loans', 'Loans and interest', ['interest', 'loans']],
+];
+const ESTATES = [['towns', 'towns'], ['peasants', 'villages'], ['nobles', 'lords']];
+const sumOf = (v) => (typeof v === 'number' ? v : Object.values(v ?? {}).reduce((a, b) => a + b, 0));
+
+function groupedLedger(last, row) {
+  const group = (groups, from) => {
+    const seen = new Set();
+    const rows = groups.map(([id, label, keys]) => {
+      keys.forEach((k) => seen.add(k));
+      const v = keys.reduce((a, k) => a + sumOf(from[k]), 0);
+      if (!v && id !== 'taxes' && id !== 'armies') return '';
+      let sub = '';
+      // Taxes by estate, when the month's accounts carry them.
+      if (id === 'taxes' && last.estates) {
+        sub = ESTATES.filter(([k]) => last.estates[k]).map(([k, name]) => `${name} ${signed(last.estates[k])}`).join(', ').replace(/^./, (c) => c.toUpperCase());
+      }
+      return `<div data-line="${id}"><dt>${label}${sub ? `<small>${escapeHtml(sub)}</small>` : ''}</dt><dd>${signed(Math.round(v))}</dd></div>`;
+    });
+    const other = Object.entries(from).filter(([k]) => !seen.has(k) && k !== 'construction' && k !== 'decrees').reduce((a, [, v]) => a + sumOf(v), 0);
+    if (Math.round(other)) rows.push(row('Other', Math.round(other)));
+    return rows.join('');
+  };
+  return { income: group(INCOME_GROUPS, last.income), expenses: group(EXPENSE_GROUPS, last.expenses) };
+}
+
 // The Ledger: last month's accounts, a line for every source of money and
 // every cost, then (folded away) the places that earned most and the past
 // year.
@@ -93,21 +135,24 @@ export function ledgerHtml(app) {
     ],
     extra: debt,
   });
-  const income = `<dl class="ledger">${lines(INCOME.slice(0, 7), i)}</dl>
+  const detailIncome = `<dl class="ledger">${lines(INCOME.slice(0, 7), i)}</dl>
     ${exportsRows ? `<h4>Trade deals</h4><dl class="ledger">${exportsRows}</dl>` : ''}
     ${crafts ? `<h4>Crafts</h4><dl class="ledger">${crafts}</dl>` : ''}
     ${goods ? `<h4>Goods from the chains</h4><dl class="ledger">${goods}</dl>` : ''}
     <dl class="ledger">${lines(INCOME.slice(7), i)}</dl>
     ${routes ? `<h4>Crown trade routes</h4><dl class="ledger">${routes}</dl>` : ''}
     <dl class="ledger">${row('Total income', totalIn, true)}</dl>`;
-  const expenses = `<dl class="ledger">${lines(EXPENSES, e)}${importsRows}${row('Total expenses', totalOut, true)}</dl>
+  const detailExpenses = `<dl class="ledger">${lines(EXPENSES, e)}${importsRows}${row('Total expenses', totalOut, true)}</dl>
     ${state.treasury > world.economy.upkeep.hoardFree ? '<p class="sub">A full treasury draws courtiers and hangers-on: the court costs more while the coffers stay this full.</p>' : ''}
     <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on repairs, ${number(e.decrees ?? 0)} on decrees.</p>`;
   const where = `${top ? `<h3>Where the money came from</h3><div class="place-list">${top}</div>` : ''}
     ${worst ? `<h3>Where it went</h3><p class="sub">Places that cost the crown more than they earned, mostly for their garrisons.</p><div class="place-list">${worst}</div>` : ''}`;
+  const g = groupedLedger(last, row);
+  const ledger = `<div data-part="ledger"><h3>Income</h3><dl class="ledger grouped">${g.income}${row('Total income', totalIn, true)}</dl>
+    <h3>Expenses</h3><dl class="ledger grouped">${g.expenses}<div data-line="repairs"><dt>Repairs and decrees<small>paid when ordered, not counted above</small></dt><dd>${number((e.construction ?? 0) + (e.decrees ?? 0))}</dd></div>${row('Total expenses', totalOut, true)}</dl></div>`;
   return `${head}
-    ${section(memory, route, 'income', 'Income', income, { open: true, count: number(totalIn) })}
-    ${section(memory, route, 'expenses', 'Expenses', expenses, { count: number(totalOut) })}
+    ${ledger}
+    ${section(memory, route, 'details', 'Details', `<h4>Income</h4>${detailIncome}<h4>Expenses</h4>${detailExpenses}`)}
     ${section(memory, route, 'places', 'Places that earn and cost', where)}
     ${section(memory, route, 'year', 'The past year', `<table class="history"><thead><tr><th>Month</th><th>Net</th><th>Works</th><th>Treasury</th></tr></thead><tbody>${history}</tbody></table>`)}`;
 }

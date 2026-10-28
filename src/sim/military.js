@@ -52,7 +52,9 @@ export function threatLevel(state, world, id, kind, patrolled = patrolledSet(sta
 // The garrison's strength behind its walls; an armoury's men fight harder.
 export function localStrength(state, world, id) {
   const s = state.settlements[id];
-  const walls = s.buildings.includes('walls') ? 1 + (mil(world).walls - 1) * worksFactor(s, 'walls') : 1;
+  // Walls count in full while they stand at a third or more (M21): a garrison
+  // behind them beats off most raids, and only a breach undoes that.
+  const walls = s.buildings.includes('walls') && (s.cond?.walls ?? 100) >= 35 ? mil(world).walls : 1;
   return s.garrison * walls * (1 + localFx(world, s, 'soldierStrength'));
 }
 

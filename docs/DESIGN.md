@@ -215,6 +215,23 @@ Numbers live in data/war.json `raise`; the rules in src/sim/armies.js.
 - **Foreign realms** muster by the same shares of their people (half a call for the first army, then the rest), with their standing armies; their garrisons stay home.
 - Save version 21: town focus empty; the crown's armies already in the field become levies of the people, their men returned to the garrisons they came from.
 
+### Threats scaled to the realm (M21 E)
+Numbers live in data/forces.json `threats`; the rules in src/sim/threats.js.
+- **Threats grow with the realm, within bounds**: bandit camps, Scoia'tael commandos and raiding parties start and grow in proportion to the realm's people against the starting realm (about 54,000), between 0.7 and 1.3 of their old size.
+- **And never past a cap**, so an ordinary threat is a nuisance any city's levy or standing company beats: a bandit camp at most 110 men, a commando 60, a raiding party 120 (300 when sent in war: those are for the armies). Beasts keep their own counts by kind.
+- **Each threat shows its strength against the nearest force**, on its card and in the Threats list: "Bandit camp: about 45 men. Gors Velen's levy: 567, overwhelming odds." The force is the nearest free company or, failing one nearer, the levy of the nearest town, city or castle of ours at a full call (the odds count militia, so a levy must still be raised to use them).
+- **Walls count in full** while they stand at a third or more (a breach undoes them): a garrison behind walls fights at 1.5 times its strength, as does every company stationed there (crossbows 1.8). A walled town beats off nearly every raid; villages have no walls and need patrols or a company near.
+- Lists of threats longer than eight fold the rest under "N more".
+- Save version 22: threats already on the map are cut to the new caps.
+
+### Clearing the clutter (M21 F)
+The rule for every screen: a card opens with three or four lines (status, chips, the one or two actions), then Details; any list longer than eight rows is grouped or folded. The audit, screen by screen:
+- **Town card**: four chips, not five (the holder's chip only when a house holds the place, the garrison's otherwise; the other goes in the status line). The overview is three lines: what it produces and what it earned and cost; food for so many days; its works as pips and one line ("16 works, all in good repair") instead of sixteen names. The full stores table is under Details.
+- **Treasury ledger**: one ledger of grouped lines. Income: taxes (with the towns, villages and lords beneath), trade deals, sales at home, crafts and mines, tolls and dues (customs, tolls, rents, donations and contracts as one line), war, loans. Expenses: armies and garrisons, upkeep of buildings, the court, goods bought abroad, loans and interest, and repairs and decrees (paid when ordered). The line by line breakdown is under Details.
+- **Threat card**: one line with the threat's size against the nearest force; the size chip is gone.
+- **Threats list**: eight rows, then "N more".
+- **Already within the rule** (checked, unchanged): the Realm overview (meters, labour strip, what needs attention), Places (searchable, eight shown, then Show all), Labour (presets, then the split), Forces (one under-arms line, chips, companies), the company and army cards, Taxes and loans (one card per estate), Trade (one line per good), a realm's card (sections folded), Laws (one line per law), the Chronicle (grouped by year and filtered).
+
 ## One map, a kingdom already built (M20)
 The crown does not build. Every realm starts the game fully developed, as the Witcher North is: towns already have their mills, mines, fisheries and markets, and what each place has comes from the land it stands on. The crown's levers are repairs after raids and war, where the kingdom's hands work through the seasons (Part C), laws, the court and war. Numbers live in data/spaces.json; the rules in src/sim/works.js.
 

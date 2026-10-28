@@ -35,7 +35,8 @@ export function companyStrength(world, c, foe, ground = 'open', walls = false) {
   const t = f.companies[c.type];
   let v = c.men * t.perMan * (0.5 + c.morale / 100) * (1 + (c.xp ?? 0) * f.xp.bonus) * (f.suits[foe]?.[c.type] ?? 1);
   if (t.horses) v *= f.ground.mounted[ground] ?? 1;
-  if (walls && t.walls) v *= t.walls;
+  // Behind walls every company fights better (M21), crossbows best of all.
+  if (walls) v *= t.walls ?? f.wallsBonus ?? 1;
   return v;
 }
 

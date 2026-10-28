@@ -2,7 +2,7 @@
 import {
   TEMERIA, freeCompanies, crownArmies, describeArmy, describeCompany, companyUpkeep, huntOdds, bestCompanyFor, canRecruit, recruitCost,
   companySlots, threatPos, threatName, threatSize, isCamp, nearestPlace, witcherCost, speciesOf, ledgerNet, targetOf, hostile, sideName,
-  armyPay,
+  armyPay, forceAgainst,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -29,6 +29,18 @@ export function threatLabel(world, t) {
   return `${threatName(world, t)}${t.band && isCamp(t) ? ', a band out on the roads' : ''} (${size} men)`;
 }
 
+// The threat's size against the nearest force of ours (M21): "Bandit camp:
+// about 120 men. Maribor's levy: 450, favourable odds."
+export function versusLine(world, state, t) {
+  const size = threatSize(t);
+  const what = t.kind === 'monsters'
+    ? `${speciesOf(world, t).name}${size > 1 ? ` (${size})` : ''}`
+    : `${isCamp(t) && !t.band ? world.forces.threats[t.kind].name : threatName(world, t)}: about ${number(Math.max(5, Math.round(size / 5) * 5))} men`;
+  const f = forceAgainst(state, world, t);
+  if (!f) return `${what}.`;
+  return `${what}. ${f.name}: ${number(f.men)}, ${f.word.toLowerCase()} odds.`;
+}
+
 function companyRow(world, state, c) {
   const t = world.forces.companies[c.type];
   return `<button type="button" class="row realm-row" data-company="${c.id}" data-go="company:${c.id}">
@@ -47,7 +59,7 @@ function threatRow(world, state, t) {
   else act = `<button type="button" class="act primary" data-send="${t.id}" ${best ? '' : 'disabled'}><span class="act-label">Send nearest suitable company</span><span class="act-sub">${best ? `${best.odds.word} for ${escapeHtml(best.c.name)}` : 'No company is free'}</span></button>`;
   return `<div class="decision"><button type="button" class="row" data-threat="${t.id}" data-go="threat:${t.id}">
       ${icon('target')}<span class="row-main"><span class="row-name">${escapeHtml(threatLabel(world, t))}</span>
-      <span class="row-sub">${escapeHtml(distanceWord(world, threatPos(t)))}.</span></span></button>
+      <span class="row-sub">${escapeHtml(versusLine(world, state, t))} ${escapeHtml(distanceWord(world, threatPos(t)))}.</span></span></button>
     <div class="actions">${act}</div></div>`;
 }
 
@@ -96,13 +108,15 @@ export function forcesHtml(app) {
 export function threatsHtml(app) {
   const { world, state } = app;
   const home = state.threats.list.filter((t) => !t.abroad);
+  // Past eight, the rest fold away (M21).
   const sighted = home.filter((t) => t.sighted || t.campSeen);
   const rumours = home.filter((t) => !t.sighted && !t.campSeen && t.rumour).length;
   const abroad = state.threats.list.filter((t) => t.abroad && (t.sighted || t.campSeen)).length;
   const foes = (state.armies ?? []).filter((a) => a.side !== TEMERIA && hostile(state, TEMERIA, a.side));
   return `
     <div data-part="threats">
-      ${sighted.length ? sighted.map((t) => threatRow(world, state, t)).join('') : '<p class="sub">Nothing in sight.</p>'}
+      ${sighted.length ? sighted.slice(0, 8).map((t) => threatRow(world, state, t)).join('') : '<p class="sub">Nothing in sight.</p>'}
+      ${sighted.length > 8 ? section(app.memory, 'tab:military', 'more-threats', `${sighted.length - 8} more`, sighted.slice(8).map((t) => threatRow(world, state, t)).join('')) : ''}
       ${rumours ? `<p class="sub">And ${rumours} rumour${rumours === 1 ? '' : 's'} of something further off: send a company or build watchtowers to see.</p>` : ''}
       ${abroad ? `<p class="sub">${abroad} camp${abroad === 1 ? '' : 's'} and lair${abroad === 1 ? '' : 's'} seen over the border. Theirs to deal with, so long as they stay there.</p>` : ''}
       ${foes.length ? `<p class="warn">Enemy armies in the field: ${foes.map((a) => escapeHtml(a.name)).join(', ')}.</p>` : ''}</div>`;
@@ -189,9 +203,8 @@ export function threatCard(app, id) {
   ].join('');
   return `
     ${cardHead({
-      status: `<span>${escapeHtml(distanceWord(world, threatPos(t)))}.${hunted.length ? ` ${escapeHtml(hunted.map((c) => c.name).join(', '))} ${hunted.length === 1 ? 'is' : 'are'} on the way.` : ''}${contract ? ' A witcher is on the trail.' : ''}${!best && !hunted.length ? ' No company is free to send.' : ''}</span>`,
-      infoText: kind + (t.kind === 'monsters' ? ' Nine in ten witchers come back with a trophy.' : ''),
-      chips: [{ icon: 'target', label: 'Size', value: threatSize(t) }],
+      status: `<span><b data-part="versus">${escapeHtml(versusLine(world, state, t))}</b> ${escapeHtml(distanceWord(world, threatPos(t)))}.${hunted.length ? ` ${escapeHtml(hunted.map((c) => c.name).join(', '))} ${hunted.length === 1 ? 'is' : 'are'} on the way.` : ''}${contract ? ' A witcher is on the trail.' : ''}${!best && !hunted.length ? ' No company is free to send.' : ''}</span>`,
+      infoText: kind + (t.kind === 'monsters' ? ' Nine in ten witchers come back with a trophy.' : '') + ' The odds are for the force named beside it; a levy must be raised first.',
       actions,
     })}
     ${others ? `<div data-part="others"><h3>Or send another</h3><div class="build-list">${others}</div></div>` : ''}`;

@@ -12,6 +12,29 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### Threats and clutter (M21 E and F)
+Threats now grow with the realm's people (0.7 to 1.3 of their old size) and are capped (a camp 110 men, a commando 60, raiders 120, or 300 in war); walls count in full. From `node tools/longrun.mjs 20 <crown> 1,2,3`, raids suffered and villagers killed over 20 years (C and D in brackets):
+
+| Crown | Raids in 20 years | Killed in raids | Days a road was held |
+| --- | --- | --- | --- |
+| Steward | 14 to 39 (15 to 21) | 15 to 46 (17 to 27) | 218 to 355 (223 to 368) |
+| Standing (3,000 men in companies) | 14 to 38 (19 to 23) | 23 to 44 (24 to 28) | 349 to 469 (330 to 369) |
+| Idle (no companies) | 675 to 785 (675 to 794) | 951 to 1,033 (951 to 1,064) | 5,464 to 6,254 (5,464 to 6,621) |
+| Warlord (no companies) | 688 to 836 (669 to 856) | 1,130 to 1,321 (1,087 to 1,450) | 5,606 to 6,813 (5,618 to 7,207) |
+
+- **A normal reign meets a nuisance**: about one raid a year and two villagers dead, with companies on patrol. Even a crown with no companies loses about 50 villagers a year in a realm of 55,000; the raids hurt it through broken works, not deaths.
+- **The caps change little in a well-run realm**, because its camps never grew that large: they stop the runaway case (a poor, restless realm breeding camps of 200 men) and keep raiders in peace to a size a town's levy beats. Every camp sighted in the tests loses to the nearest company or levy.
+- **The steward now gives its iron towns an iron focus** (the brief's steward uses focus): at year 20 it holds 38,000 to 59,000 crowns and nets +831 to +1,036 a month (before: 56,000 to 61,000 and +943 to +1,068). In one seed of three its people end lower (52,500 against 59,800), as the focus draws hands from the fields: a focus is a trade, not a free gain.
+- **Walls**: a walled town's garrison now fights at a full 1.5 times its strength until the walls fall below a third, so raids go for the villages (as the brief asked, villages need patrols).
+
+The dials, in data/forces.json `threats`:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| `scale.basePop`, `min`, `max` | 54,000; 0.7 to 1.3 | Threats grow faster with the realm |
+| `bandits.capMax`, `scoiatael.capMax`, `raiders.capMax`, `raiders.warCap` | 110, 60, 120, 300 | Larger ordinary threats |
+| `wallsBonus` (companies behind walls) | 1.5 (crossbows 1.8) | Walled towns hold harder |
+
 ### Hands and armies (M21 C and D)
 Armies are now mustered from the people (about 8% of a city, 6% of a town, 4% of a village at a full call), the lords send retinues by their lands and loyalty, and companies cost 0.55 of their old upkeep. From `node tools/longrun.mjs 20 <crown> 1,2,3`:
 

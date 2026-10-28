@@ -368,6 +368,8 @@ h4 { margin: 10px 0 2px; font-size: 0.85rem; color: var(--muted); font-weight: 6
 .accounts .pos { color: #a9c98a; }
 .accounts .neg { color: #e8a08e; }
 .ledger dd { margin: 0; font-variant-numeric: tabular-nums; }
+.ledger dt small { display: block; color: var(--muted); font-size: 0.85em; }
+.ledger.grouped div { padding: 6px 0; }
 .history { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
 .history th { text-align: right; color: var(--muted); font-weight: 400; padding: 4px; }
 .history td { text-align: right; padding: 4px; border-bottom: 1px dotted var(--line); }

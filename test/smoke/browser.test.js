@@ -79,7 +79,7 @@ for (const vp of VIEWPORTS) {
     await page.touchscreen.tap(viz.x, viz.y);
     await page.waitForSelector('#sheet:not([hidden])');
     assert.match(await page.textContent('#sheet-title'), /Vizima/);
-    assert.match(await page.textContent('#sheet-body'), /Population[\s\S]*Crown demesne[\s\S]*Overview[\s\S]*Works[\s\S]*Stores/);
+    assert.match(await page.textContent('#sheet-body'), /crown demesne[\s\S]*Population[\s\S]*Overview[\s\S]*Food for [\d,]+ days[\s\S]*Works[\s\S]*Details/);
     await page.screenshot({ path: join(OUT, `${vp.name}-card.png`) });
 
     // Mend Vizima's fire-damaged brewery from the Works tab (M20): coin
@@ -812,6 +812,8 @@ test('the Treasury, town accounts and the industries close up', async () => {
     await page.click('[data-hint="open"]');
     await page.waitForSelector('#sheet:not([hidden])');
     const text = await page.textContent('#sheet-body');
+    // One ledger of grouped lines first (M21), the full breakdown under Details.
+    assert.match(await page.textContent('[data-part="ledger"]'), /Income[\s\S]*Taxes[\s\S]*Tolls and dues[\s\S]*Total income[\s\S]*Expenses[\s\S]*Armies and garrisons[\s\S]*Upkeep of buildings[\s\S]*Repairs[\s\S]*Total expenses/);
     assert.match(text, /Treasury[\s\S]*Head tax[\s\S]*Crafts[\s\S]*Market hall[\s\S]*Goods from the chains[\s\S]*Cloth sold[\s\S]*Bridge tolls[\s\S]*Rents[\s\S]*Crown trade routes[\s\S]*Where the money came from/);
     await page.screenshot({ path: join(OUT, `${vp.name}-treasury.png`), fullPage: false });
     await page.click('[data-sec="places"] > summary');
