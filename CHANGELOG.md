@@ -1,5 +1,16 @@
 # Changelog
 
+## M21 C and D Hands and armies
+- The Realm tab shows where the kingdom's hands are and the one most pressing shortage; tap it for the Labour screen.
+- Four settings at a stroke on the Labour screen: Harvest, Winter, War footing and Rebuild, each showing what it would do before you choose ("+23 grain, −154 crowns from the crafts a month").
+- Give a town a focus (Food, Iron and arms, Cloth or Timber) from its card, and its villages' hands lean that way. Spare hands now work the works harder.
+- Armies of a real size: the levy is a share of each place's people (Vizima alone sends about 1,400 at a full call). The men leave the fields and workshops while they are away, and come back when you stand them down.
+- Call the lords and see what each house will send first. Hire mercenary companies of 400 to 800 for a season.
+- Armies are paid each month, more on campaign. An army you cannot pay grumbles, then deserts.
+- The Military tab says how many men are under arms, what they cost and how long you can pay them.
+- Foreign realms muster by the same rules.
+- Save version 21.
+
 ## M21 A and B Trade and money
 - Trade in five goods: grain, timber and stone, iron and arms, cloth, and luxuries. Treasury, Trade shows what the realm has to spare or lacks of each every month, and what it fetches. Shortages make a good dear, gluts make it cheap.
 - One trade deal per partner realm: sell a good they want, buy one they offer, so much a month. Make it from a realm's card, or with the Trade order on the board. Each partner wants and offers goods from its own land, and that changes with war and bad harvests. War cuts a deal, and what it supplied grows dear.

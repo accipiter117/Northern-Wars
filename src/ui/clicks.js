@@ -94,6 +94,16 @@ export function attachPanelInput(app) {
       app.persist();
       return;
     }
+    // A mercenary company for the army being raised (M21).
+    const merc = at('[data-merc]');
+    if (merc) {
+      const f = form(memory, 'raise');
+      const id = merc.dataset.merc;
+      f.mercs = (f.mercs ?? []).includes(id) ? f.mercs.filter((x) => x !== id) : [...(f.mercs ?? []), id];
+      nav.refresh();
+      app.persist();
+      return;
+    }
     const unit = at('[data-unit]');
     if (unit) {
       const f = form(memory, 'raise');

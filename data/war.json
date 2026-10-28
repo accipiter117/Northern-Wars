@@ -26,7 +26,72 @@
     "companyCoin": 250,
     "companyMonthly": 60,
     "maxCompanies": 5,
-    "fieldPayPerSoldier": 0.15
+    "fieldPayPerSoldier": 0.15,
+    "note": "Since M21 the crown's levies come from the people, not the garrisons: each place sends share[type] of its people, times the call (a third, half or all), and they leave its hands while away. A great house sends a retinue of retinue.perPerson of its lands' people, all of it from a loyal house (loyalty fullAbove or more), half from a lukewarm one, none below refuseBelow. Levies gather at gatherSpeed map units a day (at least gatherMin days) before the army can march. Pay a month: levy and retinue per man, times field when campaigning (beyond the realm or besieging or raiding), mercenaries their own rate. An army the treasury cannot pay (treasury below zero at the month's turn) loses unpaid.morale; from its second month unpaid (or below unpaid.desertBelow morale) it loses unpaid.desert of its men each month.",
+    "muster": {
+      "share": {
+        "city": 0.08,
+        "town": 0.06,
+        "village": 0.04,
+        "castle": 0.05,
+        "temple": 0
+      },
+      "calls": {
+        "third": 0.34,
+        "half": 0.5,
+        "all": 1
+      },
+      "gatherSpeed": 60,
+      "gatherMin": 3
+    },
+    "retinue": {
+      "perPerson": 0.1,
+      "fullAbove": 55,
+      "refuseBelow": 30
+    },
+    "pay": {
+      "levy": 0.22,
+      "retinue": 0.28,
+      "field": 1.5
+    },
+    "unpaid": {
+      "morale": 20,
+      "desertBelow": 50,
+      "desert": 0.12
+    },
+    "mercenaries": {
+      "season": 90,
+      "companies": {
+        "novigrad": {
+          "name": "The Free Company of Novigrad",
+          "from": "redania",
+          "men": 600,
+          "quality": 1.3,
+          "coin": 2200,
+          "monthly": 360,
+          "blurb": "Pikes and crossbows out of Novigrad, for whoever pays."
+        },
+        "kovir": {
+          "name": "The Koviri Pikes",
+          "from": "kovir",
+          "men": 800,
+          "quality": 1.25,
+          "coin": 2800,
+          "monthly": 460,
+          "blurb": "Disciplined Koviri foot, hired through the guilds of Lan Exeter."
+        },
+        "greybanner": {
+          "name": "The Grey Banner",
+          "from": "free",
+          "men": 400,
+          "quality": 1.4,
+          "coin": 1500,
+          "monthly": 260,
+          "afterWar": 720,
+          "blurb": "Veterans of the last war, sworn to no king. Only to be had while a war is fresh."
+        }
+      }
+    }
   },
   "marshals": {
     "vestibor": {
@@ -191,7 +256,11 @@
       "verden": 0.25
     },
     "reach": 260,
-    "atWarOpportunism": 1.2
+    "atWarOpportunism": 1.2,
+    "muster": {
+      "call": 0.5,
+      "desperate": 1
+    }
   },
   "rivalries": [
     {

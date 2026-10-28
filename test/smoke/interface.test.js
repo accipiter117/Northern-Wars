@@ -163,7 +163,7 @@ test('a stray map tap, a close and a decision mid-form lose nothing', async () =
   await page.click('[data-tab="military"]');
   await page.click('[data-sub="war"]');
   await page.click('[data-set="levy:half"]');
-  await page.click('[data-set="companies:2"]');
+  await page.click('[data-set="nobles:true"]');
   await page.evaluate(() => { document.getElementById('sheet-body').scrollTop = 260; });
   await page.waitForTimeout(50);
   const before = await ui(page);
@@ -187,7 +187,7 @@ test('a stray map tap, a close and a decision mid-form lose nothing', async () =
   assert.equal(now.snap, 'half');
   assert.equal(now.route, 'tab:military');
   assert.ok(Math.abs(now.scroll - before.scroll) < 2, `scroll ${now.scroll} vs ${before.scroll}`);
-  assert.match(await filled(), /companies:2[\s\S]*levy:half/);
+  assert.match(await filled(), /levy:half[\s\S]*nobles:true/);
 
   // Closed by mistake: one tap on the tab brings it all back.
   await page.click('#sheet-close');
@@ -198,7 +198,7 @@ test('a stray map tap, a close and a decision mid-form lose nothing', async () =
   assert.equal(t.count, 1);
   assert.equal(now.route, 'tab:military');
   assert.ok(Math.abs(now.scroll - before.scroll) < 2, `scroll after close ${now.scroll} vs ${before.scroll}`);
-  assert.match(await filled(), /companies:2[\s\S]*levy:half/);
+  assert.match(await filled(), /levy:half[\s\S]*nobles:true/);
   assert.match(await page.textContent('#sheet-body'), /Raise an army/);
 
   // A decision arrives mid-form: a toast and a badge, the game pauses, and
@@ -213,7 +213,7 @@ test('a stray map tap, a close and a decision mid-form lose nothing', async () =
   assert.match(await page.textContent('#toast'), /News from Chippira[\s\S]*waits at court/);
   now = await ui(page);
   assert.equal(now.route, 'tab:military');
-  assert.match(await filled(), /companies:2[\s\S]*levy:half/);
+  assert.match(await filled(), /levy:half[\s\S]*nobles:true/);
   await page.screenshot({ path: join(OUT, 'm14-decision-mid-form.png') });
 
   // Saved and reloaded, the same screen comes back from the tab.
@@ -225,7 +225,7 @@ test('a stray map tap, a close and a decision mid-form lose nothing', async () =
   await page.click('[data-tab="military"]');
   now = await ui(page);
   assert.equal(now.route, 'tab:military');
-  assert.match(await filled(), /companies:2[\s\S]*levy:half/);
+  assert.match(await filled(), /levy:half[\s\S]*nobles:true/);
   assert.match(await page.textContent('.segs .seg.on'), /War/);
   assert.deepEqual(errors, []);
   await context.close();

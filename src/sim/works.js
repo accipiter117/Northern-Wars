@@ -125,8 +125,14 @@ export function staffOf(s, b) {
 // staffing. A works being rebuilt yields nothing while the masons are in.
 export function worksFactor(s, b) {
   if (s.repair?.[b]?.kind === 'rebuild') return 0;
-  return Math.min(condOf(s, b), staffOf(s, b)) / 100;
+  const cond = condOf(s, b);
+  const staff = staffOf(s, b);
+  // Hands beyond what a works needs (M21 C) work it harder: up to half as
+  // many again, for up to a quarter more, as far as its condition allows.
+  const extra = staff > 100 ? Math.min(staff - 100, 50) / 100 * OVERSTAFF * (cond / 100) : 0;
+  return Math.min(cond, staff) / 100 + extra;
 }
+const OVERSTAFF = 0.5;
 
 // What a works costs to keep: never less than a share of its upkeep, even
 // in ruins (watchmen, the roof over the wreck). The crown's works cost

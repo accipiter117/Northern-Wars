@@ -70,3 +70,7 @@ export {
   loanTerms, canBorrow, canPayOff, payOffCost, owedOnLoans, loanCap, monthlyIncome,
 } from './loans.js';
 export { estateTaxPreview, houseDues } from './economy.js';
+export { monthlyOutput } from './market.js';
+export { canPreset, canFocus, labourPreview, districtHead, focusedSplit } from './labour.js';
+export { houseRetinue, mercenaryOffer, gatherDays } from './armies.js';
+export { armyPay } from './economy.js';

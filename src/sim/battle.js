@@ -39,7 +39,8 @@ export function makeupOf(state, world, a) {
     named += u.men;
   }
   // Hired companies fight as men-at-arms; the levy as levies.
-  const hired = Math.min(a.soldiers, (a.companies ?? 0) * world.war.raise.company);
+  const mc = world.war.raise.mercenaries?.companies ?? {};
+  const hired = Math.min(a.soldiers, (a.companies ?? 0) * world.war.raise.company + (a.mercs ?? []).reduce((v, m) => v + (mc[m.id] ? m.men : 0), 0));
   out.heavy += hired;
   out.levy += Math.max(0, a.raised - named - hired);
   const total = KINDS.reduce((s, k) => s + out[k], 0) || 1;

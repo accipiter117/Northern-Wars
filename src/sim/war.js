@@ -36,8 +36,14 @@ export function realmPotential(state, world, rid) {
   const ai = W(world).ai;
   let n = 0;
   let people = 0;
+  const muster = W(world).raise.muster;
   for (const [id, s] of Object.entries(state.realms[rid]?.settlements ?? {})) {
     if (ownerOf(state, world, id) !== rid) continue;
+    // Since M21 a realm musters a share of its people, as the crown does.
+    if (muster) {
+      n += Math.floor(s.population * (muster.share[world.byId[id].type] ?? 0) * ai.muster.call * integrationFactor(world, s, 'levyAt'));
+      continue;
+    }
     n += Math.floor(s.garrison * ai.armyShare);
     // A conquered town sends few men until it has taken to its new crown (M19).
     people += s.population * integrationFactor(world, s, 'levyAt');
@@ -116,20 +122,35 @@ export function raiseRealmArmy(state, world, rid, foes, order = 'siege') {
   const levy = {};
   let n = 0;
   let people = 0;
-  for (const [id, s] of Object.entries(realm.settlements)) {
-    if (ownerOf(state, world, id) !== rid) continue;
-    people += s.population;
-    const k = Math.floor(s.garrison * ai.armyShare);
-    if (k > 0) {
-      levy[id] = k;
-      s.garrison -= k;
-      n += k;
-    }
-  }
-  // The standing army marches first (M18): paid, drilled men, better than
-  // the levy, which stays a cheaper and weaker fallback.
+  const muster = W(world).raise.muster;
   const standing = Math.round(realm.army ?? 0);
-  const levied = n + Math.round(people * ai.levyPerPeople * (state.armies.some((a) => a.side === rid) ? 0.5 : 1));
+  let levied;
+  if (muster) {
+    // Since M21 a realm musters by the same rules as the crown: a share of
+    // each place's people, more from the cities, half a call at first and
+    // all of it when it already has an army in the field.
+    const call = state.armies.some((a) => a.side === rid) ? ai.muster.desperate * 0.5 : ai.muster.call;
+    levied = 0;
+    for (const [id, s] of Object.entries(realm.settlements)) {
+      if (ownerOf(state, world, id) !== rid) continue;
+      people += s.population;
+      levied += Math.floor(s.population * (muster.share[world.byId[id].type] ?? 0) * call);
+    }
+  } else {
+    for (const [id, s] of Object.entries(realm.settlements)) {
+      if (ownerOf(state, world, id) !== rid) continue;
+      people += s.population;
+      const k = Math.floor(s.garrison * ai.armyShare);
+      if (k > 0) {
+        levy[id] = k;
+        s.garrison -= k;
+        n += k;
+      }
+    }
+    // The standing army marches first (M18): paid, drilled men, better than
+    // the levy, which stays a cheaper and weaker fallback.
+    levied = n + Math.round(people * ai.levyPerPeople * (state.armies.some((a) => a.side === rid) ? 0.5 : 1));
+  }
   const total = levied + standing;
   if (total < W(world).minArmy * 2) {
     for (const [id, k] of Object.entries(levy)) realm.settlements[id].garrison += k;
@@ -453,6 +474,8 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
   // Prisoners held a year or more go home at the peace (M19).
   if (state.captives) state.captives = state.captives.filter((c) => !(war.sides.flat().includes(c.side) && war.sides.flat().includes(c.by) && state.day - c.day >= 365));
   state.wars = state.wars.filter((w) => w !== war);
+  // Men paid off at the peace find new masters (M21: the free companies).
+  state.warsEnded = [...(state.warsEnded ?? []).filter((d) => state.day - d < 1500), state.day];
   for (const a of war.sides[0]) for (const b of war.sides[1]) setTruce(state, a, b, state.day + p.truceDays);
   for (const rid of war.sides.flat()) {
     if (rid !== TEMERIA && state.neighbours[rid] && war.sides.flat().includes(TEMERIA)) {

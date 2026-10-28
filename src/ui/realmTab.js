@@ -11,7 +11,7 @@ import { chips, segs, section, cardHead } from './card.js';
 import { form } from './memory.js';
 import { INCOME, EXPENSES } from './menu.js';
 import { pendingDecisions } from './inbox.js';
-import { labourHtml } from './labour.js';
+import { labourHtml, labourStripHtml } from './labour.js';
 
 const signed = (n) => (n < 0 ? `−${number(-n)}` : `+${number(n)}`);
 const UNREST_WORDS = ['Quiet', 'Grumbling', 'Restless', 'Angry', 'On the brink'];
@@ -138,6 +138,7 @@ function overviewHtml(app) {
   const places = Object.values(state.settlements).filter((s) => !s.occupier).length;
   return `
     <div data-part="meters"><p class="sub">${number(people)} souls in ${places} settlements, ${number(soldiers)} in the garrisons. Tap a meter to see why it moved.</p>${meterChips(app)}</div>
+    ${labourStripHtml(app)}
     <div data-part="alerts"><h3>Needs attention</h3>${alertsHtml(app)}</div>
     <div data-part="troubled"><h3>In most trouble</h3>${troubledHtml(app)}</div>`;
 }

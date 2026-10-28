@@ -34,20 +34,19 @@ test('declaring war costs Authority without a cause, closes trade, and cannot be
   assert.ok(s.neighbours.redania.relation <= -60);
 });
 
-test('raising an army thins the garrisons; standing it down sends the survivors home', () => {
+test('raising an army takes men from the people, not the garrisons; standing it down sends them home', () => {
   let s = createState(world, 2);
   const g0 = s.settlements.vizima.garrison;
   const t0 = s.treasury;
-  s = act(s, { type: 'raise', muster: 'vizima', levy: 'half', nobles: false, companies: 2, marshal: 'vestibor', stance: 'cautious' });
+  s = act(s, { type: 'raise', muster: 'vizima', levy: 'half', nobles: false, mercs: [], marshal: 'vestibor', stance: 'cautious' });
   const a = s.armies[0];
-  assert.equal(s.settlements.vizima.garrison, g0 - Math.floor(g0 / 2));
-  assert.equal(s.treasury, t0 - 2 * world.war.raise.companyCoin);
+  // Since M21 the garrisons stay at home and the levy is a share of the people.
+  assert.equal(s.settlements.vizima.garrison, g0);
+  assert.equal(s.treasury, t0);
   assert.ok(a.soldiers > 1000);
   // The marshal is busy now.
-  assert.match(applyAction(s, world, { type: 'raise', muster: 'maribor', levy: 'third', companies: 1, marshal: 'vestibor', stance: 'bold' }).error, /already leads/);
-  // A month on, the levied garrison has not been refilled.
+  assert.match(applyAction(s, world, { type: 'raise', muster: 'maribor', levy: 'third', marshal: 'vestibor', stance: 'bold' }).error, /already leads/);
   s = run(s, 31);
-  assert.ok(s.settlements.vizima.garrison < g0 * 0.6);
   assert.ok(s.ledger.history.at(-1).expenses.armies > 0);
   s = act(s, { type: 'disband', army: a.id });
   // (A neighbour's show of force may stand on the border meanwhile.)
@@ -58,8 +57,10 @@ test('raising an army thins the garrisons; standing it down sends the survivors 
 test('an army besieges and takes a foreign town, which then pays the crown', () => {
   let s = quiet(createState(world, 3));
   s = act(s, { type: 'declare', realm: 'cidaris' });
-  s = act(s, { type: 'raise', muster: 'gors_velen', levy: 'half', nobles: false, companies: 3, marshal: 'captain', stance: 'bold' });
+  s = act(s, { type: 'raise', muster: 'gors_velen', levy: 'half', nobles: false, mercs: ['kovir'], marshal: 'captain', stance: 'bold' });
   const id = s.armies.find((a) => a.side === 'temeria').id;
+  // The levies gather first (M21).
+  s = run(s, s.armies.find((a) => a.id === id).gatherUntil - s.day);
   s = act(s, { type: 'army', army: id, order: 'siege', target: 'caelf' });
   let taken = false;
   for (let d = 0; d < 120 && !taken; d += 5) {

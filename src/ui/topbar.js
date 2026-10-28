@@ -55,7 +55,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
         // afresh every ten days, at the turn of the month and when the crown
         // moves its hands or makes a call, not every day.
         const lab = state.labour;
-        const when = `${Math.floor(state.day / 10)}|${d.month}|${lab ? `${Object.values(lab.split).join(',')}|${lab.winterTurn}|${Object.keys(lab.calls ?? {}).join(',')}` : ''}`;
+        const when = `${Math.floor(state.day / 10)}|${d.month}|${lab ? `${Object.values(lab.split).join(',')}|${lab.winterTurn}|${Object.keys(lab.calls ?? {}).join(',')}|${JSON.stringify(lab.focus ?? {})}` : ''}`;
         if (el.pressure && when !== lastPressure) {
           lastPressure = when;
           el.pressure.textContent = pressureLine(state, world, { foodYield, foodNeed, foodCapacity });
