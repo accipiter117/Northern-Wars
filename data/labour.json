@@ -220,5 +220,95 @@
       "blurb": "Hands become soldiers for three months: the garrisons fill and the realm is safer, but the works go short and the pay is dear."
     }
   },
-  "spread": 0.85
+  "spread": 0.85,
+  "presets": {
+    "note": "One-tap splits of the kingdom's hands (M21 C), each making a hundred.",
+    "harvest": {
+      "name": "Harvest",
+      "blurb": "Every spare hand to the fields and the pastures.",
+      "split": {
+        "fields": 60,
+        "woods": 5,
+        "mines": 5,
+        "pastures": 5,
+        "fishing": 4,
+        "crafts": 14,
+        "repairs": 3,
+        "levies": 4
+      }
+    },
+    "winter": {
+      "name": "Winter",
+      "blurb": "Fuel and the workshops: the woods, the turf cuts and the crafts.",
+      "split": {
+        "fields": 12,
+        "woods": 24,
+        "mines": 10,
+        "pastures": 3,
+        "fishing": 3,
+        "crafts": 36,
+        "repairs": 6,
+        "levies": 6
+      }
+    },
+    "war": {
+      "name": "War footing",
+      "blurb": "More to the mines, the smiths and the levies.",
+      "split": {
+        "fields": 36,
+        "woods": 6,
+        "mines": 15,
+        "pastures": 2,
+        "fishing": 3,
+        "crafts": 22,
+        "repairs": 4,
+        "levies": 12
+      }
+    },
+    "rebuild": {
+      "name": "Rebuild",
+      "blurb": "Masons and carpenters to whatever is broken.",
+      "split": {
+        "fields": 40,
+        "woods": 9,
+        "mines": 7,
+        "pastures": 3,
+        "fishing": 3,
+        "crafts": 19,
+        "repairs": 15,
+        "levies": 4
+      }
+    }
+  },
+  "focus": {
+    "note": "A town's focus (M21 C) pulls more of its district's hands (the town and the villages that lend it theirs) to one kind of work: those kinds' shares there are multiplied by boost, the rest scaled down to keep the whole.",
+    "boost": 1.6,
+    "options": {
+      "food": {
+        "name": "Food",
+        "kinds": [
+          "fields",
+          "fishing"
+        ]
+      },
+      "iron": {
+        "name": "Iron and arms",
+        "kinds": [
+          "mines"
+        ]
+      },
+      "cloth": {
+        "name": "Cloth",
+        "kinds": [
+          "pastures"
+        ]
+      },
+      "timber": {
+        "name": "Timber",
+        "kinds": [
+          "woods"
+        ]
+      }
+    }
+  }
 }

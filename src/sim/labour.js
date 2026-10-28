@@ -17,6 +17,8 @@ import { leviedMap } from './conflict.js';
 import { condOf } from './works.js';
 
 const L = (world) => world.labour;
+// Works can take up to half as many hands again as they need (M21 C).
+const MAX_STAFF = 1.5;
 const say = (state, text) => addDispatch(state, text, 'realm');
 export const KINDS = ['fields', 'woods', 'mines', 'pastures', 'fishing', 'crafts', 'repairs', 'levies'];
 
@@ -29,6 +31,7 @@ export function defaultLabour(world) {
     calls: {},
     winterTurn: false,
     pins: {},
+    focus: {},
     closed: 0,
     fuel: pop,
     short: 0,
@@ -167,8 +170,9 @@ export function stepLabourDay(state, world) {
   const muster = (state.labour.calls.harvest?.until ?? 0) > state.day;
   // First each district mans its own works, kind by kind.
   const districts = [];
-  for (const members of Object.values(groups)) {
+  for (const [head, members] of Object.entries(groups)) {
     const hands = members.reduce((a, id) => a + handsOf(state, world, id, levied), 0);
+    const shares = focusedSplit(world, split, state.labour.focus?.[head]);
     const byKind = {};
     for (const id of members) {
       const s = state.settlements[id];
@@ -182,10 +186,10 @@ export function stepLabourDay(state, world) {
     }
     const d = { byKind, own: {}, need: {}, got: {} };
     for (const kind of KINDS) {
-      d.own[kind] = (hands * split[kind]) / 100;
+      d.own[kind] = (hands * shares[kind]) / 100;
       report[kind].hands += d.own[kind];
       d.need[kind] = (byKind[kind] ?? []).reduce((a, w) => a + w.need, 0);
-      d.got[kind] = Math.min(d.own[kind], d.need[kind] * (muster && kind === 'fields' ? 1.15 : 1));
+      d.got[kind] = Math.min(d.own[kind], d.need[kind]);
     }
     districts.push(d);
   }
@@ -197,12 +201,22 @@ export function stepLabourDay(state, world) {
     const short = districts.reduce((a, d) => a + Math.max(0, d.need[kind] - d.got[kind]), 0);
     const f = short > 0 ? Math.min(1, spare / short) : 0;
     let used = 0;
+    const leftover = districts.map((d) => Math.max(0, d.own[kind] - d.got[kind]));
     for (const d of districts) {
       const gap = Math.max(0, d.need[kind] - d.got[kind]);
       d.got[kind] += gap * f;
       used += gap * f;
     }
-    report[kind].idle = Math.max(0, spare / l.spread - used / l.spread);
+    // What no other district needed works its own district's works harder
+    // (M21 C), up to half as many hands again as they need.
+    const keep = spare > 0 ? Math.max(0, 1 - used / spare) : 1;
+    let extra = 0;
+    districts.forEach((d, i) => {
+      const more = Math.min(leftover[i] * keep, d.need[kind] * (MAX_STAFF - 1));
+      d.got[kind] += more;
+      extra += more;
+    });
+    report[kind].idle = Math.max(0, spare / l.spread - used / l.spread - extra);
   }
   // Each works takes its share of what its district has: pinned works first.
   for (const d of districts) {
@@ -219,11 +233,11 @@ export function stepLabourDay(state, world) {
       const rest = list.filter((w) => w.got === undefined).reduce((a, w) => a + w.need, 0);
       const ratio = rest > 0 ? left / rest : 0;
       for (const w of list) {
-        if (w.got === undefined) w.got = w.need * Math.min(muster && w.b === null ? 1.15 : 1, ratio);
+        if (w.got === undefined) w.got = w.need * Math.min(MAX_STAFF, ratio);
         report[kind].staffed += Math.min(w.need, w.got);
         const s = state.settlements[w.id];
         // Out of season a works keeps its people but has nothing to do.
-        const pct = w.need > 0 ? clamp((100 * w.got) / w.need, 0, w.b === null && muster ? 115 : 100) : 100;
+        const pct = w.need > 0 ? clamp((100 * w.got) / w.need, 0, 100 * MAX_STAFF) : 100;
         if (w.b === null) s.farmStaff = pct;
         else (s.staff ??= {})[w.b] = pct;
       }
@@ -238,7 +252,10 @@ export function stepLabourDay(state, world) {
 export function farmFactor(world, s) {
   const l = L(world);
   if (!l) return 1;
-  return l.farmFloor + (1 - l.farmFloor) * ((s.farmStaff ?? 100) / 100);
+  // Hands beyond what the fields need (a muster, a focus on food) bring the
+  // harvest in fuller, each counting half (M21 C).
+  const staff = s.farmStaff ?? 100;
+  return l.farmFloor + (1 - l.farmFloor) * ((Math.min(staff, 100) + Math.max(0, staff - 100) / 2) / 100);
 }
 
 // How much the garrisons swell or shrink with the levies' share.
@@ -359,6 +376,75 @@ export function shiftSplit(split, kind, step) {
   return out;
 }
 
+// A district's split under its town's focus (M21 C): the focus's kinds of
+// work take boost times their share, the rest give way in proportion.
+export function focusedSplit(world, split, focus) {
+  const opt = focus && L(world).focus?.options[focus];
+  if (!opt) return split;
+  const out = { ...split };
+  const boosted = opt.kinds.reduce((a, k) => a + out[k] * L(world).focus.boost, 0);
+  const restBefore = KINDS.filter((k) => !opt.kinds.includes(k)).reduce((a, k) => a + out[k], 0);
+  const f = restBefore > 0 ? Math.max(0, 100 - boosted) / restBefore : 0;
+  for (const k of KINDS) out[k] = opt.kinds.includes(k) ? out[k] * L(world).focus.boost : out[k] * f;
+  return out;
+}
+
+// ---- Presets and focus (M21 C) ----
+
+export function canPreset(state, world, id) {
+  const p = L(world)?.presets?.[id];
+  if (!p || id === 'note') return { ok: false, reason: 'Unknown setting.' };
+  return canSetSplit(state, world, p.split);
+}
+
+export function applyPreset(state, world, id) {
+  setSplit(state, world, L(world).presets[id].split);
+}
+
+// The town whose district a place works for.
+export function districtHead(world, id) {
+  return districtOf(world)[id] ?? id;
+}
+
+export function canFocus(state, world, id, focus) {
+  const l = L(world);
+  if (!l?.focus) return { ok: false, reason: 'No focus in this world.' };
+  const s = state.settlements[id];
+  const type = world.byId[id]?.type;
+  if (!s || s.occupier) return { ok: false, reason: 'Only a place the crown holds.' };
+  if (type !== 'town' && type !== 'city') return { ok: false, reason: 'A focus is set on a town or city, for it and the villages round it.' };
+  if (focus !== null && !l.focus.options[focus]) return { ok: false, reason: 'Unknown focus.' };
+  return { ok: true };
+}
+
+export function setFocus(state, world, id, focus) {
+  state.labour.focus ??= {};
+  if (focus) state.labour.focus[id] = focus;
+  else delete state.labour.focus[id];
+}
+
+// What the realm (or one district) would make a month after a change to
+// its hands, against now: `change` is { split } or { focus: { id, focus } }.
+// Worked on a light copy of the state, so nothing is touched.
+export function labourPreview(state, world, change, output) {
+  const copy = {
+    ...state,
+    labour: { ...state.labour, split: change.split ?? state.labour.split, focus: { ...(state.labour.focus ?? {}) } },
+    settlements: Object.fromEntries(Object.entries(state.settlements).map(([id, s]) => [id, { ...s, staff: { ...(s.staff ?? {}) } }])),
+  };
+  if (change.focus) {
+    if (change.focus.focus) copy.labour.focus[change.focus.id] = change.focus.focus;
+    else delete copy.labour.focus[change.focus.id];
+  }
+  stepLabourDay(copy, world);
+  const ids = change.focus ? Object.keys(state.settlements).filter((id) => districtHead(world, id) === change.focus.id) : null;
+  const before = output(state, world, ids);
+  const after = output(copy, world, ids);
+  const diff = {};
+  for (const k of Object.keys(after)) diff[k] = Math.round(after[k] - before[k]);
+  return diff;
+}
+
 export function canCall(state, world, call) {
   const l = L(world);
   if (!l || !state.labour) return { ok: false, reason: 'No labour in this world.' };
@@ -459,8 +545,17 @@ export function pressureLine(state, world, fns) {
   const month = dateOf(state.day).month;
   const wintry = month >= 11 || month <= 2;
   const fuel = o.fuelAtFrost < o.fuelNeed * 0.6 ? ' Fuel will be short.' : '';
-  if (wintry) return `Winter. ${state.labour.short > 0.05 ? 'Hearths are going cold.' : `Fuel for about ${Math.max(0, Math.round((o.fuel / Math.max(1, o.fuelNeed)) * 5))} months.`}`;
-  return `First frost in ${o.days} days. ${o.short ? 'Grain is short for winter.' : 'Grain enough for winter.'}${fuel}`;
+  // The one most pressing shortage of hands, if any (M21 C).
+  let worst = null;
+  for (const k of KINDS) {
+    const x = state.labour.report?.[k];
+    if (!x || x.need <= 0) continue;
+    const pct = x.staffed / x.need;
+    if (pct < 0.85 && (!worst || pct < worst.pct)) worst = { pct, name: L(world).kinds[k].name };
+  }
+  const hands = worst ? ` ${worst.name} short of hands.` : '';
+  if (wintry) return `Winter. ${state.labour.short > 0.05 ? 'Hearths are going cold.' : `Fuel for about ${Math.max(0, Math.round((o.fuel / Math.max(1, o.fuelNeed)) * 5))} months.`}${hands}`;
+  return `First frost in ${o.days} days. ${o.short ? 'Grain is short for winter.' : 'Grain enough for winter.'}${fuel}${hands}`;
 }
 
 // v18: a reign from before Part C gets the default split, with the winter

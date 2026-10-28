@@ -9,8 +9,9 @@
 // what they supplied dearer. The routes, carts and tolls underneath carry
 // the goods but are not managed one by one.
 import { totalPopulation } from './state.js';
-import { foodYield, foodNeed } from './economy.js';
-import { MONTHS } from './calendar.js';
+import { foodYield, foodNeed, goodsYield, prosperityMult } from './economy.js';
+import { worksFactor } from './works.js';
+import { MONTHS, dateOf } from './calendar.js';
 import { addDispatch } from './realm.js';
 import { TEMERIA, hostile, placesHeldBy, sideName, atWar } from './conflict.js';
 import { number } from './text.js';
@@ -123,6 +124,40 @@ export function grainBalance(state, world) {
 
 function seasonOfMonth(m) {
   return m === 12 || m <= 2 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : 'autumn';
+}
+
+// What the realm (or a list of its places) makes in a month as its works
+// stand and are manned, in loads of the five goods, and what its crafts
+// earn: for previews of a change to the hands (M21 C). Inputs between works
+// (charcoal for the smiths, wool for the weavers) are not netted out.
+export function monthlyOutput(state, world, ids = null) {
+  const cfg = M(world);
+  const out = { grain: 0, materials: 0, iron: 0, cloth: 0, luxuries: 0, crowns: 0 };
+  if (!cfg) return out;
+  const d = dateOf(state.day);
+  const days = MONTHS[d.month - 1].days;
+  const i = world.industry;
+  const e = world.economy;
+  for (const id of ids ?? Object.keys(state.settlements)) {
+    const s = state.settlements[id];
+    if (!s || s.occupier) continue;
+    out.grain += foodYield(world, id, s, d.month) * days * cfg.goods.grain.of.food;
+    const q = goodsYield(world, id, s) * days;
+    const m = q > 0 && marketGoodOf(world, s.production);
+    if (m) out[m.good] += q * m.per;
+    const mult = prosperityMult(world, s);
+    for (const b of s.buildings) {
+      const wf = worksFactor(s, b);
+      const make = i?.makers[b] ?? i?.workers[b];
+      if (make) {
+        const g = marketGoodOf(world, make.good);
+        if (g) out[g.good] += make.amount * mult * wf * g.per;
+      }
+      const craft = world.buildings[b].effects.craft;
+      if (craft) out.crowns += craft * (e.crafts.works ?? 1) * e.crafts.placeScale[world.byId[id].type] * mult * wf;
+    }
+  }
+  return out;
 }
 
 // ---- Partners ----

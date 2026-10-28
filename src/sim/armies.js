@@ -11,6 +11,7 @@ import { siegesOn, siegeDay } from './siege.js';
 import { onCapture, integrationFactor } from './conquest.js';
 import { stationedStrength, freeCompanies } from './forces.js';
 import { addDispatch, clamp } from './realm.js';
+import { totalPopulation } from './state.js';
 import { roadPath, dist } from './world.js';
 import { seasonOf } from './calendar.js';
 import { informed } from './realms.js';
@@ -26,9 +27,103 @@ const round = Math.round;
 
 // ---- Raising the crown's armies ----
 
-// What a call to arms would bring: crown levies, the lords' men (from the
-// houses loyal enough to send them) and hired companies.
+// What a call to arms would bring. Since M21: the crown's levy, a share of
+// each crown place's people (more from the cities), times the call; the
+// great houses' retinues, by the size of their lands and their loyalty;
+// mercenary companies hired for a season; the crown's standing companies.
+// Levies and retinues leave their places' hands while they are away.
 export function musterPreview(state, world, opts) {
+  const r = W(world).raise;
+  if (!r.muster) return legacyPreview(state, world, opts);
+  const call = r.muster.calls[opts.levy] ?? 0;
+  const levy = {};
+  const retinues = {};
+  const houses = [];
+  const refuse = [];
+  let levyMen = 0;
+  for (const [id, s] of Object.entries(state.settlements)) {
+    if (s.occupier || s.holder !== 'crown' || !call) continue;
+    const n = Math.floor(totalPopulation(s) * (r.muster.share[world.byId[id].type] ?? 0) * call * integrationFactor(world, s, 'levyAt'));
+    if (n > 0) {
+      levy[id] = n;
+      levyMen += n;
+    }
+  }
+  let retinueMen = 0;
+  if (opts.nobles) {
+    for (const h of Object.keys(state.houses ?? {})) {
+      const ret = houseRetinue(state, world, h);
+      if (ret.refuse) {
+        if (!state.houses[h].rebel) refuse.push(h);
+        continue;
+      }
+      if (!ret.men) continue;
+      for (const [id, n] of Object.entries(ret.from)) levy[id] = (levy[id] ?? 0) + n;
+      retinues[h] = ret.men;
+      retinueMen += ret.men;
+      houses.push(h);
+    }
+  }
+  const mercs = (opts.mercs ?? []).filter((id) => mercenaryOffer(state, world, id).ok);
+  const mc = r.mercenaries?.companies ?? {};
+  const mercMen = mercs.reduce((a, id) => a + mc[id].men, 0);
+  const units = freeCompanies(state).filter((c) => (opts.units ?? []).includes(c.id) && !c.task && c.routed <= state.day);
+  const unitMen = units.reduce((a, c) => a + c.men, 0);
+  const coin = mercs.reduce((a, id) => a + mc[id].coin, 0);
+  const monthly = Math.round(levyMen * r.pay.levy + retinueMen * r.pay.retinue + mercs.reduce((a, id) => a + mc[id].monthly, 0));
+  return {
+    levy, houses, refuse, retinues, mercs, mercMen, companies: 0, units: units.map((c) => c.id), unitMen,
+    levyMen, retinueMen, hands: levyMen + retinueMen, soldiers: levyMen + retinueMen + mercMen + unitMen, coin, monthly,
+    days: gatherDays(world, opts.muster, Object.keys(levy)),
+  };
+}
+
+// The days for the levies to reach the muster: the farthest place's road.
+export function gatherDays(world, muster, ids) {
+  const m = W(world).raise.muster;
+  const at = world.byId[muster];
+  if (!at || !m) return 0;
+  let far = 0;
+  for (const id of ids) far = Math.max(far, Math.hypot(world.byId[id].x - at.x, world.byId[id].y - at.y));
+  return Math.max(m.gatherMin, Math.ceil(far / m.gatherSpeed));
+}
+
+// What a great house would send if called: a share of its lands' people,
+// all from a loyal house, half from a lukewarm one, none from a resentful
+// or rebel one.
+export function houseRetinue(state, world, h) {
+  const c = W(world).raise.retinue;
+  const house = state.houses?.[h];
+  if (!house || house.rebel || house.loyalty < c.refuseBelow) return { men: 0, from: {}, refuse: true };
+  const factor = house.loyalty >= c.fullAbove ? 1 : 0.5;
+  const from = {};
+  let men = 0;
+  for (const [id, s] of Object.entries(state.settlements)) {
+    if (s.holder !== h || s.occupier) continue;
+    const n = Math.floor(totalPopulation(s) * c.perPerson * factor);
+    if (n > 0) {
+      from[id] = n;
+      men += n;
+    }
+  }
+  return { men, from, refuse: false, half: factor < 1 };
+}
+
+// A mercenary company to be had now: the Novigrad men not against Redania,
+// the free company only while a war is fresh, none already in our pay.
+export function mercenaryOffer(state, world, id) {
+  const m = W(world).raise.mercenaries?.companies?.[id];
+  if (!m) return { ok: false, reason: 'No such company.' };
+  if ((state.armies ?? []).some((a) => (a.mercs ?? []).some((x) => x.id === id))) return { ok: false, reason: 'Already in our pay.' };
+  if (m.from !== 'free' && m.from !== 'kovir' && hostile(state, TEMERIA, m.from)) return { ok: false, reason: `Not while we are at war with ${sideName(world, m.from)}.` };
+  if (m.afterWar) {
+    const ended = (state.warsEnded ?? []).some((d) => state.day - d <= m.afterWar) || (state.wars ?? []).length > 0;
+    if (!ended) return { ok: false, reason: 'Only to be had while a war is fresh.' };
+  }
+  return { ok: true };
+}
+
+function legacyPreview(state, world, opts) {
   const r = W(world).raise;
   const share = r.levy[opts.levy] ?? 0;
   const levy = {};
@@ -52,7 +147,6 @@ export function musterPreview(state, world, opts) {
   for (const id of Object.keys(levy)) if (!levy[id]) delete levy[id];
   const companies = clamp(Math.floor(opts.companies ?? 0), 0, r.maxCompanies);
   const fromLevy = Object.values(levy).reduce((a, b) => a + b, 0);
-  // The crown's own standing companies march with it.
   const units = freeCompanies(state).filter((c) => (opts.units ?? []).includes(c.id) && !c.task && c.routed <= state.day);
   const unitMen = units.reduce((a, c) => a + c.men, 0);
   return { levy, houses, refuse, companies, units: units.map((c) => c.id), unitMen, soldiers: fromLevy + companies * r.company + unitMen, coin: companies * r.companyCoin };
@@ -81,7 +175,8 @@ export function canRaise(state, world, opts) {
 export function raiseArmy(state, world, opts) {
   const w = W(world);
   const p = musterPreview(state, world, opts);
-  for (const [id, n] of Object.entries(p.levy)) state.settlements[id].garrison -= n;
+  // Since M21 the levies come from the people, not the garrisons.
+  if (!w.raise.muster) for (const [id, n] of Object.entries(p.levy)) state.settlements[id].garrison -= n;
   state.treasury -= p.coin;
   for (const hid of p.houses) state.houses[hid].grievance += w.raise.nobleGrievance;
   const a = newArmy(state, world, TEMERIA, opts.muster, p.soldiers, p.levy, {
@@ -103,12 +198,23 @@ export function raiseArmy(state, world, opts) {
     const t = world.forces.companies[c.type];
     worth += c.men * t.perMan * (1 + (c.xp ?? 0) * world.forces.xp.bonus) * (world.forces.suits.soldiers[c.type] ?? 1);
   }
+  // Mercenaries, hired for a season, fight better than levies (M21).
+  if (w.raise.muster) {
+    const mc = w.raise.mercenaries?.companies ?? {};
+    a.folk = true;
+    a.levyMen = p.levyMen;
+    a.retinueMen = p.retinueMen;
+    a.mercs = p.mercs.map((id) => ({ id, men: mc[id].men, until: state.day + w.raise.mercenaries.season }));
+    for (const id of p.mercs) worth += mc[id].men * (mc[id].quality - 1);
+    if (p.days > 0) a.gatherUntil = state.day + p.days;
+  }
   a.quality = worth / Math.max(1, p.soldiers);
   const parts = [];
   if (Object.keys(p.levy).length) parts.push(p.houses.length ? `crown and noble levies (${p.houses.map((h) => world.houses.houses[h].name).join(', ')})` : 'the crown levy');
   if (p.companies) parts.push(`${p.companies} free compan${p.companies === 1 ? 'y' : 'ies'}`);
+  if (p.mercs?.length) parts.push(p.mercs.map((id) => w.raise.mercenaries.companies[id].name).join(' and '));
   if (p.units.length) parts.push(`${p.units.length} of the crown's standing compan${p.units.length === 1 ? 'y' : 'ies'}`);
-  say(state, `${a.name} gathers at ${world.byId[opts.muster].name}: ${round(a.soldiers)} men from ${parts.join(' and ')}${a.marshal ? `, under ${w.marshals[a.marshal].name}` : ''}.`);
+  say(state, `${a.name} gathers at ${world.byId[opts.muster].name}: ${round(a.soldiers)} men from ${parts.join(' and ')}${a.marshal ? `, under ${w.marshals[a.marshal].name}` : ''}.${a.gatherUntil ? ` The levies will be in within ${p.days} days.` : ''}`);
   for (const hid of p.refuse) say(state, `${world.houses.houses[hid].name} sends excuses instead of men.`);
   return a;
 }
@@ -129,7 +235,8 @@ export function newArmy(state, world, side, at, soldiers, levy, extra = {}) {
 // conscripts simply go.
 export function disbandArmy(state, world, a, quiet = false) {
   const f = clamp(a.soldiers / Math.max(1, a.raised), 0, 1);
-  for (const [id, n] of Object.entries(a.levy)) {
+  // Levies from the people (M21) simply go home to their work.
+  if (!a.folk) for (const [id, n] of Object.entries(a.levy)) {
     if (ownerOf(state, world, id) === a.side) placeOf(state, world, id).garrison += round(n * f);
   }
   // A realm's standing men go back to its standing army (M18).
@@ -158,6 +265,7 @@ export function disbandArmy(state, world, a, quiet = false) {
 
 export function canOrder(state, world, a, order, target) {
   if (!a || a.side !== TEMERIA) return { ok: false, reason: 'No such army.' };
+  if ((a.gatherUntil ?? 0) > state.day && order !== 'defend') return { ok: false, reason: `Still gathering: the levies are in within ${a.gatherUntil - state.day} days.` };
   if (order === 'defend') {
     if (!world.byId[target] || ownerOf(state, world, target) !== TEMERIA) return { ok: false, reason: 'Hold a place the crown holds.' };
   } else if (order === 'siege') {
@@ -271,7 +379,7 @@ export function stepArmiesDay(state, world, rng) {
   // Armies locked in battle (M19) neither think nor march until it ends.
   for (const a of state.armies) if (!a.battle) think(state, world, a);
   for (const a of state.armies) {
-    if (a.siege || a.raiding || a.battle) { a.speed = 0; continue; }
+    if (a.siege || a.raiding || a.battle || (a.gatherUntil ?? 0) > state.day) { a.speed = 0; continue; }
     move(world, a, speed);
   }
   battles(state, world, rng);

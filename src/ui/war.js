@@ -1,14 +1,14 @@
 // The war panel, army cards and the war's part of the realm and town cards.
 import {
   TEMERIA, formatDate, sideName, ownerOf, placesHeldBy, warsOf, warScore, exhaustion, heldValue, sideIndex, musterPreview,
-  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies,
+  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
 import { cardHead, orderAttr, section } from './card.js';
 import { form } from './memory.js';
 import { siegeHtml, attritionHtml, defendedSiegeHtml } from './battle.js';
-const LEVIES = { none: 'No levy', third: 'A third', half: 'Half' };
+const LEVIES = { none: 'No levy', third: 'A third', half: 'Half', all: 'All' };
 const TERMS = {
   white: ['Peace as we were', 'Every town taken in this war goes back to its old master.'],
   keep: ['Each keeps what it holds', 'The towns taken stay with whoever holds them now.'],
@@ -71,7 +71,7 @@ export function musterPlaces(world, state) {
     .sort((a, b) => world.byId[a].name.localeCompare(world.byId[b].name));
 }
 
-export const RAISE_DEFAULTS = { muster: 'vizima', levy: 'third', nobles: false, companies: 0, marshal: 'vestibor', stance: 'cautious', units: [] };
+export const RAISE_DEFAULTS = { muster: 'vizima', levy: 'third', nobles: false, companies: 0, mercs: [], marshal: 'vestibor', stance: 'cautious', units: [] };
 
 export function raiseForm(app) {
   const f = form(app.memory, 'raise', RAISE_DEFAULTS);
@@ -89,19 +89,35 @@ function raiseHtml(world, state, form) {
   const marshals = Object.entries(w.marshals).filter(([id]) => !busy.has(id));
   if (busy.has(form.marshal)) form.marshal = marshals[0]?.[0] ?? null;
   const marshal = w.marshals[form.marshal];
-  const parts = [];
-  if (Object.keys(p.levy).length) parts.push(`${number(p.soldiers - p.companies * w.raise.company - p.unitMen)} levied men`);
-  if (p.companies) parts.push(`${p.companies * w.raise.company} hired swords (${number(p.coin)} crowns now, ${p.companies * w.raise.companyMonthly} a month)`);
   const refuse = p.refuse.map((h) => world.houses.houses[h].name);
   const standing = freeCompanies(state).filter((c) => !c.task);
-  if (p.units.length) parts.push(`${p.units.length} standing compan${p.units.length === 1 ? 'y' : 'ies'} (${number(p.unitMen)} men)`);
   const action = { type: 'raise', ...form };
+  const mc = w.raise.mercenaries?.companies ?? {};
+  // The houses' likely retinues, before they are called (M21).
+  const houses = Object.keys(state.houses ?? {}).map((h) => {
+    const r = houseRetinue(state, world, h);
+    return `${escapeHtml(world.houses.houses[h].name.replace('House ', ''))} ${r.refuse ? 'would refuse' : `${number(r.men)}${r.half ? ' (half-hearted)' : ''}`}`;
+  }).join(', ');
+  const mercs = Object.entries(mc).map(([id, m]) => {
+    const offer = mercenaryOffer(state, world, id);
+    const on = (form.mercs ?? []).includes(id);
+    return `<button type="button" class="chip${on ? ' on' : ''}" data-merc="${id}" aria-pressed="${on}" ${offer.ok ? '' : 'disabled'} title="${escapeHtml(offer.ok ? m.blurb : offer.reason)}">${escapeHtml(m.name)} (${number(m.men)}, ${number(m.coin)} now)</button>`;
+  }).join(' ');
+  // The preview: men, hands taken from the works, the pay a month, the days
+  // for the levies to gather (M21).
+  const summary = p.hands !== undefined
+    ? `${number(p.soldiers)} men: ${[p.levyMen ? `${number(p.levyMen)} levied` : '', p.retinueMen ? `${number(p.retinueMen)} from the lords` : '', p.mercMen ? `${number(p.mercMen)} hired` : '', p.unitMen ? `${number(p.unitMen)} standing` : ''].filter(Boolean).join(', ')}.`
+    : `${number(p.soldiers)} men.`;
+  const costs = p.hands !== undefined
+    ? `${number(p.hands)} hands leave the works. ${number(p.monthly)} crowns a month (half as much again on campaign)${p.coin ? `, and ${number(p.coin)} now for the hired companies` : ''}. Gathers in ${p.days} days.`
+    : '';
   return `<h3>Raise an army</h3>
-    <p class="sub">Levied men leave their garrisons thin and their fields untended. The lords resent sending theirs. Hired companies cost coin and nothing else.</p>
+    <p class="sub">The levy is a share of each place's people, more from the cities: the men leave the works while they are away. The lords send men by the size of their lands and their loyalty.</p>
     <button type="button" class="row" data-pick-start='{"kind":"muster"}'><span class="row-main"><span class="row-sub">Muster at</span><span class="row-name">${form.muster ? escapeHtml(world.byId[form.muster].name) : 'Nowhere'}</span></span><span class="row-end">${icon('target')} Change</span></button>
     <div class="form-row"><span>Crown levy</span>${chips('levy', Object.entries(LEVIES), form.levy)}</div>
     <div class="form-row"><span>The lords' men</span>${chips('nobles', [[true, 'Call them'], [false, 'Leave them']], form.nobles)}</div>
-    <div class="form-row"><span>Hired companies</span>${chips('companies', [0, 1, 2, 3, 4, 5].map((n) => [n, String(n)]), form.companies)}</div>
+    ${houses ? `<p class="sub" data-part="retinues">Their likely men: ${houses}.</p>` : ''}
+    ${mercs ? `<div class="form-row"><span>Mercenaries, for a season</span><div class="chips">${mercs}</div></div>` : ''}
     ${standing.length ? `<div class="form-row"><span>Standing companies</span><div class="chips">${standing.map((c) => {
       const on = (form.units ?? []).includes(c.id);
       return `<button type="button" class="chip${on ? ' on' : ''}" data-unit="${c.id}" aria-pressed="${on}">${escapeHtml(c.name)} (${number(c.men)})</button>`;
@@ -110,8 +126,9 @@ function raiseHtml(world, state, form) {
     ${marshal ? `<p class="sub">${escapeHtml(marshal.name)}: ${escapeHtml(marshal.blurb)}</p>` : ''}
     <div class="form-row"><span>Stance</span>${chips('stance', Object.entries(w.stances).map(([id, s]) => [id, s.name]), form.stance)}</div>
     <p class="sub">${escapeHtml(w.stances[form.stance].blurb)}</p>
+    <p class="sub" data-part="raise-preview"><b>${escapeHtml(summary)}</b> ${escapeHtml(costs)}</p>
     <button type="button" class="act primary wide" data-raise ${orderAttr(action)} ${check.ok ? '' : 'disabled'}><span class="act-label">Raise ${number(p.soldiers)} men</span>
-      <span class="act-sub">${check.ok ? escapeHtml(parts.join(', ') || 'No one') : escapeHtml(check.reason)}</span></button>
+      <span class="act-sub">${check.ok ? 'Call them to arms' : escapeHtml(check.reason)}</span></button>
     ${refuse.length ? `<p class="warn">${escapeHtml(refuse.join(', '))} would send excuses instead of men.</p>` : ''}`;
 }
 

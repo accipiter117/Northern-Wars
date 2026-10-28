@@ -196,6 +196,25 @@ Numbers live in data/market.json; the rules in src/sim/market.js.
 - **Loans** from the Vivaldi bank: 2,000, 5,000 or 10,000 crowns, repaid in 24 monthly payments with 1.2% a month of simple interest. The bank lends up to six months of income in all. A payment the treasury cannot meet is missed: the rate rises, the payment goes to the end, and the crown loses 3 Authority.
 - **Crafts**: the crowding penalty for several works of the same craft is gentler (0.03 a work, from 0.07); a soft cap keeps the crafts together below 0.8 of the taxes and dues.
 
+### Directing your people (M21 C)
+- Labour is a front-line lever. The Realm tab's overview carries a strip with where the hands are (the largest shares) and the one most pressing shortage, with a tap to the Labour screen; the map's pressure strip names that shortage too.
+- **At a stroke**: four one-tap splits on the Labour screen (data/labour.json `presets`): Harvest (fields and pastures), Winter (the woods, turf and the workshops), War footing (the mines, the smiths and the levies) and Rebuild (repairs). The + and − for each kind of work stay underneath.
+- **A town's focus** (its card, Works): None, Food, Iron and arms, Cloth or Timber, offered where the town's district has works of that kind. The focus's kinds of work take 1.6 times their share of the district's hands (the town and the villages that lend it theirs); the rest give way.
+- **More hands than a works needs** now work it harder: a works can take up to half as many hands again as it needs, for up to a quarter more (a field's extra hands count half). Only hands no other district needs go to this, so a preset or a focus that moves hands to a kind of work makes more of it.
+- Every change shows its result before it is made, in the same place: "+120 iron, −60 grain a month", for the realm (presets) or the town and its villages (focus), worked out on a light copy of the realm.
+
+### Armies of a real size (M21 D)
+Numbers live in data/war.json `raise`; the rules in src/sim/armies.js.
+- **The levy is a share of the people**, not of the garrisons: a city sends 8% of its people, a town 6%, a castle 5%, a village 4%, times the call (a third, half or all). Vizima sends about 1,440 at a full call, a town 150 to 500, a village 10 to 80. The men leave their places' hands while they are away (the works go short) and go back to work when the army is stood down. Garrisons stay in their towns.
+- **Raising an army**: pick the muster on the map, the call, the lords and any mercenaries; the form shows the men, the hands that leave the works, the pay a month and the days to gather (the farthest place's road at 60 map units a day, at least three) before confirming. Until the levies are in, the army cannot march.
+- **The lords' retinues**: each great house sends a tenth of its lands' people, all of it if its loyalty is 55 or more, half if lower, none below 30 (as before, a refusal). The form shows each house's likely men before calling them.
+- **Mercenary companies**, hired for a season (90 days): the Free Company of Novigrad (600 men, not while at war with Redania), the Koviri Pikes (800) and the Grey Banner (400, only while a war is fresh). Dearer and better than levies (quality 1.25 to 1.4). When the season is out they leave.
+- **Standing companies** stay the crown's best troops, and garrisons stay in their towns; walls still multiply a garrison's strength.
+- **Pay**: levies 0.22 and retinues 0.28 a man a month, half as much again on campaign (beyond the realm, besieging or raiding); mercenaries 260 to 460 a month a company. An army the treasury cannot pay (below zero at the turn of the month) loses heart at once, and from its second month unpaid 12% of its men desert each month.
+- The Military tab's Forces screen opens with one line: men under arms (garrisons, companies, the field), what they cost a month, and how many months the treasury could pay them.
+- **Foreign realms** muster by the same shares of their people (half a call for the first army, then the rest), with their standing armies; their garrisons stay home.
+- Save version 21: town focus empty; the crown's armies already in the field become levies of the people, their men returned to the garrisons they came from.
+
 ## One map, a kingdom already built (M20)
 The crown does not build. Every realm starts the game fully developed, as the Witcher North is: towns already have their mills, mines, fisheries and markets, and what each place has comes from the land it stands on. The crown's levers are repairs after raids and war, where the kingdom's hands work through the seasons (Part C), laws, the court and war. Numbers live in data/spaces.json; the rules in src/sim/works.js.
 

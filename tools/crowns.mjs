@@ -5,7 +5,7 @@ import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
   strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks, canCall, winterOutlook, foodYield, foodNeed, foodCapacity,
-  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow,
+  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -28,7 +28,7 @@ export function makeCrowns(world) {
 
   // A sensible crown at war: one army to hold the capital, peace on the best
   // terms the enemy will take, and no part in other people's wars.
-  function warPolicy(s, treat = 'spare') {
+  function warPolicy(s, treat = 'spare', keepArmy = false) {
     for (const d of [...s.warDecisions]) {
       let choice = d.kind === 'call' ? 1 : 0;
       // An offered peace that would leave our towns with them is refused,
@@ -45,6 +45,8 @@ export function makeCrowns(world) {
     if (wars.length && !crownArmies(s).length) {
       s = act(s, { type: 'raise', muster: 'vizima', levy: 'third', nobles: true, companies: 0, marshal: 'vestibor', stance: 'cautious' });
     }
+    // At peace, a war army goes home: its pay is no longer worth it (M21).
+    if (!wars.length && keepArmy !== true) for (const a of crownArmies(s)) if (!a.keep) s = act(s, { type: 'disband', army: a.id });
     for (const w of wars) {
       // Holding towns of theirs, keep them; otherwise take their coin.
       const held = (side) => w.taken.filter((t) => ownerOf(s, world, t.id) === side && t.from !== side).reduce((a, t) => a + valueOf(s, world, t.id), 0);
@@ -377,5 +379,73 @@ export function makeCrowns(world) {
     return s;
   }
 
-  return { answer, steward, tyrant };
+  // The warlord (M21): a steward's economy, a war every three years against
+  // the weakest neighbour it can, everything it can muster (the whole levy,
+  // the lords, every mercenary company to be had), sacks for the loot, Heavy
+  // taxes and the bank while the war lasts.
+  function warlord(s, month) {
+    s = answer(s, true);
+    s = warPolicy(s, 'harsh');
+    if (world.market && month % 3 === 1) s = trade(s);
+    if (world.spaces) s = mend(s, false);
+    if (world.labour) s = labour(s);
+    const wars = warsOf(s, 'temeria');
+    const taxes = wars.length ? 'heavy' : 'fair';
+    for (const law of ['tax_towns', 'tax_peasants']) if (s.laws[law]?.option !== taxes) s = act(s, { type: 'law', law, option: taxes });
+    if (wars.length && s.treasury < 2000) for (const sum of [10000, 5000, 2000]) if (canBorrow(s, world, sum).ok) { s = act(s, { type: 'loan', sum }); break; }
+    if (month >= 24 && month % 36 === 0 && !wars.length) {
+      let best = null;
+      for (const pid of parties(world)) {
+        if (!s.realms[pid] || pid === 'brokilon' || hostile(s, 'temeria', pid)) continue;
+        const reason = ['claim', 'broken', 'refused', 'none'].find((r) => canDeclareWith(s, world, pid, r).ok);
+        if (!reason) continue;
+        const ratio = 4000 / Math.max(1, strengthOf(s, world, pid));
+        if (!best || ratio > best.ratio) best = { pid, reason, ratio };
+      }
+      if (best) {
+        s = act(s, { type: 'declare', realm: best.pid, reason: best.reason });
+        if (hostile(s, 'temeria', best.pid)) {
+          const mercs = Object.keys(world.war.raise.mercenaries?.companies ?? {}).filter((id) => mercenaryOffer(s, world, id).ok);
+          const units = s.forces.companies.filter((c) => !c.task && !c.army).map((c) => c.id);
+          s = act(s, { type: 'raise', muster: 'vizima', levy: 'all', nobles: true, mercs, units, marshal: 'vestibor', stance: 'bold' });
+          const a = crownArmies(s)[0];
+          const target = (world.foreignByRealm[best.pid] ?? [])
+            .sort((x, y) => Math.min(...Object.keys(s.settlements).map((h) => Math.hypot(world.byId[h].x - world.byId[x].x, world.byId[h].y - world.byId[x].y)))
+              - Math.min(...Object.keys(s.settlements).map((h) => Math.hypot(world.byId[h].x - world.byId[y].x, world.byId[h].y - world.byId[y].y))))[0];
+          if (a && target) s.pendingSiege = { army: a.id, target };
+        }
+      }
+    }
+    // Once the levies are in, march.
+    if (s.pendingSiege) {
+      const a = crownArmies(s).find((x) => x.id === s.pendingSiege.army);
+      if (!a) delete s.pendingSiege;
+      else if (!(a.gatherUntil > s.day)) {
+        s = act(s, { type: 'army', army: a.id, order: 'siege', target: s.pendingSiege.target, stance: 'bold' });
+        delete s.pendingSiege;
+      }
+    }
+    for (const w of wars) for (const t of w.taken) if (canRequisition(s, world, t.id).ok) s = act(s, { type: 'requisition', settlement: t.id });
+    return s;
+  }
+
+  // The steward with a standing army (M21): its usual policy, and the
+  // crown's companies (professional soldiers, who take no hands from the
+  // works) recruited until they number about 3,000 men.
+  const STANDING = ['militia', 'archers', 'menatarms', 'militia', 'archers', 'crossbows', 'menatarms', 'lightcav'];
+  function standing(s, month) {
+    s = steward(s, month, false);
+    const towns = world.geography.settlements.filter((x) => x.type !== 'village' && x.type !== 'temple').map((x) => x.id);
+    for (let i = 0; i < 4; i++) {
+      const men = s.forces.companies.reduce((a, c) => a + c.men, 0);
+      if (men >= 3000 || s.treasury < 2500) break;
+      const kind = STANDING[(month + i) % STANDING.length];
+      const at = towns.find((id) => canRecruit(s, world, id, kind).ok);
+      if (!at) break;
+      s = act(s, { type: 'recruit', settlement: at, kind });
+    }
+    return s;
+  }
+
+  return { answer, steward, tyrant, warlord, standing };
 }

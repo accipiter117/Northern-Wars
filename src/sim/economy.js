@@ -501,6 +501,7 @@ export function monthlyLedger(state, world, rng = null) {
   const totalIn = net.in;
   const totalOut = net.out;
   state.treasury += totalIn - already - totalOut;
+  armiesAfterLedger(state, world);
   // Past the bankers' limit the bills simply go unpaid, so the debt stops
   // growing a little beyond it (and the soldiers desert, below).
   const limit = creditLimit(state, world);
@@ -558,6 +559,52 @@ export function monthlyLedger(state, world, rng = null) {
   say(state, text);
 }
 
+// An army's pay for a month (M21): its levies and retinues by the man, more
+// while campaigning (beyond the realm, or besieging or raiding), and its
+// mercenaries at their own rate. The crown's standing companies are paid
+// with the companies.
+export function armyPay(state, world, a) {
+  const r = world.war.raise;
+  if (!a.folk || !r.pay) return 0;
+  const f = Math.min(1, a.soldiers / Math.max(1, a.raised));
+  const away = a.order === 'siege' || a.order === 'raid' || ownerOf(state, world, a.at) !== TEMERIA;
+  const field = away ? r.pay.field : 1;
+  const mc = r.mercenaries?.companies ?? {};
+  return ((a.levyMen ?? 0) * r.pay.levy + (a.retinueMen ?? 0) * r.pay.retinue) * f * field + (a.mercs ?? []).reduce((v, m) => v + (mc[m.id]?.monthly ?? 0), 0);
+}
+
+// After the month's accounts (M21): mercenaries whose season is out go,
+// and armies the treasury cannot pay lose heart, then men.
+export function armiesAfterLedger(state, world) {
+  const r = world.war?.raise;
+  if (!r?.pay || !state.armies) return;
+  const mc = r.mercenaries?.companies ?? {};
+  for (const a of state.armies) {
+    if (a.side !== TEMERIA || !a.folk) continue;
+    for (const m of [...(a.mercs ?? [])]) {
+      if (m.until > state.day) continue;
+      const f = Math.min(1, a.soldiers / Math.max(1, a.raised));
+      const gone = Math.round(m.men * f);
+      a.soldiers = Math.max(0, a.soldiers - gone);
+      a.raised = Math.max(1, a.raised - m.men);
+      a.mercs = a.mercs.filter((x) => x !== m);
+      say(state, `${mc[m.id]?.name ?? 'A hired company'} has served its season and leaves ${a.name}: ${number(gone)} men.`);
+    }
+    if (state.treasury >= 0) {
+      a.unpaid = 0;
+      continue;
+    }
+    // The first month unpaid they grumble; from the second, men slip away.
+    a.unpaid = (a.unpaid ?? 0) + 1;
+    a.morale = Math.max(0, a.morale - r.unpaid.morale);
+    if (a.unpaid >= 2 || a.morale < r.unpaid.desertBelow) {
+      const gone = Math.round(a.soldiers * r.unpaid.desert);
+      a.soldiers -= gone;
+      say(state, `${a.name} goes unpaid: ${number(gone)} men desert.`);
+    } else say(state, `${a.name} goes unpaid, and grumbles.`);
+  }
+}
+
 // War's share of the ledger: the armies' pay, what conquered towns yield and
 // cost to hold, and tribute paid or received.
 function warLedger(state, world, income, expenses, law) {
@@ -565,6 +612,10 @@ function warLedger(state, world, income, expenses, law) {
   const r = world.war.raise;
   for (const a of state.armies) {
     if (a.side !== TEMERIA) continue;
+    if (a.folk) {
+      expenses.armies += armyPay(state, world, a);
+      continue;
+    }
     const hired = Math.min(a.soldiers, a.companies * r.company);
     expenses.armies += (a.soldiers - hired) * r.fieldPayPerSoldier + a.companies * r.companyMonthly;
   }

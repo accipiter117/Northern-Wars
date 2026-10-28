@@ -2,6 +2,7 @@
 import {
   TEMERIA, freeCompanies, crownArmies, describeArmy, describeCompany, companyUpkeep, huntOdds, bestCompanyFor, canRecruit, recruitCost,
   companySlots, threatPos, threatName, threatSize, isCamp, nearestPlace, witcherCost, speciesOf, ledgerNet, targetOf, hostile, sideName,
+  armyPay,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -60,7 +61,23 @@ export function forcesHtml(app) {
   const armies = crownArmies(state).map((a) => `<button type="button" class="row realm-row" data-army="${a.id}" data-go="army:${a.id}">
     <span class="row-main"><span class="row-name">${escapeHtml(a.name)} ${moraleBar(a.morale)}</span>
     <span class="row-sub">${escapeHtml(describeArmy(state, world, a).replace(`${a.name}, `, ''))}.</span></span></button>`).join('');
+  // One line for the whole of the realm's force (M21): men, pay, and how
+  // long the treasury could pay it.
+  let garrison = 0;
+  let garrisonPay = 0;
+  for (const s of Object.values(state.settlements)) {
+    if (s.occupier) continue;
+    garrison += s.garrison;
+    if (s.holder === 'crown') garrisonPay += s.garrison * world.economy.upkeep.garrisonPerSoldierMonth;
+  }
+  const field = crownArmies(state);
+  const armyMen = field.reduce((a, x) => a + x.soldiers, 0);
+  const companyMen = free.reduce((a, c) => a + c.men, 0);
+  const cost = Math.round(garrisonPay + upkeep + field.reduce((a, x) => a + armyPay(state, world, x), 0));
+  const months = cost > 0 && state.treasury > 0 ? Math.floor(state.treasury / cost) : 0;
+  const line = `<p class="status" data-part="under-arms"><span><b>${number(Math.round(garrison + companyMen + armyMen))} men under arms</b> (${number(garrison)} in garrisons, ${number(companyMen)} in companies${armyMen ? `, ${number(Math.round(armyMen))} in the field` : ''}): ${number(cost)} crowns a month; the treasury could pay them ${months} month${months === 1 ? '' : 's'}.</span></p>`;
   return `
+    ${line}
     ${cardHead({
       status: '<span>Companies are recruited from a town\'s card. Give each a standing order; they march by road, fight what they meet, and come home.</span>',
       chips: [

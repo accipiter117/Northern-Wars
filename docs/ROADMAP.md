@@ -22,7 +22,7 @@
 | M18 Rulers who govern | Foreign rulers assess threat, opportunity and purse each month and choose a posture (Grow, Arm, Expand, Consolidate, Scheme); standing armies with upkeep, a court that taxes hoards, debt with desertion and offers to Temeria; building from the full catalogue; wars with aims, musters and reasons in place of rivalry dice; deterrence, probes and harder-to-break pacts with Temeria; pacts between realms that last; posture and war aims learnt through embassies and spies | Done |
 | M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | Done |
 | M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
-| M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | In progress (A and B) |
+| M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | In progress (A, B, C and D) |
 
 ## M21 acceptance criteria
 Part A, trade in five goods:
@@ -38,6 +38,20 @@ Part B, more ways to make money:
 - Loans from the Vivaldi bank with monthly repayments and interest, capped by income; missed payments raise the rate and cost Authority.
 - A gentler crowding penalty on crafts with a soft cap below the taxes.
 - Save version 20.
+
+Part C, directing your people:
+- A labour strip on the Realm tab and the map's pressure strip show where the hands are and the most pressing shortage, with a tap to the Labour screen.
+- One-tap presets (Harvest, Winter, War footing, Rebuild) over the + and − per kind of work.
+- A town's focus (None, Food, Iron and arms, Cloth, Timber) pulls its district's hands to that work.
+- Every change shows its result before it is made ("+120 iron a month, −60 grain").
+
+Part D, armies of a real size:
+- Levies by population (city about 8%, town 6%, village 4%), taken from the place's hands and returned when stood down.
+- Raising an army shows men, hands lost, monthly cost and days to gather; levies gather along the roads before it can march.
+- The houses' retinues by size and loyalty, shown before calling; mercenary companies of 400 to 800 for a season.
+- Pay by men and type with field pay on campaign; unpaid armies lose morale, then desert; the Military tab shows men under arms, cost and months it can be paid.
+- Foreign realms muster by the same rules.
+- Save version 21.
 
 ## M20 acceptance criteria
 Part A, spaces from the land:

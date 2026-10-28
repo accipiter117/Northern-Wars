@@ -4,10 +4,70 @@
 // kind of work with its hands, what it needs and a line on its season; the
 // royal calls. Hands short or standing idle are flagged.
 import {
-  LABOUR_KINDS, splitNow, winterOutlook, canCall, dateOf, MONTHS, foodYield, foodNeed, foodCapacity,
+  LABOUR_KINDS, splitNow, winterOutlook, canCall, dateOf, MONTHS, foodYield, foodNeed, foodCapacity, labourPreview, monthlyOutput, canPreset,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
+
+// What a change to the hands would do, in one line: "+120 iron, −60 grain a
+// month". Previews are worked out once per state and kept (M21 C).
+const previews = new WeakMap();
+export function previewOf(state, world, key, change) {
+  let m = previews.get(state);
+  if (!m) previews.set(state, (m = {}));
+  return (m[key] ??= labourPreview(state, world, change, monthlyOutput));
+}
+
+const OUT_NAMES = { grain: 'grain', materials: 'timber and stone', iron: 'iron', cloth: 'cloth', luxuries: 'luxuries', crowns: 'crowns from the crafts' };
+export function outputLine(diff) {
+  const parts = Object.entries(diff).filter(([, v]) => Math.abs(v) >= 2).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 3)
+    .map(([k, v]) => `${v > 0 ? '+' : '\u2212'}${number(Math.abs(v))} ${OUT_NAMES[k]}`);
+  return parts.length ? `${parts.join(', ')} a month` : 'Little change this month';
+}
+
+// The most pressing shortage of hands, if any: the kind of work with work
+// to do that is least well manned.
+export function pressingShortage(state, world) {
+  const r = state.labour?.report;
+  if (!r) return null;
+  let worst = null;
+  for (const k of LABOUR_KINDS) {
+    const x = r[k];
+    if (!x || x.need <= 0) continue;
+    const pct = x.staffed / x.need;
+    if (pct < 0.85 && (!worst || pct < worst.pct)) worst = { kind: k, pct, name: world.labour.kinds[k].name };
+  }
+  return worst;
+}
+
+// A compact strip for the Realm tab: where the hands are, the one most
+// pressing shortage, and a tap to the Labour screen.
+export function labourStripHtml(app) {
+  const { world, state } = app;
+  if (!world.labour || !state.labour?.report) return '';
+  const split = splitNow(state, world);
+  const top = LABOUR_KINDS.filter((k) => split[k] >= 5).sort((a, b) => split[b] - split[a]).slice(0, 4)
+    .map((k) => `${escapeHtml(world.labour.kinds[k].name.toLowerCase())} ${Math.round(split[k])}`).join(', ');
+  const worst = pressingShortage(state, world);
+  return `<button type="button" class="labour-strip" data-part="labour-strip" data-tab-go="realm:labour">
+    <span class="ls-main">Hands, in a hundred: ${top}</span>
+    <span class="ls-sub">${worst ? `<span class="down">Most pressing: ${escapeHtml(worst.name.toLowerCase())}, ${Math.round(worst.pct * 100)}% manned.</span>` : 'Every kind of work is manned.'} Tap to set them.</span></button>`;
+}
+
+function presetsHtml(world, state) {
+  const presets = Object.entries(world.labour.presets ?? {}).filter(([k]) => k !== 'note');
+  if (!presets.length) return '';
+  const now = state.labour.split;
+  const buttons = presets.map(([id, p]) => {
+    const same = Object.keys(p.split).every((k) => p.split[k] === now[k]);
+    const check = canPreset(state, world, id);
+    const line = same ? 'In force' : outputLine(previewOf(state, world, `preset:${id}`, { split: p.split }));
+    return `<button type="button" class="build${same ? ' on' : ''}" data-preset="${id}" ${orderAttr({ type: 'preset', preset: id })} ${check.ok && !same ? '' : 'disabled'}>
+      <span class="build-name">${escapeHtml(p.name)}</span><span class="build-blurb">${escapeHtml(p.blurb)}</span>
+      <span class="build-cost" data-part="preset-preview">${escapeHtml(line)}</span></button>`;
+  }).join('');
+  return `<div data-part="presets"><h3>At a stroke</h3><div class="build-list presets">${buttons}</div></div>`;
+}
 
 const SEASON_OF = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
 
@@ -85,6 +145,7 @@ export function labourHtml(app) {
     <p class="sub">The kingdom's ${number(total)} hands, by kind of work, in a hundred. Villages within a day's walk lend theirs to the nearest town; spare hands go where they are short.</p>
     ${seasonStrip(world, state)}
     ${outlookHtml(world, state)}
+    ${presetsHtml(world, state)}
     <h3>Where the hands go</h3>
     <div class="labour-rows">${LABOUR_KINDS.map((k) => kindRow(world, state, k, split)).join('')}</div>
     ${callsHtml(world, state)}

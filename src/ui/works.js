@@ -4,7 +4,8 @@
 import { spacesOf, repairOptions, canRepairWorks, worksSummary, kindOfWorks, districtOf, handsOf } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
-import { isOpen } from './memory.js';
+import { isOpen, form } from './memory.js';
+import { previewOf, outputLine } from './labour.js';
 
 export function condWord(c) {
   return c >= 90 ? 'Sound' : c >= 70 ? 'Worn' : c >= 45 ? 'Damaged' : c >= 20 ? 'Badly damaged' : 'In ruins';
@@ -84,7 +85,34 @@ export function worksTabHtml(app, id) {
     return `<div class="space" data-space="${sp.kind}"><h4><span class="space-dot" aria-hidden="true"></span>${escapeHtml(cap1(sp.name))} <small>${escapeHtml(kind)}</small></h4>
       ${rows ? `<div class="rows">${rows}</div>` : '<p class="sub">Nothing stands here.</p>'}</div>`;
   }).join('');
-  return `<div data-part="spaces">${head}${handsLine(world, state, id)}<div class="tags">${landTags(world, state, id)}</div>${blocks}</div>`;
+  return `<div data-part="spaces">${head}${handsLine(world, state, id)}${focusHtml(app, id)}<div class="tags">${landTags(world, state, id)}</div>${blocks}</div>`;
+}
+
+// A town's focus (M21 C): which work its hinterland's hands lean to, offered
+// only where the district has works of that kind; the chosen option shows
+// what it would do before it is set.
+function focusHtml(app, id) {
+  const { world, state, memory } = app;
+  const cfg = world.labour?.focus;
+  const type = world.byId[id].type;
+  if (!cfg || !state.labour || state.settlements[id]?.occupier || (type !== 'town' && type !== 'city')) return '';
+  const district = districtOf(world);
+  const members = Object.keys(state.settlements).filter((x) => (district[x] ?? x) === id);
+  const kinds = new Set();
+  for (const x of members) for (const b of state.settlements[x].buildings) kinds.add(kindOfWorks(world, b));
+  kinds.add('fields');
+  const opts = Object.entries(cfg.options).filter(([, o]) => o.kinds.some((k) => kinds.has(k)));
+  const now = state.labour.focus?.[id] ?? null;
+  const f = form(memory, `focus:${id}`, { pick: now ?? 'none' });
+  const pick = f.pick === 'none' ? null : f.pick;
+  const chips = [['none', 'None'], ...opts.map(([k, o]) => [k, o.name])].map(([k, name]) =>
+    `<button type="button" class="chip${f.pick === k ? ' on' : ''}${(now ?? 'none') === k ? ' current' : ''}" aria-pressed="${f.pick === k}" data-set="pick:${k}">${escapeHtml(name)}</button>`).join('');
+  const same = pick === now;
+  const line = same ? (now ? `Focused on ${cfg.options[now].name.toLowerCase()}.` : 'No focus: its hands follow the realm\'s split.')
+    : outputLine(previewOf(state, world, `focus:${id}:${pick}`, { focus: { id, focus: pick } }));
+  return `<div data-form="focus:${id}" data-part="focus"><div class="form-row"><span>Focus</span><div class="chips">${chips}</div></div>
+    <p class="sub" data-part="focus-preview">${same ? escapeHtml(line) : `This town and its villages: ${escapeHtml(line)}.`}</p>
+    ${same ? '' : `<button type="button" class="act" data-focus-go="${id}" ${orderAttr({ type: 'focus', settlement: id, focus: pick })}><span class="act-label">${pick ? `Focus on ${escapeHtml(cfg.options[pick].name.toLowerCase())}` : 'Clear the focus'}</span></button>`}</div>`;
 }
 
 // Hands within a day's walk (M20 C): its own, and the villages' that lend

@@ -248,6 +248,25 @@ const MIGRATIONS = {
     state.version = 20;
     return state;
   },
+  // v21 (M21 C and D): no town focus yet; the crown's armies already in the
+  // field become levies of the people (their men go back to the garrisons
+  // they were drawn from, and the army keeps its strength as levy).
+  20(state, world) {
+    if (state.labour) state.labour.focus ??= {};
+    for (const a of state.armies ?? []) {
+      if (a.side !== 'temeria' || a.folk) continue;
+      const f = Math.min(1, a.soldiers / Math.max(1, a.raised));
+      for (const [id, n] of Object.entries(a.levy ?? {})) if (state.settlements[id]) state.settlements[id].garrison += Math.round(n * f);
+      const hired = Math.min(a.soldiers, (a.companies ?? 0) * (world.war.raise.company ?? 0));
+      const units = (a.units ?? []).reduce((v, u) => v + u.men, 0);
+      a.folk = true;
+      a.levyMen = Math.max(0, Math.round(a.raised - hired - units));
+      a.retinueMen = 0;
+      a.mercs = [];
+    }
+    state.version = 21;
+    return state;
+  },
 };
 
 // Swap every reference to a vanished foreign town for its replacement: as a
