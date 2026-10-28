@@ -504,7 +504,7 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   assert.match(await page.textContent('#sheet-body'), /Against Kaedwen[\s\S]*Raise an army/);
 
   // Raise an army at Ellander, picked on the map: half the crown levy and
-  // two free companies.
+  // the lords' men.
   const tapPlace = async (pg, id) => {
     await pg.evaluate((p) => { const st = window.northernWars.world.byId[p]; window.northernWars.lookAt(st.x, st.y); }, id);
     const q = await pg.evaluate((p) => window.northernWars.screenOf(p), id);
@@ -514,11 +514,13 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   await tapPlace(page, 'ellander');
   await page.click('[data-pick-confirm]');
   await page.click('[data-set="levy:half"]');
-  await page.click('[data-set="companies:2"]');
+  await page.click('[data-set="nobles:true"]');
   await page.click('[data-set="stance:bold"]');
   await page.click('[data-raise]');
   assert.match(await page.textContent('#sheet'), /The army of Ellander[\s\S]*Orders/);
 
+  // The levies take days to gather (M21); let them come in.
+  await page.evaluate(() => { for (const a of window.northernWars.state.armies) if (a.side === 'temeria') a.gatherUntil = 0; });
   // Send it against Ban Ard: tap it on the map and see what it would face.
   await page.click('[data-order-kind="siege"]');
   await tapPlace(page, 'ban_ard');

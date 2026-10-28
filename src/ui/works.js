@@ -78,7 +78,7 @@ export function worksTabHtml(app, id) {
   const s = state.settlements[id];
   const spaces = spacesOf(state, world, id);
   const sum = worksSummary(s);
-  const head = `<p class="sub">The land gives this place its works; the crown keeps them standing. ${sum.n} works, ${sum.worn ? `${sum.worn} worn or worse` : 'all in good repair'}.${s.occupier ? ' The enemy holds it: its works serve them now.' : ''}</p>`;
+  const head = `<p class="sub">${sum.n} works from the land, ${sum.worn ? `${sum.worn} worn or worse` : 'all in good repair'}.${s.occupier ? ' The enemy holds it: its works serve them now.' : ''}</p>`;
   const blocks = spaces.map((sp) => {
     const kind = world.spacesData?.kinds?.[sp.kind]?.name ?? sp.kind;
     const rows = sp.works.map((w) => worksRow(app, id, w)).join('');
@@ -108,10 +108,11 @@ function focusHtml(app, id) {
   const chips = [['none', 'None'], ...opts.map(([k, o]) => [k, o.name])].map(([k, name]) =>
     `<button type="button" class="chip${f.pick === k ? ' on' : ''}${(now ?? 'none') === k ? ' current' : ''}" aria-pressed="${f.pick === k}" data-set="pick:${k}">${escapeHtml(name)}</button>`).join('');
   const same = pick === now;
-  const line = same ? (now ? `Focused on ${cfg.options[now].name.toLowerCase()}.` : 'No focus: its hands follow the realm\'s split.')
+  // With no focus and none chosen, the None chip says it all.
+  const line = same ? (now ? `Focused on ${cfg.options[now].name.toLowerCase()}.` : '')
     : outputLine(previewOf(state, world, `focus:${id}:${pick}`, { focus: { id, focus: pick } }));
   return `<div data-form="focus:${id}" data-part="focus"><div class="form-row"><span>Focus</span><div class="chips">${chips}</div></div>
-    <p class="sub" data-part="focus-preview">${same ? escapeHtml(line) : `This town and its villages: ${escapeHtml(line)}.`}</p>
+    ${same && !now ? '' : `<p class="sub" data-part="focus-preview">${same ? escapeHtml(line) : `This town and its villages: ${escapeHtml(line)}.`}</p>`}
     ${same ? '' : `<button type="button" class="act" data-focus-go="${id}" ${orderAttr({ type: 'focus', settlement: id, focus: pick })}><span class="act-label">${pick ? `Focus on ${escapeHtml(cfg.options[pick].name.toLowerCase())}` : 'Clear the focus'}</span></button>`}</div>`;
 }
 
