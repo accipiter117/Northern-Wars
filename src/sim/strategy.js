@@ -63,7 +63,9 @@ export function deterrence(state, world, rid) {
   // The rest of the crown's strength could march to the border in time,
   // and the army it could call up from its levies and its lords (M19).
   v += soldiersOf(state, world, TEMERIA) * c.whole;
-  if (c.muster) v += musterPreview(state, world, { levy: 'half', nobles: true, companies: 0 }).soldiers * c.muster;
+  // Since M21 the levy is a share of the people: in its own defence the
+  // crown would call all of it.
+  if (c.muster) v += musterPreview(state, world, { levy: world.war.raise.muster ? 'all' : 'half', nobles: true, companies: 0 }).soldiers * c.muster;
   for (const p of parties(world)) {
     if (p === rid || !state.realms?.[p]) continue;
     if (bindingTreaty(state, p, TEMERIA, false)) v += strengthOf(state, world, p) * c.allies;

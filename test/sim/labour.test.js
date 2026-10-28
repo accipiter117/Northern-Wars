@@ -50,7 +50,8 @@ test('villages lend their hands to the nearest town by road, within a day\'s wal
   const alone = structuredClone(s);
   for (const id of Object.keys(alone.settlements)) if (d[id] === 'vizima' && id !== 'vizima') alone.settlements[id].occupier = 'redania';
   stepLabourDay(alone, world);
-  assert.ok(alone.settlements.vizima.farmStaff <= s.settlements.vizima.farmStaff);
+  const hands = (x) => Object.keys(x.settlements).filter((id) => d[id] === 'vizima').reduce((a, id) => a + handsOf(x, world, id), 0);
+  assert.ok(hands(alone) < hands(s), 'fewer hands for the capital\'s works without its villages');
   assert.ok(handsOf(s, world, 'vizima') > handsOf(s, world, 'murky_waters'));
 });
 

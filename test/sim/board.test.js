@@ -104,7 +104,8 @@ test('at the turn of the month the crown\'s orders and the rulers\' moves resolv
   assert.ok(marched.ok, marched.text);
   const a = after.armies.find((x) => x.id === army.id);
   assert.ok(a && after.realms.cidaris.settlements[a.target], 'the army marches on a town of Cidaris');
-  assert.ok(marches(after, world).some((m) => m.army === army.id && m.to === 'cidaris'), 'a dashed line on the board');
+  // A dashed line on the board while it is on the road (Vartburg is close by).
+  if (a.at !== a.target) assert.ok(marches(after, world).some((m) => m.army === army.id && m.to === 'cidaris'), 'a dashed line on the board');
   assert.ok(after.orders.envoys.some((e) => e.realm === 'redania'), 'an audience waits');
   assert.ok(after.neighbours.redania.relation >= relation);
   const traded = after.orders.last.find((o) => o.kind === 'trade');

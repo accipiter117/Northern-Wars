@@ -74,7 +74,10 @@ test('the labour strip, a preset, a town\'s focus, and an army raised with its p
   const text = await page.textContent('[data-part="raise-preview"]');
   assert.match(text, /\d[\d,]* men: [\d,]+ levied, \d+ from the lords, 800 hired[\s\S]*hands leave the works[\s\S]*crowns a month[\s\S]*Gathers in \d+ days/);
   assert.match(await page.textContent('[data-part="retinues"]'), /Dravnik \d+/);
-  await page.evaluate(() => document.querySelector('[data-part="raise-preview"]').scrollIntoView({ block: 'center' }));
+  // Let the sheet settle after the last tap before scrolling to the preview.
+  await page.waitForTimeout(300);
+  await page.evaluate(() => document.querySelector('[data-part="raise-preview"]').scrollIntoView({ block: 'end' }));
+  await page.waitForTimeout(100);
   await page.screenshot({ path: join(OUT, 'portrait-raise.png') });
   await page.click('[data-raise]');
   const army = await page.evaluate(() => window.northernWars.state.armies.find((a) => a.side === 'temeria'));
