@@ -70,7 +70,7 @@ test('the board: every realm standing, with its land, a marker, its men where se
 test('three orders a month: march, trade and envoy, shown as set and refused past three', () => {
   let s = quiet(createState(world, 4));
   s = act(s, { type: 'order', order: { kind: 'envoy', realm: 'redania' } });
-  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', give: 'grain', take: 'iron' } });
+  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', sell: { good: 'materials', qty: 30 }, buy: { good: 'iron', qty: 10 } } });
   assert.match(applyAction(s, world, { type: 'order', order: { kind: 'envoy', realm: 'redania' } }).error, /Already ordered/);
   assert.match(applyAction(s, world, { type: 'order', order: { kind: 'march', realm: 'redania', army: 1 } }).error, /Raise an army/);
   s = act(s, { type: 'order', order: { kind: 'envoy', realm: 'cintra' } });
@@ -79,7 +79,8 @@ test('three orders a month: march, trade and envoy, shown as set and refused pas
   // An order withdrawn frees its place.
   s = act(s, { type: 'cancelOrder', index: 2 });
   assert.equal(s.orders.list.length, 2);
-  assert.ok(applyAction(s, world, { type: 'order', order: { kind: 'trade', realm: 'cintra', give: 'iron', take: 'iron' } }).error);
+  // A deal in a good the partner does not want is refused (M21).
+  assert.ok(applyAction(s, world, { type: 'order', order: { kind: 'trade', realm: 'cintra', sell: { good: 'grain', qty: 10 }, buy: null } }).error);
 });
 
 test('at the turn of the month the crown\'s orders and the rulers\' moves resolve together', () => {
@@ -89,7 +90,7 @@ test('at the turn of the month the crown\'s orders and the rulers\' moves resolv
   const army = s.armies.find((a) => a.side === 'temeria');
   s = act(s, { type: 'order', order: { kind: 'march', realm: 'cidaris', army: army.id } });
   s = act(s, { type: 'order', order: { kind: 'envoy', realm: 'redania' } });
-  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', give: 'grain', take: 'iron' } });
+  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', sell: { good: 'materials', qty: 30 }, buy: { good: 'iron', qty: 10 } } });
   // Nothing goes out before the turn.
   const before = run(s, 1);
   assert.equal(before.orders.list.length, 3);
@@ -106,7 +107,9 @@ test('at the turn of the month the crown\'s orders and the rulers\' moves resolv
   assert.ok(marches(after, world).some((m) => m.army === army.id && m.to === 'cidaris'), 'a dashed line on the board');
   assert.ok(after.orders.envoys.some((e) => e.realm === 'redania'), 'an audience waits');
   assert.ok(after.neighbours.redania.relation >= relation);
-  assert.ok(after.orders.last.find((o) => o.kind === 'trade').text.length > 0);
+  const traded = after.orders.last.find((o) => o.kind === 'trade');
+  assert.ok(traded.ok, traded.text);
+  assert.deepEqual(after.market.deals.redania.sell, { good: 'materials', qty: 30 });
   for (const o of after.orders.last) assert.ok(after.chronicle.some((d) => d.text === o.text), `told: ${o.text}`);
   // The rulers' moves of the same turn are noted for the board.
   assert.ok(Array.isArray(after.orders.theirs));

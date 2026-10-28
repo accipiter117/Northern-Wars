@@ -31,7 +31,7 @@
       "id": "laws",
       "trigger": "noDecreeAfter60",
       "title": "Your strongest lever",
-      "text": "Court, Laws changes taxes, order, faith and more. Every decree costs Authority and pleases some groups while angering others: tap a law to see who. The realm's mood sits at the top.",
+      "text": "Court, Laws changes order, faith, the guilds and more. Every decree costs Authority and pleases some groups while angering others: tap a law to see who. The realm's mood sits at the top. Taxes are set in the Treasury.",
       "open": "court:laws",
       "openLabel": "Open the Laws"
     },
@@ -108,8 +108,8 @@
     {
       "id": "trade",
       "trigger": "day150NoRoutes",
-      "title": "Trade routes",
-      "text": "Treasury, Trade routes opens crown routes between towns and cities, at home or in a friendly neighbour: tap the far end on the map and see what it would earn before you pay. A route earns each month from both towns' size and fortunes, the length of the haul and safe roads; patrols protect it and war closes it. Market halls and guildhalls let you run more.",
+      "title": "Trade and taxes",
+      "text": "Treasury, Trade shows the five goods the realm trades (grain, timber and stone, iron and arms, cloth, luxuries): what it has to spare or lacks each month, and the price. Surplus sells at home for less; a deal with a partner realm sells abroad for more, or buys what you lack. Each partner wants two goods and offers two. Treasury, Taxes sets what the towns, the villages and the lords pay, and shows what each setting would bring in.",
       "open": "treasury:routes",
       "openLabel": "Open Trade routes"
     },
@@ -144,7 +144,7 @@
     {
       "id": "tabs",
       "title": "Finding your way",
-      "text": "Five tabs hold the realm: Realm (the dashboard and every place), Court (decisions, laws, the great houses, faith), Treasury (the ledger, trade routes, mines and industry), Military (companies, threats, garrisons, war) and Diplomacy (neighbouring realms, spies and embassies, envoys). Each reopens where you left it. Chronicle, Help and saves are under the three dots at the top."
+      "text": "Five tabs hold the realm: Realm (the dashboard and every place), Court (decisions, laws, the great houses, faith), Treasury (the ledger, taxes and loans, trade, mines and industry), Military (companies, threats, garrisons, war) and Diplomacy (neighbouring realms, spies and embassies, envoys). Each reopens where you left it. Chronicle, Help and saves are under the three dots at the top."
     },
     {
       "id": "panel",
@@ -159,7 +159,7 @@
     {
       "id": "pick",
       "title": "Moving about and picking on the map",
-      "text": "Drag to pan, and flick to send the map gliding. Pinch to zoom, double tap open land to zoom in, and tap with two fingers to zoom out. Orders that need a place or a target (a hunt, a patrol, a station, a trade route, an army's march, where to muster) are given by tapping the map. A banner says what to tap; once you tap, it shows the odds or what it would earn, and you confirm or tap elsewhere."
+      "text": "Drag to pan, and flick to send the map gliding. Pinch to zoom, double tap open land to zoom in, and tap with two fingers to zoom out. Orders that need a place or a target (a hunt, a patrol, a station, an army's march, where to muster) are given by tapping the map. A banner says what to tap; once you tap, it shows the odds or what it would earn, and you confirm or tap elsewhere."
     },
     {
       "id": "urgent",
@@ -169,7 +169,7 @@
     {
       "id": "longpress",
       "title": "Long press",
-      "text": "Hold a finger on the map for half a second, until the ring under it fills. On one of your towns it offers Works, Recruit, Garrison, Trade route and Open card; on a company or army, its orders; on a threat, sending the nearest company. On anything foreign it says what is known, and on open land what's here: the ground, whose land, the nearest place and how dangerous it is. Hold a row in a list for a quick look without leaving it."
+      "text": "Hold a finger on the map for half a second, until the ring under it fills. On one of your towns it offers Works, Recruit, Garrison and Open card; on a company or army, its orders; on a threat, sending the nearest company. On anything foreign it says what is known, and on open land what's here: the ground, whose land, the nearest place and how dangerous it is. Hold a row in a list for a quick look without leaving it."
     },
     {
       "id": "install",

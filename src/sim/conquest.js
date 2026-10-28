@@ -7,6 +7,7 @@
 // that never take to their new crown rise; rulers driven from their thrones
 // plot from exile; and every town taken makes the North more afraid.
 // Foreign rulers follow the same rules by their own tempers.
+import { windfall } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import {
@@ -140,7 +141,7 @@ function sack(state, world, id, by) {
   const s = C(world).capture.sack;
   const p = placeOf(state, world, id);
   const loot = Math.round(sackLoot(state, world, id));
-  if (by === TEMERIA) state.treasury += loot;
+  if (by === TEMERIA) windfall(state, 'loot', loot);
   else if (state.realms[by]) state.realms[by].treasury += loot;
   if (p.stock) for (const g of Object.keys(p.stock)) p.stock[g] *= 1 - s.goods;
   p.prosperity = clamp(p.prosperity - s.prosperity, 0, 100);
@@ -270,7 +271,7 @@ export function requisition(state, world, id) {
   const o = C(world).occupation;
   const check = canRequisition(state, world, id);
   const p = placeOf(state, world, id);
-  state.treasury += check.coin;
+  windfall(state, 'requisition', check.coin);
   // The grain goes to the nearest of our own towns.
   const at = world.byId[id];
   let best = null;
@@ -404,7 +405,7 @@ export function integrationParts(state, world, id) {
   }
   const law = (k, o) => state.laws[k]?.option === o;
   const non = 1 - (s.population.human / Math.max(1, totalPopulation(s)));
-  if (law('taxation', 'heavy')) add('Heavy taxes', -m.heavyTax);
+  if (law('tax_towns', 'heavy') || law('tax_peasants', 'heavy')) add('Heavy taxes', -m.heavyTax);
   if (law('public_order', 'martial')) add('Martial law', -m.harsh);
   if (law('nonhumans', 'expulsion') && non > 0.1) add('Our law against their nonhumans', -m.harsh);
   if (law('nonhumans', 'charter') && non > 0.1) add('Our charter for nonhumans', m.tolerant);

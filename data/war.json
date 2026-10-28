@@ -453,7 +453,9 @@
     },
     "ransom": {
       "perSkill": 900,
-      "foreign": 600
+      "foreign": 600,
+      "paidAfterDays": 30,
+      "note": "A commander Temeria holds is ransomed by his realm after paidAfterDays, if it can pay (M21); our own are ransomed at the deal table."
     }
   },
   "sieges": {

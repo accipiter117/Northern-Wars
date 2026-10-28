@@ -130,7 +130,7 @@
       ],
       "cares": {
         "guilds:free": 10,
-        "taxation:heavy": -5
+        "tax_peasants:heavy": -5
       }
     },
     "verden": {

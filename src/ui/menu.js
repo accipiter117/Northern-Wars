@@ -7,9 +7,11 @@ const signed = (n) => (n < 0 ? `−${number(-n)}` : number(n));
 
 // Labels for the money lines that are not one per building, good or route.
 export const INCOME = [
-  ['taxes', 'Taxes'],
-  ['trade', 'Market trade in the towns'],
-  ['sales', 'Surplus timber, stone and iron'],
+  ['taxes', 'Head tax'],
+  ['trade', 'Market dues in the towns'],
+  ['tithe', 'Tithe of the harvest'],
+  ['nobles', 'Dues from the lords'],
+  ['sales', 'Surplus sold at home'],
   ['foreign', 'Trade over the borders'],
   ['customs', 'River and sea customs'],
   ['gold', 'Gold'],
@@ -20,6 +22,12 @@ export const INCOME = [
   ['contracts', 'Shipyard contracts'],
   ['conquests', 'Conquered towns'],
   ['tribute', 'Tribute received'],
+  ['loot', 'Loot'],
+  ['ransom', 'Ransoms'],
+  ['reparations', 'Coin in peace terms'],
+  ['requisition', 'Requisitions from occupied towns'],
+  ['payments', 'Payments under deals'],
+  ['borrowed', 'Borrowed from the bank'],
 ];
 export const EXPENSES = [
   ['garrisons', 'Garrisons'],
@@ -35,6 +43,7 @@ export const EXPENSES = [
   ['tribute', 'Tribute paid'],
   ['routes', 'Running trade routes'],
   ['interest', 'Interest to the bankers'],
+  ['loans', 'Loan payments'],
 ];
 const ALWAYS = new Set(['taxes', 'trade', 'garrisons', 'upkeep', 'court', 'interest']);
 
@@ -62,6 +71,9 @@ export function ledgerHtml(app) {
   const goods = Object.entries(i.goods ?? {}).filter(([, v]) => v).sort((a, b) => b[1] - a[1])
     .map(([g, v]) => row(`${escapeHtml(world.industry?.goods[g]?.name ?? g)} sold`, v)).join('');
   const routes = routeLedgerRows(world, last, row);
+  const partners = (obj, verb) => Object.entries(obj ?? {}).filter(([, v]) => v).sort((a, b) => b[1] - a[1]).map(([n, v]) => row(`${verb} ${escapeHtml(n)}`, v)).join('');
+  const exportsRows = partners(i.exports, 'Sold to');
+  const importsRows = partners(e.imports, 'Bought from');
   const history = state.ledger.history.slice().reverse().map((h) => {
     const { net: n } = ledgerNet(h);
     return `<tr><td>${MONTHS[h.month - 1].name.slice(0, 3)} ${h.year}</td><td>${signed(n)}</td><td>${number(h.expenses.construction)}</td><td>${signed(h.treasury)}</td></tr>`;
@@ -81,13 +93,14 @@ export function ledgerHtml(app) {
     ],
     extra: debt,
   });
-  const income = `<dl class="ledger">${lines(INCOME.slice(0, 5), i)}</dl>
+  const income = `<dl class="ledger">${lines(INCOME.slice(0, 7), i)}</dl>
+    ${exportsRows ? `<h4>Trade deals</h4><dl class="ledger">${exportsRows}</dl>` : ''}
     ${crafts ? `<h4>Crafts</h4><dl class="ledger">${crafts}</dl>` : ''}
     ${goods ? `<h4>Goods from the chains</h4><dl class="ledger">${goods}</dl>` : ''}
-    <dl class="ledger">${lines(INCOME.slice(5), i)}</dl>
+    <dl class="ledger">${lines(INCOME.slice(7), i)}</dl>
     ${routes ? `<h4>Crown trade routes</h4><dl class="ledger">${routes}</dl>` : ''}
     <dl class="ledger">${row('Total income', totalIn, true)}</dl>`;
-  const expenses = `<dl class="ledger">${lines(EXPENSES, e)}${row('Total expenses', totalOut, true)}</dl>
+  const expenses = `<dl class="ledger">${lines(EXPENSES, e)}${importsRows}${row('Total expenses', totalOut, true)}</dl>
     ${state.treasury > world.economy.upkeep.hoardFree ? '<p class="sub">A full treasury draws courtiers and hangers-on: the court costs more while the coffers stay this full.</p>' : ''}
     <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on repairs, ${number(e.decrees ?? 0)} on decrees.</p>`;
   const where = `${top ? `<h3>Where the money came from</h3><div class="place-list">${top}</div>` : ''}

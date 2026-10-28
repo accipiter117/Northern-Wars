@@ -6,6 +6,7 @@
 // with use, faster when the crown cannot pay its upkeep. A works yields by
 // the lower of its condition and its staffing, so the crown's levers are
 // repairs (rebuild, patch, or leave it) and, from Part C, where its hands go.
+import { noteUsed, underPrice } from './market.js';
 import { addDispatch, clamp } from './realm.js';
 import { dateOf, MONTHS } from './calendar.js';
 import { TEMERIA, placeOf, ownerOf } from './conflict.js';
@@ -208,7 +209,8 @@ export function repairOptions(state, world, id, b) {
   const stock = { timber: 0, stone: 0, iron: 0 };
   for (const t of Object.values(state.settlements)) if (!t.occupier) for (const k of Object.keys(stock)) stock[k] += t.stock[k];
   let bought = 0;
-  for (const [k, v] of Object.entries(mats)) bought += Math.max(0, v - stock[k]) * (world.economy.goods.prices[k] ?? 1) * cfg.rebuild.buyFactor;
+  // What the stores lack is bought in at the market's price (M21).
+  for (const [k, v] of Object.entries(mats)) bought += Math.max(0, v - stock[k]) * underPrice(state, world, k) * cfg.rebuild.buyFactor;
   const rebuild = {
     coin: round(coinBase * missing * cfg.rebuild.coin + bought),
     materials: mats,
@@ -251,6 +253,7 @@ export function startRepair(state, world, id, b, kind) {
   // Materials from the realm's stocks, home first.
   for (const [k, v] of Object.entries(o.materials)) {
     let left = v;
+    noteUsed(state, world, k, v);
     const own = Math.min(s.stock[k], left);
     s.stock[k] -= own;
     left -= own;

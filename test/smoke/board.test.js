@@ -75,6 +75,8 @@ test('one map, two levels: pips up close, a cross-fade, and the board of the Nor
   assert.match(await page.textContent('#sheet-body'), /Men[\s\S]*Places[\s\S]*Works[\s\S]*0 of 3 orders set[\s\S]*March[\s\S]*Envoy[\s\S]*Trade/);
   await page.click('[data-board-order="envoy"]');
   await page.waitForTimeout(200);
+  // A trade order in the five goods (M21): 25 loads a month of what they want.
+  await page.click('[data-form="deal:redania"] [data-set="sellQty:25"]');
   await page.click('[data-board-order="trade"]');
   await page.waitForTimeout(200);
   assert.equal(await page.evaluate(() => window.northernWars.state.orders.list.length), 2);

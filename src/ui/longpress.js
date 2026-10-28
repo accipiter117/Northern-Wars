@@ -73,7 +73,7 @@ export function longPress(app, ctx, x, y) {
       { label: 'Recruit', icon: 'sword', run: () => ctx.openTown(id, 'military', 'recruit') },
       { label: 'Garrison', icon: 'shield', run: () => ctx.openTown(id, 'military') },
     ];
-    if (world.trade && routeEndOk(state, world, id).ok) list.push({ label: 'Trade route', icon: 'scroll', run: () => app.startPick({ kind: 'route', from: id }) });
+    if (world.trade && !world.market && routeEndOk(state, world, id).ok) list.push({ label: 'Trade route', icon: 'scroll', run: () => app.startPick({ kind: 'route', from: id }) });
     list.push({ label: 'Open card', icon: 'castle', run: () => ctx.openTown(id) });
     return ctx.ring(x, y, name(id), list);
   }

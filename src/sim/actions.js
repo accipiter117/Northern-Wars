@@ -21,6 +21,8 @@ import { canOpenEmbassy, openEmbassy, closeEmbassy, canSendSpy, sendSpy } from '
 import { makeRng } from './rng.js';
 import { depositAt, canProspect, startProspect } from './gold.js';
 import { canOpenRoute, openRoute, closeRoute } from './trade.js';
+import { canTrade, makeDeal, endDeal } from './market.js';
+import { canBorrow, borrow, canPayOff, payOff } from './loans.js';
 import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy } from './armies.js';
 import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision } from './war.js';
 import { TEMERIA, sideIndex } from './conflict.js';
@@ -268,10 +270,48 @@ export function applyAction(state, world, action) {
       closeRoute(next, world, action.id);
       return { state: next };
     }
+    // Since M21 the crown trades by deals with partner realms; the routes
+    // underneath are no longer opened one by one.
+    if (world.market) return { state, error: 'Trade is made by deals with partner realms now (Treasury, Trade).' };
     const check = canOpenRoute(state, world, action.from, action.to);
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     openRoute(next, world, action.from, action.to);
+    return { state: next };
+  }
+  // The market (M21): a deal with a partner, ending one, holding a good back.
+  if (action.type === 'trade') {
+    const check = canTrade(state, world, action.realm, action.sell ?? null, action.buy ?? null);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    makeDeal(next, world, action.realm, action.sell ?? null, action.buy ?? null);
+    return { state: next };
+  }
+  if (action.type === 'endTrade') {
+    if (!state.market?.deals?.[action.realm]) return { state, error: 'No deal with that realm.' };
+    const next = structuredClone(state);
+    endDeal(next, world, action.realm);
+    return { state: next };
+  }
+  if (action.type === 'hold') {
+    if (!world.market?.goods[action.good]) return { state, error: 'Unknown good.' };
+    const next = structuredClone(state);
+    next.market.hold[action.good] = !!action.on;
+    return { state: next };
+  }
+  // Loans from the Vivaldi bank (M21).
+  if (action.type === 'loan') {
+    const check = canBorrow(state, world, action.sum);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    borrow(next, world, action.sum);
+    return { state: next };
+  }
+  if (action.type === 'payOff') {
+    const check = canPayOff(state, world, action.id);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    payOff(next, world, action.id);
     return { state: next };
   }
   if (action.type === 'prospect') {

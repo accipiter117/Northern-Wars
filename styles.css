@@ -665,3 +665,18 @@ body.in-audience .tabbar, body.in-audience .sheet { visibility: hidden; }
 /* The month's orders on the board (M20 E). */
 ul.orders li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
 ul.orders li .chip { flex: none; }
+
+/* The Treasury's Trade and Taxes screens (M21). */
+.good-row, .deal-row, .tax-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 10px; margin: 0 0 6px; border-radius: 10px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--line); }
+.gr-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gr-line { font-weight: 600; }
+.gr-line.up { color: #a9d18e; }
+.gr-line.down { color: #e0745e; }
+.gr-sub { font-size: 12px; color: var(--muted); }
+.good-row .chip, .deal-row .chip { flex: none; min-height: 44px; }
+.tax-row { flex-direction: column; align-items: stretch; }
+.tax-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tax-opt { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 48px; padding: 4px; font-size: 13px; }
+.tax-opt span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tax-opt.on { background: var(--gold); color: #1d1610; border-color: var(--gold); }
+.tax-opt.on span { color: #1d1610; }

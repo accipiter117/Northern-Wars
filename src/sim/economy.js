@@ -3,23 +3,25 @@
 // and surplus grain moves along the market to places running short. Once a
 // month the ledger is drawn up: taxes and trade in, garrisons, upkeep, court
 // and interest out. The treasury may go below zero; the bankers lend, at a price.
-import { dateOf } from './calendar.js';
+import { dateOf, MONTHS } from './calendar.js';
 import { integrationFactor } from './conquest.js';
 import { totalPopulation } from './state.js';
 import { addDispatch } from './realm.js';
 import { number } from './text.js';
-import { lawEffects } from './laws.js';
+import { lawEffects, enactment } from './laws.js';
 import { foreignTrade, stanceCost } from './neighbours.js';
 import { crownShare } from './houses.js';
 import { garrisonFactor, quarantined } from './military.js';
 import { companyUpkeep } from './forces.js';
-import { TEMERIA, ownerOf, leviedMap, besieged } from './conflict.js';
+import { TEMERIA, ownerOf, leviedMap, besieged, sideName } from './conflict.js';
 import { tradeLedger, routeKey } from './trade.js';
 import { goldLedger } from './gold.js';
 import { industryLedger, saltStorage } from './industry.js';
 import { dealLedger } from './deals.js';
 import { worksFactor, upkeepFactor } from './works.js';
 import { farmFactor, levyFactor } from './labour.js';
+import { loanLedger } from './loans.js';
+import { marketLedger, noteMade, noteUsed, noteSpill, offer, isHeld, marketGoodOf } from './market.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -130,7 +132,11 @@ export function stepEconomyDay(state, world) {
   if (salt) law.storage = (law.storage ?? 0) + salt;
   for (const [id, s] of Object.entries(state.settlements)) {
     s.stock.food += foodYield(world, id, s, date.month, law);
-    if (GOODS.includes(s.production)) s.stock[s.production] += goodsYield(world, id, s);
+    if (GOODS.includes(s.production)) {
+      const q = goodsYield(world, id, s);
+      s.stock[s.production] += q;
+      noteMade(state, world, s.production, q);
+    }
     const need = foodNeed(world, s, date.season);
     let shortfall = 0;
     if (s.stock.food >= need) s.stock.food -= need;
@@ -140,7 +146,12 @@ export function stepEconomyDay(state, world) {
     }
     // Hunger is smoothed so one bad day is not a famine, but a bad month is.
     s.hunger = s.hunger * 0.9 + shortfall * 0.1;
-    s.stock.food = Math.min(s.stock.food, foodCapacity(world, s, law));
+    // Grain above the granaries' room would spoil; the market sells it (M21).
+    const room = foodCapacity(world, s, law);
+    if (s.stock.food > room) {
+      if (!s.occupier) noteSpill(state, world, s.stock.food - room);
+      s.stock.food = room;
+    }
   }
   shipFood(state, world, date.season);
   advanceConstruction(state, world);
@@ -216,16 +227,127 @@ export function authorityParts(state, world) {
   };
 }
 
+// Coin that comes to the crown at once from war and deals (M21): loot,
+// ransoms, coin in peace terms, requisition, lump sums from deals. It is in
+// the treasury at once, and shows on the month's ledger as its own line.
+export function windfall(state, kind, coin) {
+  if (!(coin > 0)) return;
+  state.treasury += coin;
+  state.ledger.windfalls ??= {};
+  state.ledger.windfalls[kind] = (state.ledger.windfalls[kind] ?? 0) + coin;
+}
+
+// Commanders Temeria holds are bought back by their realms after a month,
+// when they can pay: the ransom is war's takings on the ledger (M21).
+export function collectRansoms(state, world) {
+  const r = world.war?.battles?.ransom;
+  if (!r?.paidAfterDays || !state.captives?.length) return;
+  for (const c of [...state.captives]) {
+    if (c.by !== TEMERIA || state.day - c.day < r.paidAfterDays) continue;
+    const realm = state.realms?.[c.side];
+    if (!realm || realm.treasury < c.ransom) continue;
+    realm.treasury -= c.ransom;
+    windfall(state, 'ransom', c.ransom);
+    state.captives = state.captives.filter((x) => x !== c);
+    const who = c.marshal ? world.war.marshals[c.marshal]?.name ?? 'their commander' : 'their commander';
+    say(state, `${sideName(world, c.side)} pays ${number(c.ransom)} crowns to ransom ${who}.`);
+  }
+}
+
+// A place's taxes to the crown (M21), each by its estate's setting: in
+// cities and towns the head tax and the market dues (the merchants' trade),
+// in villages, castles and temples the hearth tax and a tithe of the
+// month's harvest at the grain price. Cities pay most a head and villages
+// least; richer places pay more, and market halls, guildhalls and
+// merchants' quarters more again. Lords keep part of what their lands
+// yield; a conquered town pays as it has come to accept the crown (M19),
+// and less again under a charter won by rising.
+export function placeTaxes(state, world, id, s, law, { fx = buildingEffects(world, s), tradeMult = 1, month = dateOf(state.day).month } = {}) {
+  const e = world.economy;
+  const type = world.byId[id].type;
+  const town = type === 'city' || type === 'town';
+  const share = crownShare(state, world, s);
+  const yoke = integrationFactor(world, s, 'taxAt') * (s.charter > state.day ? world.conquest.revolt.charterTax : 1);
+  const rate = Math.max(0, 1 + law.tax + (law.taxBy?.[type] ?? 0));
+  const pop = totalPopulation(s);
+  const tax = pop * e.taxes.perPersonMonth[type] * taxProsperity(world, s) * (1 + fx.taxBonus) * rate * yoke * share;
+  // Roads held by bandits keep the carts at home.
+  const robbed = 1 - (world.forces?.roads.tradeCut ?? 0) * Math.min(1, (state.threats?.robbed[id] ?? 0) / 30);
+  const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
+  const trade = pop * e.trade.perPersonMonth[type] * focus * prosperityMult(world, s) * (1 + fx.trade * (e.trade.worksScale ?? 1))
+    * tradeMult * (town ? rate : 1) * share * robbed * (quarantined(state, s) ? 0 : 1);
+  const days = MONTHS[month - 1].days;
+  const tithe = town ? 0 : foodYield(world, id, s, month) * days * (e.taxes.tithe ?? 0) * (world.diplomacy?.goods.grain.price ?? 0.05) * rate * yoke * share;
+  return { tax, trade, tithe, estate: town ? 'towns' : 'peasants' };
+}
+
+// Each great house's monthly due to the crown: a base and a share by the
+// people of its lands, times the lords' setting. Rebels and houses granted
+// an exemption pay nothing.
+export function houseDues(state, world, law) {
+  const n = world.economy.taxes.nobles;
+  const out = {};
+  if (!n || !state.houses) return out;
+  for (const [h, house] of Object.entries(state.houses)) {
+    if (house.rebel || (house.exemptUntil !== null && state.day < house.exemptUntil)) continue;
+    const people = Object.values(state.settlements).filter((t) => t.holder === h && !t.occupier).reduce((a, t) => a + totalPopulation(t), 0);
+    if (!people) continue;
+    out[h] = (n.base + n.perPerson * people) * (law.nobleTax ?? 1);
+  }
+  return out;
+}
+
+// What each estate would pay a month under each of its settings, fully in
+// force and all else as it stands, for the Treasury's choice.
+export function estateTaxPreview(state, world) {
+  const base = lawEffects(state, world);
+  const g = world.groups.effects;
+  const tradeMult = Math.max(0, 1 + base.trade + (state.opinion.burghers - 50) * g.burgherTrade);
+  const month = dateOf(state.day).month;
+  const out = {};
+  for (const [estate, lawId] of [['towns', 'tax_towns'], ['peasants', 'tax_peasants'], ['nobles', 'tax_nobles']]) {
+    const law = world.laws.laws[lawId];
+    if (!law) continue;
+    out[estate] = {};
+    // What this law adds to the effects now, while a change takes hold too.
+    const l = state.laws[lawId] ?? { option: law.default, previous: law.default };
+    const k = enactment(state, world, lawId);
+    const cur = law.options[l.option].effects;
+    const prev = law.options[l.previous ?? l.option].effects;
+    const now = { nobleTax: (cur.nobleTax ?? 0) * k + (prev.nobleTax ?? 0) * (1 - k), taxBy: {} };
+    for (const t of Object.keys(base.taxBy)) now.taxBy[t] = (cur.taxBy?.[t] ?? 0) * k + (prev.taxBy?.[t] ?? 0) * (1 - k);
+    for (const [opt, def] of Object.entries(law.options)) {
+      const fx = { ...base, taxBy: { ...base.taxBy }, nobleTax: base.nobleTax - now.nobleTax + (def.effects.nobleTax ?? 0) };
+      for (const t of Object.keys(fx.taxBy)) fx.taxBy[t] = base.taxBy[t] - now.taxBy[t] + (def.effects.taxBy?.[t] ?? 0);
+      let sum = 0;
+      if (estate === 'nobles') sum = Object.values(houseDues(state, world, fx)).reduce((a, v) => a + v, 0);
+      else {
+        for (const [id, s] of Object.entries(state.settlements)) {
+          if (s.occupier) continue;
+          const t = placeTaxes(state, world, id, s, fx, { tradeMult, month });
+          if (t.estate === estate) sum += t.tax + t.trade + t.tithe;
+        }
+      }
+      out[estate][opt] = Math.round(sum);
+    }
+  }
+  return out;
+}
+
 export function monthlyLedger(state, world, rng = null) {
+  collectRansoms(state, world);
   const e = world.economy;
   const debtCfg = e.debt;
   const law = lawEffects(state, world);
   const g = world.groups.effects;
   const tradeMult = Math.max(0, 1 + law.trade + (state.opinion.burghers - 50) * g.burgherTrade);
   const income = {
-    taxes: 0, trade: 0, sales: 0, foreign: foreignTrade(state, world).total, conquests: 0, tribute: 0,
+    taxes: 0, tithe: 0, nobles: 0, trade: 0, sales: 0, foreign: foreignTrade(state, world).total, conquests: 0, tribute: 0,
     crafts: {}, customs: 0, gold: 0, silver: 0, tolls: 0, rents: 0, donations: 0, contracts: 0, goods: {}, routes: {}, deals: {},
   };
+  // Taxes by estate (M21), for the Treasury's tax settings.
+  const estates = { towns: 0, peasants: 0, nobles: 0 };
+  const lastMonth = dateOf(state.day - 1).month;
   // What each place earned for the crown and cost it, for its card.
   const places = {};
   const put = (id, v) => { if (state.settlements[id]) (places[id] ??= { in: 0, out: 0 }).in += v; };
@@ -262,25 +384,19 @@ export function monthlyLedger(state, world, rng = null) {
   for (const [id, s] of Object.entries(state.settlements)) {
     // An occupied town pays its occupier, not the crown.
     if (s.occupier) continue;
-    const pop = totalPopulation(s);
     const mult = prosperityMult(world, s);
     const fx = buildingEffects(world, s);
     // Lords keep part of what their lands yield, and pay their own soldiers.
     const share = crownShare(state, world, s);
     const type = world.byId[id].type;
-    // Cities pay most a head and villages least; richer places pay more,
-    // and market halls, guildhalls and merchants' quarters more again.
-    // A conquered town pays as it has come to accept the crown (M19), and
-    // less again under a charter won by rising.
-    const yoke = integrationFactor(world, s, 'taxAt') * (s.charter > state.day ? world.conquest.revolt.charterTax : 1);
-    const tax = pop * e.taxes.perPersonMonth[type] * taxProsperity(world, s) * (1 + fx.taxBonus) * Math.max(0, 1 + law.tax) * share * yoke;
-    income.taxes += tax;
-    const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
-    // Roads held by bandits keep the carts at home.
-    const robbed = 1 - (world.forces?.roads.tradeCut ?? 0) * Math.min(1, (state.threats?.robbed[id] ?? 0) / 30);
-    const trade = pop * e.trade.perPersonMonth[type] * focus * mult * (1 + fx.trade * (e.trade.worksScale ?? 1)) * tradeMult * share * robbed * (quarantined(state, s) ? 0 : 1);
-    income.trade += trade;
-    put(id, tax + trade);
+    // The towns' head tax and market dues, or the villages' hearth tax and
+    // tithe (M21), each by its estate's setting.
+    const t = placeTaxes(state, world, id, s, law, { fx, tradeMult, month: lastMonth });
+    income.taxes += t.tax;
+    income.trade += t.trade;
+    income.tithe += t.tithe;
+    estates[t.estate] += t.tax + t.trade + t.tithe;
+    put(id, t.tax + t.trade + t.tithe);
     // Each craft pays by the size and fortunes of its place, on its own
     // line; quays on the river or the sea collect customs.
     const scale = e.crafts.placeScale[type] * mult * share;
@@ -294,19 +410,24 @@ export function monthlyLedger(state, world, rng = null) {
       income.customs += fx.customs * share;
       put(id, fx.customs * share);
     }
-    // Surplus goods are sold off above what the place can store; a
-    // warehouse stores more and sells dearer.
+    // Surplus goods above what the place can store go to market (M21), or
+    // stay in store while the crown holds them back; a warehouse stores
+    // more. Without a market they are sold at once as before.
     const cap = e.goods.storageCap + fx.goodsStorage;
     for (const g of GOODS) {
       const over = s.stock[g] - cap;
-      if (over > 0) {
+      if (over <= 0) continue;
+      if (world.market) {
+        if (isHeld(state, marketGoodOf(world, g).good)) continue;
+        offer(state, world, g, over);
+      } else {
         income.sales += over * e.goods.prices[g] * (1 + fx.sales);
         put(id, over * e.goods.prices[g] * (1 + fx.sales));
-        s.stock[g] = cap;
       }
+      s.stock[g] = cap;
     }
     // Smithies and armouries eat iron, from home first and then the realm.
-    if (fx.ironUse) useIron(state, s, fx.ironUse);
+    if (fx.ironUse) useIron(state, world, s, fx.ironUse);
     if (s.holder === 'crown') {
       const pay = s.garrison * e.upkeep.garrisonPerSoldierMonth * Math.max(0.2, 1 + law.garrisonUpkeep + fx.garrisonUpkeep);
       expenses.garrisons += pay;
@@ -317,6 +438,18 @@ export function monthlyLedger(state, world, rng = null) {
       expenses.upkeep += u;
       cost(id, u);
     }
+  }
+  // A soft cap (M21): the crafts together never earn more than a share of
+  // the taxes and dues, however many works the realm has.
+  const craftSum = Object.values(income.crafts).reduce((a, v) => a + v, 0);
+  const craftCap = (e.crafts.capShare ?? Infinity) * (income.taxes + income.trade + income.tithe);
+  if (craftSum > craftCap && craftSum > 0) for (const b of Object.keys(income.crafts)) income.crafts[b] *= craftCap / craftSum;
+  // The great houses' dues, by the lords' setting (M21).
+  for (const [h, v] of Object.entries(houseDues(state, world, law))) {
+    income.nobles += v;
+    estates.nobles += v;
+    const seat = world.houses.houses[h]?.seat;
+    if (seat) put(seat, v);
   }
   warLedger(state, world, income, expenses, law);
   tradeLedger(state, world, income, expenses);
@@ -338,6 +471,8 @@ export function monthlyLedger(state, world, rng = null) {
     cost(c.station, pay);
   }
   industryLedger(state, world, income, put, dateOf(state.day - 1).season);
+  // The five goods: deals with partner realms, then home sales (M21).
+  marketLedger(state, world, income, expenses);
   // A dwarven bank lends cheaper.
   if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth * Math.max(0.5, 1 + Math.min(0, realmEffect(state, world, 'interest')));
 
@@ -350,10 +485,22 @@ export function monthlyLedger(state, world, rng = null) {
     if (typeof expenses[k] === 'number') expenses[k] = Math.round(expenses[k]);
     else for (const j of Object.keys(expenses[k])) expenses[k][j] = Math.round(expenses[k][j]);
   }
+  // War's takings and lump sums came in when they happened (M21): listed
+  // here, but already in the treasury.
+  const windfalls = state.ledger.windfalls ?? {};
+  let already = 0;
+  for (const [k, v] of Object.entries(windfalls)) {
+    income[k] = (typeof income[k] === 'number' ? income[k] : 0) + Math.round(v);
+    already += Math.round(v);
+  }
+  state.ledger.windfalls = {};
+  // Loan payments, if the treasury can meet them (M21).
+  const pre = ledgerNet({ income, expenses });
+  loanLedger(state, world, expenses, state.treasury + pre.in - already - pre.out);
   const net = ledgerNet({ income, expenses });
   const totalIn = net.in;
   const totalOut = net.out;
-  state.treasury += totalIn - totalOut;
+  state.treasury += totalIn - already - totalOut;
   // Past the bankers' limit the bills simply go unpaid, so the debt stops
   // growing a little beyond it (and the soldiers desert, below).
   const limit = creditLimit(state, world);
@@ -390,7 +537,11 @@ export function monthlyLedger(state, world, rng = null) {
   }
 
   const date = dateOf(state.day - 1);
-  state.ledger.history.push({ year: date.year, month: date.month, income, expenses, treasury: Math.round(state.treasury), ...(deliveries.length ? { deliveries } : {}) });
+  state.ledger.history.push({
+    year: date.year, month: date.month, income, expenses, treasury: Math.round(state.treasury),
+    estates: Object.fromEntries(Object.entries(estates).map(([k, v]) => [k, Math.round(v)])),
+    ...(deliveries.length ? { deliveries } : {}),
+  });
   if (state.ledger.history.length > 12) state.ledger.history.shift();
   state.ledger.construction = 0;
   state.ledger.decrees = 0;
@@ -432,7 +583,8 @@ function warLedger(state, world, income, expenses, law) {
   }
 }
 
-function useIron(state, s, need) {
+function useIron(state, world, s, need) {
+  noteUsed(state, world, 'iron', need);
   const own = Math.min(s.stock.iron, need);
   s.stock.iron -= own;
   let left = need - own;

@@ -12,6 +12,35 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### Trade and money (M21 A and B)
+More ways to earn: taxes by estate (the lords' dues and the villages' tithe are new), surplus sold at home (grain that once spoiled now sells), trade deals, war's takings and loans. From `node tools/longrun.mjs 30 <crown> 1,2,3`, at year 30 (M20 C in brackets):
+
+| Crown | People | Treasury at year 10 | Treasury at year 30 | Net a month at year 30 |
+| --- | --- | --- | --- | --- |
+| Idle | about 33,100 (29,400) | 62,000 to 66,000 | 1,000 to 1,900 (at the floor) | −112 to −70 |
+| Steward (deals with every partner, taxes Fair) | about 58,900 (57,000) | 38,000 to 51,000 | 14,000 to 34,000 (800 to 2,500) | +580 to +707 |
+| Spendthrift | about 60,100 (56,500) | 42,000 to 47,000 | 19,000 to 35,000 | +480 to +541 |
+| Tyrant (every tax Heavy) | about 16,900 (12,200) | 23,000 to 30,000 | at the debt floor by year 20 | −336 to −34 |
+
+- **The well-run crown now has money to spend.** At the start the realm nets about +1,000 a month at Fair taxes (M20: about +800 before repairs): towns about 1,200 (head tax and market dues), villages 60 to 280 (the tithe follows the harvest), lords about 300. The steward's deals sell its timber and stone surplus to Redania, Kaedwen and others and buy cloth and luxuries it lacks: about +200 a month in exports against 150 to 210 in imports, most of it resold at home while the realm is short. This is the headroom Part D's standing army will need (the target, about 3,000 men plus the garrisons while still saving, is checked there).
+- **Heavy taxes pay, at a price.** Towns Heavy brings in about +30% (roughly +370 a month) and angers the burghers (towns' unrest +3, prosperity −2); villages Heavy about +30% and slows growth; lords Heavy doubles their dues (about +300) and costs the houses' loyalty through the nobles' mood. The tyrant, taxing everything Heavy, still ends in debt: its works fall to ruin and its people leave.
+- **The idle crown slides, more slowly than in M20.** It now banks the lords' dues and the home sales of its surplus, so it hoards about 64,000 in the first decade (M20: 38,000); from then on its ruined works cost more than they earn and it loses 70 to 250 a month, nearly broke by year 30 (M20: at the debt floor by then).
+- **Home sales** (0.6 of the home price) earn about 300 a month for the steward, most of it grain the granaries could not keep.
+
+The dials, in data/market.json, data/economy.json and data/laws.json:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| market `home` | 0.6 | Home sales of surplus earn more (and the idle crown less fast into debt) |
+| market `export.want`, `import.offer` | 1.25 and 0.85 | Deals earn more |
+| market `price.swing`, `min`, `max` | 0.6, 0.6 to 1.8 | Shortages and gluts move prices more |
+| market `deals.perPerson` | 0.0025 loads a head a month | Bigger deals |
+| economy `taxes.tithe` | 0.15 of the harvest at the grain price | The villages pay more |
+| economy `taxes.nobles` | 40 a house plus 0.02 a head | The lords pay more |
+| laws `taxBy` (Light and Heavy) | −0.25 and +0.3 | Wider gap between settings |
+| economy `loans.rate`, `capMonths` | 1.2% a month, six months of income | Dearer, larger loans |
+| economy `crafts.crowding`, `capShare` | 0.03, 0.8 of taxes and dues | Several works of a craft earn less each; the cap binds sooner |
+
 ### The board of the North (M20 D and E)
 No balance change. Orders on the board go through the rules that already exist (a march is a siege order, a trade the deal table, an envoy a small warming and an audience), so the crowns' figures above stand. The board's markers count a realm's garrisons as well as its armies.
 

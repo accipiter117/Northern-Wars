@@ -10,7 +10,7 @@ const decree = (s, law, option) => applyAction(s, world, { type: 'law', law, opt
 
 test('every law has a valid default and every option names known groups and effects', () => {
   const groups = Object.keys(world.groups.groups);
-  const known = ['tax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'authority', 'monthly', 'storage', 'growth', 'nonhumanExodus', 'unrest', 'prosperity'];
+  const known = ['tax', 'taxBy', 'nobleTax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'authority', 'monthly', 'storage', 'growth', 'nonhumanExodus', 'unrest', 'prosperity'];
   for (const [id, law] of Object.entries(world.laws.laws)) {
     assert.ok(law.options[law.default], `${id} default`);
     for (const opt of Object.values(law.options)) {
@@ -23,38 +23,44 @@ test('every law has a valid default and every option names known groups and effe
 
 test('a decree costs Authority and crowns, and jolts the groups it touches', () => {
   const s0 = createState(world, 1);
-  const { state: s, error } = decree(s0, 'taxation', 'heavy');
+  const { state: s, error } = decree(s0, 'grain_prices', 'granaries');
   assert.equal(error, undefined);
-  assert.equal(s.authority, s0.authority - 10);
-  assert.equal(s.treasury, s0.treasury - 50);
-  assert.ok(s.opinion.peasants < 50 && s.opinion.burghers < 50);
+  const law = world.laws.laws.grain_prices;
+  assert.equal(s.authority, s0.authority - law.authority);
+  assert.equal(s.treasury, s0.treasury - law.coin);
+  const touched = Object.keys(law.options.granaries.opinion);
+  for (const g of touched) assert.notEqual(s.opinion[g], 50, g);
   assert.equal(s.opinion.melitele, 50);
-  assert.match(s.chronicle.at(-1).text, /By royal decree: heavy taxes/);
+  assert.match(s.chronicle.at(-1).text, /By royal decree/);
+  // Taxes by estate (M21) are decreed the same way, cheaply.
+  const t = decree(s0, 'tax_peasants', 'heavy').state;
+  assert.equal(t.authority, s0.authority - world.laws.laws.tax_peasants.authority);
+  assert.ok(t.opinion.peasants < 50);
 });
 
 test('a new law phases in over a month and cannot be changed again meanwhile', () => {
-  let s = decree(createState(world, 1), 'taxation', 'heavy').state;
-  assert.equal(enactment(s, world, 'taxation'), 0);
-  assert.equal(canDecree(s, world, 'taxation', 'light').ok, false);
+  let s = decree(createState(world, 1), 'tax_peasants', 'heavy').state;
+  assert.equal(enactment(s, world, 'tax_peasants'), 0);
+  assert.equal(canDecree(s, world, 'tax_peasants', 'light').ok, false);
   s = run(s, 15);
-  assert.ok(Math.abs(lawEffects(s, world).tax - 0.175) < 1e-9);
+  assert.ok(Math.abs(lawEffects(s, world).taxBy.village - 0.15) < 1e-9);
   s = run(s, 15);
-  assert.equal(enactment(s, world, 'taxation'), 1);
-  assert.equal(lawEffects(s, world).tax, 0.35);
-  assert.equal(canDecree(s, world, 'taxation', 'light').ok, true);
+  assert.equal(enactment(s, world, 'tax_peasants'), 1);
+  assert.equal(lawEffects(s, world).taxBy.village, 0.3);
+  assert.equal(canDecree(s, world, 'tax_peasants', 'light').ok, true);
 });
 
 test('without enough Authority the crown cannot decree', () => {
   const s = createState(world, 1);
   s.authority = 5;
   assert.equal(canDecree(s, world, 'nonhumans', 'charter').reason, 'Needs 20 Authority.');
-  assert.equal(canDecree(s, world, 'taxation', 'standard').reason, 'Already the law of the land.');
+  assert.equal(canDecree(s, world, 'tax_towns', 'fair').reason, 'Already the law of the land.');
 });
 
 test('heavy taxes bring in more coin but sour the villages', () => {
   const base = run(createState(world, 2), 120);
-  const taxed = run(decree(createState(world, 2), 'taxation', 'heavy').state, 120);
-  assert.ok(taxed.ledger.history.at(-1).income.taxes > base.ledger.history.at(-1).income.taxes * 1.25);
+  const taxed = run(decree(createState(world, 2), 'tax_peasants', 'heavy').state, 120);
+  assert.ok(taxed.ledger.history.at(-1).estates.peasants > base.ledger.history.at(-1).estates.peasants * 1.25);
   assert.ok(taxed.opinion.peasants < 45);
   // The villages as a whole, so one village's luck with raids or events
   // does not decide it.
@@ -109,7 +115,7 @@ test('a version 2 save gains the customary laws', () => {
   s.state.version = 2;
   const up = deserialize(JSON.stringify(s), world);
   assert.equal(up.version, STATE_VERSION);
-  assert.equal(up.laws.taxation.option, 'standard');
+  assert.equal(up.laws.tax_towns.option, 'fair');
   assert.equal(up.opinion.nobles, 50);
   assert.ok(Number.isFinite(run(up, 40).treasury));
 });

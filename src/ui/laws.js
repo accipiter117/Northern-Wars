@@ -13,7 +13,8 @@ const MOOD_WORDS = ['Hostile', 'Resentful', 'Indifferent', 'Content', 'Devoted']
 export function lawsHtml(app) {
   const { world, state, memory } = app;
   const route = 'tab:court';
-  const cats = Object.entries(world.laws.categories).map(([cat, title]) => {
+  // Taxes by estate are set in the Treasury (M21).
+  const cats = Object.entries(world.laws.categories).filter(([cat]) => cat !== 'taxes').map(([cat, title]) => {
     const rows = Object.entries(world.laws.laws)
       .filter(([, law]) => law.category === cat)
       .map(([id, law]) => lawHtml(world, state, id, law, isOpen(memory, route, `law:${id}`))).join('');

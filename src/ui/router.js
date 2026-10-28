@@ -9,7 +9,8 @@ import { lawsHtml } from './laws.js';
 import { noblesHtml, houseCard, swatch, depositionHtml } from './nobles.js';
 import { faithHtml } from './faith.js';
 import { ledgerHtml, chronicleHtml } from './menu.js';
-import { routesHtml, industryHtml } from './trade.js';
+import { industryHtml } from './trade.js';
+import { marketHtml, taxesHtml } from './market.js';
 import { forcesHtml, threatsHtml, companyCard, threatCard, threatLabel } from './forces.js';
 import { garrisonsHtml } from './military.js';
 import { warHtml, armyCard } from './war.js';
@@ -21,7 +22,7 @@ import { boardCard, boardTitle, ordersHtml } from './board.js';
 export const SUBS = {
   realm: [['overview', 'Overview'], ['labour', 'Labour'], ['places', 'Places']],
   court: [['inbox', 'Decisions'], ['laws', 'Laws'], ['houses', 'Great houses'], ['faith', 'Faith']],
-  treasury: [['ledger', 'Ledger'], ['routes', 'Trade routes'], ['industry', 'Mines and industry']],
+  treasury: [['ledger', 'Ledger'], ['taxes', 'Taxes and loans'], ['trade', 'Trade'], ['industry', 'Mines and industry']],
   military: [['forces', 'Forces'], ['threats', 'Threats'], ['garrisons', 'Garrisons'], ['war', 'War']],
   diplomacy: [['realms', 'Rulers'], ['pacts', 'Pacts'], ['envoys', 'Audiences'], ['intel', 'Spies and embassies']],
 };
@@ -49,7 +50,8 @@ function tabScreen(app, tab) {
     else if (sub === 'faith') html = faithHtml(app);
     else html = inboxHtml(pendingDecisions(app.state, app.world, app.acked()));
   } else if (tab === 'treasury') {
-    if (sub === 'routes') html = routesHtml(app);
+    if (sub === 'trade' || sub === 'routes') html = marketHtml(app);
+    else if (sub === 'taxes') html = taxesHtml(app);
     else if (sub === 'industry') html = industryHtml(app);
     else html = ledgerHtml(app);
   } else if (tab === 'military') {

@@ -8,11 +8,16 @@ import {
 import { number, escapeHtml } from './format.js';
 import { chips, orderAttr, button } from './card.js';
 import { form } from './memory.js';
+import { dealFormHtml } from './market.js';
 
 const KIND = { march: 'March', trade: 'Trade', envoy: 'Envoy' };
 
 function orderLine(world, o) {
   if (o.kind === 'march') return `March on ${escapeHtml(sideName(world, o.realm))}`;
+  if (o.kind === 'trade' && world.market) {
+    const parts = [o.sell ? `sell ${number(o.sell.qty)} ${world.market.goods[o.sell.good].short}` : '', o.buy ? `buy ${number(o.buy.qty)} ${world.market.goods[o.buy.good].short}` : ''].filter(Boolean).join(', ');
+    return `Trade with ${escapeHtml(sideName(world, o.realm))}: ${escapeHtml(parts)} a month`;
+  }
   if (o.kind === 'trade') return `Trade with ${escapeHtml(sideName(world, o.realm))}: our ${escapeHtml(world.diplomacy.goods[o.give].name.toLowerCase())} for their ${escapeHtml(world.diplomacy.goods[o.take].name.toLowerCase())}`;
   return `An envoy to ${escapeHtml(sideName(world, o.realm))}`;
 }
@@ -73,7 +78,7 @@ export function boardCard(app, rid) {
       ${button('Envoy', `data-board-order="envoy" ${orderAttr({ type: 'order', order: envoy })}`, { disabled: !ec.ok, sub: ec.ok ? 'Warmer relations, and an audience waiting' : escapeHtml(ec.reason) })}
       ${world.neighbours.realms[rid] ? button('The full card', `data-go="realm:${rid}"`, { sub: 'Stance, intelligence, pacts and war' }) : ''}
     </div>
-    ${hostile(state, TEMERIA, rid) ? '' : tradeHtml(app, rid)}`;
+    ${hostile(state, TEMERIA, rid) ? '' : world.market ? dealFormHtml(app, rid, 'order') : tradeHtml(app, rid)}`;
 }
 
 export function boardTitle(app, rid) {

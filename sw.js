@@ -2,7 +2,7 @@
 // Every game file is kept in a versioned cache. Pages load from the cache
 // first, so the game starts at once and plays offline; a new version
 // installs beside the old and waits until the player chooses to restart.
-const VERSION = 'c704616687e9';
+const VERSION = '26097ee21de1';
 const CACHE = `northern-wars-${VERSION}`;
 const FILES = [
   "./",
@@ -28,6 +28,7 @@ const FILES = [
   "data/labour.json",
   "data/laws.json",
   "data/layout.json",
+  "data/market.json",
   "data/military.json",
   "data/neighbours.json",
   "data/north-geography.json",
@@ -89,6 +90,8 @@ const FILES = [
   "src/sim/lands.js",
   "src/sim/laws.js",
   "src/sim/load.js",
+  "src/sim/loans.js",
+  "src/sim/market.js",
   "src/sim/military.js",
   "src/sim/neighbours.js",
   "src/sim/petitions.js",
@@ -125,6 +128,7 @@ const FILES = [
   "src/ui/labour.js",
   "src/ui/laws.js",
   "src/ui/longpress.js",
+  "src/ui/market.js",
   "src/ui/memory.js",
   "src/ui/menu.js",
   "src/ui/military.js",

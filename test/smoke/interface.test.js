@@ -35,7 +35,7 @@ function busyRealm() {
   const marsh = wildSites(world, 'anchor').find((x) => x.terrain === 'marsh');
   s.threats.list = [{ id: 1, kind: 'bandits', terrain: 'marsh', x: marsh.x, y: marsh.y, near: 'anchor', men: 40, morale: 70, born: s.day, band: null, sighted: true, campSeen: true, alerted: true, rumour: null }];
   s.threats.nextId = 2;
-  for (const a of [{ type: 'recruit', settlement: 'gors_velen', kind: 'menatarms' }, { type: 'route', from: 'vizima', to: 'maribor' }]) {
+  for (const a of [{ type: 'recruit', settlement: 'gors_velen', kind: 'menatarms' }, { type: 'trade', realm: 'redania', sell: { good: 'materials', qty: 25 }, buy: null }]) {
     const out = applyAction(s, world, a);
     assert.equal(out.error, undefined, out.error);
     s = out.state;
@@ -144,9 +144,9 @@ test('the tap targets, counted from the map', async () => {
   t.reset();
   await t.tap('[data-tab="court"]');
   await t.tap('[data-sub="laws"]');
-  await t.tap('[data-law="taxation"]');
-  await t.tap('[data-decree="taxation:heavy"]');
-  assert.equal(await page.evaluate(() => window.northernWars.state.laws.taxation.option), 'heavy');
+  await t.tap('[data-law="grain_prices"]');
+  await t.tap('[data-decree="grain_prices:controlled"]');
+  assert.equal(await page.evaluate(() => window.northernWars.state.laws.grain_prices.option), 'controlled');
   assert.ok(t.count <= 4, `law: ${t.count} taps`);
   await page.click('#sheet-close');
   assert.deepEqual(errors, []);
@@ -334,7 +334,7 @@ test('no tab or card opens longer than about two screens', async () => {
     const h = await page.evaluate(() => document.getElementById('sheet-body').scrollHeight);
     if (h > limit) tooLong.push(`${name}: ${h}px`);
   };
-  const subs = { realm: ['overview', 'places'], court: ['inbox', 'laws', 'houses', 'faith'], treasury: ['ledger', 'routes', 'industry'], military: ['forces', 'threats', 'garrisons', 'war'], diplomacy: ['realms', 'intel', 'envoys'] };
+  const subs = { realm: ['overview', 'places'], court: ['inbox', 'laws', 'houses', 'faith'], treasury: ['ledger', 'taxes', 'trade', 'industry'], military: ['forces', 'threats', 'garrisons', 'war'], diplomacy: ['realms', 'intel', 'envoys'] };
   for (const [tab, list] of Object.entries(subs)) {
     await page.click(`[data-tab="${tab}"]`);
     for (const sub of list) {
