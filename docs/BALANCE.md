@@ -24,6 +24,7 @@ Threats now grow with the realm's people (0.7 to 1.3 of their old size) and are 
 
 - **A normal reign meets a nuisance**: about one raid a year and two villagers dead, with companies on patrol. Even a crown with no companies loses about 50 villagers a year in a realm of 55,000; the raids hurt it through broken works, not deaths.
 - **The caps change little in a well-run realm**, because its camps never grew that large: they stop the runaway case (a poor, restless realm breeding camps of 200 men) and keep raiders in peace to a size a town's levy beats. Every camp sighted in the tests loses to the nearest company or levy.
+- **The steward now gives its iron towns an iron focus** (the brief's steward uses focus): at year 20 it holds 38,000 to 59,000 crowns and nets +831 to +1,036 a month (before: 56,000 to 61,000 and +943 to +1,068). In one seed of three its people end lower (52,500 against 59,800), as the focus draws hands from the fields: a focus is a trade, not a free gain.
 - **Walls**: a walled town's garrison now fights at a full 1.5 times its strength until the walls fall below a third, so raids go for the villages (as the brief asked, villages need patrols).
 
 The dials, in data/forces.json `threats`:
