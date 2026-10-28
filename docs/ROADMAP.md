@@ -22,6 +22,22 @@
 | M18 Rulers who govern | Foreign rulers assess threat, opportunity and purse each month and choose a posture (Grow, Arm, Expand, Consolidate, Scheme); standing armies with upkeep, a court that taxes hoards, debt with desertion and offers to Temeria; building from the full catalogue; wars with aims, musters and reasons in place of rivalry dice; deterrence, probes and harder-to-break pacts with Temeria; pacts between realms that last; posture and war aims learnt through embassies and spies | Done |
 | M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | Done |
 | M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
+| M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | In progress (A and B) |
+
+## M21 acceptance criteria
+Part A, trade in five goods:
+- All trade folds into Grain, Timber and stone, Iron and arms, Cloth and Luxuries; the underlying goods stay for production.
+- Each good has a monthly balance shown as one line; prices rise with shortage and fall with glut.
+- One deal per partner (board Trade order or the realm's card), selling a good it wants and buying one it offers, so much a month; partners' wants and offers come from their land and change with war and worn fields.
+- Unsold surplus sells at home for less than abroad unless held back with one toggle.
+- War, closed borders and a fallen partner cut deals and raise the price of what they supplied.
+
+Part B, more ways to make money:
+- Taxes by estate (Towns, Villages, Lords; Light, Fair or Heavy) with the crowns each setting yields shown before choosing, replacing the old tax laws.
+- Tolls and river dues stay; loot, ransoms, coin in peace terms, tribute and requisition each show as their own income line.
+- Loans from the Vivaldi bank with monthly repayments and interest, capped by income; missed payments raise the rate and cost Authority.
+- A gentler crowding penalty on crafts with a soft cap below the taxes.
+- Save version 20.
 
 ## M20 acceptance criteria
 Part A, spaces from the land:

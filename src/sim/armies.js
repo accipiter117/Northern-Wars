@@ -4,6 +4,7 @@
 // their own captains. Armies march the roads a stretch a day, fight when
 // they meet an enemy, starve or storm the towns they besiege, and carry off
 // what they can.
+import { windfall } from './economy.js';
 import { creditLimit, realmEffect } from './economy.js';
 import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
 import { siegesOn, siegeDay } from './siege.js';
@@ -634,7 +635,7 @@ export function capture(state, world, rng, a, id, prev, how) {
     if (k) damagePlace(state, world, rng, id, { count: k.works, amount: k.amount, why: how === 'storm' ? 'Wrecked when the town was stormed' : 'Damaged in the taking of the town' });
   }
   p.sacked = state.day + c.sackedDays;
-  if (a.side === TEMERIA) state.treasury += loot;
+  if (a.side === TEMERIA) windfall(state, 'loot', loot);
   else if (state.realms[a.side]) state.realms[a.side].treasury += loot;
   a.siege = null;
   const name = world.byId[id].name;
@@ -672,7 +673,7 @@ function raidTick(state, world, rng, a) {
   hurtPlace(state, world, id, { prosperity: r.prosperity, food: r.food, unrest: r.unrest });
   damagePlace(state, world, rng, id, { count: 2, amount: world.works?.capture?.amount ?? [10, 25], why: 'Plundered by an enemy army', pick: outside });
   p.sacked = state.day + W(world).capture.sackedDays;
-  if (a.side === TEMERIA) state.treasury += loot;
+  if (a.side === TEMERIA) windfall(state, 'loot', loot);
   else if (state.realms[a.side]) state.realms[a.side].treasury += loot;
   a.raiding = null;
   a.raidTarget = null;

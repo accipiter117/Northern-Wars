@@ -63,3 +63,10 @@ export {
 export {
   ORDERS_A_MONTH, boardRealms, boardRealm, boardLinks, neighboursOnBoard, realmGeometry, markerAt, realmAtPoint, marches, canGiveOrder, marchTarget, envoysWaiting, seesRealm, realmWorks, TRADE_GIVE, tradeItems,
 } from './board.js';
+export {
+  MARKET_GOODS, partnerTrade, canTrade, dealPreview, homePrice, homeSalePrice, exportPrice, importPrice, balanceLine, marketGoodOf,
+} from './market.js';
+export {
+  loanTerms, canBorrow, canPayOff, payOffCost, owedOnLoans, loanCap, monthlyIncome,
+} from './loans.js';
+export { estateTaxPreview, houseDues } from './economy.js';

@@ -11,7 +11,9 @@ import { makeRng } from '../../src/sim/rng.js';
 import { planSettlement, overlaps, geoOf, segDist } from '../../src/render/layout.js';
 import { nodeWorld, ROOT } from '../helpers.js';
 
-const world = await nodeWorld();
+// The routes underneath trade (M21 keeps them as machinery): tested in a
+// world without the market of five goods, where the crown still opens them.
+const world = { ...(await nodeWorld()), market: null };
 const layout = JSON.parse(readFileSync(join(ROOT, 'data/layout.json'), 'utf8'));
 const run = (s, days) => step(s, days, world, { ambient: false });
 const act = (s, a) => {

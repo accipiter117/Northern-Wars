@@ -121,7 +121,7 @@ export function settlementTradeHtml(world, state, id) {
   if (!world.spaces) parts.push(`<p class="sub">Room for ${Math.max(0, slotsOf(world, id) - s.buildings.length)} more of ${slotsOf(world, id)} buildings.</p>`);
   const mine = state.routes.filter((r) => r.from === id || r.to === id)
     .map((r) => `<li>${escapeHtml(placeName(world, state, r.from === id ? r.to : r.from))}: ${r.closed ? 'closed' : `${number(r.last)} crowns last month`}</li>`).join('');
-  if (routeEndOk(state, world, id).ok) {
+  if (routeEndOk(state, world, id).ok && !world.market) {
     parts.push(`<h3>Trade</h3>${mine ? `<ul class="cares">${mine}</ul>` : ''}
       <button type="button" class="act" data-route-from="${id}" data-pick-start='{"kind":"route","from":"${id}"}'><span class="act-label">Open a trade route from here</span>
       <span class="act-sub">${state.routes.length} of ${routeLimit(state, world)} crown routes in use. Pick the far end on the map.</span></button>`);

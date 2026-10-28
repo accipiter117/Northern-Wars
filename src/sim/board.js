@@ -5,6 +5,7 @@
 // orders a month from here (march, trade, envoy); at the turn of the month
 // the crown's orders and the rulers' own moves go out together, and armies
 // march and fight in real time as before.
+import { canTrade, makeDeal, dealPreview } from './market.js';
 import { addDispatch, clamp } from './realm.js';
 import { pointInPolygon, distanceToPolygon } from './geometry.js';
 import { TEMERIA, ownerOf, hostile, sideName, placesHeldBy, placeOf, warBetween } from './conflict.js';
@@ -202,6 +203,8 @@ export function canGiveOrder(state, world, o) {
     return { ok: true };
   }
   if (o.kind === 'trade') {
+    // Since M21, a trade order proposes a deal in the five goods.
+    if (world.market) return canTrade(state, world, o.realm, o.sell ?? null, o.buy ?? null);
     if (hostile(state, TEMERIA, o.realm)) return { ok: false, reason: 'No trade with an enemy.' };
     if (!(world.neighbours.realms[o.realm]?.trade > 0)) return { ok: false, reason: `${sideName(world, o.realm)} does not trade with Temeria.` };
     if (!TRADE_GIVE.includes(o.give) || !world.diplomacy?.goods?.[o.take] || o.give === o.take) return { ok: false, reason: 'Choose what to send and what to ask for.' };
@@ -214,7 +217,8 @@ export function canGiveOrder(state, world, o) {
 }
 
 export function giveOrder(state, world, o) {
-  const clean = { kind: o.kind, realm: o.realm, ...(o.kind === 'march' ? { army: o.army } : {}), ...(o.kind === 'trade' ? { give: o.give, take: o.take } : {}), day: state.day };
+  const trade = o.kind !== 'trade' ? {} : world.market ? { sell: o.sell ?? null, buy: o.buy ?? null } : { give: o.give, take: o.take };
+  const clean = { kind: o.kind, realm: o.realm, ...(o.kind === 'march' ? { army: o.army } : {}), ...trade, day: state.day };
   orders(state).list.push(clean);
 }
 
@@ -260,6 +264,13 @@ export function resolveOrders(state, world) {
       if (hostileNow) orderArmy(state, world, a, 'siege', target);
       else { a.order = 'defend'; a.target = target; }
       done.push({ ...x, ok: true, text: `${a.name} marches into ${sideName(world, x.realm)}, on ${world.byId[target].name}.` });
+    } else if (x.kind === 'trade' && world.market) {
+      const check = canTrade(state, world, x.realm, x.sell ?? null, x.buy ?? null);
+      if (check.ok) {
+        makeDeal(state, world, x.realm, x.sell ?? null, x.buy ?? null);
+        const p = dealPreview(state, world, x.realm, x.sell ?? null, x.buy ?? null);
+        done.push({ ...x, ok: true, text: `Our trade with ${sideName(world, x.realm)} is agreed: ${p.lines.join(' ')}` });
+      } else done.push({ ...x, ok: false, text: `${sideName(world, x.realm)} will not trade on those terms. ${check.reason}` });
     } else if (x.kind === 'trade') {
       let items = tradeItems(world, x);
       let c = canSign(state, world, x.realm, items);

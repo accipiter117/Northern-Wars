@@ -30,7 +30,8 @@ export function townCard(app, id) {
   const capital = id === world.kingdom.capital;
   const holder = s.holder === 'crown' || !world.houses.houses[s.holder] ? null : s.holder;
   const what = `${capital ? `${TYPE_NAMES[geo.type]}, seat of the crown` : TYPE_NAMES[geo.type]}, in ${TERRAIN_NAMES[world.terrainOf[id]]}`;
-  const trade = !s.occupier && world.trade && routeEndOk(state, world, id).ok;
+  // Since M21 the crown trades by deals with partners, not routes by hand.
+  const trade = !s.occupier && world.trade && !world.market && routeEndOk(state, world, id).ok;
   const actions = s.occupier ? '' : [
     world.forces ? `<button type="button" class="act" data-tsub="military" data-recruit-here><span class="act-label">${icon('sword')} Recruit here</span></button>` : '',
     trade ? `<button type="button" class="act" data-route-from="${id}" data-pick-start='{"kind":"route","from":"${id}"}'><span class="act-label">${icon('scroll')} Trade route from here</span></button>` : '',

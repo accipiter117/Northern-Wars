@@ -84,7 +84,12 @@
     },
     "prosperityBase": 0.3,
     "perProsperity": 0.014,
-    "note": "Tax a head a month by kind of place, times a fortunes factor (prosperityBase + perProsperity x prosperity), times any tax bonus from market halls, guildhalls and merchants' quarters."
+    "note": "Tax a head a month by kind of place, times a fortunes factor (prosperityBase + perProsperity x prosperity), times any tax bonus from market halls, guildhalls and merchants' quarters. Since M21 the crown sets three estates: the towns (head tax in cities and towns, and their market dues), the villages (head tax in villages, castles and temples, and a tithe of the harvest at the grain price) and the lords (each great house pays a due of base plus perPerson for its lands).",
+    "tithe": 0.15,
+    "nobles": {
+      "base": 40,
+      "perPerson": 0.02
+    }
   },
   "trade": {
     "perPersonMonth": {
@@ -138,8 +143,24 @@
       "castle": 0.7,
       "temple": 0.7
     },
-    "crowding": 0.07,
-    "note": "A craft building earns its craft value x placeScale for the kind of place x the place's fortunes. Each further building of the same craft in the realm cuts every one's takings: 1 / (1 + crowding x (count - 1)). Since M20 every place starts with its works, so each craft earns `works` of that (the whole realm's crafts at once would otherwise outearn its taxes).",
-    "works": 0.35
+    "crowding": 0.03,
+    "note": "A craft building earns its craft value x placeScale for the kind of place x the place's fortunes. Each further building of the same craft in the realm cuts every one's takings: 1 / (1 + crowding x (count - 1)). Since M20 every place starts with its works, so each craft earns `works` of that (the whole realm's crafts at once would otherwise outearn its taxes). Since M21 crowding is gentler (0.03), and if the crafts together would earn more than capShare of the towns' and villages' taxes and dues, every craft is scaled down to that.",
+    "works": 0.35,
+    "capShare": 0.8
+  },
+  "loans": {
+    "note": "Loans from the Vivaldi bank (M21): borrow one of `sums`, repaid over `months` monthly payments of principal x (1 + rate x months) / months. Total owed on loans may not pass capMonths of the realm's monthly income (the mean of the last three months, at least minIncome). A payment the treasury cannot meet is missed: the rate on that loan rises by missedRate, the payment is added to the end, and the crown loses missedAuthority Authority.",
+    "lender": "the Vivaldi bank",
+    "sums": [
+      2000,
+      5000,
+      10000
+    ],
+    "months": 24,
+    "rate": 0.012,
+    "capMonths": 6,
+    "minIncome": 1500,
+    "missedRate": 0.004,
+    "missedAuthority": 3
   }
 }

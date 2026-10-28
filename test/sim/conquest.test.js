@@ -150,7 +150,7 @@ test('integration rises under a garrison and good laws, and falls under harsh on
   for (let m = 0; m < 12; m++) monthlyConquest(s, world, rng);
   assert.ok(t.integration > 46, `rose to ${t.integration}`);
   // Heavy taxes and martial law push it back down.
-  s.laws.taxation.option = 'heavy';
+  s.laws.tax_peasants.option = 'heavy';
   s.laws.public_order.option = 'martial';
   s.laws.patronage.option = 'eternal_fire';
   t.prosperity = 35;

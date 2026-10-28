@@ -1,5 +1,15 @@
 # Changelog
 
+## M21 A and B Trade and money
+- Trade in five goods: grain, timber and stone, iron and arms, cloth, and luxuries. Treasury, Trade shows what the realm has to spare or lacks of each every month, and what it fetches. Shortages make a good dear, gluts make it cheap.
+- One trade deal per partner realm: sell a good they want, buy one they offer, so much a month. Make it from a realm's card, or with the Trade order on the board. Each partner wants and offers goods from its own land, and that changes with war and bad harvests. War cuts a deal, and what it supplied grows dear.
+- Whatever surplus is left sells at home each month, for less than abroad. Hold a good back with one tap (keep the iron for a war).
+- Taxes by estate: the towns, the villages and the lords, each Light, Fair or Heavy, with what each would bring in shown before you choose. Heavier taxes anger whoever pays them. The old Taxation and Noble privilege laws are gone.
+- War pays: loot, ransoms, coin in peace terms, tribute and requisitions each show on the ledger. A realm buys back a commander we hold after a month, if it can pay.
+- Loans from the Vivaldi bank, repaid month by month with interest. Miss a payment and the rate rises and the lords take note.
+- Several works of the same craft no longer earn so much less each.
+- Save version 20.
+
 ## M20 D and E One map, the board of the North
 - Pull the map back and the kingdom fades into the board of the North: every realm in its colours, named large, with a marker showing its men in hundreds (where we have eyes there) and pips for the state of its works, routes between neighbours, and dashed lines where armies march.
 - Up close, every town carries pips for its works, red where something is broken.

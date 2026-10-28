@@ -16,6 +16,7 @@ import { syncWorld, settleOwnership } from './lands.js';
 import { upgradeConquest } from './conquest.js';
 import { upgradeWorks } from './works.js';
 import { upgradeLabour } from './labour.js';
+import { upgradeMarket } from './market.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
 
@@ -231,6 +232,20 @@ const MIGRATIONS = {
   18(state) {
     state.orders = { list: [], last: [], theirs: [], envoys: [] };
     state.version = 19;
+    return state;
+  },
+  // v20 (M21 A and B): taxes by estate in place of the old tax laws (all
+  // Fair), the market of five goods with routes abroad folded into deals,
+  // and no loans yet.
+  19(state, world) {
+    delete state.laws.taxation;
+    delete state.laws.noble_privilege;
+    for (const id of ['tax_towns', 'tax_peasants', 'tax_nobles']) {
+      if (world.laws.laws[id]) state.laws[id] = { option: 'fair', previous: 'fair', since: 0 };
+    }
+    upgradeMarket(state, world);
+    state.loans = [];
+    state.version = 20;
     return state;
   },
 };

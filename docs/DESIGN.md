@@ -49,7 +49,7 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 
 ### Laws and edicts
 Around 12 to 15 laws in categories, each with options. Changing a law costs Authority and coin, takes effect over time, and pleases or angers specific groups (nobles, burghers, peasants, clergy of each faith, each non-human people). Examples:
-- Taxation: light, standard, heavy.
+- Taxation: light, standard, heavy (since M21, three settings by estate in the Treasury: towns, villages and lords).
 - Conscription: none, seasonal levy, standing muster.
 - Public order: town watch, curfews, martial law.
 - Non-human rights: equal charter, quarters and restrictions, expulsion.
@@ -57,7 +57,7 @@ Around 12 to 15 laws in categories, each with options. Changing a law costs Auth
 - Guild charters, road corvee labour, grain price controls, monster bounties (witcher contracts), registration of mages, noble tax privileges.
 
 #### As built in M3
-- Fourteen laws: taxation, noble tax privileges, guild charters, grain prices, road corvee, conscription, public order, the royal court, monster bounties, registration of mages, faith of the crown, non-human rights, the Old Ways, poor relief.
+- Fourteen laws (since M21 the two tax laws are three tax settings by estate): taxation, noble tax privileges, guild charters, grain prices, road corvee, conscription, public order, the royal court, monster bounties, registration of mages, faith of the crown, non-human rights, the Old Ways, poor relief.
 - Nine groups: nobles, burghers, peasants, the three faiths and the three non-human peoples. Opinion 0 to 100, starting at 50. Peasants move village unrest, burghers town unrest and trade, nobles castle unrest and Authority; faiths and peoples move unrest by their share of each settlement.
 - A decree's opinion shock is 40% of the eventual shift, felt at once; the rest arrives as opinion drifts (2% of the gap a day).
 - Authority: +1 a month, plus or minus noble mood and the court, minus debt. Laws cost 5 to 20.
@@ -173,6 +173,28 @@ Diplomacy as meetings with people. No story or scripted dialogue: rulers speak i
 ### Rulers who act
 - Rulers request audiences with real proposals, about one in fourteen a month each: a deal of their own devising (by their agenda: trade pacts, non-aggression, defensive pacts, protectorates, goods for crowns), a demand when they are hostile and stronger (crowns, or the town they want, or else), or a warning when our armies crowd their border. Requests wait in the Court inbox and the Diplomacy tab's Audiences, can be accepted, refused or bargained over at the deal table, and lapse after 30 days. They replace the random envoys.
 - Save version 14: old saves keep their stances; a friendly stance with a true ally (relation 75 or more) becomes a defensive pact for five years; trust starts from the relation; envoys still waiting take their default answer.
+
+## Wealth, hands and armies (M21)
+A crown should feel rich or poor through its own choices, raise a real army when it decides on war, pay for it, and beat ordinary threats while still fearing a real war. Fewer figures on screen, each tied to something the player can do.
+
+### Trade in five goods (M21 A)
+Numbers live in data/market.json; the rules in src/sim/market.js.
+- The player trades five goods: **Grain**, **Timber and stone**, **Iron and arms**, **Cloth** (wool and cloth) and **Luxuries** (rye spirit, salt and horses; silver pays the crown directly). The underlying goods (food, timber, stone and iron in the stores, the industry's wool, cloth, charcoal, spirit, salt, arms and horses) still drive production; they roll up into the five in loads, each worth about the good's base price.
+- Each good has a monthly balance: what the realm made against what it used (grain: a year's harvest against a year's eating, a month's worth). It shows as one line ("Iron and arms: short 40 a month"). The price at home rises with a shortage and falls with a glut (up to 1.8 times or down to 0.6 times the base), eased month to month.
+- **Deals**: one per partner realm, saying what Temeria sells (a good the partner wants) and buys (a good it offers), so many loads a month, up to what the partner's people can take or supply. Each partner wants two goods and offers two, drawn from its own works; war makes it want iron and arms, worn fields make it want grain. Deals are made from the board's Trade order (sent at the turn of the month) or from the realm's card (agreed at once). A good sold abroad fetches 1.25 times its base price; a good bought costs 0.85 times. Bought grain, timber, stone and iron go into the stores; bought cloth and luxuries sell on at home, at the full home price while the realm is short.
+- **Home sales**: what is left of each surplus at the end of the month (timber, stone and iron beyond what the stores hold, grain beyond what the granaries can keep, the industry's goods beyond what the realm wants) sells at home for 0.6 of the home price, so a surplus always earns something. One toggle per good holds it back instead (iron kept for a war): held goods stay in store.
+- War, closed borders (relations below 10) or a fallen partner cut a deal; whatever it supplied is a quarter dearer for three months.
+- The routes, carts and tolls stay underneath, but the player no longer opens routes one by one.
+
+### More ways to make money (M21 B)
+- **Taxes by estate**, three settings in the Treasury, each Light, Fair or Heavy, with the crowns each would bring in shown before choosing. They are decreed like laws (3 Authority, a month to take hold) and replace the old Taxation and Noble privilege laws.
+  - Towns: the head tax in cities and towns and their market dues. Heavy angers the burghers and stirs the towns; Light pleases them and lets the towns grow richer.
+  - Villages: the hearth tax in villages, castles and temples and a tithe of the month's harvest at the grain price (most at harvest). Heavy angers the peasants, stirs the villages and slows growth.
+  - Lords: each great house pays a due of 40 crowns plus 0.02 a head for its lands; Light is 0.4 of that, Heavy twice. Heavy angers the nobles, which lowers the houses' loyalty.
+- Surplus sold at home and trade deals are the main merchant income. Tolls and river dues stay.
+- **War pays**: loot from a sack, a stormed town or plunder, ransoms (a realm buys back a commander we hold after a month, if it can pay, or at the deal table), coin in peace terms and tribute month by month, and requisition from occupied towns. Each comes in at once and shows as its own line on the month's ledger.
+- **Loans** from the Vivaldi bank: 2,000, 5,000 or 10,000 crowns, repaid in 24 monthly payments with 1.2% a month of simple interest. The bank lends up to six months of income in all. A payment the treasury cannot meet is missed: the rate rises, the payment goes to the end, and the crown loses 3 Authority.
+- **Crafts**: the crowding penalty for several works of the same craft is gentler (0.03 a work, from 0.07); a soft cap keeps the crafts together below 0.8 of the taxes and dues.
 
 ## One map, a kingdom already built (M20)
 The crown does not build. Every realm starts the game fully developed, as the Witcher North is: towns already have their mills, mines, fisheries and markets, and what each place has comes from the land it stands on. The crown's levers are repairs after raids and war, where the kingdom's hands work through the seasons (Part C), laws, the court and war. Numbers live in data/spaces.json; the rules in src/sim/works.js.
@@ -356,6 +378,7 @@ This replaces "no battles in v1": the owner asked for war. The crown still gover
 All numbers are in data/trade.json, data/gold.json, data/buildings.json and data/layout.json.
 
 ### Crown trade routes
+(Since M21 the player trades by deals in five goods; the routes below remain as the machinery underneath, no longer opened one by one. See "Trade in five goods".)
 - Between two towns or cities: ours, or a neighbour's (one end must be ours) once that realm's relation is 20 or more, it trades with us and we are not at war. Opened from a town's card or Treasury, Trade routes, for 400 crowns plus 0.8 a unit of road; 12 crowns a month to run.
 - A month's takings = 0.0038 x the square root of both towns' people x their fortunes (average prosperity / 55) x the haul (road length / 350, from 0.6 to 1.6) x wares (1.3 if they make different things, 0.75 if the same; a foreign town always counts as different) x road safety (1 less 0.9% per point of the worst threat along the way, at least a quarter) x relation abroad (the border-trade factor, x1.25) x a quarter more for each market hall at either end and the harbour and guildhall bonuses, divided by the square root of how many routes share each end.
 - Bandits rob a month's takings with a chance of 30% x (1 - safety). An occupied end, or war with the far end's realm, closes the route.

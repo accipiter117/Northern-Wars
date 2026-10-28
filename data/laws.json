@@ -3,74 +3,149 @@
   "enactDays": 30,
   "shock": 0.4,
   "categories": {
+    "taxes": "Taxes by estate",
     "economy": "Treasury and trade",
     "order": "Order and the realm",
     "faith": "Faith and peoples"
   },
   "laws": {
-    "taxation": {
-      "name": "Taxation",
-      "category": "economy",
-      "default": "standard",
-      "authority": 10,
-      "coin": 50,
+    "tax_towns": {
+      "name": "Taxes on the towns",
+      "category": "taxes",
+      "default": "fair",
+      "authority": 3,
+      "coin": 0,
       "options": {
         "light": {
-          "name": "Light taxes",
-          "blurb": "The crown takes less and is loved more.",
+          "name": "Light",
+          "blurb": "Lower the head tax and the market dues: the burghers keep more and the towns grow richer.",
           "effects": {
-            "tax": -0.25,
-            "prosperity": 2
+            "taxBy": {
+              "town": -0.25,
+              "city": -0.25
+            },
+            "prosperity": {
+              "town": 1,
+              "city": 1
+            }
           },
           "opinion": {
-            "peasants": 8,
             "burghers": 6
           }
         },
-        "standard": {
-          "name": "Customary taxes",
-          "blurb": "What the crown has always taken.",
+        "fair": {
+          "name": "Fair",
+          "blurb": "What the towns have always paid.",
           "effects": {},
           "opinion": {}
         },
         "heavy": {
-          "name": "Heavy taxes",
-          "blurb": "Fill the treasury and empty every purse.",
+          "name": "Heavy",
+          "blurb": "Raise the head tax and the market dues. The towns will grumble.",
           "effects": {
-            "tax": 0.35,
-            "prosperity": -3
+            "taxBy": {
+              "town": 0.3,
+              "city": 0.3
+            },
+            "prosperity": {
+              "town": -2,
+              "city": -2
+            },
+            "unrest": {
+              "town": 3,
+              "city": 3
+            }
           },
           "opinion": {
-            "peasants": -10,
-            "burghers": -8,
-            "nobles": -2
+            "burghers": -10
           }
         }
       }
     },
-    "noble_privilege": {
-      "name": "Noble tax privileges",
-      "category": "economy",
-      "default": "exempt",
-      "authority": 20,
+    "tax_peasants": {
+      "name": "Taxes on the villages",
+      "category": "taxes",
+      "default": "fair",
+      "authority": 3,
       "coin": 0,
       "options": {
-        "exempt": {
-          "name": "Lords exempt",
-          "blurb": "The lords pay in blood and service, not coin.",
+        "light": {
+          "name": "Light",
+          "blurb": "Lower the hearth tax and the tithe: the villages keep their grain and grow.",
+          "effects": {
+            "taxBy": {
+              "village": -0.25,
+              "castle": -0.25,
+              "temple": -0.25
+            },
+            "growth": 0.08
+          },
+          "opinion": {
+            "peasants": 6
+          }
+        },
+        "fair": {
+          "name": "Fair",
+          "blurb": "What the villages have always paid.",
           "effects": {},
           "opinion": {}
         },
-        "taxed": {
-          "name": "Lords taxed",
-          "blurb": "Every estate pays its share. The lords will remember.",
+        "heavy": {
+          "name": "Heavy",
+          "blurb": "Raise the hearth tax and the tithe. The villages will pay, sullenly, and grow more slowly.",
           "effects": {
-            "tax": 0.15
+            "taxBy": {
+              "village": 0.3,
+              "castle": 0.3,
+              "temple": 0.3
+            },
+            "growth": -0.15,
+            "prosperity": {
+              "village": -2
+            },
+            "unrest": {
+              "village": 3
+            }
           },
           "opinion": {
-            "nobles": -15,
-            "peasants": 4,
-            "burghers": 4
+            "peasants": -12
+          }
+        }
+      }
+    },
+    "tax_nobles": {
+      "name": "Taxes on the lords",
+      "category": "taxes",
+      "default": "fair",
+      "authority": 3,
+      "coin": 0,
+      "options": {
+        "light": {
+          "name": "Light",
+          "blurb": "The lords pay a token due. They like the crown for it.",
+          "effects": {
+            "nobleTax": 0.4
+          },
+          "opinion": {
+            "nobles": 6
+          }
+        },
+        "fair": {
+          "name": "Fair",
+          "blurb": "Each great house pays its customary due by the size of its lands.",
+          "effects": {
+            "nobleTax": 1
+          },
+          "opinion": {}
+        },
+        "heavy": {
+          "name": "Heavy",
+          "blurb": "The houses pay twice their due. They will remember it.",
+          "effects": {
+            "nobleTax": 2
+          },
+          "opinion": {
+            "nobles": -12
           }
         }
       }

@@ -5,7 +5,7 @@ import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
   strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks, canCall, winterOutlook, foodYield, foodNeed, foodCapacity,
-  LABOUR_KINDS,
+  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -163,8 +163,14 @@ export function makeCrowns(world) {
     s = diplomacy(s, month);
     s = warPolicy(s);
     s = campaign(s, month);
-    // Open the most lucrative trade route the crown can, before building.
-    if (month % 6 === 1 && s.treasury > 900) {
+    // Trade (M21): sell what the realm has to spare to partners who want
+    // it, buy what it lacks from partners who offer it; before M21, open
+    // the most lucrative trade route.
+    if (world.market) {
+      if (month % 3 === 1) s = trade(s);
+      // The spendthrift borrows when the coffers run low.
+      if (spend && s.treasury < 800 && canBorrow(s, world, 5000).ok) s = act(s, { type: 'loan', sum: 5000 });
+    } else if (month % 6 === 1 && s.treasury > 900) {
       const ends = world.geography.settlements.filter((x) => x.type === 'town' || x.type === 'city').map((x) => x.id);
       let best = null;
       for (const a of ends) for (const b of ends) {
@@ -195,6 +201,47 @@ export function makeCrowns(world) {
     // Keep the lords sweet.
     for (const id of Object.keys(s.houses)) {
       if (s.houses[id].loyalty < 35) s = act(s, { type: 'house', house: id, kind: 'honours' });
+    }
+    return s;
+  }
+
+  // The steward's trade (M21): each good's monthly surplus goes to the
+  // partners that want it, largest first, and what is short is bought from
+  // partners that offer it; a deal that could not be filled is cut back.
+  function trade(s) {
+    const r = s.market?.report;
+    if (!r || !Object.keys(r).length) return s;
+    const spare = Object.fromEntries(MARKET_GOODS.map((g) => [g, r[g]?.balance ?? 0]));
+    const partners = Object.keys(world.geography.neighbours).filter((rid) => s.realms?.[rid] && !s.realms[rid].fallen)
+      .map((rid) => ({ rid, p: partnerTrade(s, world, rid) })).filter((x) => x.p && x.p.capacity >= world.market.deals.minQty)
+      .sort((a, b) => b.p.capacity - a.p.capacity);
+    for (const d of Object.values(s.market.deals)) {
+      if (d.sell) spare[d.sell.good] -= d.sell.qty;
+      if (d.buy) spare[d.buy.good] += d.buy.qty;
+    }
+    for (const { rid, p } of partners) {
+      const cur = s.market.deals[rid];
+      let sell = cur?.sell ?? null;
+      let buy = cur?.buy ?? null;
+      if (sell && cur.sent !== undefined && cur.sent < sell.qty * 0.7) {
+        spare[sell.good] += sell.qty - cur.sent;
+        sell = cur.sent >= world.market.deals.minQty ? { good: sell.good, qty: cur.sent } : null;
+      }
+      if (!sell) {
+        const g = p.wants.find((w) => spare[w] >= world.market.deals.minQty);
+        if (g) {
+          sell = { good: g, qty: Math.min(p.capacity, Math.floor(spare[g])) };
+          spare[g] -= sell.qty;
+        }
+      }
+      if (!buy) {
+        const g = p.offers.find((o) => spare[o] <= -world.market.deals.minQty);
+        if (g) {
+          buy = { good: g, qty: Math.min(p.capacity, Math.floor(-spare[g])) };
+          spare[g] += buy.qty;
+        }
+      }
+      if ((sell || buy) && (sell !== cur?.sell || buy !== cur?.buy)) s = act(s, { type: 'trade', realm: rid, sell, buy });
     }
     return s;
   }
@@ -323,7 +370,7 @@ export function makeCrowns(world) {
     s = warPolicy(s, 'harsh');
     // The tyrant goes looking for plunder whenever its coffers allow.
     s = campaign(s, month, -8000);
-    const laws = [['taxation', 'heavy'], ['noble_privilege', 'taxed'], ['public_order', 'martial'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
+    const laws = [['tax_towns', 'heavy'], ['tax_peasants', 'heavy'], ['tax_nobles', 'heavy'], ['public_order', 'martial'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
     const [law, option] = laws[month % laws.length];
     s = act(s, { type: 'law', law, option });
     for (const id of Object.keys(s.houses)) if (month % 12 === 0) s = act(s, { type: 'house', house: id, kind: 'fine' });

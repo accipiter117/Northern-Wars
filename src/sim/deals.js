@@ -4,6 +4,7 @@
 // Acceptable, Close, They want more, or Insulting. What is agreed is carried
 // out by the simulation: lump sums at once, monthly payments and deliveries
 // through the ledger, goods on the road as caravans.
+import { windfall } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { settleOwnership } from './lands.js';
 import { expelClaimant } from './conquest.js';
@@ -429,12 +430,12 @@ export function ourValue(state, world, pid, items) {
 
 const SAY = (state, text) => addDispatch(state, text, 'abroad');
 
-function pay(state, from, to, coin) {
+function pay(state, from, to, coin, kind = 'payments') {
   if (from === TEMERIA) {
     state.treasury -= coin;
     state.ledger.decrees = (state.ledger.decrees ?? 0) + coin;
   } else if (state.realms[from]) state.realms[from].treasury -= coin;
-  if (to === TEMERIA) state.treasury += coin;
+  if (to === TEMERIA) windfall(state, kind, coin);
   else if (state.realms[to]) state.realms[to].treasury += coin;
 }
 
@@ -468,7 +469,8 @@ export function signDeal(state, world, pid, items) {
   for (const i of items) {
     const giver = i.from === 'us' ? TEMERIA : pid;
     const taker = i.from === 'us' ? pid : TEMERIA;
-    if (i.kind === 'coin') pay(state, giver, taker, i.amount);
+    // Coin paid for one of their commanders we hold is a ransom (M21).
+    if (i.kind === 'coin') pay(state, giver, taker, i.amount, peace ? 'reparations' : items.some((x) => x.kind === 'captive' && x.from === 'us') ? 'ransom' : 'payments');
     else if (i.kind === 'monthly') {
       if (protect && i.from === 'them') protectTribute = i.amount;
       else if (peace) state.tributes.push({ from: giver, to: taker, monthly: i.amount, until: state.day + i.months * 30 });

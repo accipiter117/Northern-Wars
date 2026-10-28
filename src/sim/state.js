@@ -17,6 +17,7 @@ import { syncWorld } from './lands.js';
 import { defaultConquest } from './conquest.js';
 import { startingWorks, defaultWorks } from './works.js';
 import { defaultLabour, startingFuel } from './labour.js';
+import { defaultMarket } from './market.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -26,7 +27,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 19;
+export const STATE_VERSION = 20;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -89,6 +90,8 @@ export function createState(world, seed = 1) {
     works: defaultWorks(),
     labour: defaultLabour(world),
     orders: { list: [], last: [], theirs: [], envoys: [] },
+    market: defaultMarket(world),
+    loans: [],
   };
   applyHoldings(state, world);
   if (state.labour) state.labour.fuel = startingFuel(state, world);

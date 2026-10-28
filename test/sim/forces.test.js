@@ -75,7 +75,9 @@ test('threats appear and grow where the country is poor, restless and wild, and 
 
 test('a band holding a road robs the crown route over it, and stops the caravans on the map', () => {
   let s = quiet(createState(world, 2));
-  s = act(s, { type: 'route', from: 'vizima', to: 'maribor' });
+  // The route underneath (since M21 opened by deals, not by hand).
+  s = applyAction(s, { ...world, market: null }, { type: 'route', from: 'vizima', to: 'maribor' }).state;
+  assert.equal(s.routes.length, 1);
   s.threats.list = [];
   const plain = run(structuredClone(s), 62);
   // A band camped on the road between Vizima and White Orchard for the month.

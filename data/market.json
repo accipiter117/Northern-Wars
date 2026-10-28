@@ -1,0 +1,24 @@
+{
+  "note": "The five goods the crown trades (M21). Each rolls up the realm's underlying goods (food, timber, stone and iron in its stores; the industry's wool, cloth, charcoal, spirit, salt, arms and horses) in loads: `of` gives how many loads one unit of each underlying good makes, set so a load is worth about the good's base price. Prices move with the realm's monthly balance: price = base x clamp(1 - swing x balance / max(made, used), min, max), eased towards that each month, and a deal cut by war adds `cut` for `cutMonths`. Unsold surplus sells at home for `home` of the home price; partners pay `export.want` of base for a good they want, and sell a good they offer for `import.offer` of base. A partner can take or supply up to `perPerson` loads a month for each of its people. `realmWorks` says which works make which good, for the partners' wants and offers.",
+  "goods": {
+    "grain": { "name": "Grain", "short": "grain", "base": 5, "of": { "food": 0.01 }, "blurb": "Bread for the towns and the army: the harvest beyond what the realm eats." },
+    "materials": { "name": "Timber and stone", "short": "timber and stone", "base": 0.6, "of": { "timber": 1, "stone": 1, "charcoal": 1.8 }, "blurb": "For walls, works and repairs." },
+    "iron": { "name": "Iron and arms", "short": "iron", "base": 1.4, "of": { "iron": 1, "arms": 3 }, "blurb": "Iron from the mines and the arms the smiths make of it. Hold it back before a war." },
+    "cloth": { "name": "Cloth", "short": "cloth", "base": 1.6, "of": { "cloth": 1, "wool": 0.4 }, "blurb": "Wool from the pastures and the weavers' cloth." },
+    "luxuries": { "name": "Luxuries", "short": "luxuries", "base": 2.2, "of": { "spirit": 1, "salt": 0.7, "horses": 2.3 }, "blurb": "Rye spirit, salt and horses (silver pays the crown directly)." }
+  },
+  "price": { "swing": 0.6, "min": 0.6, "max": 1.8, "ease": 0.35, "cut": 0.25, "cutMonths": 3 },
+  "home": 0.6,
+  "export": { "want": 1.25 },
+  "import": { "offer": 0.85 },
+  "deals": { "minRelation": 10, "perPerson": 0.0025, "minQty": 5 },
+  "grainReserveMonths": 3,
+  "materialsReserve": 50,
+  "realmWorks": {
+    "grain": ["fields", "mill", "fishery"],
+    "materials": ["lumber", "quarry", "charcoal"],
+    "iron": ["mine", "smithy", "weaponsmith", "armoury"],
+    "cloth": ["pasture", "weavers", "tannery"],
+    "luxuries": ["distillery", "saltpans", "stud", "silvermine", "brewery"]
+  }
+}

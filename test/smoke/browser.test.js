@@ -133,16 +133,17 @@ for (const vp of VIEWPORTS) {
     await page.click('#more-button');
     await page.click('[data-more="save"]');
     assert.ok(await page.evaluate(() => localStorage.getItem('northern-wars.save')?.includes('northern-wars-save')));
-    // Decree heavy taxes from the Laws screen.
+    // Decree price controls from the Laws screen.
     await page.click('[data-tab="court"]');
     await page.click('[data-sub="laws"]');
-    assert.match(await page.textContent('#sheet-body'), /Peasants[\s\S]*Taxation/);
+    assert.match(await page.textContent('#sheet-body'), /Peasants[\s\S]*Grain prices/);
+    assert.doesNotMatch(await page.textContent('#sheet-body'), /Taxes on the towns/, 'taxes are set in the Treasury');
     const authority = await page.evaluate(() => window.northernWars.state.authority);
-    await page.click('[data-law="taxation"]');
-    await page.click('[data-decree="taxation:heavy"]');
-    assert.equal(await page.evaluate(() => window.northernWars.state.laws.taxation.option), 'heavy');
+    await page.click('[data-law="grain_prices"]');
+    await page.click('[data-decree="grain_prices:controlled"]');
+    assert.equal(await page.evaluate(() => window.northernWars.state.laws.grain_prices.option), 'controlled');
     assert.equal(await page.evaluate(() => window.northernWars.state.authority), authority - 10);
-    assert.match(await page.textContent('[data-law="taxation"]'), /Heavy taxes[\s\S]*Taking hold/);
+    assert.match(await page.textContent('[data-law="grain_prices"]'), /Price controls[\s\S]*Taking hold/);
     await page.screenshot({ path: join(OUT, `${vp.name}-laws.png`) });
 
     // Neighbouring realms: warm to Redania.
@@ -586,36 +587,36 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   await ctx2.close();
 });
 
-// Trade and gold: open a crown route from a town's card, see it drawn on the
-// map, and send prospectors into the hills.
-test('trade routes and gold from the town cards and the Trade screen', async () => {
+// Trade and gold: the five goods and a deal with a partner from the
+// Treasury's Trade screen (M21), and prospectors sent into the hills.
+test('trade deals and gold from the Trade screen and the town cards', async () => {
+  const { nodeWorld } = await import('../helpers.js');
+  const { createState, step, serialize } = await import('../../src/sim/index.js');
+  const world = await nodeWorld();
+  const s = step(createState(world, 1262), 62, world, { ambient: false });
+  for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
+  s.diplomacy.requests = [];
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   const page = await context.newPage();
   const errors = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('dialog', (d) => d.accept());
-  await page.goto(`${base}?seed=1262&fresh&paused&nohints`);
+  await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
+  await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
-  const viz = await page.evaluate(() => window.northernWars.screenOf('vizima'));
-  await page.touchscreen.tap(viz.x, viz.y);
-  // From the town card: tap the far end on the map, see what it would earn,
-  // confirm.
-  await page.click('[data-route-from="vizima"]');
-  await page.waitForSelector('#pickbar:not([hidden])');
-  await page.evaluate(() => { const st = window.northernWars.world.byId.maribor; window.northernWars.lookAt(st.x, st.y); });
-  const mar = await page.evaluate(() => window.northernWars.screenOf('maribor'));
-  await page.touchscreen.tap(mar.x, mar.y);
-  assert.match(await page.textContent('#pickbar'), /Vizima to Maribor[\s\S]*crowns a month/);
-  await page.screenshot({ path: join(OUT, 'pick-route.png') });
-  await page.click('[data-pick-confirm]');
-  const routes = await page.evaluate(() => window.northernWars.state.routes);
-  assert.equal(routes.length, 1);
-  assert.deepEqual([routes[0].from, routes[0].to], ['vizima', 'maribor']);
+  // Trade (M21): the five goods, then a deal with Redania from its card.
   await page.click('[data-tab="treasury"]');
-  await page.click('[data-sub="routes"]');
-  assert.match(await page.textContent('#sheet-body'), /Vizima to Maribor[\s\S]*crowns a month/);
+  await page.click('.segs [data-sub="trade"]');
+  assert.match(await page.textContent('[data-part="goods"]'), /Grain[\s\S]*Timber and stone: surplus[\s\S]*Iron and arms[\s\S]*Cloth: short[\s\S]*Luxuries/);
   await page.screenshot({ path: join(OUT, 'trade.png') });
+  await page.click('[data-partner="redania"]');
+  await page.click('[data-sec="trade"] summary');
+  await page.click('[data-form="deal:redania"] [data-set="sell:materials"]');
+  await page.click('[data-form="deal:redania"] [data-set="sellQty:50"]');
+  assert.match(await page.textContent('[data-part="deal-preview"]'), /Sell 50 loads of timber and stone a month: \+\d+ crowns/);
+  await page.click('[data-deal-go="redania"]');
+  assert.deepEqual(await page.evaluate(() => window.northernWars.state.market.deals.redania.sell), { good: 'materials', qty: 50 });
   await page.click('#sheet-close');
   // Prospectors go into the Tukaj Hills above Napeys.
   await page.evaluate(() => { const st = window.northernWars.world.byId.napeys; window.northernWars.lookAt(st.x, st.y); });

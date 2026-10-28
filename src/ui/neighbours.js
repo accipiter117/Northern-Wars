@@ -3,6 +3,7 @@ import { number, escapeHtml, describeLevel } from './format.js';
 import { realmWarHtml, siegeNote } from './war.js';
 import { sideName } from '../sim/index.js';
 import { cardHead, orderAttr, section } from './card.js';
+import { dealFormHtml } from './market.js';
 import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { portraitImg } from './audience.js';
@@ -175,6 +176,7 @@ export function realmCard(app, id) {
     })}
     <div data-part="envoys">${envoys.length ? inboxHtml(envoys).replace(/data-part="[^"]*"/g, '') : ''}</div>
     <div data-part="stance"><h3>Our stance</h3><div class="build-list">${stances}</div></div>
+    ${world.market && !hostile(state, TEMERIA, id) ? section(memory, route, 'trade', 'Trade', dealFormHtml(app, id, 'now'), { open: !!state.market?.deals?.[id] }) : ''}
     ${intentionsHtml(world, state, id)}
     ${world.war ? `<div data-part="war">${realmWarHtml(world, state, id)}</div>` : ''}
     ${world.realms ? `<div data-part="intel">${intelligenceHtml(world, state, id)}</div>` : ''}

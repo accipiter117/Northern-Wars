@@ -89,7 +89,7 @@ test('interface actions ask for their sounds', async () => {
 
   // A decree is sealed; spending coin clinks; a refused order knocks.
   await page.waitForTimeout(600);
-  await nw(page, () => window.northernWars.order({ type: 'law', law: 'taxation', option: 'heavy' }));
+  await nw(page, () => window.northernWars.order({ type: 'law', law: 'tax_towns', option: 'heavy' }));
   await page.waitForTimeout(300);
   let asked = await nw(page, () => window.northernWars.sounds);
   assert.ok(asked.includes('seal'), `law: ${asked}`);

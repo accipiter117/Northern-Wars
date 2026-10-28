@@ -15,6 +15,7 @@ import { routePath, routeKey } from './trade.js';
 import { foreignTrade } from './neighbours.js';
 import { intersectSegments } from './geometry.js';
 import { worksFactor } from './works.js';
+import { noteMade, noteUsed, noteShort, offer } from './market.js';
 
 const I = (world) => world.industry;
 const MATERIALS = ['timber', 'stone', 'iron'];
@@ -137,7 +138,8 @@ export function tollsAt(state, world, id) {
 // ---- The month's industry ----
 
 // Draw a material from the realm's stockpiles, home first.
-function drawStock(state, id, key, want) {
+function drawStock(state, world, id, key, want) {
+  noteUsed(state, world, key, want);
   const own = state.settlements[id].stock;
   const take = Math.min(own[key], want);
   own[key] -= take;
@@ -211,6 +213,7 @@ export function industryLedger(state, world, income, put, season) {
   const make = (good, id, qty) => {
     pool[good].push({ id, qty });
     made[good] = (made[good] ?? 0) + qty;
+    noteMade(state, world, good, qty);
   };
 
   // Makers.
@@ -233,6 +236,7 @@ export function industryLedger(state, world, income, put, season) {
         const want = qty * per;
         if (pool[k]) {
           // Suppliers are paid the raw price out of the finished good's sale.
+          noteUsed(state, world, k, want);
           for (const e of takePool(pool[k], want)) {
             const v = e.qty * i.goods[k].price * share(id);
             put(e.id, v);
@@ -240,7 +244,7 @@ export function industryLedger(state, world, income, put, season) {
             if (e.id !== id) flows.push({ from: e.id, to: id, good: k, qty: e.qty });
           }
         } else if (k === 'grain') drawGrain(state, world, id, want, season);
-        else if (MATERIALS.includes(k)) drawStock(state, id, k, want);
+        else if (MATERIALS.includes(k)) drawStock(state, world, id, k, want);
       }
       make(w.good, id, qty);
     }
@@ -252,7 +256,10 @@ export function industryLedger(state, world, income, put, season) {
   if (stores && caps) {
     for (const g of ['arms', 'horses']) {
       const want = Math.max(0, caps[g] - stores[g]);
-      for (const e of takePool(pool[g], want)) stores[g] += e.qty;
+      for (const e of takePool(pool[g], want)) {
+        stores[g] += e.qty;
+        noteUsed(state, world, g, e.qty);
+      }
     }
   }
 
@@ -286,16 +293,25 @@ export function industryLedger(state, world, income, put, season) {
     }
   }
 
-  // What is left sells at home, at half price beyond what the realm wants.
+  // What is left sells at home up to what the realm wants; beyond that it
+  // goes to the market (M21), to be sold abroad by the crown's deals or at
+  // home for less, or held back. What the realm wants and lacks is a
+  // shortage that raises the price.
   const people = Object.values(state.settlements).reduce((a, s) => a + (s.occupier ? 0 : totalPopulation(s)), 0);
   for (const [g, def] of Object.entries(i.goods)) {
     const total = pool[g].reduce((a, e) => a + e.qty, 0);
-    if (total <= 0) continue;
     const price = goodPrice(state, world, g);
     const exported = Math.min(total, carried[g] ?? 0);
     const home = total - exported;
     const want = people * def.demand;
-    const value = exported * price + Math.min(home, want) * price + Math.max(0, home - want) * price * i.glut;
+    const sold = Math.min(home, want);
+    noteUsed(state, world, g, exported + sold);
+    noteShort(state, world, g, want - home);
+    if (total <= 0) continue;
+    const excess = home - sold;
+    let value = exported * price + sold * price;
+    // Without a market, the excess sells at home at the glut price as before.
+    if (excess > 0 && !offer(state, world, g, excess) && !world.market) value += excess * price * i.glut;
     const unit = value / total;
     for (const e of pool[g]) {
       const v = e.qty * unit * share(e.id) * robbed(e.id);

@@ -2,6 +2,7 @@
 // invaded by a neighbour it has soured or that smells weakness, be called to
 // a friend's side, or watch its neighbours fight one another. Wars end in a
 // peace: towns handed back or kept, sometimes tribute, and a truce.
+import { windfall } from './economy.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { goldGreed } from './gold.js';
@@ -531,7 +532,8 @@ function prizeOf(state, world, war, side) {
 function pay(state, from, to, coin) {
   if (from === TEMERIA) state.treasury -= coin;
   else if (state.realms[from]) state.realms[from].treasury -= coin;
-  if (to === TEMERIA) state.treasury += coin;
+  // Coin won in peace terms shows on the ledger as war's takings (M21).
+  if (to === TEMERIA) windfall(state, 'reparations', coin);
   else if (state.realms[to]) state.realms[to].treasury += coin;
 }
 
