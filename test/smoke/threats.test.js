@@ -63,9 +63,13 @@ test('a threat against the nearest force, the Treasury ledger, and a decluttered
     return { lines: lines.reduce((a, b) => a + b, 0), total: v(dl.querySelector('.total dd')) };
   }));
   for (const x of sums) assert.ok(Math.abs(x.lines - x.total) <= 3, JSON.stringify(sums));
-  await page.waitForTimeout(200);
-  await page.evaluate(() => document.querySelector('[data-part="ledger"]').scrollIntoView({ block: 'start' }));
-  await page.waitForTimeout(100);
+  // Drag the sheet up to full height to see the whole ledger.
+  const h = await page.locator('#sheet-head').boundingBox();
+  await page.mouse.move(h.x + 80, h.y + 20);
+  await page.mouse.down();
+  for (let i = 1; i <= 8; i++) await page.mouse.move(h.x + 80, h.y + 20 - (h.y * i) / 8);
+  await page.mouse.up();
+  await page.waitForTimeout(300);
   await page.screenshot({ path: join(OUT, 'portrait-ledger.png') });
 
   // A town card: four chips, three lines, then Details.
