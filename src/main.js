@@ -602,7 +602,7 @@ async function boot() {
     } else if (hit?.unit) {
       lowerPanel();
       const u = state.ambient.units.find((v) => v.id === hit.unit);
-      showLabel({ unit: hit.unit }, describeUnit(world, u));
+      showLabel({ unit: hit.unit }, describeUnit(world, u, state));
     } else {
       lowerPanel();
       hideUnitLabel();

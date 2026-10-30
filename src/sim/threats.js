@@ -547,21 +547,58 @@ export function witcherCost(state, world, t) {
   return round((w.base + w.perStrength * threatStrength(world, t)) * bounty);
 }
 
+// A contract runs in three parts (M22 B): the ride out, the fight at the
+// lair (where it is settled), and the ride home, if he won. A witcher who
+// lost does not come back.
 function witcherContracts(state, world, rng) {
   const w = T(world).monsters.witcher;
   for (const c of [...state.threats.contracts]) {
-    if (c.until > state.day) continue;
-    state.threats.contracts = state.threats.contracts.filter((x) => x !== c);
-    const t = state.threats.list.find((x) => x.id === c.threat);
-    if (!t) continue;
-    const name = speciesOf(world, t).name;
-    if (rng.chance(w.success)) {
-      destroyThreat(state, world, t);
-      say(state, `The witcher came back from the wilds near ${world.byId[t.near].name} with a trophy and a bill. ${name}: dealt with.`);
-    } else {
-      say(state, `The witcher sent after ${name.toLowerCase()} near ${world.byId[t.near].name} has not come back.`);
+    const start = c.start ?? c.until - w.days;
+    const fightAt = start + Math.round((c.until - start) * (w.fight ?? 1));
+    if (!c.done && state.day >= fightAt) {
+      c.done = true;
+      const t = state.threats.list.find((x) => x.id === c.threat);
+      if (t) {
+        const name = speciesOf(world, t).name;
+        c.won = rng.chance(w.success);
+        if (c.won) {
+          destroyThreat(state, world, t);
+          say(state, `The witcher came back from the wilds near ${world.byId[t.near].name} with a trophy and a bill. ${name}: dealt with.`);
+        } else {
+          say(state, `The witcher sent after ${name.toLowerCase()} near ${world.byId[t.near].name} has not come back.`);
+        }
+      } else c.won = true;
     }
+    if ((c.done && !c.won) || c.until <= state.day) state.threats.contracts = state.threats.contracts.filter((x) => x !== c);
   }
+}
+
+// Where a witcher on contract is (M22 B), for the map: riding out from his
+// town, at the lair fighting, or riding home. Cosmetic: it only reads.
+export function witcherOnRoad(state, world, c, frac = 0) {
+  const w = T(world).monsters.witcher;
+  const home = world.byId[c.from];
+  const lair = c.x !== undefined ? { x: c.x, y: c.y } : threatPos(state.threats.list.find((x) => x.id === c.threat) ?? {});
+  if (!home || lair.x === undefined) return null;
+  const start = c.start ?? c.until - w.days;
+  const days = Math.max(1, c.until - start);
+  const f = Math.min(1, Math.max(0, (state.day + frac - start) / days));
+  const fight = w.fight ?? 0.5;
+  const ride = fight * 0.8;
+  const lerp = (a, b, k) => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k });
+  if (f < ride) return { ...lerp(home, lair, f / ride), phase: 'out', facing: lair.x >= home.x ? 1 : -1 };
+  if (!c.done || f < fight + 0.1) return { ...lair, phase: 'fight', facing: 1 };
+  return { ...lerp(lair, home, Math.min(1, (f - fight - 0.1) / (1 - fight - 0.1))), phase: 'home', facing: home.x >= lair.x ? 1 : -1 };
+}
+
+// The witcher in one line, for the long press.
+export function describeWitcher(state, world, c) {
+  const t = state.threats.list.find((x) => x.id === c.threat);
+  const what = t ? speciesOf(world, t).name.replace(/^A /, 'the ').toLowerCase() : 'the beasts';
+  const near = world.byId[t?.near ?? c.from]?.name ?? '';
+  const p = witcherOnRoad(state, world, c);
+  const doing = !p ? '' : p.phase === 'out' ? `riding out from ${world.byId[c.from].name}` : p.phase === 'fight' ? 'at the lair' : `riding home to ${world.byId[c.from].name}`;
+  return `Witcher: ${c.name ?? 'a witcher'}, ${doing}; the crown's contract on ${what} near ${near}, ${c.cost} crowns`;
 }
 
 // ---- Sight ----

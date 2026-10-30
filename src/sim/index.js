@@ -4,6 +4,7 @@ export { createState, totalPopulation } from './state.js';
 export { step } from './step.js';
 export { serialize, deserialize } from './save.js';
 export { unitPosition, describeUnit } from './ambient.js';
+export { worksLife } from './worklife.js';
 export { dateOf, formatDate, seasonOf, SEASON_NAMES, MONTHS } from './calendar.js';
 export { loadWorld } from './load.js';
 export { canBuild, applyAction } from './actions.js';
@@ -29,7 +30,7 @@ export {
   freeCompanies, companiesAt, canRecruit, recruitCost, companySlots, canOrderCompany, huntOdds, bestCompanyFor, targetOf, targetPos,
   describeCompany, companyUpkeep, ORDERS, forceAgainst,
 } from './forces.js';
-export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites, threatScale, threatCap } from './threats.js';
+export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites, threatScale, threatCap, witcherOnRoad, describeWitcher } from './threats.js';
 export { companyStrength, threatStrength, winChance, oddsWord, resolve, speciesOf, groundAt } from './combat.js';
 export {
   parties, rulerOf, rulerName, rulerShort, agendaText, agendaOf, trustIn, moodReasons, moodTarget, moodWord, treatiesOf, treatyBetween, treatyDef,

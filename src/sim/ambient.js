@@ -2,12 +2,20 @@
 // Cosmetic only. It reads the realm (prosperity, garrisons) but never writes to
 // it, and draws only from the ambient RNG stream, so turning it off or changing
 // it can never alter game outcomes.
+//
+// Since M22 B every traveller stands for something real and carries what it
+// is for, so a long press can say it in one line: merchant caravans for the
+// surplus sold at home, Temerian and foreign merchants for the trade deals,
+// pilgrims for a real shrine or cathedral, patrols for the companies on
+// patrol orders, barges for the realm's trade on its rivers.
 import { seasonOf } from './calendar.js';
 import { dist, nearby, roadPath, polylineLength } from './world.js';
 import { totalPopulation } from './state.js';
 import { foreignTrade } from './neighbours.js';
 import { realmFaith } from './culture.js';
 import { visionOf, updateIntel } from './vision.js';
+import { monthlyOutput, homeSalePrice, exportPrice, importPrice } from './market.js';
+import { TEMERIA, hostile } from './conflict.js';
 
 const HALTED = new Set(['caravan', 'grain', 'goods', 'route', 'export', 'foreign', 'pilgrim', 'deal']);
 const HALT_RANGE = 18;
@@ -41,7 +49,10 @@ export function stepAmbientDay(state, world, rng) {
     const count = kept.reduce((n, u) => n + (u.kind === kind ? 1 : 0), 0);
     let rate = season === 'winter' && k.winterSpawn !== undefined ? k.winterSpawn : k.spawnPerDay;
     rate *= RATE[kind]?.(state, k, world) ?? 1;
-    if (count >= k.max || !rng.chance(rate)) continue;
+    // Some kinds have as many on the road as their source allows: one patrol
+    // for each company out on patrol.
+    const cap = Math.min(k.max, CAP[kind]?.(state, world) ?? k.max);
+    if (count >= cap || !rng.chance(rate)) continue;
     const unit = SPAWNERS[kind](state, world, rng);
     if (!unit) continue;
     unit.id = state.ambient.nextId++;
@@ -66,13 +77,33 @@ export function travellerPositions(state, world, frac = 0) {
 
 // How busy each kind of traffic is, read from the real economy.
 const RATE = {
-  caravan(state, k) {
+  // Merchant caravans carry the surplus sold at home (M21), and none run
+  // when nothing is sold.
+  caravan(state, k, world) {
+    if (state.market && world.market) return Math.min(2, homeSales(state, world).total / k.tradeBaseline);
     const last = state.ledger.history.at(-1);
     if (!last) return 1;
     return Math.min(2, Math.max(0.3, (last.income.trade + last.income.sales) / k.tradeBaseline));
   },
+  // Merchants both ways follow the trade deals (M21): ours out with what we
+  // sell, theirs in with what we buy.
+  export(state, k, world) {
+    if (state.market && world.market) return Math.min(1.5, liveDeals(state, world).filter((d) => d.sell).length);
+    return 1;
+  },
   foreign(state, k, world) {
+    if (state.market && world.market) return Math.min(1.5, liveDeals(state, world).filter((d) => d.buy).length);
     return Math.min(1.5, foreignTrade(state, world).total / k.tradeBaseline);
+  },
+  // Barges carry the realm's trade on its rivers: home sales and deals.
+  barge(state, k, world) {
+    if (!state.market || !world.market) return 1;
+    const deals = liveDeals(state, world).reduce((a, d) => a + (d.sell?.value ?? 0) + (d.buy?.value ?? 0), 0);
+    return Math.min(1, (homeSales(state, world).total + deals) / k.tradeBaseline);
+  },
+  // Patrols ride only for companies on patrol orders.
+  patrol(state) {
+    return patrollers(state).length ? 1 : 0;
   },
   pilgrim(state, k) {
     return Math.min(1.5, realmFaith(state).melitele / k.faithBaseline);
@@ -110,6 +141,58 @@ const RATE = {
     return Math.min(1, flowing / k.flowBaseline);
   },
 };
+
+const CAP = {
+  patrol: (state) => patrollers(state).length,
+};
+
+// The crown's companies out on patrol orders, free of any army or task.
+function patrollers(state) {
+  return (state.forces?.companies ?? []).filter((c) => !c.army && !c.task && c.order?.kind === 'patrol' && c.order.from && c.order.to);
+}
+
+// What the realm sold at home last month (M21), by good, in crowns.
+function homeSales(state, world) {
+  const by = {};
+  let total = 0;
+  for (const [g, r] of Object.entries(state.market?.report ?? {})) {
+    if (!(r.sold > 0) || !world.market.goods[g]) continue;
+    by[g] = Math.round(r.sold * homeSalePrice(state, world, g));
+    total += by[g];
+  }
+  return { by, total };
+}
+
+// The trade deals running now (M21), each side with its monthly value.
+function liveDeals(state, world) {
+  const out = [];
+  for (const [rid, d] of Object.entries(state.market?.deals ?? {})) {
+    if (state.realms?.[rid]?.fallen || hostile(state, TEMERIA, rid)) continue;
+    out.push({
+      rid,
+      sell: d.sell?.qty > 0 ? { ...d.sell, value: Math.round(d.sell.qty * exportPrice(world, d.sell.good)) } : null,
+      buy: d.buy?.qty > 0 ? { ...d.buy, value: Math.round(d.buy.qty * importPrice(world, d.buy.good)) } : null,
+    });
+  }
+  return out;
+}
+
+// Our places that make a market good, weighted by how much.
+function makerOf(state, world, rng, good) {
+  const list = world.geography.settlements.filter((st) => !state.settlements[st.id]?.occupier)
+    .map((st) => ({ id: st.id, q: monthlyOutput(state, world, [st.id])[good] ?? 0 })).filter((x) => x.q > 0);
+  return list.length ? weightedPick(rng, list, (x) => x.q).id : null;
+}
+
+// Our towns and cities with a market, where goods are sold.
+function marketTowns(state, world) {
+  return world.geography.settlements.filter((st) => (st.type === 'town' || st.type === 'city') && !state.settlements[st.id]?.occupier).map((st) => st.id);
+}
+
+// A realm's capital, or its gateway town on our border.
+function partnerSeat(world, rid) {
+  return world.realms?.realms[rid]?.capital ?? world.neighbours?.realms[rid]?.gateway ?? null;
+}
 
 // Places of one realm, weighted by how many live there.
 function realmPick(state, world, rng, rid, filter = () => true) {
@@ -150,6 +233,17 @@ const SPAWNERS = {
   // Temerian merchants carry goods into realms that trade with the crown,
   // and see the country as they go.
   export(state, world, rng) {
+    // Since M21: the goods we sell under a deal, from a place that makes
+    // them to the partner's seat.
+    if (state.market && world.market) {
+      const deals = liveDeals(state, world).filter((d) => d.sell);
+      if (!deals.length) return null;
+      const d = weightedPick(rng, deals, (x) => x.sell.value);
+      const from = makerOf(state, world, rng, d.sell.good) ?? world.kingdom.capital;
+      const to = partnerSeat(world, d.rid);
+      const route = to ? roadPath(world, from, to, true) : null;
+      return route && route.length > 1 ? { route, realm: d.rid, good: d.sell.good, qty: d.sell.qty, value: d.sell.value } : null;
+    }
     const trade = foreignTrade(state, world).by;
     const realms = Object.keys(trade).filter((r) => trade[r] > 0 && world.foreignByRealm[r]);
     if (!realms.length) return null;
@@ -195,14 +289,21 @@ const SPAWNERS = {
     return route && route.length > 1 ? { route, good: f.good } : null;
   },
 
-  // Pilgrims set out for the Temple of Melitele from wherever her faithful are.
+  // Pilgrims set out from wherever the faithful are for a real holy place:
+  // the Temple of Melitele, or the nearest cathedral or shrine standing whole.
   pilgrim(state, world, rng) {
-    const shrine = world.ambient.kinds.pilgrim.shrine;
-    if (!world.byId[shrine]) return null;
-    const ids = world.geography.settlements.map((s) => s.id).filter((id) => id !== shrine);
-    const from = weightedPick(rng, ids, (id) => totalPopulation(state.settlements[id]) * state.settlements[id].faith.melitele);
-    const route = roadPath(world, from, shrine);
-    return route && route.length > 1 ? { route } : null;
+    const holy = holyPlaces(state, world);
+    if (!holy.length) return null;
+    const ids = world.geography.settlements.map((s) => s.id).filter((id) => !state.settlements[id]?.occupier);
+    const from = weightedPick(rng, ids, (id) => totalPopulation(state.settlements[id]) * (state.settlements[id].faith.melitele + state.settlements[id].faith.eternal_fire));
+    let best = null;
+    for (const h of holy) {
+      if (h.id === from) continue;
+      const d = Math.hypot(world.byId[h.id].x - world.byId[from].x, world.byId[h.id].y - world.byId[from].y) / h.pull;
+      if (!best || d < best.d) best = { d, h };
+    }
+    const route = best ? roadPath(world, from, best.h.id) : null;
+    return route && route.length > 1 ? { route, holy: best.h.what } : null;
   },
 
   // A people driven out of a town walk the roads towards their kin (M19).
@@ -235,6 +336,17 @@ const SPAWNERS = {
   // Merchants from abroad cross the border, pass their gateway town and
   // carry on to a Temerian market. Realms they would not trade with send none.
   foreign(state, world, rng) {
+    // Since M21: the goods we buy under a deal, from the partner's seat to
+    // one of our market towns.
+    if (state.market && world.market) {
+      const deals = liveDeals(state, world).filter((d) => d.buy);
+      if (!deals.length) return null;
+      const d = weightedPick(rng, deals, (x) => x.buy.value);
+      const from = partnerSeat(world, d.rid);
+      const to = weightedPick(rng, marketTowns(state, world), (id) => totalPopulation(state.settlements[id]));
+      const route = from ? roadPath(world, from, to, true) : null;
+      return route && route.length > 1 ? { route, realm: d.rid, good: d.buy.good, qty: d.buy.qty, value: d.buy.value } : null;
+    }
     const trade = foreignTrade(state, world).by;
     const realms = Object.keys(trade).filter((id) => trade[id] > 0);
     if (!realms.length) return null;
@@ -258,9 +370,21 @@ const SPAWNERS = {
     return route && route.length > 1 ? { route } : null;
   },
 
-  // Trade flows between places with people and money, so both ends are
-  // weighted by prosperity and size.
+  // Since M21: the surplus sold at home, from a place that makes the good
+  // to a market town. Before, trade between places weighted by prosperity.
   caravan(state, world, rng) {
+    if (state.market && world.market) {
+      const sales = homeSales(state, world);
+      const goods = Object.keys(sales.by);
+      if (!goods.length) return null;
+      const good = weightedPick(rng, goods, (g) => sales.by[g]);
+      const from = makerOf(state, world, rng, good);
+      if (!from) return null;
+      const towns = marketTowns(state, world).filter((id) => id !== from);
+      const to = weightedPick(rng, towns, (id) => totalPopulation(state.settlements[id]) / (40 + Math.hypot(world.byId[id].x - world.byId[from].x, world.byId[id].y - world.byId[from].y)));
+      const route = to ? roadPath(world, from, to) : null;
+      return route && route.length > 1 ? { route, good, value: sales.by[good] } : null;
+    }
     const ids = world.geography.settlements.filter((s) => s.type !== 'castle').map((s) => s.id);
     const weight = (id) => {
       const s = state.settlements[id];
@@ -272,27 +396,61 @@ const SPAWNERS = {
     return route && route.length > 1 ? { route } : null;
   },
 
-  // Garrison riders go out from strongholds to a nearby place and back.
-  // (The crown's patrolling companies are on the map in their own right.)
+  // Outriders of a company on patrol orders (M22 B), along its road and
+  // back, one for each company that has none on the road yet.
   patrol(state, world, rng) {
-    const bases = world.geography.settlements
-      .filter((s) => state.settlements[s.id].garrison >= 100)
-      .map((s) => s.id);
-    if (!bases.length) return null;
-    const from = weightedPick(rng, bases, (id) => state.settlements[id].garrison);
-    const reach = nearby(world, from, world.ambient.kinds.patrol.reach);
-    if (!reach.length) return null;
-    const out = roadPath(world, from, rng.pick(reach));
-    return { route: [...out, ...out.slice(0, -1).reverse()] };
+    const out = new Set(state.ambient.units.filter((u) => u.kind === 'patrol').map((u) => u.company));
+    const free = patrollers(state).filter((c) => !out.has(c.id));
+    if (!free.length) return null;
+    const c = rng.pick(free);
+    const path = roadPath(world, c.order.from, c.order.to);
+    if (!path || path.length < 2) return null;
+    return { route: [...path, ...path.slice(0, -1).reverse()], company: c.id, name: c.name };
   },
 
+  // Barges ply the rivers our towns stand on, carrying their trade; none
+  // while the rivers are frozen (data: winterSpawn 0).
   barge(state, world, rng) {
-    const names = Object.keys(world.rivers);
+    const names = Object.keys(world.rivers).filter((n) => riverTowns(state, world, n) > 0);
     if (!names.length) return null;
-    const river = weightedPick(rng, names, (n) => world.rivers[n].length);
+    const river = weightedPick(rng, names, (n) => riverTowns(state, world, n));
     return { river, reverse: rng.chance(0.5) };
   },
 };
+
+// Holy places pilgrims make for: the Temple of Melitele, and every
+// cathedral and shrine of ours standing whole (cathedrals draw from further).
+function holyPlaces(state, world) {
+  const out = [];
+  const temple = world.ambient.kinds.pilgrim.shrine;
+  if (world.byId[temple] && state.settlements[temple] && !state.settlements[temple].occupier) out.push({ id: temple, pull: 3, what: 'the Temple of Melitele' });
+  for (const [id, s] of Object.entries(state.settlements)) {
+    if (s.occupier || id === temple) continue;
+    const whole = (b) => s.buildings.includes(b) && (s.cond?.[b] ?? 100) >= 50;
+    if (whole('cathedral')) out.push({ id, pull: 2, what: `the cathedral at ${world.byId[id].name}` });
+    else if (whole('shrine')) out.push({ id, pull: 1, what: `the shrine at ${world.byId[id].name}` });
+  }
+  return out;
+}
+
+// How many of our places stand on a river (by their river spaces, named
+// "the Ismena" for the Ismena).
+const riverCache = new WeakMap();
+function riverTowns(state, world, name) {
+  let byRiver = riverCache.get(world);
+  if (!byRiver) {
+    byRiver = {};
+    for (const [id, list] of Object.entries(world.spaces ?? {})) {
+      for (const sp of list) {
+        if (sp.kind !== 'river' || !sp.name) continue;
+        const key = sp.name.replace(/^the /, '');
+        (byRiver[key] ??= []).push(id);
+      }
+    }
+    riverCache.set(world, byRiver);
+  }
+  return (byRiver[name] ?? []).filter((id) => state.settlements[id] && !state.settlements[id].occupier).length;
+}
 
 // A place people are leaving: riots, hunger, or an army through its gates.
 function fleeing(state, s) {
@@ -362,47 +520,52 @@ export function unitPosition(world, u, pos = u.pos) {
   return { x: pts[0].x, y: pts[0].y, angle: 0 };
 }
 
-// What a unit is and where it is going, in words, for the tap label.
-export function describeUnit(world, u) {
+// What a unit is and where it is going, in one line, for the tap label and
+// the long press (M22 B): "Merchant caravan: timber and stone from Carreras
+// to Maribor, sold at home for about 120 crowns a month".
+export function describeUnit(world, u, state = null) {
   const kind = world.ambient.kinds[u.kind].name;
+  const name = (id) => world.byId[id]?.name ?? id;
+  const from = u.route ? name(u.route[0]) : '';
+  const to = u.route ? name(u.route[u.route.length - 1]) : '';
+  const crowns = (v) => `${Math.round(v).toLocaleString('en-GB')} crowns a month`;
+  const good = (g) => world.market?.goods[g]?.short ?? world.industry?.goods[g]?.name.toLowerCase() ?? world.diplomacy?.goods?.[g]?.name.toLowerCase() ?? 'goods';
+  const realm = (r) => world.geography.neighbours[r]?.name ?? r;
   if (u.river) {
     const { pts } = unitPoints(world, u);
     const east = pts[pts.length - 1].x > pts[0].x;
-    return `${kind} on the ${world.rivers[u.river].name}, heading ${east ? 'east' : 'west'}`;
+    return `${kind}: on the ${world.rivers[u.river].name}, heading ${east ? 'east' : 'west'} with the towns' trade`;
   }
-  if (u.kind === 'abroad' || u.kind === 'abroad_patrol') {
-    const realm = world.geography.neighbours[u.realm].name;
-    if (u.kind === 'abroad_patrol') return `Riders of ${realm} out of ${world.byId[u.route[0]].name}`;
-    return `A caravan of ${realm} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
+  switch (u.kind) {
+    case 'abroad': return `Caravan of ${realm(u.realm)}: from ${from} to ${to}`;
+    case 'abroad_patrol': return `Riders of ${realm(u.realm)}: out of ${from} and back`;
+    case 'exile': {
+      const who = world.groups?.groups[u.people]?.name ?? 'People';
+      return `${u.people === 'human' ? 'Townsfolk' : who} driven out: from ${from} to ${to}`;
+    }
+    case 'route': {
+      const r = state?.routes?.find((x) => x.id === u.crownRoute);
+      return `${kind}: on the crown's route from ${from} to ${to}${r?.last ? `, ${crowns(r.last)}` : ''}`;
+    }
+    case 'goods': return `Goods cart: ${good(u.good)} from ${from} to ${to}`;
+    case 'deal': return `${kind}: ${good(u.good)} under our treaty with ${realm(u.realm)}, from ${from} to ${to}`;
+    case 'export':
+      return u.good ? `${kind}: ${u.qty} loads of ${good(u.good)} a month from ${from} to ${to} under our deal with ${realm(u.realm)}, ${crowns(u.value)}`
+        : `${kind}: from ${from} to ${to} in ${realm(u.realm)}`;
+    case 'foreign':
+      if (u.good) return `Merchants of ${realm(u.realm)}: ${u.qty} loads of ${good(u.good)} a month from ${from} to ${to} under our deal, ${crowns(u.value)}`;
+      return `Merchants of ${realm(u.entry)}: bound for ${to}`;
+    case 'caravan':
+      return u.good ? `${kind}: ${good(u.good)} from ${from} to ${to}, sold at home for about ${crowns(u.value)}` : `${kind}: from ${from} to ${to}`;
+    case 'pilgrim': return `Pilgrims: from ${from} to ${u.holy ?? to}`;
+    case 'refugee': return `Refugees: fleeing ${from} for ${to}`;
+    case 'grain': return `Grain cart: from the full stores of ${from} to hungry ${to}`;
+    case 'patrol': {
+      const c = state?.forces?.companies.find((x) => x.id === u.company);
+      const n = c?.name ?? u.name;
+      const turn = name(u.route[Math.floor(u.route.length / 2)]);
+      return `Patrol: ${n ? `the ${n.replace(/^The /, '')}` : 'riders'} on the road from ${from} to ${turn}`;
+    }
+    default: return `${kind}: from ${from} to ${to}`;
   }
-  if (u.kind === 'exile') {
-    const who = world.groups?.groups[u.people]?.name ?? 'People';
-    return `${u.people === 'human' ? 'Townsfolk' : who} driven out of ${world.byId[u.route[0]].name}, on the road to ${world.byId[u.route[u.route.length - 1]].name}`;
-  }
-  if (u.kind === 'route') {
-    return `${kind} on the crown's route, from ${world.byId[u.route[0]].name} bound for ${world.byId[u.route[u.route.length - 1]].name}`;
-  }
-  if (u.kind === 'goods') {
-    const good = world.industry.goods[u.good]?.name.toLowerCase() ?? 'goods';
-    return `A cart of ${good} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
-  }
-  if (u.kind === 'deal') {
-    const good = world.diplomacy?.goods[u.good]?.name.toLowerCase() ?? 'goods';
-    return `A caravan of ${good} under our treaty with ${world.geography.neighbours[u.realm].name}, from ${world.byId[u.route[0]].name} bound for ${world.byId[u.route[u.route.length - 1]].name}`;
-  }
-  if (u.kind === 'export') {
-    return `${kind} from ${world.byId[u.route[0]].name}, bound for ${world.byId[u.route[u.route.length - 1]].name} in ${world.geography.neighbours[u.realm].name}`;
-  }
-  if (u.entry) {
-    return `${kind} from ${world.geography.neighbours[u.entry].name}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
-  }
-  const from = world.byId[u.route[0]].name;
-  if (u.kind === 'refugee') {
-    return `${kind} fleeing ${from}, making for ${world.byId[u.route[u.route.length - 1]].name}`;
-  }
-  if (u.kind === 'patrol') {
-    const turn = world.byId[u.route[Math.floor(u.route.length / 2)]].name;
-    return `${kind} out of ${from}, riding to ${turn} and back`;
-  }
-  return `${kind} from ${from}, bound for ${world.byId[u.route[u.route.length - 1]].name}`;
 }

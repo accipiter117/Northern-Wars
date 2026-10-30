@@ -170,7 +170,9 @@ export function applyAction(state, world, action) {
     const next = structuredClone(state);
     next.treasury -= cost;
     next.ledger.decrees = (next.ledger.decrees ?? 0) + cost;
-    next.threats.contracts.push({ threat: t.id, until: next.day + world.forces.threats.monsters.witcher.days, cost });
+    // M22 B: he sets out from the nearest place of ours, and is seen riding.
+    const w = world.forces.threats.monsters.witcher;
+    next.threats.contracts.push({ threat: t.id, start: next.day, until: next.day + w.days, cost, from: t.near, x: t.x, y: t.y, name: w.names?.[t.id % w.names.length] ?? 'A witcher' });
     addDispatch(next, `A witcher takes the crown's contract on the beasts near ${world.byId[t.near].name}, for ${cost} crowns.`, 'military');
     return { state: next };
   }

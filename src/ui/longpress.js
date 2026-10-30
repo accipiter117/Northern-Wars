@@ -3,7 +3,7 @@
 // company or army: its orders. A threat: send the nearest suitable company.
 // Anything foreign: what is known of it. Open land: what is here.
 import {
-  TEMERIA, describeArmy, describeUnit, groundAt, threatLevel, routeEndOk, bestCompanyFor, sideName, ownerOf, threatPos,
+  TEMERIA, describeArmy, describeUnit, describeWitcher, groundAt, threatLevel, routeEndOk, bestCompanyFor, sideName, ownerOf, threatPos,
 } from '../sim/index.js';
 import { pointInPolygon } from '../sim/geometry.js';
 import { escapeHtml, number, describeLevel } from './format.js';
@@ -135,9 +135,13 @@ export function longPress(app, ctx, x, y) {
     const t = world.distantTowns.find((v) => v.id === hit.distant);
     if (t) return ctx.peek(page.x, page.y, escapeHtml(t.name), `<p>A ${t.type} of ${escapeHtml(world.lands[t.land]?.name ?? t.land)}, beyond the realms the crown deals with. Our maps show where it stands; no more.</p>`);
   }
+  if (hit?.witcher !== undefined) {
+    const c = state.threats.contracts.find((v) => v.threat === hit.witcher);
+    if (c) return ctx.peek(page.x, page.y, 'On the road', `<p data-part="what-unit">${escapeHtml(describeWitcher(state, world, c))}</p>`);
+  }
   if (hit?.unit) {
     const u = state.ambient.units.find((v) => v.id === hit.unit);
-    if (u) return ctx.peek(page.x, page.y, 'On the road', `<p>${escapeHtml(describeUnit(world, u))}</p>`);
+    if (u) return ctx.peek(page.x, page.y, 'On the road', `<p data-part="what-unit">${escapeHtml(describeUnit(world, u, state))}</p>`);
   }
   const w = ctx.toWorld(x, y);
   const here = whatsHere(world, state, w.x, w.y);

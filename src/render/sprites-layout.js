@@ -3,7 +3,7 @@
 // Everything is drawn standing on its ground point (x, y is the middle of
 // its base) so pieces overlap correctly when drawn back to front, as
 // painted 2.5D art will. Any of them can be replaced with registerImage.
-import { registerPlaceholder } from './sprites.js';
+import { registerPlaceholder, getSprite } from './sprites.js';
 
 const INK = '#2b2116';
 const ROOFS = ['#9a5638', '#b89b5a', '#5d6066', '#7a5a3a'];
@@ -674,6 +674,79 @@ registerPlaceholder('life', 'worker', (ctx, x, y, size, opts = {}) => {
   ctx.beginPath();
   ctx.arc(x, y - size * 0.88, size * 0.13, 0, Math.PI * 2);
   ctx.fillStyle = '#d8b48a';
+  ctx.fill();
+  // What the hand is doing (M22 B): an axe or pick swung, a sheaf carried,
+  // a hammer at the scaffolding.
+  const swing = Math.sin((opts.phase ?? 0) * Math.PI * 4);
+  if (opts.tool === 'axe' || opts.tool === 'pick' || opts.tool === 'hammer') {
+    const a = -0.6 + swing * 0.7;
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.12, y - size * 0.6);
+    ctx.lineTo(x + size * 0.12 + Math.cos(a) * size * 0.45, y - size * 0.6 + Math.sin(a) * size * 0.45);
+    line(ctx, Math.max(0.5, size * 0.07));
+  } else if (opts.tool === 'sheaf') {
+    ctx.fillStyle = '#d9b24a';
+    ctx.fillRect(x + size * 0.1, y - size * 0.8, size * 0.18, size * 0.38);
+  } else if (opts.tool === 'crook') {
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.18, y);
+    ctx.lineTo(x + size * 0.18, y - size * 1.0);
+    ctx.arc(x + size * 0.28, y - size * 1.0, size * 0.1, Math.PI, 0);
+    line(ctx, Math.max(0.4, size * 0.05));
+  }
+});
+
+// A tree coming down in the woods: it leans further as the axes work.
+registerPlaceholder('life', 'tree', (ctx, x, y, size, opts = {}) => {
+  const lean = (opts.phase ?? 0) * 1.3;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(lean);
+  ctx.fillStyle = '#5a4128';
+  ctx.fillRect(-size * 0.05, -size * 0.9, size * 0.1, size * 0.9);
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.95, size * 0.3, 0, Math.PI * 2);
+  ctx.fillStyle = '#4f6e3a';
+  ctx.fill();
+  line(ctx, 0.4);
+  ctx.restore();
+});
+
+// A cart at the pithead, full of ore or stone.
+registerPlaceholder('life', 'cart', (ctx, x, y, size) => {
+  ctx.fillStyle = TIMBER;
+  ctx.fillRect(x - size * 0.4, y - size * 0.45, size * 0.8, size * 0.3);
+  line(ctx, 0.5);
+  ctx.fillStyle = '#6d6a63';
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.48, size * 0.25, Math.PI, 0);
+  ctx.fill();
+  for (const dx of [-0.25, 0.25]) {
+    ctx.beginPath();
+    ctx.arc(x + dx * size, y - size * 0.12, size * 0.12, 0, Math.PI * 2);
+    ctx.fillStyle = '#3a3026';
+    ctx.fill();
+  }
+});
+
+// An ox at the plough.
+registerPlaceholder('life', 'plough', (ctx, x, y, size, opts = {}) => {
+  getSprite('life', 'sheep').draw(ctx, x, y, size, { cow: true, facing: opts.facing ?? 1 });
+  ctx.beginPath();
+  ctx.moveTo(x - (opts.facing ?? 1) * size * 0.4, y - size * 0.3);
+  ctx.lineTo(x - (opts.facing ?? 1) * size * 0.85, y);
+  line(ctx, Math.max(0.5, size * 0.07));
+});
+
+// A scorch mark where a works was burned or broken.
+registerPlaceholder('life', 'scorch', (ctx, x, y, size) => {
+  ctx.beginPath();
+  ctx.ellipse(x, y, size * 0.7, size * 0.38, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(40, 30, 22, 0.55)';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.15, y - size * 0.05, size * 0.3, size * 0.15, 0.4, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(20, 14, 10, 0.6)';
   ctx.fill();
 });
 

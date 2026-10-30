@@ -359,3 +359,27 @@ registerPlaceholder('unit', 'barge', (ctx, x, y, size, opts = {}) => {
   ctx.fill();
   stroke(ctx, 0.8);
 });
+
+// A witcher (M22 B): a lone rider in grey with a sword on his back; at the
+// lair, his blade flashes.
+registerPlaceholder('unit', 'witcher', (ctx, x, y, size, opts = {}) => {
+  getSprite('unit', 'patrol').draw(ctx, x, y, size, { facing: opts.facing, colours: ['#4a4a4a'] });
+  const r = size / 2;
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.35, y - r * 0.15);
+  ctx.lineTo(x + r * 0.25, y - r * 0.95);
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = '#d8d8d8';
+  ctx.stroke();
+  if (opts.fighting) {
+    const k = Math.sin((opts.t ?? 0) * 9);
+    ctx.beginPath();
+    ctx.moveTo(x + r * 0.6, y - r * (0.9 + k * 0.3));
+    ctx.lineTo(x + r * 1.3, y - r * (0.2 - k * 0.3));
+    ctx.moveTo(x + r * 0.6, y - r * (0.2 + k * 0.2));
+    ctx.lineTo(x + r * 1.3, y - r * (0.9 - k * 0.2));
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = '#f4e3b0';
+    ctx.stroke();
+  }
+});

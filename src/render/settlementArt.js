@@ -121,27 +121,73 @@ export function createSettlementArt(world, cfg) {
 
   // Life about the place: smoke, workers going to the fields and the mines,
   // beasts in the pasture, boats at the quay, builders on the scaffolding.
-  // Driven by game time, so a paused realm holds still.
-  function drawLife(ctx, st, scale, x, y, time, look) {
+  // Driven by game time, so a paused realm holds still. For our own places
+  // `life` (M22 B, from worksLife) says who works each works: figures by its
+  // staffing, the fields by the season, none and a scorch mark where it is
+  // damaged, builders where it is mended. `budget.left` caps the figures
+  // drawn in a frame; `half` (Battery saver) draws half of each group.
+  function drawLife(ctx, st, scale, x, y, time, look, life = null, budget = { left: Infinity, half: false }) {
     const plan = plans.get(st.id)?.plan;
     if (!plan) return;
     const h = hash(st.id);
     const at = (v) => v * scale;
-    const unit = scale;
+    // Figures half as large again as a map unit (M22 B), so the work can be
+    // read at the closest zoom.
+    const unit = scale * 1.5;
+    const take = (n) => {
+      const k = Math.min(budget.half ? Math.ceil(n / 2) : n, Math.max(0, budget.left));
+      budget.left -= k;
+      return k;
+    };
     for (const [i, s] of plan.smoke.slice(0, 24).entries()) {
       getSprite('life', 'smoke').draw(ctx, x + at(s.x), y + at(s.y), unit * (s.big ? 0.9 : 0.6), { phase: (time * 0.6 + h + i * 0.37) % 1, steam: s.steam });
     }
     const workers = cfg.workersPerSite;
     for (const [i, s] of plan.sites.entries()) {
-      if (s.kind === 'field' && look.season === 'winter') continue;
+      const sx = x + at(s.x);
+      const sy = y + at(s.y);
       if (s.kind === 'works') {
-        for (let j = 0; j < 2; j++) {
+        for (let j = 0; j < take(2); j++) {
           const jig = Math.sin((time * 3 + j) * Math.PI) * unit * 0.3;
-          getSprite('life', 'worker').draw(ctx, x + at(s.x) + (j - 0.5) * unit * 1.2 + jig, y + at(s.y) + unit * 0.4, unit * 0.9, { phase: time + j, colour: '#8a6844' });
+          getSprite('life', 'worker').draw(ctx, sx + (j - 0.5) * unit * 1.2 + jig, sy + unit * 0.4, unit * 0.9, { phase: time + j, colour: '#8a6844', tool: 'hammer' });
         }
         continue;
       }
-      for (let j = 0; j < workers; j++) {
+      const l = life ? life[s.kind === 'field' ? 'fields' : s.kind] : null;
+      if (life && l) {
+        if (l.scorched) {
+          getSprite('life', 'scorch').draw(ctx, sx, sy + unit * 0.3, unit * 1.6);
+          continue;
+        }
+        const n = take(l.figures);
+        if (!n) continue;
+        if (l.activity === 'build') {
+          for (let j = 0; j < n; j++) getSprite('life', 'worker').draw(ctx, sx + (j - 0.5) * unit * 1.2, sy + unit * 0.4, unit * 0.9, { phase: time + j, colour: '#8a6844', tool: 'hammer' });
+          continue;
+        }
+        if (l.activity === 'fell') {
+          getSprite('life', 'tree').draw(ctx, sx + unit * 1.2, sy + unit * 0.4, unit * 1.6, { phase: (time * 0.2 + h) % 1 });
+          for (let j = 0; j < n; j++) getSprite('life', 'worker').draw(ctx, sx + (j - 0.5) * unit * 1.1, sy + unit * 0.4, unit * 0.85, { phase: time + j * 0.3, tool: 'axe' });
+          continue;
+        }
+        if (l.activity === 'dig') {
+          getSprite('life', 'cart').draw(ctx, sx + unit * 1.1, sy + unit * 0.5, unit * 1.1);
+          for (let j = 0; j < n; j++) getSprite('life', 'worker').draw(ctx, sx + (j - 0.5) * unit * 1.1, sy + unit * 0.4, unit * 0.85, { phase: time + j * 0.3, tool: 'pick', colour: '#55504a' });
+          continue;
+        }
+        if (s.kind === 'field') {
+          if (l.activity === 'plough') getSprite('life', 'plough').draw(ctx, sx + unit * 0.9, sy, unit * 1.1, { facing: 1 });
+          for (let j = 0; j < n; j++) {
+            const u = (time * 0.25 + h + i * 0.31 + j * 0.5) % 1;
+            const tri = u < 0.5 ? u * 2 : 2 - u * 2;
+            getSprite('life', 'worker').draw(ctx, x + at(s.x * tri), y + at(s.y * tri), unit * 0.85, { phase: u, tool: l.activity === 'harvest' ? 'sheaf' : null });
+          }
+          continue;
+        }
+      }
+      if (life) continue;
+      if (s.kind === 'field' && look.season === 'winter') continue;
+      for (let j = 0; j < take(workers); j++) {
         const u = (time * 0.25 + h + i * 0.31 + j * 0.5) % 1;
         const tri = u < 0.5 ? u * 2 : 2 - u * 2;
         getSprite('life', 'worker').draw(ctx, x + at(s.x * tri), y + at(s.y * tri), unit * 0.85, { phase: u });
@@ -149,20 +195,32 @@ export function createSettlementArt(world, cfg) {
     }
     for (const [i, f] of plan.fields.entries()) {
       if (f.kind !== 'pasture' || look.snow) continue;
-      for (let j = 0; j < 3; j++) {
+      for (let j = 0; j < take(3); j++) {
         const wob = Math.sin(time * 0.4 + j * 2.1 + i) * f.w * 0.25;
         getSprite('life', 'sheep').draw(ctx, x + at(f.x + wob), y + at(f.y + (j - 1) * f.h * 0.25), unit * 0.9, { cow: (i + j) % 3 === 0, facing: wob > 0 ? 1 : -1 });
       }
     }
     for (const [i, hd] of (plan.herds ?? []).entries()) {
       if (look.snow) continue;
-      for (let j = 0; j < 3; j++) {
+      const l = life?.[hd.b];
+      if (l?.scorched) {
+        getSprite('life', 'scorch').draw(ctx, x + at(hd.x), y + at(hd.y), unit * 1.6);
+        continue;
+      }
+      if (life && !l?.figures) continue;
+      // The shepherd, then the flock (shorn at the shearing: fewer, smaller).
+      if (l) getSprite('life', 'worker').draw(ctx, x + at(hd.x - hd.w * 0.5), y + at(hd.y), unit * 0.85, { phase: time, tool: 'crook' });
+      for (let j = 0; j < take(3); j++) {
         const wob = Math.sin(time * 0.35 + j * 2.3 + i) * hd.w * 0.3;
-        getSprite('life', 'sheep').draw(ctx, x + at(hd.x + (j - 1) * hd.w * 0.3 + wob * 0.3), y + at(hd.y + (j % 2) * hd.w * 0.15), unit * (hd.horses ? 1.1 : 0.9), { horse: hd.horses, facing: wob > 0 ? 1 : -1 });
+        getSprite('life', 'sheep').draw(ctx, x + at(hd.x + (j - 1) * hd.w * 0.3 + wob * 0.3), y + at(hd.y + (j % 2) * hd.w * 0.15), unit * (hd.horses ? 1.1 : l?.activity === 'shear' ? 0.75 : 0.9), { horse: hd.horses, facing: wob > 0 ? 1 : -1 });
       }
     }
     for (const [i, b] of plan.boats.entries()) {
-      getSprite('life', 'boat').draw(ctx, x + at(b.x) + unit * 1.6, y + at(b.y) + unit * 0.8, unit * 1.4, { phase: (time * 0.5 + i * 0.3) % 1 });
+      const l = life?.[b.b];
+      const n = life ? take(Math.min(2, l?.figures ?? 0)) : take(1);
+      for (let j = 0; j < n; j++) {
+        getSprite('life', 'boat').draw(ctx, x + at(b.x) + unit * (1.6 + j * 1.8), y + at(b.y) + unit * (0.8 + j * 0.6), unit * 1.4, { phase: (time * 0.5 + i * 0.3 + j * 0.5) % 1 });
+      }
     }
   }
 
