@@ -23,6 +23,15 @@
 | M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | Done |
 | M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
 | M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | Done |
+| M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | In progress (A) |
+
+## M22 acceptance criteria
+Part A, battery and performance:
+- The map is drawn only when something needs drawing; paused and idle, no frames are asked for until the next event.
+- Paused with ambient life on screen, about 8 frames a second; running, at most 30 unless the camera moves.
+- Battery saver in Help (on by default on phones): 30 frames a second always, half the ambient sprites, no wake lock.
+- Hidden: nothing draws, the realm pauses, the music stops, the audio context is suspended and the wake lock released; shown again, drawing and sound resume. The wake lock is held only while running with the setting on.
+- Tests count frames paused and idle, paused with life, running and hidden, and check the audio and the wake lock.
 
 ## M21 acceptance criteria
 Part A, trade in five goods:
