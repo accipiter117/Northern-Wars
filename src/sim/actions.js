@@ -23,7 +23,7 @@ import { depositAt, canProspect, startProspect } from './gold.js';
 import { canOpenRoute, openRoute, closeRoute } from './trade.js';
 import { canTrade, makeDeal, endDeal } from './market.js';
 import { canBorrow, borrow, canPayOff, payOff } from './loans.js';
-import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy } from './armies.js';
+import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy, canMuster, callMuster, detachCompany, canMerge, mergeArmies } from './armies.js';
 import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision } from './war.js';
 import { TEMERIA, sideIndex } from './conflict.js';
 import { addDispatch as note } from './realm.js';
@@ -205,7 +205,7 @@ export function applyAction(state, world, action) {
     return { state: next };
   }
   if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
-  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege'].includes(action.type)) return warAction(state, world, action);
+  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege', 'muster', 'detach', 'merge'].includes(action.type)) return warAction(state, world, action);
   // Labour (M20 C): the split of the kingdom's hands, a shift of a few in
   // a hundred, royal calls, and works pinned to be manned first.
   if (action.type === 'labour' || action.type === 'labourShift') {
@@ -367,6 +367,20 @@ function warAction(state, world, action) {
   } else if (action.type === 'disband') {
     if (!army || army.side !== TEMERIA) return { state, error: 'No such army.' };
     disbandArmy(next, world, army);
+  } else if (action.type === 'muster') {
+    // A place calls its own muster (M22 C).
+    const check = canMuster(state, world, action.settlement);
+    if (!check.ok) return { state, error: check.reason };
+    callMuster(next, world, action.settlement);
+  } else if (action.type === 'detach') {
+    if (!army || army.side !== TEMERIA) return { state, error: 'No such army.' };
+    if (!army.bands?.[action.band] || army.bands.length < 2) return { state, error: 'No such company, or it is the army\'s last.' };
+    detachCompany(next, world, army, action.band);
+  } else if (action.type === 'merge') {
+    const into = next.armies.find((a) => a.id === action.into);
+    const check = canMerge(next, world, army, into);
+    if (!check.ok) return { state, error: check.reason };
+    mergeArmies(next, world, army, into);
   } else if (action.type === 'peace') {
     const check = canMakePeace(state, world, action.war, action.terms);
     if (!check.ok) return { state, error: check.reason };

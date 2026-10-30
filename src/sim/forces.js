@@ -13,6 +13,8 @@ import { TEMERIA, ownerOf, hostile, hasWalls } from './conflict.js';
 import { companyStrength, threatStrength, winChance, oddsWord, resolve, groundAt, foeKind, mounted } from './combat.js';
 import { threatPos, threatName, foeName, destroyThreat, isCamp, nearestPlace } from './threats.js';
 import { armyPosition, armyStrength, routArmy } from './armies.js';
+import { placeMuster } from './companies.js';
+import { localStrength } from './military.js';
 
 const F = (world) => world.forces;
 const say = (state, text) => addDispatch(state, text, 'military');
@@ -198,15 +200,15 @@ export function forceAgainst(state, world, t) {
     if (c.routed > state.day) continue;
     options.push({ name: c.name, men: round(c.men), strength: companyStrength(world, c, foe, ground), d: near(c, p), company: c.id });
   }
+  // Or the nearest place of ours that can stand for itself (M22 C): its
+  // garrison and its own muster, by the one strength formula.
   const share = world.war?.raise?.muster?.share;
-  const militia = F(world).companies.militia;
-  if (share && militia) {
+  if (share) {
     const n = nearestPlace(world, p, (id) => (share[world.byId[id].type] ?? 0) > 0.05 && !state.settlements[id].occupier);
     if (n) {
       const st = world.byId[n.id];
-      const men = Math.floor(peopleOf(state.settlements[n.id]) * share[st.type]);
-      const strength = men * militia.perMan * (0.5 + F(world).morale.start / 100) * (F(world).suits[foe]?.militia ?? 1);
-      options.push({ name: `${st.name}'s levy`, men, strength, d: n.d, levy: n.id });
+      const men = state.settlements[n.id].garrison + placeMuster(state, world, n.id).reduce((v, b) => v + b.men, 0);
+      options.push({ name: `${st.name}'s garrison and levy`, men: round(men), strength: localStrength(state, world, n.id, foe), d: n.d, levy: n.id });
     }
   }
   if (!options.length) return null;
@@ -216,7 +218,6 @@ export function forceAgainst(state, world, t) {
   return { ...best, chance, word: oddsWord(world, chance), theirs };
 }
 
-const peopleOf = (s) => Object.values(s.population).reduce((a, b) => a + b, 0);
 
 // The odds of a group of companies against a threat or an army, from both
 // sides' strength, the ground, morale and how well the troops suit the foe.

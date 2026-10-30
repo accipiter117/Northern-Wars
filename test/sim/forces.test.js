@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createState, step, applyAction, serialize, deserialize, winChance, resolve, oddsWord, huntOdds, wildSites, threatLevel, crownVision, sees,
 } from '../../src/sim/index.js';
+import { companyStrength as _cs } from '../../src/sim/combat.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { makeRng } from '../../src/sim/rng.js';
 import { updateSight } from '../../src/sim/threats.js';
@@ -237,7 +238,13 @@ test('a field army takes standing companies along, fights better for them, and s
   s = act(s, { type: 'raise', muster: 'vizima', levy: 'third', nobles: false, companies: 0, marshal: 'vestibor', stance: 'cautious', units: ids });
   const a = s.armies.find((x) => x.side === 'temeria');
   assert.equal(a.units.length, 2);
-  assert.ok(a.quality > 1, `quality ${a.quality}`);
+  // Since M22 C the standing companies march as companies of their own,
+  // each worth more a man than the levy beside them.
+  const standing = a.bands.filter((b) => b.source === 'standing');
+  assert.deepEqual(standing.map((b) => b.company).sort(), [...ids].sort());
+  const worth = (b) => _cs(world, { ...b, morale: 80 }, 'soldiers') / b.men;
+  const levy = a.bands.find((b) => b.source === 'levy' && b.type === 'militia');
+  assert.ok(worth(standing.find((b) => b.type === 'menatarms')) > worth(levy));
   for (const c of s.forces.companies) assert.equal(c.army, a.id);
   s = act(s, { type: 'disband', army: a.id });
   for (const c of s.forces.companies) {

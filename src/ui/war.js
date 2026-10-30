@@ -1,13 +1,14 @@
 // The war panel, army cards and the war's part of the realm and town cards.
 import {
   TEMERIA, formatDate, sideName, ownerOf, placesHeldBy, warsOf, warScore, exhaustion, heldValue, sideIndex, musterPreview,
-  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer,
+  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer, canMerge,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
 import { cardHead, orderAttr, section } from './card.js';
 import { form } from './memory.js';
 import { siegeHtml, attritionHtml, defendedSiegeHtml } from './battle.js';
+import { companyLine } from './military.js';
 const LEVIES = { none: 'No levy', third: 'A third', half: 'Half', all: 'All' };
 const TERMS = {
   white: ['Peace as we were', 'Every town taken in this war goes back to its old master.'],
@@ -184,7 +185,7 @@ export function armyCard(app, id) {
         { icon: 'people', label: 'Men', value: number(Math.round(a.soldiers)) },
         { label: 'Spirit', value: a.morale >= 75 ? 'Eager' : a.morale >= 50 ? 'Steady' : a.morale >= 30 ? 'Shaken' : 'Broken', tone: a.morale < 30 ? 'bad' : '' },
         { icon: 'crown', label: 'Marshal', value: m ? escapeHtml(m.short ?? m.name) : 'None' },
-        a.companies && { label: 'Hired', value: a.companies },
+        { label: 'Companies', value: a.bands?.length ?? 0 },
       ],
     })}
     ${a.battle ? `<div data-part="inbattle"><button type="button" class="act primary" data-go="battle:${a.battle}"><span class="act-label">${icon('sword')} In battle: to the field</span></button></div>` : ''}
@@ -199,8 +200,27 @@ export function armyCard(app, id) {
     <div data-part="stance"><h3>Stance</h3>
       <div class="chips">${Object.entries(w.stances).map(([sid, s]) => `<button type="button" class="chip${a.stance === sid ? ' on' : ''}" data-stance="${sid}" ${orderAttr({ type: 'army', army: id, order: a.order, target: a.target, stance: sid })} aria-pressed="${a.stance === sid}">${s.name}</button>`).join(' ')}</div>
       <p class="sub">${escapeHtml(w.stances[a.stance].blurb)}</p></div>
+    ${companiesHtml(app, a)}
     <div data-part="disband"><button type="button" class="act danger" data-disband ${orderAttr({ type: 'disband', army: id }, `Stand down ${a.name}?`)} data-then="back"><span class="act-label">Stand the army down</span><span class="act-sub">The levies go home to their garrisons; the companies are paid off.</span></button></div>
   `;
+}
+
+// An army's companies (M22 C), each keeping its name, with what it adds;
+// any one can be detached, and another army of ours in the same place can
+// be joined to this one.
+function companiesHtml(app, a) {
+  const { world, state, memory } = app;
+  if (!a.bands?.length || a.side !== TEMERIA) return '';
+  const total = a.soldiers || 1;
+  const sum = a.bands.reduce((v, b) => v + b.men, 0) || 1;
+  const rows = a.bands.map((b, i) => {
+    const men = Math.round((b.men * total) / sum);
+    const what = b.source === 'standing' ? 'standing company' : b.source === 'levy' ? 'levy' : b.source === 'retinue' ? 'retinue' : b.source === 'mercenary' ? 'hired' : 'company';
+    return `<li class="company-row"><span>${companyLine(world, { ...b, men })} <small>(${what})</small></span>${a.bands.length > 1 ? `<button type="button" class="chip" data-detach="${i}" ${orderAttr({ type: 'detach', army: a.id, band: i })}>Detach</button>` : ''}</li>`;
+  }).join('');
+  const others = crownArmies(state).filter((x) => x !== a && canMerge(state, world, x, a).ok);
+  const joins = others.map((x) => `<button type="button" class="act" data-merge="${x.id}" ${orderAttr({ type: 'merge', army: x.id, into: a.id })}><span class="act-label">Join ${escapeHtml(x.name)} to this army</span><span class="act-sub">${number(Math.round(x.soldiers))} men, ${x.bands?.length ?? 0} companies</span></button>`).join('');
+  return `<div data-part="companies">${section(memory, `army:${a.id}`, 'companies', `Companies (${a.bands.length})`, `<ul class="companies">${rows}</ul>`)}${joins ? `<div class="actions">${joins}</div>` : ''}</div>`;
 }
 
 // The realm card's war section: declare, or how the war with them stands.

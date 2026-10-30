@@ -2,6 +2,7 @@
 // invaded by a neighbour it has soured or that smells weakness, be called to
 // a friend's side, or watch its neighbours fight one another. Wars end in a
 // peace: towns handed back or kept, sometimes tribute, and a truce.
+import { realmCompanies } from './companies.js';
 import { windfall } from './economy.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
