@@ -45,12 +45,13 @@ for (const seed of SEEDS) {
     // An untended realm should not boom over ten years, and since M20 it
     // declines as its works wear out, but it does not collapse. Towns lost to
     // a neighbour at a peace leave the realm for good (M19), so the measure
-    // is taken over the towns it still has.
+    // is taken over the towns it still has. Since M24 C an idle crown also
+    // drifts into debt, and the debt's unrest thins it a little more.
     const start = createState(world, seed);
     const kept = Object.keys(a.settlements).filter((id) => start.settlements[id]);
     const pop = (x) => kept.reduce((n, id) => n + Object.values(x.settlements[id].population).reduce((p, q) => p + q, 0), 0);
     const ratio = pop(a) / pop(start);
-    assert.ok(ratio > 0.8 && ratio < 1.15, `population ratio ${ratio}`);
+    assert.ok(ratio > 0.7 && ratio < 1.15, `population ratio ${ratio}`);
     assert.equal(a.day - createState(world, seed).day, 10 * YEAR_DAYS);
   });
 }

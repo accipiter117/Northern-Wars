@@ -67,6 +67,7 @@ for (const seed of seedList.split(',').map(Number)) {
     if (mode === 'tyrant') s = tyrant(s, m);
     if (mode === 'warlord') s = warlord(s, m);
     if (mode === 'standing') s = standing(s, m);
+    if (mode === 'careless') s = careless(s, m);
     if (mode === 'idle') s = answer(s, false);
     s = step(s, 30, world, { ambient: false });
     // Count by date: the chronicle is capped, so its length stops growing.

@@ -71,9 +71,11 @@ test('the Labour sheet: one screen with the bar, the settings and three lines; A
       await page.screenshot({ path: join(OUT, 'portrait-labour-adjust.png') });
       // The royal calls live under Adjust.
       await page.evaluate(() => document.querySelector('[data-call="winter"]').scrollIntoView({ block: 'center' }));
+      // The winter turn stands from the start (M24 C): a tap calls it off.
+      const standing = await page.evaluate(() => window.northernWars.state.labour.winterTurn);
       await page.click('[data-call="winter"]');
       await page.waitForTimeout(250);
-      assert.equal(await page.evaluate(() => window.northernWars.state.labour.winterTurn), true);
+      assert.equal(await page.evaluate(() => window.northernWars.state.labour.winterTurn), !standing);
       await page.evaluate(() => document.querySelector('[data-part="labour-adjust"] [data-set="adjust:false"]').scrollIntoView({ block: 'center' }));
       await page.click('[data-part="labour-adjust"] [data-set="adjust:false"]');
       await page.waitForSelector('[data-part="labour"]');

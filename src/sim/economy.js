@@ -6,7 +6,7 @@
 import { nudge, taxCollected, sabotage } from './meters.js';
 import { normalise } from './companies.js';
 import { dateOf, MONTHS } from './calendar.js';
-import { integrationFactor } from './conquest.js';
+import { integrationFactor, conquestYield } from './conquest.js';
 import { totalPopulation } from './state.js';
 import { addDispatch } from './realm.js';
 import { number } from './text.js';
@@ -118,6 +118,22 @@ export function ledgerNet({ income, expenses }) {
   let o = 0;
   for (const [k, v] of Object.entries(expenses)) if (k !== 'construction' && k !== 'decrees') o += sum(v);
   return { in: i, out: o, net: i - o };
+}
+
+// The Steward's report (M24 C): last month in three numbers, the three
+// costs that weighed most and the kinds of work under half manned, for the
+// inbox and the Treasury. Of the court's cost, `hoard` is what a full
+// treasury draws in courtiers.
+export function stewardReport(state, world) {
+  const last = state.ledger?.history?.at(-1);
+  if (!last) return null;
+  const { in: income, out, net } = ledgerNet(last);
+  const sum = (v) => (typeof v === 'number' ? v : Object.values(v ?? {}).reduce((a, b) => a + b, 0));
+  const costs = Object.entries(last.expenses).filter(([k]) => k !== 'construction' && k !== 'decrees')
+    .map(([key, v]) => ({ key, v: Math.round(sum(v)) })).filter((c) => c.v > 0).sort((a, b) => b.v - a.v).slice(0, 3);
+  const u = world.economy.upkeep;
+  const hoard = Math.round(Math.max(0, (last.treasury ?? state.treasury) - u.hoardFree) * u.hoardPerMonth);
+  return { month: last.month, year: last.year, in: Math.round(income), out: Math.round(out), net: Math.round(net), costs, hoard };
 }
 
 export function realmStock(state) {
@@ -250,14 +266,15 @@ export function collectRansoms(state, world) {
 // month's harvest at the grain price. Cities pay most a head and villages
 // least; richer places pay more, and market halls, guildhalls and
 // merchants' quarters more again. Lords keep part of what their lands
-// yield; a conquered town pays as it has come to accept the crown (M19),
-// and less again under a charter won by rising.
+// yield; a conquered town pays as it has come to accept the crown and as
+// its works are mended (M19, M24 C), and less again under a charter won by
+// rising.
 export function placeTaxes(state, world, id, s, law, { fx = buildingEffects(world, s), tradeMult = 1, month = dateOf(state.day).month } = {}) {
   const e = world.economy;
   const type = world.byId[id].type;
   const town = type === 'city' || type === 'town';
   const share = crownShare(state, world, s);
-  const yoke = integrationFactor(world, s, 'taxAt') * (s.charter > state.day ? world.conquest.revolt.charterTax : 1);
+  const yoke = conquestYield(world, s) * (s.charter > state.day ? world.conquest.revolt.charterTax : 1);
   const rate = Math.max(0, 1 + law.tax + (law.taxBy?.[type] ?? 0));
   const pop = totalPopulation(s);
   const tax = pop * e.taxes.perPersonMonth[type] * taxProsperity(world, s) * (1 + fx.taxBonus) * rate * yoke * share;
@@ -265,7 +282,7 @@ export function placeTaxes(state, world, id, s, law, { fx = buildingEffects(worl
   const robbed = 1 - (world.forces?.roads.tradeCut ?? 0) * Math.min(1, (state.threats?.robbed[id] ?? 0) / 30);
   const focus = s.production === 'coin' ? e.trade.coinFocus : 1;
   const trade = pop * e.trade.perPersonMonth[type] * focus * prosperityMult(world, s) * (1 + fx.trade * (e.trade.worksScale ?? 1))
-    * tradeMult * (town ? rate : 1) * share * robbed * (quarantined(state, s) ? 0 : 1);
+    * tradeMult * (town ? rate : 1) * share * robbed * yoke * (quarantined(state, s) ? 0 : 1);
   const days = MONTHS[month - 1].days;
   const tithe = town ? 0 : foodYield(world, id, s, month) * days * (e.taxes.tithe ?? 0) * (world.diplomacy?.goods.grain.price ?? 0.05) * rate * yoke * share;
   return { tax, trade, tithe, estate: town ? 'towns' : 'peasants' };
@@ -335,6 +352,10 @@ export function monthlyLedger(state, world, rng = null) {
     taxes: 0, tithe: 0, nobles: 0, trade: 0, sales: 0, foreign: foreignTrade(state, world).total, conquests: 0, tribute: 0,
     crafts: {}, customs: 0, gold: 0, silver: 0, tolls: 0, rents: 0, donations: 0, contracts: 0, goods: {}, routes: {}, deals: {},
   };
+  // Winter work (M24 C): hands the winter turn cannot place spin, mend and
+  // cart at home for a little coin.
+  const home = Object.values(state.labour?.report ?? {}).reduce((a, r) => a + (r.home ?? 0), 0);
+  if (home > 0) income.homework = home * (e.homeWork ?? 0);
   // Taxes by estate (M21), for the Treasury's tax settings.
   const estates = { towns: 0, peasants: 0, nobles: 0 };
   const lastMonth = dateOf(state.day - 1).month;
@@ -399,7 +420,7 @@ export function monthlyLedger(state, world, rng = null) {
     put(id, t.tax + t.trade + t.tithe);
     // Each craft pays by the size and fortunes of its place, on its own
     // line; quays on the river or the sea collect customs.
-    const scale = e.crafts.placeScale[type] * mult * share;
+    const scale = e.crafts.placeScale[type] * mult * share * conquestYield(world, s);
     for (const b of s.buildings) {
       if (!world.buildings[b].effects.craft) continue;
       // A strike (M22 D: high Unrest) stops half the workshops.
@@ -430,16 +451,14 @@ export function monthlyLedger(state, world, rng = null) {
     }
     // Smithies and armouries eat iron, from home first and then the realm.
     if (fx.ironUse) useIron(state, world, s, fx.ironUse);
-    if (s.holder === 'crown') {
-      const pay = s.garrison * e.upkeep.garrisonPerSoldierMonth * Math.max(0.2, 1 + law.garrisonUpkeep + fx.garrisonUpkeep);
-      expenses.garrisons += pay;
-      cost(id, pay);
-    }
-    for (const b of s.buildings) {
-      const u = world.buildings[b].upkeep * upkeepFactor(world, s, b);
-      expenses.upkeep += u;
-      cost(id, u);
-    }
+    const pay = s.holder === 'crown' ? s.garrison * e.upkeep.garrisonPerSoldierMonth * Math.max(0.2, 1 + law.garrisonUpkeep + fx.garrisonUpkeep) : 0;
+    const keep = s.buildings.reduce((a, b) => a + world.buildings[b].upkeep * upkeepFactor(world, s, b), 0);
+    // A conquered town (M24 C) keeps its garrison and its works from its
+    // own takings first, and never costs the crown more than it brings in.
+    const own = s.integration !== undefined ? Math.min(1, Math.max(0, (places[id]?.in ?? 0) - (places[id]?.out ?? 0)) / Math.max(1e-9, pay + keep)) : 1;
+    expenses.garrisons += pay * own;
+    expenses.upkeep += keep * own;
+    cost(id, (pay + keep) * own);
   }
   // A soft cap (M21): the crafts together never earn more than a share of
   // the taxes and dues, however many works the realm has.
@@ -626,8 +645,11 @@ function warLedger(state, world, income, expenses, law) {
   for (const [rid, realm] of Object.entries(state.realms ?? {})) {
     for (const [id, s] of Object.entries(realm.settlements)) {
       if (ownerOf(state, world, id) !== TEMERIA) continue;
-      income.conquests += s.population * re.taxPerPersonMonth * (0.6 + 0.008 * s.prosperity) * Math.max(0, 1 + law.tax);
-      expenses.occupation += s.garrison * world.economy.upkeep.garrisonPerSoldierMonth * (1 + law.garrisonUpkeep);
+      // An occupied town pays for its own garrison and never costs the
+      // crown more than it yields (M24 C).
+      const takes = s.population * re.taxPerPersonMonth * (0.6 + 0.008 * s.prosperity) * Math.max(0, 1 + law.tax) * conquestYield(world, s);
+      income.conquests += takes;
+      expenses.occupation += Math.min(takes, s.garrison * world.economy.upkeep.garrisonPerSoldierMonth * (1 + law.garrisonUpkeep));
     }
   }
   for (const t of state.tributes ?? []) {

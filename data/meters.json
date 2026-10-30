@@ -30,8 +30,8 @@
   },
   "authority": {
     "lowerShare": 0.25,
-    "taxAt": 60,
-    "taxFloor": 0.6,
+    "taxAt": 75,
+    "taxFloor": 0.45,
     "levyAt": 50,
     "levyFloor": 0.5,
     "riotBelow": 45

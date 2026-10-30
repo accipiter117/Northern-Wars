@@ -1,6 +1,7 @@
 // The model crowns the balance tools and tests play: a steward who builds
 // earners and keeps the peace, a spendthrift who builds on credit, a
-// tyrant, and the plain answering of whatever the realm asks.
+// tyrant, a careless crown, and the plain answering of whatever the realm
+// asks.
 import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
@@ -208,6 +209,11 @@ export function makeCrowns(world) {
       s = act(s, { type: 'law', law: 'bounties', option: 'witchers' });
     }
     if (month === 6 && canDecree(s, world, 'nonhumans', 'charter').ok) s = act(s, { type: 'law', law: 'nonhumans', option: 'charter' });
+    // A frugal court (M24 C) while the people love the crown enough to bear
+    // it, the customary one again if Love runs low.
+    const court = s.laws.court?.option;
+    if (s.love > 50 && court === 'customary' && canDecree(s, world, 'court', 'frugal').ok) s = act(s, { type: 'law', law: 'court', option: 'frugal' });
+    else if (s.love < 35 && court === 'frugal' && canDecree(s, world, 'court', 'customary').ok) s = act(s, { type: 'law', law: 'court', option: 'customary' });
     s = keepThePeace(s, month);
     // Win the people's love (M24 B): a feast in winter and a royal progress
     // in summer, when the treasury can bear them.
@@ -485,5 +491,17 @@ export function makeCrowns(world) {
     return s;
   }
 
-  return { answer, steward, tyrant, warlord, standing };
+  // The careless crown (M24 C): it keeps the peace and answers the realm
+  // generously, but never trades, never moves its hands from where they
+  // stand, never prospects, and patches what breaks rather than mending it.
+  function careless(s, month) {
+    s = answer(s, true);
+    s = diplomacy(s, month);
+    s = warPolicy(s);
+    for (const d of [...(s.works?.decisions ?? [])]) s = act(s, { type: 'worksDecision', id: d.id, choice: 1 });
+    s = keepThePeace(s, month);
+    return s;
+  }
+
+  return { answer, steward, tyrant, warlord, standing, careless };
 }

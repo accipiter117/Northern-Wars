@@ -12,6 +12,22 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### A rich crown at peace (M24 C)
+Each crown's average month over the year named, from a ledger trace of the crowns in `tools/crowns.mjs` on seeds 1, 2 and 3 (all at peace), rounded down. The test in test/sim/peace.test.js checks seed 3.
+
+| Crown | What it does | Year 2 | Year 3 | Year 5 |
+| --- | --- | --- | --- | --- |
+| Steward | Trades its surplus, moves its hands where they are short, mends its works, prospects, keeps a frugal court while it is loved (Love over 50), feasts and goes on progress | +1,359 to +1,388 | +1,478 to +1,518 | +1,048 to +1,127 |
+| Careless | Keeps the peace and answers generously, but never trades, never moves its hands and only patches what breaks | +445 to +474 | +272 to +294 | −24 to +353 |
+| Idle | Nothing; every decision left to its default | +432 to +532 | −17 to +142 | −264 to −155 |
+
+- **The steward's surplus.** About 4,300 a month in (taxes about 700, market dues about 670, gold about 800 while the seams last, exports about 500, crafts about 500, home sales about 400, the lords' dues 300) against about 2,950 out (a frugal court about 1,100, upkeep about 1,300, companies about 330, garrisons about 270, goods bought abroad about 200). It falls by year 5 as the gold seams thin and a hoard of 50,000 draws courtiers (about 350 a month above the 15,000 mark).
+- **What sets the crowns apart.** The steward's Authority (50 to 70) gathers almost all the tax; the idle crown's Love falls to nothing by year 3 and its Authority to 8 to 19, so it gathers about half (taxes about 350 against about 700). The steward alone sells abroad (about 500 a month), prospects (gold), and trims its court (about 480 a month). The careless crown's generosity keeps it loved, so its taxes hold, but without trade or mended works its income drifts down to meet its costs.
+- **The frugal court is the steward's biggest single saving.** Its Love cost (0.3 a month) is easily paid by a feast and a progress a year. The Steward's report offers it as the one-tap fix whenever the court is among the three largest costs.
+- **War is dear.** The whole levy (about 4,300 men in year 1) costs about 2,200 a month at home and about 4,000 a month on campaign: a season abroad is about 12,000, two thirds of the steward's year of peace, before counting the works left short of hands. A third of the levy costs about 930 a month at home.
+- **Conquered towns.** A newly spared town yields about a quarter of its takings (integration 45 and works about 70% sound give about 0.27), climbing to the whole as it settles and is mended; a sacked town about a twentieth. Its garrison and works are paid from those takings first, so it never shows as a loss.
+- **Dials worth knowing.** `upkeep.courtMonth` (1,600) and `upkeep.hoardFree` (15,000) in data/economy.json set how rich the careless and idle crowns are; `authority.taxAt` (75) and `taxFloor` (0.45) in data/meters.json set how much a weak crown loses; `export.want` (2.0) and `deals.perPerson` (0.009) in data/market.json set what trade is worth; `war.raise.pay` sets the price of an army.
+
 ### Love, Fear and Authority (M24 B)
 From `node tools/longrun.mjs 10 <crown> 1` and a month-by-month trace of the steward, seed 1, rounded down.
 

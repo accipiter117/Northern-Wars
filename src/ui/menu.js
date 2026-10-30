@@ -27,6 +27,7 @@ export const INCOME = [
   ['reparations', 'Coin in peace terms'],
   ['requisition', 'Requisitions from occupied towns'],
   ['payments', 'Payments under deals'],
+  ['homework', 'Winter work at home'],
   ['borrowed', 'Borrowed from the bank'],
 ];
 export const EXPENSES = [
@@ -47,46 +48,65 @@ export const EXPENSES = [
 ];
 const ALWAYS = new Set(['taxes', 'trade', 'garrisons', 'upkeep', 'court', 'interest']);
 
-// The one ledger (M21): every money line folded into a handful of groups,
-// so the month reads at a glance; the full breakdown stays under Details.
-const INCOME_GROUPS = [
+// The one ledger (M21, regrouped in M24 C): every money line folded into
+// five groups, Taxes, Trade and sales, Crafts and goods, War and Other, so
+// the month reads at a glance; each group opens to its own lines.
+export const INCOME_GROUPS = [
   ['taxes', 'Taxes', ['taxes', 'trade', 'tithe', 'nobles']],
-  ['trade', 'Trade deals', ['exports', 'foreign', 'routes']],
-  ['sales', 'Sales at home', ['sales', 'goods']],
-  ['crafts', 'Crafts and mines', ['crafts', 'gold', 'silver']],
-  ['tolls', 'Tolls and dues', ['customs', 'tolls', 'rents', 'donations', 'contracts']],
-  ['war', 'War', ['conquests', 'tribute', 'loot', 'ransom', 'reparations', 'requisition', 'payments']],
-  ['loans', 'Loans', ['borrowed']],
+  ['trade', 'Trade and sales', ['exports', 'foreign', 'routes', 'sales', 'customs', 'tolls']],
+  ['crafts', 'Crafts and goods', ['crafts', 'goods', 'gold', 'silver', 'homework', 'rents', 'donations', 'contracts']],
+  ['war', 'War', ['conquests', 'tribute', 'loot', 'ransom', 'reparations', 'requisition', 'payments', 'bounties', 'trophies', 'raids', 'seized']],
 ];
-const EXPENSE_GROUPS = [
-  ['armies', 'Armies and garrisons', ['garrisons', 'companies', 'patrols', 'armies', 'occupation']],
-  ['upkeep', 'Upkeep of buildings', ['upkeep']],
-  ['court', 'The court', ['court', 'edicts', 'gifts', 'embassies', 'tribute']],
-  ['trade', 'Goods bought abroad', ['imports', 'routes']],
-  ['loans', 'Loans and interest', ['interest', 'loans']],
+export const EXPENSE_GROUPS = [
+  ['war', 'War', ['garrisons', 'companies', 'patrols', 'armies', 'occupation', 'tribute', 'witchers']],
+  ['crafts', 'Crafts and goods', ['upkeep']],
+  ['trade', 'Trade and sales', ['imports', 'routes']],
 ];
+const EXTRA = {
+  exports: 'Sold to partners abroad', routes: 'Crown trade routes', crafts: 'Crafts', goods: 'Goods from the chains',
+  homework: 'Winter work at home', imports: 'Bought from abroad', bounties: 'Bounties', trophies: 'Trophies', raids: 'Raid loot',
+  seized: 'Seized caravans and herds', witchers: "Witchers' fees",
+};
 const ESTATES = [['towns', 'towns'], ['peasants', 'villages'], ['nobles', 'lords']];
 const sumOf = (v) => (typeof v === 'number' ? v : Object.values(v ?? {}).reduce((a, b) => a + b, 0));
 
-function groupedLedger(last, row) {
-  const group = (groups, from) => {
-    const seen = new Set();
-    const rows = groups.map(([id, label, keys]) => {
-      keys.forEach((k) => seen.add(k));
-      const v = keys.reduce((a, k) => a + sumOf(from[k]), 0);
-      if (!v && id !== 'taxes' && id !== 'armies') return '';
-      let sub = '';
-      // Taxes by estate, when the month's accounts carry them.
-      if (id === 'taxes' && last.estates) {
-        sub = ESTATES.filter(([k]) => last.estates[k]).map(([k, name]) => `${name} ${signed(last.estates[k])}`).join(', ').replace(/^./, (c) => c.toUpperCase());
-      }
-      return `<div data-line="${id}"><dt>${label}${sub ? `<small>${escapeHtml(sub)}</small>` : ''}</dt><dd>${signed(Math.round(v))}</dd></div>`;
-    });
-    const other = Object.entries(from).filter(([k]) => !seen.has(k) && k !== 'construction' && k !== 'decrees').reduce((a, [, v]) => a + sumOf(v), 0);
-    if (Math.round(other)) rows.push(row('Other', Math.round(other)));
-    return rows.join('');
+// The groups of one side of the month, each a row that opens to its lines.
+// What no group claims (the court, loans, borrowing) falls under Other.
+export function groupedLines(from, groups, labels, last = null) {
+  const seen = new Set(['construction', 'decrees']);
+  const out = [];
+  const lineOf = (k) => [k, labels[k] ?? EXTRA[k] ?? k, sumOf(from[k])];
+  for (const [id, label, keys] of groups) {
+    keys.forEach((k) => seen.add(k));
+    const lines = keys.map(lineOf).filter(([, , v]) => Math.round(v));
+    const v = lines.reduce((a, [, , x]) => a + x, 0);
+    if (!Math.round(v) && id !== 'taxes' && id !== 'war') continue;
+    let sub = '';
+    // Taxes by estate, when the month's accounts carry them.
+    if (id === 'taxes' && last?.estates) {
+      sub = ESTATES.filter(([k]) => last.estates[k]).map(([k, name]) => `${name} ${signed(last.estates[k])}`).join(', ').replace(/^./, (c) => c.toUpperCase());
+    }
+    out.push({ id, label, sub, v, lines });
+  }
+  const rest = Object.keys(from).filter((k) => !seen.has(k)).map(lineOf).filter(([, , v]) => Math.round(v));
+  const other = rest.reduce((a, [, , x]) => a + x, 0);
+  if (Math.round(other)) out.push({ id: 'other', label: 'Other', sub: '', v: other, lines: rest });
+  return out;
+}
+
+const LABELS_IN = Object.fromEntries(INCOME);
+const LABELS_OUT = Object.fromEntries(EXPENSES);
+
+function groupHtml(g) {
+  const lines = g.lines.sort((a, b) => b[2] - a[2]).map(([k, label, v]) => `<div data-sub="${k}"><dt>${escapeHtml(label)}</dt><dd>${signed(Math.round(v))}</dd></div>`).join('');
+  return `<details class="lgroup" data-line="${g.id}"><summary><span class="lg-label">${g.label}${g.sub ? `<small>${escapeHtml(g.sub)}</small>` : ''}</span><span class="lg-val">${signed(Math.round(g.v))}</span></summary><dl class="ledger">${lines || '<div><dt>Nothing this month</dt><dd></dd></div>'}</dl></details>`;
+}
+
+function groupedLedger(last) {
+  return {
+    income: groupedLines(last.income, INCOME_GROUPS, LABELS_IN, last).map(groupHtml).join(''),
+    expenses: groupedLines(last.expenses, EXPENSE_GROUPS, LABELS_OUT).map(groupHtml).join(''),
   };
-  return { income: group(INCOME_GROUPS, last.income), expenses: group(EXPENSE_GROUPS, last.expenses) };
 }
 
 // The Ledger: last month's accounts, a line for every source of money and
@@ -147,9 +167,10 @@ export function ledgerHtml(app) {
     <p class="sub">Paid when ordered this month: ${number(e.construction)} crowns on repairs, ${number(e.decrees ?? 0)} on decrees.</p>`;
   const where = `${top ? `<h3>Where the money came from</h3><div class="place-list">${top}</div>` : ''}
     ${worst ? `<h3>Where it went</h3><p class="sub">Places that cost the crown more than they earned, mostly for their garrisons.</p><div class="place-list">${worst}</div>` : ''}`;
-  const g = groupedLedger(last, row);
-  const ledger = `<div data-part="ledger"><h3>Income</h3><dl class="ledger grouped">${g.income}${row('Total income', totalIn, true)}</dl>
-    <h3>Expenses</h3><dl class="ledger grouped">${g.expenses}<div data-line="repairs"><dt>Repairs and decrees<small>paid when ordered, not counted above</small></dt><dd>${number((e.construction ?? 0) + (e.decrees ?? 0))}</dd></div>${row('Total expenses', totalOut, true)}</dl></div>`;
+  const g = groupedLedger(last);
+  const ledger = `<div data-part="ledger"><h3>Income</h3><div class="lgroups" data-side="in">${g.income}<dl class="ledger">${row('Total income', totalIn, true)}</dl></div>
+    <h3>Expenses</h3><div class="lgroups" data-side="out">${g.expenses}<dl class="ledger"><div data-line="repairs"><dt>Repairs and decrees<small>paid when ordered, not counted above</small></dt><dd>${number((e.construction ?? 0) + (e.decrees ?? 0))}</dd></div>${row('Total expenses', totalOut, true)}</dl></div>
+    <p class="sub">Tap a line to see what it is made of.</p></div>`;
   return `${head}
     ${ledger}
     ${section(memory, route, 'details', 'Details', `<h4>Income</h4>${detailIncome}<h4>Expenses</h4>${detailExpenses}`)}

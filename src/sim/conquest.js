@@ -376,6 +376,19 @@ export function integrationFactor(world, s, key) {
   return at + (1 - at) * (s.integration / 100);
 }
 
+// What a conquered town yields of its full takings (M24 C): about a quarter
+// at first, climbing to the whole as it comes to accept the crown and its
+// works are mended. A sacked town, its acceptance cut deep and its works
+// burned, yields almost nothing for years.
+export function conquestYield(world, s) {
+  if (s.integration === undefined || !C(world)?.integration.yield) return 1;
+  const y = C(world).integration.yield;
+  const ramp = clamp((s.integration - y.from) / (100 - y.from), 0, 1);
+  const conds = s.buildings.map((b) => s.cond?.[b] ?? 100);
+  const mended = conds.length ? conds.reduce((a, v) => a + v, 0) / conds.length / 100 : 1;
+  return (y.floor + (1 - y.floor) * ramp) * (y.works + (1 - y.works) * mended);
+}
+
 export function integrationUnrest(world, s) {
   if (s.integration === undefined || !C(world)) return 0;
   const i = C(world).integration;

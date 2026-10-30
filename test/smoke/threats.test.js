@@ -55,12 +55,17 @@ test('a threat against the nearest force, the Treasury ledger, and a decluttered
   await page.click('[data-tab="treasury"]');
   await page.click('.segs [data-sub="ledger"]');
   const ledger = await page.textContent('[data-part="ledger"]');
-  assert.match(ledger, /Income[\s\S]*Taxes[\s\S]*Towns [\d,]+[\s\S]*Total income[\s\S]*Expenses[\s\S]*Armies and garrisons[\s\S]*The court[\s\S]*Total expenses/);
-  // The groups add up to the totals.
-  const sums = await page.evaluate(() => [...document.querySelectorAll('[data-part="ledger"] dl')].map((dl) => {
+  assert.match(ledger, /Income[\s\S]*Taxes[\s\S]*Towns [\d,]+[\s\S]*Total income[\s\S]*Expenses[\s\S]*War[\s\S]*Other[\s\S]*Total expenses/);
+  // The groups add up to the totals (M24 C: Taxes, Trade and sales, Crafts
+  // and goods, War, Other), and each group's lines add up to the group.
+  const sums = await page.evaluate(() => [...document.querySelectorAll('[data-part="ledger"] .lgroups')].map((side) => {
     const v = (el) => Number(el.textContent.replace(/[^\d−-]/g, '').replace('−', '-'));
-    const lines = [...dl.querySelectorAll('[data-line]:not([data-line="repairs"]) dd')].map(v);
-    return { lines: lines.reduce((a, b) => a + b, 0), total: v(dl.querySelector('.total dd')) };
+    const groups = [...side.querySelectorAll('.lgroup')];
+    for (const g of groups) {
+      const parts = [...g.querySelectorAll('dl [data-sub] dd')].map(v).reduce((a, b) => a + b, 0);
+      if (Math.abs(parts - v(g.querySelector('.lg-val'))) > 3) return { bad: g.dataset.line, parts, group: v(g.querySelector('.lg-val')) };
+    }
+    return { lines: groups.map((g) => v(g.querySelector('.lg-val'))).reduce((a, b) => a + b, 0), total: v(side.querySelector('.total dd')) };
   }));
   for (const x of sums) assert.ok(Math.abs(x.lines - x.total) <= 3, JSON.stringify(sums));
   // Drag the sheet up to full height to see the whole ledger.

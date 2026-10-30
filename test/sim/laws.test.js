@@ -61,7 +61,9 @@ test('without enough Authority the crown cannot decree', () => {
 test('heavy taxes bring in more coin but sour the villages', () => {
   const base = run(createState(world, 2), 120);
   const taxed = run(decree(createState(world, 2), 'tax_peasants', 'heavy').state, 120);
-  assert.ok(taxed.ledger.history.at(-1).estates.peasants > base.ledger.history.at(-1).estates.peasants * 1.25);
+  // Not the whole three tenths more: the Love the decree costs lowers the
+  // crown's Authority, and with it what the collectors gather (M24 B, C).
+  assert.ok(taxed.ledger.history.at(-1).estates.peasants > base.ledger.history.at(-1).estates.peasants * 1.15);
   assert.ok(taxed.opinion.peasants < 45);
   // The villages as a whole, so one village's luck with raids or events
   // does not decide it.

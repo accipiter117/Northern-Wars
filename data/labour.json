@@ -135,13 +135,13 @@
   },
   "split": {
     "fields": 47,
-    "woods": 7,
-    "mines": 7,
+    "woods": 5,
+    "mines": 8,
     "pastures": 3,
     "fishing": 4,
-    "crafts": 22,
-    "repairs": 4,
-    "levies": 6
+    "crafts": 25,
+    "repairs": 3,
+    "levies": 5
   },
   "minShare": 0,
   "maxShare": 80,
@@ -205,9 +205,9 @@
       "frost": 11,
       "spring": 3,
       "to": {
-        "woods": 0.5,
-        "fishing": 0.2,
-        "crafts": 0.3
+        "woods": 0.15,
+        "mines": 0.2,
+        "crafts": 0.65
       },
       "blurb": "At first frost the field hands go to the woods and the turf cuts, the boats and the workshops, until spring. A standing order."
     },
@@ -279,7 +279,7 @@
         "levies": 4
       }
     },
-    "balanced": { "name": "Balanced", "blurb": "The kingdom's usual round: the fields first, the crafts next, a little of everything.", "split": { "fields": 47, "woods": 7, "mines": 7, "pastures": 3, "fishing": 4, "crafts": 22, "repairs": 4, "levies": 6 } }
+    "balanced": { "name": "Balanced", "blurb": "The kingdom's usual round: the fields first, the crafts next, a little of everything.", "split": { "fields": 47, "woods": 5, "mines": 8, "pastures": 3, "fishing": 4, "crafts": 25, "repairs": 3, "levies": 5 } }
   },
   "prompts": {
     "note": "The seasonal prompt in the pressure strip and on the Labour sheet (M23 B): in these months, unless the hands already stand at `preset` (or, with `from`, only while they stand at that preset), suggest it.",

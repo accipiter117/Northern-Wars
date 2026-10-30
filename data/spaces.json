@@ -1783,7 +1783,7 @@
         "fishery"
       ]
     },
-    "upkeepFloor": 0.3,
+    "upkeepFloor": 0.1,
     "abroad": {
       "repairBelow": 60,
       "perMonth": 35,
