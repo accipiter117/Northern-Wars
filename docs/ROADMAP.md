@@ -40,6 +40,14 @@ Part B, life on the map that means something:
 - Witchers ride out to the lair, fight there, and ride home if they won; a long press says who and for how much.
 - Life at the works only close up, capped on screen, halved by Battery saver.
 
+Part C, one military:
+- Every soldier belongs to a company; armies are lists of companies; one strength formula everywhere.
+- Levy companies of about 200 by the place's troop types, standing companies, retinues and hired companies.
+- A town's Military card shows its garrison companies, its possible levy and how fast, and standing companies near; Call the muster raises its levy companies on the spot.
+- Raise an army gathers standing companies, levies, retinues and hired companies, with the same preview; companies keep their identity and can be detached; armies in one place can merge.
+- tools/skirmish.mjs: a city's garrison and muster beats ordinary threats at least 80% of the time, a town's a small band at least 75%; only large bands, famous monsters and war parties need an army. Table in BALANCE.md.
+- Save version 23: armies become lists of companies, with nothing lost.
+
 ## M21 acceptance criteria
 Part A, trade in five goods:
 - All trade folds into Grain, Timber and stone, Iron and arms, Cloth and Luxuries; the underlying goods stay for production.

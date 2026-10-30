@@ -12,6 +12,44 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### One military (M22 C)
+Every soldier is in a company, and everything is measured by the one strength formula in data/forces.json: garrisons as companies of garrison soldiers (1 a man), levies as militia spearmen (1.1 against soldiers since M22, from 0.8) with crossbowmen from towns or bowmen from villages and the woods, retinues as men-at-arms and militia, hired companies by their troop type. A place defends itself with its garrison and its own muster, behind its walls.
+
+From `node tools/skirmish.mjs` (the chance the defenders win; garrison plus its own muster, walls where they stand; the company is 100 men-at-arms at the start's morale):
+
+| Threat | Men or beasts | City (Maribor) | Town (White Bridge) | Village (Mortara) | One standing company | Needs an army |
+| --- | --- | --- | --- | --- | --- | --- |
+| Bandits, a small band | 30 | 100% | 100% | 37% | 99% |  |
+| Bandit camp, ordinary | 156 | 100% | 89% | 0% | 57% |  |
+| Bandit camp, at its largest | 240 | 100% | 69% | 0% | 27% | yes |
+| Scoia'tael commando, ordinary | 35 | 100% | 98% | 3% | 88% |  |
+| Scoia'tael commando, at its largest | 120 | 100% | 53% | 0% | 15% | yes |
+| Raiders over the border | 80 | 100% | 97% | 2% | 86% |  |
+| A war party, in war | 300 | 99% | 42% | 0% | 10% | yes |
+| Drowners (a lair, marsh) | 10 | 100% | 100% | 23% | 99% |  |
+| A water hag (famous, marsh) | 2 | 100% | 72% | 0% | 32% | yes |
+| Wolves (a lair, forest) | 11 | 100% | 100% | 44% | 100% |  |
+| A werewolf (famous, forest) | 1 | 100% | 86% | 0% | 53% | yes |
+| A leshen (famous, forest) | 1 | 100% | 57% | 0% | 19% | yes |
+| Harpies (a lair, hills) | 10 | 100% | 100% | 23% | 99% |  |
+| A griffin (famous, hills) | 1 | 100% | 77% | 0% | 38% | yes |
+| Wyverns (a lair, mountains) | 2 | 100% | 100% | 15% | 98% |  |
+| A forktail (famous, mountains) | 1 | 100% | 82% | 0% | 45% | yes |
+
+- **Targets met**: a city beats every ordinary camp, commando and lair (100%); a town beats a small band (100%) and an ordinary camp (89%).
+- **What needs an army**: the largest camps (up to 240 men, raised from 110 in M21 E), the largest commandos (up to 120, from 60), war parties (300) and the famous monsters (three times as dreadful as before). A town wins against these only 42 to 86% of the time, and one standing company 10 to 53%.
+- **Villages cannot stand alone** (37% against even a small band), so patrols and companies near them still matter.
+
+The dials, in data/forces.json:
+
+| Dial | Now | What turning it up does |
+| --- | --- | --- |
+| `levy.size`, `levy.spears` | 200 men a company, 0.6 spearmen | Bigger levy companies; more spears, fewer bows |
+| `suits.soldiers.militia` | 1.1 | Levies stronger against armies |
+| `garrison.perMan` | 1 | Garrisons stronger |
+| `threats.bandits.capMax`, `threats.scoiatael.capMax` | 240, 120 | Larger camps and commandos at their worst |
+| species `power` (famous beasts) | three times M21 | Famous monsters harder |
+
 ### Threats and clutter (M21 E and F)
 Threats now grow with the realm's people (0.7 to 1.3 of their old size) and are capped (a camp 110 men, a commando 60, raiders 120, or 300 in war); walls count in full. From `node tools/longrun.mjs 20 <crown> 1,2,3`, raids suffered and villagers killed over 20 years (C and D in brackets):
 
