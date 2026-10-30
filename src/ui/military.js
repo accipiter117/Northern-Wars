@@ -1,5 +1,6 @@
 import {
   threatLevel, localStrength, patrolledSet, crownSoldiers, canSetGarrison, plagueActive, quarantined, garrisonCompanies, placeMuster, freeCompanies, crownArmies, canMuster,
+  describeArmy, canOrder, canMerge, sightedThreats, threatPos, threatName, threatPurse, armyHuntOdds,
 } from '../sim/index.js';
 import { icon } from './icons.js';
 import { number, escapeHtml, describeLevel } from './format.js';
@@ -83,6 +84,26 @@ function byType(world, bands) {
   const parts = Object.entries(sum).map(([t, n]) => `${number(Math.round(n))} ${escapeHtml(t)}`);
   return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts.join('');
 }
+// What a town's levy, once called, can be told from the town's own card
+// (M24 E): hold the town, hunt a threat near, march to join one of the
+// crown's armies, or merge with one standing here.
+function levyOrders(world, state, a, id) {
+  const here = world.byId[id];
+  const out = [];
+  if (a.order !== 'defend' || a.target !== id) out.push(`<button type="button" class="act" data-levy-order="hold" ${orderAttr({ type: 'army', army: a.id, order: 'defend', target: id })}><span class="act-label">Hold ${escapeHtml(here.name)}</span></button>`);
+  const near = sightedThreats(state).filter((t) => !t.abroad && Math.hypot(threatPos(t).x - here.x, threatPos(t).y - here.y) < 150)
+    .sort((x, y) => Math.hypot(threatPos(x).x - here.x, threatPos(x).y - here.y) - Math.hypot(threatPos(y).x - here.x, threatPos(y).y - here.y))[0];
+  if (near && canOrder(state, world, a, 'hunt', near.id).ok) {
+    const odds = armyHuntOdds(state, world, a, near);
+    out.push(`<button type="button" class="act" data-levy-order="hunt" ${orderAttr({ type: 'army', army: a.id, order: 'hunt', target: near.id })}><span class="act-label">Hunt ${escapeHtml(threatName(world, near).toLowerCase())}</span><span class="act-sub">${escapeHtml(odds.word)} odds; purse about ${number(threatPurse(state, world, near).total)}</span></button>`);
+  }
+  for (const b of crownArmies(state).filter((x) => x !== a && !x.muster).slice(0, 3)) {
+    if (canMerge(state, world, a, b).ok) out.push(`<button type="button" class="act" data-levy-order="merge" ${orderAttr({ type: 'merge', army: a.id, into: b.id, marshal: b.marshal ?? null }, `The levy of ${here.name} joins ${b.name}.`)}><span class="act-label">Merge into ${escapeHtml(b.name)}</span><span class="act-sub">It stands here</span></button>`);
+    else if (canOrder(state, world, a, 'join', b.id).ok) out.push(`<button type="button" class="act" data-levy-order="join" ${orderAttr({ type: 'army', army: a.id, order: 'join', target: b.id })}><span class="act-label">March to join ${escapeHtml(b.name)}</span><span class="act-sub">${escapeHtml(describeArmy(state, world, b).replace(`${b.name}, `, ''))}</span></button>`);
+  }
+  return out.length ? `<div data-part="levy-orders">${out.join('')}</div>` : '';
+}
+
 export function musterHtml(world, state, id) {
   const s = state.settlements[id];
   if (!s || s.occupier || !world.forces?.levy) return '';
@@ -96,6 +117,6 @@ export function musterHtml(world, state, id) {
     <ul class="companies">${garrison.length ? `<li>Garrison of ${escapeHtml(world.byId[id].name)}: ${number(s.garrison)} garrison soldiers in ${garrison.length} compan${garrison.length === 1 ? 'y' : 'ies'}</li>` : '<li>No garrison.</li>'}</ul>
     <p class="sub">${levy.length ? `Its muster: ${number(men)} men in ${levy.length} compan${levy.length === 1 ? 'y' : 'ies'} (${byType(world, levy)}), under arms in a day. Their hands leave the works while they serve.` : 'Too few people here to muster.'}</p>
     ${near.length ? `<p class="sub">Standing companies near: ${near.map((c) => escapeHtml(c.name)).join(', ')}.</p>` : ''}
-    ${called ? `<button type="button" class="act" data-go="army:${called.id}"><span class="act-label">${icon('sword')} The muster is under arms</span><span class="act-sub">${number(Math.round(called.soldiers))} men</span></button>`
+    ${called ? `<button type="button" class="act" data-go="army:${called.id}"><span class="act-label">${icon('sword')} The muster is under arms</span><span class="act-sub">${number(Math.round(called.soldiers))} men, ${escapeHtml(describeArmy(state, world, called).replace(`${called.name}, ${Math.round(called.soldiers)} men, `, ''))}</span></button>${levyOrders(world, state, called, id)}`
     : `<button type="button" class="act" data-muster="${id}" ${orderAttr({ type: 'muster', settlement: id })} ${check.ok ? '' : 'disabled'}><span class="act-label">${icon('sword')} Call the muster</span><span class="act-sub">${check.ok ? 'To defend it, answer a threat near, or join an army' : escapeHtml(check.reason)}</span></button>`}</div>`;
 }

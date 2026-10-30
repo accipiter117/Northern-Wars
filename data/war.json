@@ -1,4 +1,7 @@
 {
+  "armyNames": ["The First Army", "The Second Army", "The Third Army", "The Fourth Army", "The Fifth Army", "The Sixth Army", "The Seventh Army", "The Eighth Army", "The Ninth Army", "The Tenth Army"],
+  "captains": ["Captain Aldric Venn", "Captain Mora Hesk", "Captain Tibor Gald", "Captain Ysolde Brann", "Captain Edwin Marl", "Captain Hedda Rusk", "Captain Osmund Thale", "Captain Wenna Corve", "Captain Jory Fask", "Captain Brisa Holm"],
+  "armyNote": "M24 E: the crown's armies are numbered from armyNames, the lowest free; one raised without a marshal is led by the first free captain. There is no limit on armies beyond the treasury and the men.",
   "note": "War between realms. Speeds are map units a day; Temeria is about 1000 units across. Strength is soldiers, multiplied by stance, marshal, morale and walls. Town values count towards who is winning a war and what a peace costs.",
   "noWar": [
     "brokilon"

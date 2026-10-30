@@ -11,7 +11,8 @@ import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
 import { siegesOn, siegeDay } from './siege.js';
 import { onCapture, integrationFactor, addFear } from './conquest.js';
 import { remember } from './diplomacy.js';
-import { stationedStrength, freeCompanies } from './forces.js';
+import { stationedStrength, freeCompanies, huntOdds } from './forces.js';
+import { destroyThreat, threatName } from './threats.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength, placeMuster, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
 import { addDispatch, clamp } from './realm.js';
@@ -167,7 +168,6 @@ export function crownArmies(state) {
 export function canRaise(state, world, opts) {
   const w = W(world);
   if (!world.byId[opts.muster] || ownerOf(state, world, opts.muster) !== TEMERIA) return { ok: false, reason: 'Muster at a place the crown holds.' };
-  if (crownArmies(state).filter((a) => !a.muster).length >= 3) return { ok: false, reason: 'The realm cannot keep more than three armies.' };
   if (opts.marshal && !w.marshals[opts.marshal]) return { ok: false, reason: 'Unknown marshal.' };
   if (opts.marshal && crownArmies(state).some((a) => a.marshal === opts.marshal)) return { ok: false, reason: 'That marshal already leads an army.' };
   const held = (state.captives ?? []).find((c) => c.marshal === opts.marshal && c.side === TEMERIA);
@@ -189,8 +189,17 @@ export function raiseArmy(state, world, opts) {
   for (const hid of p.houses) state.houses[hid].grievance += w.raise.nobleGrievance;
   const a = newArmy(state, world, TEMERIA, opts.muster, p.soldiers, p.levy, {
     companies: p.companies, marshal: opts.marshal ?? null, stance: opts.stance ?? 'cautious',
-    name: `The army of ${world.byId[opts.muster].name}`,
+    name: armyName(state, world, opts.muster),
   });
+  // Without a marshal, a captain of the crown leads it (M24 E).
+  if (!a.marshal) a.captain = captainFor(state, world);
+  // The levies converge on the muster along the roads (M24 E): a band from
+  // each of the larger districts, walking for as long as the gathering takes.
+  const district = districtOf(world);
+  const bands = {};
+  for (const [id, n] of Object.entries(p.levy ?? {})) bands[district[id] ?? id] = (bands[district[id] ?? id] ?? 0) + n;
+  Object.entries(bands).filter(([id, n]) => id !== opts.muster && n >= 100).sort((x, y) => y[1] - x[1]).slice(0, 8)
+    .forEach(([id, n]) => sendFigure(state, world, { kind: 'levy', from: id, to: opts.muster, days: Math.max(2, p.days ?? 2), name: `${round(n)} levies of ${world.byId[id].name}`, about: `for ${a.name}` }));
   // The realm's armouries arm the levy.
   a.arms = 1 + Math.min(0.3, realmEffect(state, world, 'armyArms'));
   // Standing companies leave their stations and march under the marshal.
@@ -237,6 +246,27 @@ export function raiseArmy(state, world, opts) {
   say(state, `${a.name} gathers at ${world.byId[opts.muster].name}: ${round(a.soldiers)} men from ${parts.join(' and ')}${a.marshal ? `, under ${w.marshals[a.marshal].name}` : ''}.${a.gatherUntil ? ` The levies will be in within ${p.days} days.` : ''}`);
   for (const hid of p.refuse) say(state, `${world.houses.houses[hid].name} sends excuses instead of men.`);
   return a;
+}
+
+// ---- Names and captains (M24 E) ----
+
+// The crown's armies are numbered, the First, the Second and on, each
+// taking the lowest number not in the field; past the list, by its muster.
+export function armyName(state, world, muster) {
+  const used = new Set(crownArmies(state).map((a) => a.name));
+  return (W(world).armyNames ?? []).find((n) => !used.has(n)) ?? `The army of ${world.byId[muster].name}`;
+}
+
+// A captain of the crown not already leading an army.
+export function captainFor(state, world) {
+  const used = new Set(crownArmies(state).map((a) => a.captain).filter(Boolean));
+  const list = W(world).captains ?? [];
+  return list.find((n) => !used.has(n)) ?? list[crownArmies(state).length % Math.max(1, list.length)] ?? null;
+}
+
+// Who leads an army: its marshal, or its captain.
+export function leaderOf(world, a) {
+  return a.marshal ? W(world).marshals[a.marshal]?.name ?? null : a.captain ?? null;
 }
 
 // ---- A town's muster, and armies made of companies (M22 C) ----
@@ -470,6 +500,11 @@ export function canOrder(state, world, a, order, target) {
     if (!roadPath(world, a.to ?? a.at, target, true)) return { ok: false, reason: 'No road leads there.' };
   } else if (order === 'raid') {
     if (!hostile(state, TEMERIA, target)) return { ok: false, reason: 'We are not at war with them.' };
+  } else if (order === 'hunt') {
+    // Go after an outlaw camp, a lair or a war party on our ground (M24 E).
+    const th = state.threats?.list.find((x) => x.id === Number(target));
+    if (!th || th.abroad) return { ok: false, reason: 'Nothing of that kind to hunt.' };
+    if (!roadPath(world, a.to ?? a.at, th.near, true) && th.near !== (a.to ?? a.at)) return { ok: false, reason: 'No road leads there.' };
   } else if (order === 'join') {
     // March to join another of the crown's armies, and become one with it (M23 C).
     const b = state.armies.find((x) => x.id === Number(target));
@@ -490,10 +525,11 @@ export function orderArmy(state, world, a, order, target, stance) {
   const words = {
     defend: () => `${a.name} is to hold ${world.byId[target].name}.`,
     siege: () => `${a.name} marches to besiege ${world.byId[target].name}.`,
+    hunt: () => `${a.name} goes out after ${(() => { const th = state.threats?.list.find((x) => x.id === Number(target)); return th ? threatName(world, th).toLowerCase() : 'the outlaws'; })()}.`,
     raid: () => `${a.name} rides into ${sideName(world, target)} to burn and plunder.`,
     join: () => `${a.name} marches to join ${state.armies.find((x) => x.id === Number(target))?.name ?? 'the army'}.`,
   };
-  if (order === 'join') a.target = Number(target);
+  if (order === 'join' || order === 'hunt') a.target = Number(target);
   say(state, words[order]());
 }
 
@@ -621,6 +657,7 @@ export function stepArmiesDay(state, world, rng) {
   battles(state, world, rng);
   if (battlesOn(world)) stepBattlesDay(state, world, rng);
   for (const a of [...state.armies]) if (state.armies.includes(a) && !a.battle) siegeOrRaid(state, world, rng, a);
+  for (const a of [...state.armies]) if (state.armies.includes(a) && a.order === 'hunt' && !a.battle && stationary(a)) huntTick(state, world, rng, a);
   wear(state, world, rng);
 }
 
@@ -697,6 +734,15 @@ function thinkCrown(state, world, a) {
     const near = nearestEnemy(state, world, a, pos.x, pos.y, 60);
     if (near && ratio(state, world, a, near.army) >= st.engageAt) return chase(world, a, near.army);
     return routeTo(world, a, a.target);
+  }
+  if (a.order === 'hunt') {
+    const th = state.threats?.list.find((x) => x.id === a.target);
+    if (!th) {
+      a.order = 'defend';
+      a.target = ownerOf(state, world, a.at) === TEMERIA ? a.at : refuge(state, world, a);
+      return routeTo(world, a, a.target);
+    }
+    return routeTo(world, a, th.near);
   }
   if (a.order === 'join') {
     const b = state.armies.find((x) => x.id === a.target && x.side === TEMERIA);
@@ -907,6 +953,36 @@ export function routArmy(state, world, a) {
   a.retreating = true;
   a.routed = state.day + W(world).battle.routedDays;
   if (!routeTo(world, a, refuge(state, world, a))) halt(a);
+  if (a.soldiers < W(world).minArmy) disbandArmy(state, world, a, true);
+}
+
+// ---- Hunting (M24 E) ----
+
+// An army's odds against a threat: its companies, each at the army's spirit.
+export function armyHuntOdds(state, world, a, th) {
+  return huntOdds(state, world, (a.bands ?? []).map((b) => ({ ...b, morale: a.morale ?? 60 })), th);
+}
+
+// An army come to the place nearest the threat it hunts fights it there:
+// won, the threat is broken (and its purse paid); lost, the army bleeds and
+// falls back. Either way it then holds where it stands.
+function huntTick(state, world, rng, a) {
+  const th = state.threats?.list.find((x) => x.id === a.target);
+  if (!th || a.at !== th.near) return;
+  normalise(a);
+  const odds = armyHuntOdds(state, world, a, th);
+  const won = rng.chance(odds.chance);
+  const loss = a.soldiers * (won ? 0.04 + 0.1 * (1 - odds.chance) : 0.15);
+  a.soldiers = Math.max(0, a.soldiers - loss);
+  if (a.bands?.length) for (const b of a.bands) b.men *= a.soldiers / Math.max(1, a.soldiers + loss);
+  const name = threatName(world, th);
+  if (won) destroyThreat(state, world, th);
+  else a.morale = clamp(a.morale - 20, 0, 100);
+  say(state, won
+    ? `${a.name} broke ${name.toLowerCase()} near ${world.byId[a.at].name}, losing ${round(loss)} men.`
+    : `${a.name} was beaten off by ${name.toLowerCase()} near ${world.byId[a.at].name}, losing ${round(loss)} men.`);
+  a.order = 'defend';
+  a.target = ownerOf(state, world, a.at) === TEMERIA ? a.at : refuge(state, world, a);
   if (a.soldiers < W(world).minArmy) disbandArmy(state, world, a, true);
 }
 
@@ -1152,8 +1228,10 @@ export function describeArmy(state, world, a) {
   else if (a.raiding) doing = `plundering ${world.byId[a.at].name}`;
   else if (a.order === 'siege' && a.target) doing = `marching on ${world.byId[a.target].name}`;
   else if (a.order === 'raid') doing = `raiding ${sideName(world, a.target)}`;
+  else if (a.order === 'hunt') doing = `hunting ${(() => { const th = state.threats?.list.find((x) => x.id === a.target); return th ? threatName(world, th).toLowerCase() : 'what is left'; })()}`;
   else if (a.order === 'join') doing = `marching to join ${state.armies.find((x) => x.id === a.target)?.name ?? 'another army'}`;
   else if (a.order === 'defend' && a.target) doing = a.at === a.target && !a.to ? `holding ${world.byId[a.target].name}` : `making for ${world.byId[a.target].name}`;
   else doing = 'awaiting orders';
-  return `${a.name}, ${round(a.soldiers)} men, ${doing}, ${where}`;
+  const lead = leaderOf(world, a);
+  return `${a.name}, ${round(a.soldiers)} men${lead && a.side === TEMERIA ? ` under ${lead}` : ''}, ${doing}, ${where}`;
 }

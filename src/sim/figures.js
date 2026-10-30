@@ -62,6 +62,7 @@ const WORDS = {
   courier: (w, f) => `Courier from ${w.byId[f.from].name}, bringing a petition to Vizima`,
   lord: (w, f) => `${f.name || 'A lord'}, riding from ${w.byId[f.from].name} to ${w.byId[f.to].name}`,
   commander: (w, f) => `${f.name || 'A marshal'}, riding to ${w.byId[f.to].name} to take command`,
+  levy: (w, f) => `${f.name || 'Levies'} on the road from ${w.byId[f.from].name} to the muster at ${w.byId[f.to].name}`,
   progress: (w, f) => `The king and his train, ${f.about || 'on a royal progress'}, riding from ${w.byId[f.from].name} to ${w.byId[f.to].name}`,
 };
 

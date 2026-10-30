@@ -288,6 +288,14 @@ registerPlaceholder('unit', 'figure', (ctx, x, y, size, opts = {}) => {
     ctx.strokeStyle = INK;
     ctx.lineWidth = 0.6;
     ctx.stroke();
+  } else if (kind === 'levy') {
+    // Levies on the road to a muster (M24 E): a spear over the shoulder.
+    ctx.beginPath();
+    ctx.moveTo(mx - f * r * 0.5, y + r * 0.2);
+    ctx.lineTo(mx + f * r * 0.6, y - r * 1.4);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
   } else if (kind === 'courier') {
     ctx.fillStyle = '#8a6a3a';
     ctx.fillRect(x - f * r * 0.45, y - r * 0.15, r * 0.3, r * 0.25);
