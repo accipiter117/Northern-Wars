@@ -1,5 +1,11 @@
 # Changelog
 
+## M22 B Life on the map
+- Everything that moves on the map now stands for something real. Merchant caravans carry what the realm sells at home; Temerian and foreign merchants carry the goods of your trade deals; pilgrims walk to a real shrine or cathedral; patrols ride for the companies you have on patrol; barges ply the rivers your towns trade on. Travellers with no reason to be there are gone.
+- Long press any traveller to see what it is in one line: "Patrol: the Maribor Light cavalry on the road from Maribor to Vizima".
+- Close up, the works come alive: ploughing in spring, harvesting in late summer, empty fields in winter, woodsmen felling trees, miners at the pit with a cart, shepherds with their flocks, boats on the water. A works short of hands shows fewer people; a damaged one shows a scorch mark; one being mended shows its builders.
+- Hire a witcher and watch him ride out to the lair, fight, and ride home (if he wins). Long press him to see who he is and what the contract costs.
+
 ## M22 A Battery
 - The map is only drawn when something needs drawing. Paused with nothing moving, the game asks for no frames at all, so it no longer drains a phone while it sits open.
 - Paused with travellers in sight, the map draws a gentle 8 frames a second; running, at most 30 (full rate only while you pan or zoom).

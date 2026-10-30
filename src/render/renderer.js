@@ -687,6 +687,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // sieges, risings) and ambient life, counted on the last full draw, so the
   // loop knows whether a paused map needs any frames at all.
   let live = { war: 0, life: 0 };
+  let lifeDrawn = 0;
   let saver = false;
   let idleT = null;
   function draw(state, frac, selection, { tick = null } = {}) {
@@ -704,6 +705,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // clock on the wall, not the realm's (which has stopped).
     idleT = tick;
     live = { war: 0, life: 0 };
+    lifeDrawn = 0;
     // A new zoom, or a pan past the margin, redraws every layer from here.
     if (fogPending && performance.now() - lastFog > FOG_EVERY_MS) {
       fogPending = false;
@@ -893,7 +895,6 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
     lifeDrawn = (saver ? LIFE_CAP / 2 : LIFE_CAP) - budget.left;
   }
-  let lifeDrawn = 0;
 
   // Battlefields of the last days, sieges, and the armies themselves. The
   // crown sees its own armies everywhere, and foreign ones only in sight.

@@ -1,5 +1,5 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions, markerAt } from './sim/index.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, witcherOnRoad, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions, markerAt } from './sim/index.js';
 import { createCamera, resizeCamera, panBy, toWorld, toScreen, zoomAt } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
@@ -942,6 +942,12 @@ async function boot() {
       const p = renderer.armyScreen(state, id, frac);
       const r = canvas.getBoundingClientRect();
       return p && { x: r.left + p.x, y: r.top + p.y };
+    },
+    // Where a witcher on contract is on screen (M22 B), by the lair's id.
+    witcherScreenOf(threat) {
+      const c = state.threats.contracts.find((x) => x.threat === threat);
+      const w = c && witcherOnRoad(state, world, c, frac);
+      return w ? this.screenOfPoint(w.x, w.y - 4 / cam.scale) : null;
     },
     unitScreenOf(id) {
       const p = renderer.unitScreen(state, id, frac);

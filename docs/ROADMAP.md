@@ -33,6 +33,13 @@ Part A, battery and performance:
 - Hidden: nothing draws, the realm pauses, the music stops, the audio context is suspended and the wake lock released; shown again, drawing and sound resume. The wake lock is held only while running with the setting on.
 - Tests count frames paused and idle, paused with life, running and hidden, and check the audio and the wake lock.
 
+Part B, life on the map that means something:
+- Every moving sprite stands for something real (home sales, deals, a holy place, a company on patrol, river trade), and its count follows that source; sprites with no source are gone.
+- A long press on any sprite says what it is in one line, with what it is worth.
+- Life at the works close up: figures by staffing, season and condition; a scorch mark where damaged, builders where mended.
+- Witchers ride out to the lair, fight there, and ride home if they won; a long press says who and for how much.
+- Life at the works only close up, capped on screen, halved by Battery saver.
+
 ## M21 acceptance criteria
 Part A, trade in five goods:
 - All trade folds into Grain, Timber and stone, Iron and arms, Cloth and Luxuries; the underlying goods stay for production.
