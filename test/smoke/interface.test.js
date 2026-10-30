@@ -361,7 +361,7 @@ test('no tab or card opens longer than about two screens', async () => {
     // Military last showed the company's card: a second tap on the tab goes
     // back to its root.
     ['threat', ['[data-tab="military"]', '[data-tab="military"]', '.segs [data-sub="threats"]', '[data-threat="1"]']],
-    ['meters', ['.meter[data-go="meter:treasury"]']],
+    ['meters', ['.good[data-go="meter:treasury"]']],
     ['help', ['#more-button', '[data-more="help"]']],
     ['chronicle', ['#more-button', '[data-more="chronicle"]']],
   ];

@@ -3,7 +3,7 @@
 // every place. Also the four meter cards that say why a meter moved.
 import {
   totalPopulation, realmStock, foodNeed, foodYield, seasonOf, dateOf, ledgerNet, creditLimit,
-  plagueActive, freeCompanies, warsOf, TEMERIA, MONTHS,
+  plagueActive, freeCompanies, warsOf, TEMERIA, MONTHS, monthlyOutput,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
@@ -22,6 +22,10 @@ const METERS = [
   ['trust', 'Trust in the Crown', 'crown'],
   ['unrest', 'Unrest', 'flame'],
   ['dread', 'Dread', 'moon'],
+  // The goods of the compact top bar (M24 A).
+  ['fuel', 'Fuel', 'logs'],
+  ['iron', 'Iron and arms', 'anvil'],
+  ['cloth', 'Cloth', 'cloth'],
 ];
 
 export function meterValue(state, key) {
@@ -226,6 +230,56 @@ function treasuryCard(app) {
     <div data-part="works"><p class="sub">Also paid when ordered last month: ${number(last.expenses.construction)} on repairs, ${number(last.expenses.decrees ?? 0)} on decrees.</p></div>`;
 }
 
+// Fuel (M24 A): what the woods cut against what the hearths burn.
+function fuelCard(app) {
+  const { state, world } = app;
+  const lab = state.labour ?? {};
+  const made = lab.made ?? 0;
+  const burned = lab.burned ?? 0;
+  const woods = lab.report?.woods;
+  const reasons = [
+    ['Cut last month by the woods hands', made],
+    ['Burned last month in the hearths', -burned],
+  ];
+  if (woods && woods.need > 0) reasons.push([`Woods hands: ${number(woods.staffed)} at work of ${number(woods.need)} wanted`, null]);
+  if ((lab.short ?? 0) > 0.05) reasons.unshift(['The woodpiles are empty: hearths are going cold', null]);
+  return `${cardHead({
+    status: '<span>Wood, charcoal and turf for the realm\'s hearths, cut by the woods hands and burned from November to March. Run short in winter and the poorest die of cold.</span>',
+    chips: [
+      { icon: 'logs', label: 'In store', value: number(lab.fuel ?? 0), tone: (lab.short ?? 0) > 0.05 ? 'bad' : '' },
+      { label: 'Last month', value: signed(made - burned), tone: made < burned ? 'bad' : 'good' },
+    ],
+    actions: '<button type="button" class="act" data-tab-go="realm:labour"><span class="act-label">Labour</span></button>',
+  })}
+    <div data-part="why"><h3>Last month</h3><dl class="ledger" data-part="reasons">${reasons.map(([why, v]) => `<div><dt>${escapeHtml(why)}</dt><dd class="${v === null ? '' : v >= 0 ? 'up' : 'down'}">${v === null ? '' : signed(Math.round(v))}</dd></div>`).join('')}</dl></div>`;
+}
+
+// Iron and cloth (M24 A): the month's making and using, from the market's
+// report, and where most of it is made.
+function goodCard(app, good, iconName) {
+  const { state, world } = app;
+  const r = state.market?.report?.[good];
+  const def = world.market?.goods?.[good];
+  if (!r || !def) return '<p class="sub">No trade in this good in this world.</p>';
+  const makers = Object.keys(state.settlements).filter((id) => !state.settlements[id].occupier)
+    .map((id) => [id, monthlyOutput(state, world, [id])[good]]).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const lines = [
+    ['Made', r.made], ['Used by the realm', -r.used],
+    r.sold ? ['Sold at home', -r.sold] : null, r.exported ? ['Sent abroad', -r.exported] : null, r.imported ? ['Bought from abroad', r.imported] : null,
+  ].filter(Boolean);
+  const kept = good === 'iron' ? ` In store: ${number(realmStock(state).iron)}.` : ' Cloth is not kept in store: what is not used is sold.';
+  return `${cardHead({
+    status: `<span>${escapeHtml(def.blurb)}${kept}</span>`,
+    chips: [
+      { icon: iconName, label: 'Last month', value: signed(Math.round(r.balance)), tone: r.balance < 0 ? 'bad' : 'good' },
+      { label: 'Price', value: r.price.toFixed(2) },
+    ],
+    actions: '<button type="button" class="act" data-tab-go="treasury:trade"><span class="act-label">Trade</span></button>',
+  })}
+    <div data-part="why"><h3>Last month</h3><dl class="ledger" data-part="reasons">${lines.map(([why, v]) => `<div><dt>${escapeHtml(why)}</dt><dd class="${v >= 0 ? 'up' : 'down'}">${signed(Math.round(v))}</dd></div>`).join('')}</dl></div>
+    <div data-part="makers"><h3>Made most in</h3>${makers.length ? `<div class="rows">${makers.map(([id, v]) => placeRow(app, id, `${number(Math.round(v))} a month`)).join('')}</div>` : '<p class="sub">None of our places makes it.</p>'}</div>`;
+}
+
 function granaryCard(app) {
   const { state, world } = app;
   const season = seasonOf(state.day);
@@ -290,7 +344,10 @@ const dreadCard = (app) => meterOf(app, 'dread', 'down', 60);
 
 export function meterCard(app, key) {
   const [, label] = METERS.find((m) => m[0] === key) ?? METERS[0];
-  const html = { treasury: treasuryCard, granary: granaryCard, trust: trustCard, unrest: unrestCard, dread: dreadCard }[key]?.(app) ?? '';
+  const html = {
+    treasury: treasuryCard, granary: granaryCard, trust: trustCard, unrest: unrestCard, dread: dreadCard,
+    fuel: fuelCard, iron: (a) => goodCard(a, 'iron', 'anvil'), cloth: (a) => goodCard(a, 'cloth', 'cloth'),
+  }[key]?.(app) ?? '';
   return { title: `${icon(METERS.find((m) => m[0] === key)?.[2] ?? 'coin')} ${label}`, html };
 }
 

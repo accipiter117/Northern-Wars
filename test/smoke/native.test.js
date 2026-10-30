@@ -167,7 +167,9 @@ test('map gestures: momentum comes to rest, double-tap zooms in, two-finger tap 
   // A flick: the map glides on after the finger lifts, then stops.
   await page.mouse.move(200, 500);
   await page.mouse.down();
-  for (let i = 1; i <= 6; i++) { await page.mouse.move(200 - i * 25, 500); await page.waitForTimeout(8); }
+  // Short enough to stay within the cached layers' margin, so no layer is
+  // redrawn mid-flick (synthetic events are timed when handled, not made).
+  for (let i = 1; i <= 6; i++) { await page.mouse.move(200 - i * 15, 500); await page.waitForTimeout(8); }
   await page.mouse.up();
   const lifted = await at();
   await page.waitForTimeout(250);

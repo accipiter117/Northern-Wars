@@ -1,5 +1,10 @@
 # Changelog
 
+## M24 A Compact top bar
+- The top bar now shows symbols and numbers instead of words: coin (with last month's change in green or red), grain, fuel, iron and cloth, then a slim row of the meters with thin bars.
+- Tap any symbol for its detail; fuel, iron and cloth have new cards. Long press a symbol to see its name.
+- Fits a 360px phone in one row each, and sits neatly at the top right in landscape.
+
 ## M23 D A fuller map
 - The land between the towns is now full of life: patchwork fields, farmsteads, orchards and windmills where people live, thinning into copses, heath, shrines, ruins and old watchtowers where few do. Foreign realms too.
 - Fields follow the year: green in spring, gold in summer, stooked at the harvest, pale in winter. They burn round a sacked town and lie bare round a hungry one.
