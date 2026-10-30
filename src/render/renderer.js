@@ -681,7 +681,13 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // A frame identical to the last (paused, nothing selected changing, camera
   // still) is skipped, so a paused game costs next to no battery.
   let lastFrame = null;
-  function draw(state, frac, selection) {
+  // What on screen moves of itself (M22 A): animated war (smoke, battles,
+  // sieges, risings) and ambient life, counted on the last full draw, so the
+  // loop knows whether a paused map needs any frames at all.
+  let live = { war: 0, life: 0 };
+  let saver = false;
+  let idleT = null;
+  function draw(state, frac, selection, { tick = null } = {}) {
     const selectedId = selection?.settlement ?? null;
     followLands();
     updateTints(state);
@@ -689,9 +695,13 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     const frame = { state, frac, unit: selection?.unit ?? null, army: selection?.army ?? null, company: selection?.company ?? null, threat: selection?.threat ?? null, realm: selection?.realm ?? null, selectedId, x: cam.x, y: cam.y, scale: cam.scale };
     if (!dirty && !baseDirty && !fogDirty && !fogPending && selectedId === lastSelected && lastFrame && lastFrame.state === frame.state
       && lastFrame.frac === frame.frac && lastFrame.unit === frame.unit && lastFrame.army === frame.army && lastFrame.company === frame.company && lastFrame.threat === frame.threat && lastFrame.realm === frame.realm
-      && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale) return;
+      && lastFrame.x === frame.x && lastFrame.y === frame.y && lastFrame.scale === frame.scale && tick === null) return;
     lastFrame = frame;
     stats.draws += 1;
+    // A paused map drawn at the gentle rate keeps its life stirring by the
+    // clock on the wall, not the realm's (which has stopped).
+    idleT = tick;
+    live = { war: 0, life: 0 };
     // A new zoom, or a pan past the margin, redraws every layer from here.
     if (fogPending && performance.now() - lastFog > FOG_EVERY_MS) {
       fogPending = false;
@@ -751,10 +761,15 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     const forceView = { ctx, cam, world, zoom: zoomRel(), selection, frac };
     drawForces(forceView, state, 'ground');
     for (const u of state.ambient.units) {
+      // Battery saver (M22 A): half the travellers.
+      if (saver && u.id % 2) continue;
       const w = unitPosition(world, u, u.pos + u.speed * frac);
       const p = toScreen(cam, w.x, w.y);
       if (p.x < -20 || p.y < -20 || p.x > cam.viewW + 20 || p.y > cam.viewH + 20) continue;
       if (!unitInSight(w)) continue;
+      live.life += 1;
+      // Paused, a traveller still stirs a little on the spot.
+      if (idleT !== null) p.y += Math.sin(idleT * 5 + u.id) * 0.8;
       const facing = Math.cos(w.angle) >= 0 ? 1 : -1;
       const colours = u.realm && u.kind !== 'export' ? world.realms?.realms[u.realm]?.colours : null;
       getSprite('unit', u.kind, u.kind === 'abroad' ? 'foreign' : u.kind === 'abroad_patrol' ? 'patrol' : u.kind === 'export' || u.kind === 'deal' ? 'caravan' : u.kind === 'exile' ? 'refugee' : u.kind)
@@ -856,12 +871,14 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const st = world.byId[id];
       const p = toScreen(cam, st.x, st.y);
       smoke(ctx, p.x, p.y - 4, iconSize(st.type) * 0.8);
+      live.war += 1;
     }
     for (const realm of Object.values(state.realms ?? {})) {
       for (const [id, s] of Object.entries(realm.settlements)) {
         if (!(s.smoulder > state.day) || !unitInSight(world.byId[id])) continue;
         const p = toScreen(cam, world.byId[id].x, world.byId[id].y);
         smoke(ctx, p.x, p.y - 4, iconSize(world.byId[id].type) * 0.8);
+        live.war += 1;
       }
     }
     for (const r of state.conquest?.revolts ?? []) {
@@ -869,6 +886,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (!st || (r.against !== TEMERIA && !unitInSight(st))) continue;
       const p = toScreen(cam, st.x, st.y);
       drawRebels(ctx, p.x + iconSize(st.type) * 0.4, p.y - iconSize(st.type) * 0.3, 14, sideColours(world, r.origin === TEMERIA ? TEMERIA : r.origin), r.id);
+      live.war += 1;
     }
     for (const b of state.battles) {
       if (state.day - b.day > 12 || !unitInSight(b)) continue;
@@ -883,6 +901,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const r = Math.max(iconSize(st.type) / 2 + 8 * Math.min(1.6, Math.max(0.8, Math.sqrt(zoomRel()))), (footprint[st.id] ?? 0) * 1.05);
       if (a.siege.wallsMax !== undefined) {
         drawSiege(ctx, p.x, p.y, r, { colours: sideColours(world, a.side), men: a.soldiers, walls: a.siege.walls, wallsMax: a.siege.wallsMax, breached: a.siege.wallsMax > 0 && a.siege.walls <= 0, seed: a.id });
+        live.war += 1;
       } else getSprite('marker', 'siege').draw(ctx, p.x, p.y, iconSize(st.type) + 22, { colours: sideColours(world, a.side), progress: a.siege.progress });
     }
     // Battles in progress, and the rout for a day or two after.
@@ -892,6 +911,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (p.x < -60 || p.y < -60 || p.x > cam.viewW + 60 || p.y > cam.viewH + 60) continue;
       const size = 34 * Math.max(0.8, Math.min(1.5, Math.sqrt(zoomRel())));
       const men = [0, 1].map((i) => lineOf(state, f, i) + f.reserve[i]);
+      live.war += 1;
       drawBattle(ctx, p.x, p.y - 8, size, {
         colours: f.sides.map((sd) => sideColours(world, sd)), men, phase: f.phase, over: !!f.over, loser: f.over ? 1 - f.over.winner : null, seed: f.id,
       });
@@ -1028,7 +1048,17 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   }
 
   return {
-    resize, draw, pick, unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
+    resize, draw, pick,
+    // Anything on screen that moves of itself: 'war' (smoke, battles), 'life'
+    // (travellers on the roads), or null.
+    lively: () => (live.war ? 'war' : live.life ? 'life' : null),
+    setSaver(on) { saver = !!on; dirty = true; },
+    // Layers still to finish (tiles filled in over several frames, the fog
+    // waiting its turn): the loop keeps asking for frames until they are.
+    unfinished: () => dirty || baseDirty || fogDirty || fogPending,
+    // For browser tests: what is left to draw and what moves on screen.
+    get flags() { return { dirty, baseDirty, fogDirty, fogPending, live }; },
+    unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
     get boardness() { return boardness(cam); },
     get tileStats() { return { size: tiles.size, drawn: tiles.stats.drawn, pending: baseDirty }; },
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },

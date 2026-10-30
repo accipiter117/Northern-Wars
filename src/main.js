@@ -39,6 +39,13 @@ async function boot() {
   let state = startingState(world);
   let speed = 0;
   let frac = 0;
+  // The frame clock (M22 A): when the last frame ran, whether one is asked
+  // for, the timer for a capped one, and when the camera last moved.
+  let last = performance.now();
+  let framePending = false;
+  let frameTimer = null;
+  let frameGap = 0;
+  let camMovedAt = 0;
   let selection = null;
   let label = null;
   let unitLabelUntil = 0;
@@ -54,10 +61,13 @@ async function boot() {
   const cam = createCamera(world);
   const renderer = createRenderer(canvas, world, cam, layoutCfg);
   const prefs = loadPrefs();
+  // Battery saver (M22 A) starts on for phones until the player says otherwise.
+  if (prefs.batterySaver === undefined) prefs.batterySaver = matchMedia('(pointer: coarse)').matches;
   stopBrowserGestures();
   instantPress();
   const haptic = createHaptics(prefs);
   const wake = createWakeLock(prefs);
+  renderer.setSaver(prefs.batterySaver);
   const audio = createAudio(prefs, { save: savePrefs });
   // A long press completing ticks as well as buzzes.
   const quick = createQuick({ haptic: (k) => { haptic(k); if (k === 'press') audio.play('ring'); } });
@@ -274,6 +284,8 @@ async function boot() {
     speed = s;
     topbar.setSpeed(s);
     wake.playing(s > 0);
+    last = performance.now();
+    wakeFrame();
   }
 
   function save(quiet) {
@@ -458,7 +470,13 @@ async function boot() {
 
   function menuAction(action) {
     if (!action) return;
-    if (/^(haptics|awake)-(on|off)$/.test(action)) {
+    if (action === 'saver-on' || action === 'saver-off') {
+      prefs.batterySaver = action === 'saver-on';
+      savePrefs(prefs);
+      renderer.setSaver(prefs.batterySaver);
+      wake.sync();
+      nav.refresh();
+    } else if (/^(haptics|awake)-(on|off)$/.test(action)) {
       const [k, v] = action.split('-');
       prefs[k === 'haptics' ? 'haptics' : 'keepAwake'] = v === 'on';
       savePrefs(prefs);
@@ -644,11 +662,15 @@ async function boot() {
     onDoubleTap,
     onLongPress,
     onPress: (at) => quick.pressing(at),
-    onChange: () => {},
+    onChange: () => {
+      camMovedAt = performance.now();
+      wakeFrame();
+    },
   });
 
   let firstSize = true;
   function layout() {
+    wakeFrame();
     const root = document.documentElement.style;
     root.setProperty('--bar-h', `${document.getElementById('topbar').offsetHeight}px`);
     root.setProperty('--tab-h', `${panel.side ? 0 : document.getElementById('tabbar').offsetHeight}px`);
@@ -710,7 +732,6 @@ async function boot() {
 
   // The clock. Whole days go through the simulation; the leftover fraction
   // only slides ambient units along so motion looks smooth between days.
-  let last = performance.now();
   let lastSheetRefresh = 0;
   let lastHintCheck = 0;
   // How long each frame's own work takes (the realm's days and the drawing),
@@ -734,6 +755,7 @@ async function boot() {
   }
 
   function frame(now) {
+    framePending = false;
     const work = performance.now();
     const dt = Math.min(0.25, (now - last) / 1000);
     last = now;
@@ -769,7 +791,7 @@ async function boot() {
         unitLabel.style.top = `${p.y}px`;
       }
     }
-    renderer.draw(state, frac, nav.open || label || pick.active ? selection : null);
+    renderer.draw(state, frac, nav.open || label || pick.active ? selection : null, { tick: speed === 0 && renderer.lively() ? now / 1000 : null });
     topbar.update(state, renderer.boardness >= 0.5);
     if (now - lastHintCheck > 1000) {
       lastHintCheck = now;
@@ -785,8 +807,64 @@ async function boot() {
       frameStats.recent.shift();
       frameStats.days.shift();
     }
+    nextFrame(work);
+  }
+
+  // Frames on demand (M22 A). A frame is asked for only when something
+  // needs drawing: the realm running, the camera moving, a tap or key, the
+  // panel changing, or something on screen that moves of itself. Running,
+  // the map draws at most 30 times a second (full rate only while the camera
+  // moves, never with Battery saver); paused, it draws 15 times a second
+  // while battles or smoke are in sight, 8 while only travellers are, and
+  // not at all otherwise, until the next event. A hidden page draws nothing.
+  function wakeFrame() {
+    if (framePending || document.hidden) return;
+    if (frameTimer) {
+      // A frame already due within the cap stands; only a slow (paused)
+      // one gives way to a tap.
+      if (frameGap <= 1000 / 30 + 1) return;
+      clearTimeout(frameTimer);
+      frameTimer = null;
+    }
+    framePending = true;
     requestAnimationFrame(frame);
   }
+  function nextFrame(started) {
+    if (document.hidden) return;
+    const now = performance.now();
+    const moving = now - camMovedAt < 200;
+    const saver = !!prefs.batterySaver;
+    let gap;
+    if (speed > 0) gap = moving && !saver ? 0 : 1000 / 30;
+    else if (moving || label || pick.active || uiDue) gap = saver ? 1000 / 30 : 0;
+    else if (renderer.unfinished()) gap = 1000 / 30;
+    else {
+      const alive = renderer.lively();
+      if (alive === 'war') gap = 1000 / 15;
+      else if (alive === 'life') gap = 1000 / 8;
+      else return;
+    }
+    if (!gap) {
+      wakeFrame();
+      return;
+    }
+    frameGap = gap;
+    frameTimer = setTimeout(() => {
+      frameTimer = null;
+      wakeFrame();
+    }, Math.max(0, gap - (now - started)));
+  }
+  // Any tap, key or change in the interface may need the map redrawn.
+  for (const ev of ['pointerdown', 'pointermove', 'pointerup', 'wheel', 'keydown', 'click', 'input', 'change']) {
+    document.addEventListener(ev, () => wakeFrame(), { capture: true, passive: true });
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      last = performance.now();
+      renderer.invalidate();
+      wakeFrame();
+    }
+  });
 
   topbar.update(state);
   sample();
@@ -794,7 +872,7 @@ async function boot() {
   updateUrgent();
   setSpeed(params.has('paused') ? 0 : 1);
   document.getElementById('loading').hidden = true;
-  requestAnimationFrame(frame);
+  wakeFrame();
 
   // A small handle for browser tests and curious players.
   window.northernWars = {
@@ -806,14 +884,19 @@ async function boot() {
     get sounds() { return [...audio.log]; },
     get heard() { return [...audio.heard]; },
     // Give an order as a tap would, for browser tests.
-    order: (a) => order(a),
+    order: (a) => { const r = order(a); wakeFrame(); return r; },
     // The two levels of the map (M20 D): zoom to a share of the opening
     // zoom, how far the board has faded in, and where a realm's marker sits.
-    zoomTo: (rel) => { zoomAt(cam, world, cam.viewW / 2, cam.viewH / 2, (rel * cam.cover) / cam.scale); },
+    zoomTo: (rel) => { zoomAt(cam, world, cam.viewW / 2, cam.viewH / 2, (rel * cam.cover) / cam.scale); wakeFrame(); },
     get boardness() { return renderer.boardness; },
     markerOf: (rid) => { const m = markerAt(state, world, rid); const p = toScreen(cam, m.x, m.y); const r = canvas.getBoundingClientRect(); return { x: r.left + p.x, y: r.top + p.y }; },
-    get audio() { return { unlocked: audio.unlocked, musicPlaying: audio.musicPlaying, src: audio.music?.getAttribute('src') ?? null }; },
+    get audio() { return { unlocked: audio.unlocked, musicPlaying: audio.musicPlaying, context: audio.context, src: audio.music?.getAttribute('src') ?? null }; },
+    // Frames and power (M22 A): whether the screen is held awake, and the
+    // Battery saver setting.
+    get wakeHeld() { return wake.held; },
+    get prefs() { return { ...prefs }; },
     get renderStats() { return renderer.stats; },
+    renderer,
     get artStats() { return renderer.artStats; },
     get tileStats() { return renderer.tileStats; },
     // p95Calm leaves out the frames that also ran a day of the realm, to see
@@ -841,6 +924,7 @@ async function boot() {
     lookAt(x, y) {
       panBy(cam, world, (cam.x - x) * cam.scale, (cam.y - y) * cam.scale);
       renderer.recentre();
+      wakeFrame();
     },
     screenOf(id) {
       const st = world.byId[id];

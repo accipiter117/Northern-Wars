@@ -573,6 +573,13 @@ Rebuilt in M14 around one rule: the player never loses their place.
 - Put away or closed, the game saves and pauses, and stays paused on return. Help has settings for vibration (short ticks for long presses, orders and alerts, on Android; iOS has none) and for keeping the screen awake while the realm runs.
 - The layout uses the dynamic viewport height, so the sheet and tab bar do not jump as the browser's bars come and go. The map canvas is drawn at no more than two device pixels per CSS pixel, and while paused with nothing moving it is not redrawn at all.
 
+### Battery (M22 A)
+- Frames on demand: a frame is asked for only when something needs drawing (the realm stepping, the camera moving or gliding, a tap or key, the panel changing, layers still filling in, or something on screen that moves of itself). Paused with nothing moving, no frames are asked for at all until the next event.
+- Paused with travellers in sight, the map draws a gentle 8 frames a second (each traveller stirs a little on the spot); with smoke, battles or sieges in sight, 15. Running, it draws at most 30 a second, full rate only while the camera moves.
+- Battery saver, in Help (on by default on phones, chosen by a coarse pointer): 30 frames a second always, even while panning; half the travellers drawn; no wake lock.
+- Put away: nothing draws, the realm pauses (and stays paused on return, as since M15), the music stops and the sound is suspended, and the wake lock is released. The wake lock is only ever held while the realm runs, the setting is on and Battery saver is off.
+- Measured over ten seconds at 390x844 (frames the loop ran): paused and idle 585 before, 0 after; paused with travellers in sight 601 before (none of them drawing anything), 79 after; running 590 before, 296 after.
+
 ### Look
 - Parchment and ink, one dark theme. Touch targets of 44px or more; no hover-only controls; motion kept short and off under reduced-motion settings.
 

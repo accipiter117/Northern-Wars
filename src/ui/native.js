@@ -47,12 +47,13 @@ export function createHaptics(prefs) {
   };
 }
 
-// Keep the screen awake while the realm runs, if the player asked for it.
+// Keep the screen awake while the realm runs, if the player asked for it:
+// never while paused or hidden, and never under Battery saver (M22 A).
 export function createWakeLock(prefs) {
   let lock = null;
   let want = false;
   async function sync() {
-    const should = want && prefs.keepAwake && document.visibilityState === 'visible' && 'wakeLock' in navigator;
+    const should = want && prefs.keepAwake && !prefs.batterySaver && document.visibilityState === 'visible' && 'wakeLock' in navigator;
     if (should && !lock) {
       try {
         lock = await navigator.wakeLock.request('screen');

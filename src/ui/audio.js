@@ -351,6 +351,8 @@ export function createAudio(prefs, { save = () => {} } = {}) {
     apply,
     get unlocked() { return unlocked; },
     get musicPlaying() { return !!el && !el.paused; },
+    // The audio context's state: 'running', 'suspended' (put away) or none yet.
+    get context() { return ctx?.state ?? null; },
     get music() { return el; },
     log,
     heard,

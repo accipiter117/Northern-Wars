@@ -1,5 +1,11 @@
 # Changelog
 
+## M22 A Battery
+- The map is only drawn when something needs drawing. Paused with nothing moving, the game asks for no frames at all, so it no longer drains a phone while it sits open.
+- Paused with travellers in sight, the map draws a gentle 8 frames a second; running, at most 30 (full rate only while you pan or zoom).
+- New Battery saver setting in Help, on by default on phones: 30 frames a second always, half the travellers on the roads, and the screen is never kept awake.
+- Put away, the game draws nothing, pauses, stops the music and suspends the sound; the screen is free to sleep.
+
 ## M21 E and F Threats and clutter
 - Bandits, Scoia'tael and raiders grow with the realm but stay a nuisance: no ordinary camp is larger than a town's levy or a standing company can beat. Raiders sent in war can be larger.
 - Every threat says how it measures up to the nearest force: "Bandit camp: about 45 men. Gors Velen's levy: 567, overwhelming odds."
