@@ -173,6 +173,9 @@ test('a conquered town rises: the revolt spreads, and can be crushed or treated 
   }
   applyPeace(s, world, war, { towns: 'keep' });
   s.conquest.decisions = [];
+  // A crown neither loved nor feared (M24 B: a strong one makes risings rarer).
+  s.love = 10;
+  s.fear = 10;
   const ours = Object.keys(s.settlements).filter((id) => s.settlements[id].origin === 'cidaris');
   assert.ok(ours.length >= 2);
   for (const id of ours) {
@@ -186,12 +189,12 @@ test('a conquered town rises: the revolt spreads, and can be crushed or treated 
   const r = s.conquest.revolts[0];
   const d = s.conquest.decisions.find((x) => x.kind === 'revolt' && x.revolt === r.id);
   assert.ok(d);
-  // Treating with them ends it, at a cost in Trust, and wins the town over.
-  const auth = s.trust;
+  // Treating with them ends it, at a cost in Love, and wins the town over.
+  const auth = s.love;
   const before = s.settlements[r.town].integration;
   resolveConquestDecision(s, world, d.id, 1);
   assert.ok(!s.conquest.revolts.some((x) => x.id === r.id));
-  assert.ok(s.trust < auth);
+  assert.ok(s.love < auth);
   assert.ok(s.settlements[r.town].integration > before);
   assert.ok(s.settlements[r.town].charter > s.day);
   // A rising met with a strong garrison is crushed.

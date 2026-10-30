@@ -1,5 +1,5 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, witcherOnRoad, applyAction, describeArmy, describeFigure, figurePosition, daysToArrive, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions, markerAt } from './sim/index.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, witcherOnRoad, applyAction, describeArmy, authority, describeFigure, figurePosition, daysToArrive, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions, markerAt } from './sim/index.js';
 import { createCamera, resizeCamera, panBy, toWorld, toScreen, zoomAt } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
@@ -782,7 +782,7 @@ async function boot() {
   function sample() {
     const last = app.samples.at(-1);
     if (last?.day === state.day) return;
-    app.samples.push({ day: state.day, treasury: state.treasury, granary: realmStock(state).food, trust: state.trust, unrest: state.unrest, dread: state.dread });
+    app.samples.push({ day: state.day, treasury: state.treasury, granary: realmStock(state).food, love: state.love, fear: state.fear, authority: authority(state, world), unrest: state.unrest });
     if (app.samples.length > 120) app.samples.shift();
   }
 

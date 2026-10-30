@@ -1,13 +1,14 @@
-// Laws and the realm's opinion of them. A decree costs Trust and crowns,
+// Laws and the realm's opinion of them. A decree needs Authority and spends Love and crowns,
 // jolts the groups it touches at once, and then phases in over a month: until
 // it has fully taken hold, the old law's effects fade as the new one's grow.
 import { nudge } from './meters.js';
+import { authority, onProgress } from './meters.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 
 const say = (state, text) => addDispatch(state, text, 'realm');
 
-const SUMMED = ['tax', 'nobleTax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'trust', 'monthly', 'storage', 'growth', 'nonhumanExodus'];
+const SUMMED = ['tax', 'nobleTax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'love', 'fear', 'monthly', 'storage', 'growth', 'nonhumanExodus'];
 const SCOPED = ['unrest', 'prosperity', 'taxBy'];
 const TYPES = ['village', 'town', 'city', 'castle', 'temple'];
 
@@ -89,7 +90,10 @@ export function canDecree(state, world, lawId, optionId) {
   if (!law || !law.options[optionId]) return { ok: false, reason: 'Unknown law.' };
   if (l.option === optionId) return { ok: false, reason: 'Already the law of the land.' };
   if (enactment(state, world, lawId) < 1) return { ok: false, reason: 'The last change is still taking hold.' };
-  if (state.trust < law.trust) return { ok: false, reason: `Needs ${law.trust} of the folk's Trust: they would not accept a new law.` };
+  // M24 B: a new law needs the crown's Authority, loved or feared, and the
+  // king at court.
+  if (onProgress(state)) return { ok: false, reason: 'The king is away on progress: no decrees until he is back at court.' };
+  if (authority(state, world) < (law.love ?? 0)) return { ok: false, reason: `Needs Authority of ${law.love}: the realm would not heed a new law.` };
   if (state.treasury - law.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
   return { ok: true, borrow: law.coin > 0 && state.treasury - law.coin < 0 };
 }
@@ -98,7 +102,8 @@ export function decree(state, world, lawId, optionId) {
   const law = world.laws.laws[lawId];
   const l = state.laws[lawId];
   const before = opinionTargets(state, world);
-  nudge(state, world, 'trust', -law.trust, 'Laws decreed');
+  // The folk dislike change: it spends their Love, as far as there is any.
+  nudge(state, world, 'love', -Math.min(state.love, law.love ?? 0), 'Laws decreed');
   state.treasury -= law.coin;
   state.ledger.decrees = (state.ledger.decrees ?? 0) + law.coin;
   state.laws[lawId] = { option: optionId, previous: l.option, since: state.day };

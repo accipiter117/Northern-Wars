@@ -101,7 +101,7 @@ export function loanLedger(state, world, expenses, available) {
     const remaining = l.payment * l.left;
     l.left += 1;
     l.payment = Math.round((remaining * (1 + c.missedRate * l.left)) / l.left);
-    nudge(state, world, 'trust', -c.missedTrust, 'A loan payment missed');
+    nudge(state, world, 'love', -c.missedLove, 'A loan payment missed');
     say(state, `The crown misses a payment to ${c.lender}. The bank raises its rate, and the lords hear of it.`);
   }
   state.loans = state.loans.filter((l) => l.left > 0);

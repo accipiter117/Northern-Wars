@@ -1,5 +1,5 @@
 {
-  "note": "Laws and their options. Changing a law costs Trust in the Crown (M22 D: the folk must trust the crown to take a new law) and crowns, then phases in over enactDays. Effects are fractions (0.2 = +20%) or points; unrest and prosperity may be scoped by settlement type. Opinion values shift each group's settled view of the crown while the law stands.",
+  "note": "Laws and their options. Changing a law needs Authority at least its love value and spends that much of the folk's Love, at most what there is (M24 B), and crowns, then phases in over enactDays. Effects are fractions (0.2 = +20%) or points; unrest and prosperity may be scoped by settlement type. Opinion values shift each group's settled view of the crown while the law stands.",
   "enactDays": 30,
   "shock": 0.4,
   "categories": {
@@ -13,7 +13,7 @@
       "name": "Taxes on the towns",
       "category": "taxes",
       "default": "fair",
-      "trust": 3,
+      "love": 3,
       "coin": 0,
       "options": {
         "light": {
@@ -66,7 +66,7 @@
       "name": "Taxes on the villages",
       "category": "taxes",
       "default": "fair",
-      "trust": 3,
+      "love": 3,
       "coin": 0,
       "options": {
         "light": {
@@ -117,7 +117,7 @@
       "name": "Taxes on the lords",
       "category": "taxes",
       "default": "fair",
-      "trust": 3,
+      "love": 3,
       "coin": 0,
       "options": {
         "light": {
@@ -154,7 +154,7 @@
       "name": "Guild charters",
       "category": "economy",
       "default": "chartered",
-      "trust": 10,
+      "love": 10,
       "coin": 100,
       "options": {
         "free": {
@@ -197,7 +197,7 @@
       "name": "Grain prices",
       "category": "economy",
       "default": "market",
-      "trust": 10,
+      "love": 10,
       "coin": 100,
       "options": {
         "market": {
@@ -240,7 +240,7 @@
       "name": "Road corvee",
       "category": "economy",
       "default": "none",
-      "trust": 10,
+      "love": 10,
       "coin": 50,
       "options": {
         "none": {
@@ -269,7 +269,7 @@
       "name": "Conscription",
       "category": "order",
       "default": "seasonal",
-      "trust": 15,
+      "love": 15,
       "coin": 100,
       "options": {
         "none": {
@@ -308,7 +308,7 @@
       "name": "Public order",
       "category": "order",
       "default": "watch",
-      "trust": 10,
+      "love": 10,
       "coin": 50,
       "options": {
         "watch": {
@@ -329,7 +329,8 @@
               "town": -2,
               "city": -2
             },
-            "garrisonUpkeep": 0.1
+            "garrisonUpkeep": 0.1,
+            "fear": 1
           },
           "opinion": {
             "burghers": -5
@@ -341,12 +342,26 @@
           "effects": {
             "unrest": -10,
             "prosperity": -6,
-            "garrisonUpkeep": 0.3
+            "garrisonUpkeep": 0.3,
+            "fear": 3
           },
           "opinion": {
             "burghers": -12,
             "peasants": -6,
             "nobles": 4
+          }
+        },
+        "riders": {
+          "name": "The king's riders",
+          "blurb": "Mounted men in the crown's colours ride the roads and hang whoever they please. The roads are quiet and the people afraid.",
+          "effects": {
+            "fear": 2.5,
+            "unrest": -4,
+            "garrisonUpkeep": 0.15
+          },
+          "opinion": {
+            "peasants": -6,
+            "nobles": 2
           }
         }
       }
@@ -355,7 +370,7 @@
       "name": "The royal court",
       "category": "order",
       "default": "customary",
-      "trust": 5,
+      "love": 5,
       "coin": 0,
       "options": {
         "frugal": {
@@ -363,7 +378,7 @@
           "blurb": "Plain food, few feasts, fewer courtiers.",
           "effects": {
             "court": -0.3,
-            "trust": -0.3
+            "love": -0.3
           },
           "opinion": {
             "nobles": -8
@@ -380,7 +395,7 @@
           "blurb": "Tourneys, masques and favours. The lords come to Vizima and stay.",
           "effects": {
             "court": 0.6,
-            "trust": 0.6
+            "love": 0.6
           },
           "opinion": {
             "nobles": 10,
@@ -393,7 +408,7 @@
       "name": "Monster bounties",
       "category": "order",
       "default": "none",
-      "trust": 5,
+      "love": 5,
       "coin": 0,
       "options": {
         "none": {
@@ -422,7 +437,7 @@
       "name": "Registration of mages",
       "category": "order",
       "default": "registered",
-      "trust": 10,
+      "love": 10,
       "coin": 50,
       "options": {
         "free": {
@@ -450,7 +465,8 @@
             "trade": -0.05,
             "prosperity": {
               "city": -2
-            }
+            },
+            "fear": 1
           },
           "opinion": {
             "eternal_fire": 10,
@@ -465,7 +481,7 @@
       "name": "Faith of the crown",
       "category": "faith",
       "default": "tolerance",
-      "trust": 15,
+      "love": 15,
       "coin": 100,
       "options": {
         "tolerance": {
@@ -510,7 +526,7 @@
       "name": "Non-human rights",
       "category": "faith",
       "default": "restricted",
-      "trust": 20,
+      "love": 20,
       "coin": 100,
       "options": {
         "charter": {
@@ -530,7 +546,9 @@
         "restricted": {
           "name": "Quarters and restrictions",
           "blurb": "Non-humans may live and trade, within their quarters and their limits.",
-          "effects": {},
+          "effects": {
+            "fear": 1
+          },
           "opinion": {}
         },
         "expulsion": {
@@ -538,7 +556,8 @@
           "blurb": "Non-humans are to leave the realm. Many will. Some will take to the woods.",
           "effects": {
             "trade": -0.15,
-            "nonhumanExodus": 0.03
+            "nonhumanExodus": 0.03,
+            "fear": 2
           },
           "opinion": {
             "dwarf": -30,
@@ -554,7 +573,7 @@
       "name": "The Old Ways",
       "category": "faith",
       "default": "tolerated",
-      "trust": 10,
+      "love": 10,
       "coin": 50,
       "options": {
         "tolerated": {
@@ -569,7 +588,8 @@
           "effects": {
             "unrest": {
               "village": 3
-            }
+            },
+            "fear": 1
           },
           "opinion": {
             "old_ways": -20,
@@ -583,7 +603,7 @@
       "name": "Poor relief",
       "category": "faith",
       "default": "none",
-      "trust": 5,
+      "love": 5,
       "coin": 0,
       "options": {
         "none": {
@@ -601,7 +621,8 @@
               "city": -2,
               "town": -2
             },
-            "growth": 0.1
+            "growth": 0.1,
+            "love": 0.6
           },
           "opinion": {
             "melitele": 6,

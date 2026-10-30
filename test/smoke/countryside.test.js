@@ -68,7 +68,7 @@ test('townsfolk in a city close up, within the life budget', async () => {
   const s = step(createState(world, 4), 60, world, { ambient: false });
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
-  s.dread = 10;
+  s.unrest = 10;
   const { context, page, errors } = await open(serialize(s));
   await page.evaluate(() => window.northernWars.renderer.setSaver(false));
   await page.evaluate(() => { const nw = window.northernWars; const v = nw.world.byId.vizima; nw.zoomTo(8); nw.lookAt(v.x, v.y); });

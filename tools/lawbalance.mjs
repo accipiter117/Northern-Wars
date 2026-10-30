@@ -25,16 +25,16 @@ function run(lawId, optionId) {
     const l = s.ledger.history.at(-1);
     if (l) net += ledgerNet(l).net;
     unrest += s.unrest;
-    dread += s.dread;
+    dread += s.fear;
   }
   const pop = Object.values(s.settlements).reduce((a, st) => a + totalPopulation(st), 0);
   const soldiers = Object.values(s.settlements).reduce((a, st) => a + st.garrison, 0);
-  return { net: net / months, unrest: unrest / months, dread: dread / months, pop, trust: s.trust, soldiers, opinion: s.opinion };
+  return { net: net / months, unrest: unrest / months, dread: dread / months, pop, trust: s.love, soldiers, opinion: s.opinion };
 }
 
 const base = run();
 const f = (v, d = 0) => (v >= 0 ? '+' : '') + v.toFixed(d);
-console.log(`baseline: net ${base.net.toFixed(0)}/mo, unrest ${base.unrest.toFixed(1)}, dread ${base.dread.toFixed(1)}, pop ${base.pop}, trust ${base.trust.toFixed(0)}, soldiers ${base.soldiers}`);
+console.log(`baseline: net ${base.net.toFixed(0)}/mo, unrest ${base.unrest.toFixed(1)}, fear ${base.dread.toFixed(1)}, pop ${base.pop}, love ${base.trust.toFixed(0)}, soldiers ${base.soldiers}`);
 console.log('law / option'.padEnd(34), 'net/mo unrest   pop   trust  soldiers');
 for (const [id, law] of Object.entries(world.laws.laws)) {
   for (const opt of Object.keys(law.options)) {

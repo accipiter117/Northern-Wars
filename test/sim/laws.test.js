@@ -10,7 +10,7 @@ const decree = (s, law, option) => applyAction(s, world, { type: 'law', law, opt
 
 test('every law has a valid default and every option names known groups and effects', () => {
   const groups = Object.keys(world.groups.groups);
-  const known = ['tax', 'taxBy', 'nobleTax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'trust', 'monthly', 'storage', 'growth', 'nonhumanExodus', 'unrest', 'prosperity'];
+  const known = ['tax', 'taxBy', 'nobleTax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'love', 'fear', 'monthly', 'storage', 'growth', 'nonhumanExodus', 'unrest', 'prosperity'];
   for (const [id, law] of Object.entries(world.laws.laws)) {
     assert.ok(law.options[law.default], `${id} default`);
     for (const opt of Object.values(law.options)) {
@@ -21,12 +21,12 @@ test('every law has a valid default and every option names known groups and effe
   }
 });
 
-test('a decree costs Trust and crowns, and jolts the groups it touches', () => {
+test('a decree spends Love and crowns, and jolts the groups it touches', () => {
   const s0 = createState(world, 1);
   const { state: s, error } = decree(s0, 'grain_prices', 'granaries');
   assert.equal(error, undefined);
   const law = world.laws.laws.grain_prices;
-  assert.equal(s.trust, s0.trust - law.trust);
+  assert.equal(s.love, s0.love - law.love);
   assert.equal(s.treasury, s0.treasury - law.coin);
   const touched = Object.keys(law.options.granaries.opinion);
   for (const g of touched) assert.notEqual(s.opinion[g], 50, g);
@@ -34,7 +34,7 @@ test('a decree costs Trust and crowns, and jolts the groups it touches', () => {
   assert.match(s.chronicle.at(-1).text, /By royal decree/);
   // Taxes by estate (M21) are decreed the same way, cheaply.
   const t = decree(s0, 'tax_peasants', 'heavy').state;
-  assert.equal(t.trust, s0.trust - world.laws.laws.tax_peasants.trust);
+  assert.equal(t.love, s0.love - world.laws.laws.tax_peasants.love);
   assert.ok(t.opinion.peasants < 50);
 });
 
@@ -50,10 +50,11 @@ test('a new law phases in over a month and cannot be changed again meanwhile', (
   assert.equal(canDecree(s, world, 'tax_peasants', 'light').ok, true);
 });
 
-test('without enough Trust the crown cannot decree', () => {
+test('without enough Authority the crown cannot decree', () => {
   const s = createState(world, 1);
-  s.trust = 5;
-  assert.equal(canDecree(s, world, 'nonhumans', 'charter').reason, "Needs 20 of the folk's Trust: they would not accept a new law.");
+  s.love = 5;
+  s.fear = 0;
+  assert.equal(canDecree(s, world, 'nonhumans', 'charter').reason, 'Needs Authority of 20: the realm would not heed a new law.');
   assert.equal(canDecree(s, world, 'tax_towns', 'fair').reason, 'Already the law of the land.');
 });
 

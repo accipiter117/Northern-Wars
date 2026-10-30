@@ -46,6 +46,8 @@ const ACTIONS = [
   ['summon', 'Summon to court', (a) => `Raises Unrest by ${a.unrest}. Cools his ambition.`],
   ['levies', 'Demand levies', () => 'A quarter of his soldiers march to Vizima. He will resent it.'],
   ['fine', 'Impose a fine', (a) => `Raises Unrest by ${a.unrest}. Coin for the crown, a grievance for him.`],
+  // M24 B: a child of the house kept at court.
+  ['hostages', 'Take a hostage', (a) => `Fear +${a.fear}. A child of the house at court for its good behaviour; a deep grievance.`],
 ];
 
 export function houseCard(app, id) {
@@ -62,7 +64,7 @@ export function houseCard(app, id) {
   const trend = gap > 2 ? ' <small class="up">\u25B2</small>' : gap < -2 ? ' <small class="down">\u25BC</small>' : '';
   const actions = ACTIONS.map(([kind, label, cost]) => {
     const check = canHouseAction(state, world, id, kind);
-    const ask = kind === 'fine' || kind === 'levies' ? `${label}: ${def.name}?` : '';
+    const ask = kind === 'fine' || kind === 'levies' || kind === 'hostages' ? `${label}: ${def.name}?` : '';
     return `<button type="button" class="build" data-house-action="${kind}" ${orderAttr({ type: 'house', house: id, kind }, ask)} ${check.ok ? '' : 'disabled'}>
       <span class="build-name">${label}</span><span class="build-cost">${check.ok ? cost(world.houses.actions[kind]) : escapeHtml(check.reason)}</span></button>`;
   }).join('');
@@ -116,7 +118,7 @@ export function depositionHtml(summary) {
       <div><dt>Pogroms</dt><dd>${summary.pogroms}</dd></div>
     </dl>
     <div class="build-list">
-      <button type="button" class="build" data-regency><span class="build-name">Continue under a regency</span><span class="build-cost">The realm stays as it is. The council restores some of the folk's Trust.</span></button>
+      <button type="button" class="build" data-regency><span class="build-name">Continue under a regency</span><span class="build-cost">The realm stays as it is. The council restores some of the folk's Love.</span></button>
       <button type="button" class="build danger" data-new-reign><span class="build-name">Start a new reign</span><span class="build-cost">A fresh Temeria.</span></button>
     </div>
   `;

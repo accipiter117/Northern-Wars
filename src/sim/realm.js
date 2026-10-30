@@ -1,6 +1,6 @@
 // The realm's day: the economy turns, moods drift, and on the first of each
 // month the ledger and the census are drawn up.
-import { stepMetersDay, monthlyMeters } from './meters.js';
+import { stepMetersDay, monthlyMeters, crownCalm, threatUnrest } from './meters.js';
 import { dateOf } from './calendar.js';
 import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed, creditLimit } from './economy.js';
 import { monthlyPopulation } from './population.js';
@@ -79,8 +79,15 @@ export function stepRealmDay(state, world, rng) {
     if (debtShare > 0) unrestTarget += world.economy.debt.debtUnrest * debtShare;
     unrestTarget -= Math.max(0, s.prosperity - 50) * m.prosperityCalm;
     // Folk who no longer trust the crown turn sullen, then angry (M22 D).
-    const mt = world.meters?.trust;
-    if (mt && !s.occupier) unrestTarget += Math.max(0, mt.lowBelow - (state.trust ?? 50)) * (mt.lowAnger ?? 0);
+    const mt = world.meters?.love;
+    if (mt && !s.occupier) {
+      // Folk with no love for the crown turn sullen (M22 D); a loved or a
+      // feared crown's towns are calmer (M24 B); beasts and bandits near a
+      // town anger it (what Dread carried before).
+      unrestTarget += Math.max(0, mt.lowBelow - (state.love ?? 50)) * (mt.lowAnger ?? 0);
+      unrestTarget -= crownCalm(state, world);
+      unrestTarget += threatUnrest(state, world, id);
+    }
     let prosperityTarget = start.prosperity + fx.prosperity + law.prosperity[type] - s.hunger * m.hungerProsperity;
     if (wellFed) prosperityTarget += m.wellFedProsperity;
     if (levied[id]) prosperityTarget -= world.war.raise.levyProsperity * Math.min(1, levied[id] / Math.max(1, levied[id] + s.garrison));
@@ -100,7 +107,7 @@ export function stepRealmDay(state, world, rng) {
     if (!state.diplomacy) monthlyEnvoy(state, world, rng);
     monthlyCulture(state, world, rng);
     monthlyPetition(state, world, rng);
-    // Trust, Unrest and Dread take stock of the month (M22 D), before the
+    // Love, Fear and Unrest take stock of the month (M24 B), before the
     // lords weigh the reign.
     monthlyMeters(state, world, rng);
     monthlyHouses(state, world, rng);

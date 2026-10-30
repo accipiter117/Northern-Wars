@@ -28,7 +28,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 25;
+export const STATE_VERSION = 26;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -50,10 +50,11 @@ export function createState(world, seed = 1) {
     day,
     rng: { game: streamSeed(seed, 1), ambient: streamSeed(seed, 2) },
     treasury: k.treasury,
-    // Three meters (M22 D): Trust in the Crown, the realm's Unrest, Dread.
-    trust: k.trust ?? 60,
+    // The crown's hold (M24 B): Love and Fear (Authority is worked out from
+    // them), and the realm's Unrest.
+    love: k.love ?? 60,
+    fear: k.fear ?? 20,
     unrest: 0,
-    dread: k.dread ?? 15,
     meters: defaultMeters(),
     unpaid: false,
     settlements,

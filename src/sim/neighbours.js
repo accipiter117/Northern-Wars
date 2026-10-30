@@ -138,7 +138,7 @@ export function resolveEnvoy(state, world, envoyId, choice, ignored = false) {
   const gate = state.settlements[realm.gateway];
   if (fx.relation) state.neighbours[pending.realm].relation = clamp(state.neighbours[pending.realm].relation + fx.relation, -100, 100);
   if (fx.treasury) state.treasury += fx.treasury;
-  if (fx.trust) nudge(state, world, 'trust', fx.trust, 'Answers to the realm');
+  if (fx.love) nudge(state, world, 'love', fx.love, 'Answers to the realm');
   for (const [g, v] of Object.entries(fx.opinion ?? {})) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
   if (fx.settlers) gate.population.human += fx.settlers;
   if (fx.losses) gate.garrison = Math.max(0, gate.garrison - fx.losses);

@@ -53,7 +53,7 @@ const quiet = (s) => {
 
 test('a weighty order happens at once, and Undo puts the realm back exactly', async () => {
   const s = quiet(step(createState(world, 31), 40, world, { ambient: false }));
-  s.trust = 80;
+  s.love = 80;
   const { context, page, errors } = await open(serialize(s));
   const before = await page.evaluate(() => JSON.stringify(window.northernWars.state));
   // Declare war on Kaedwen from its card: no question, the war begins.

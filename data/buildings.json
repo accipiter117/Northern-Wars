@@ -426,7 +426,7 @@
       "days": 120,
       "upkeep": 8,
       "effects": {
-        "trust": 0.4,
+        "love": 0.4,
         "unrest": -6,
         "tension": 12,
         "opinion": {
@@ -950,7 +950,7 @@
       "upkeep": 6,
       "effects": {
         "craft": 40,
-        "trust": 0.1,
+        "love": 0.1,
         "taxBonus": 0.04
       },
       "blurb": "Where the crown's orens are struck. A little profit on every coin, and the king's face in every purse."

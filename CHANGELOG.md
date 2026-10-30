@@ -1,5 +1,13 @@
 # Changelog
 
+## M24 B Love, Fear, Authority and Unrest
+- Trust and Dread are gone. The crown is now held by Love and Fear, and Authority (the greater of the two plus a quarter of the lesser) decides how much tax is gathered, how many answer the muster, whether lords obey and whether troubled towns riot.
+- A loved king gets volunteers, towns that hold out and calmer streets, but soft-seeming lords. A feared king gets taxes and levies on time, but quiet sabotage, and his grip breaks after a defeat.
+- New acts: hang the ringleaders, raise gibbets at the crossroads, hold a feast and tournament, set out on a royal progress, take a hostage from a great house, and set the king's riders on the roads.
+- Unrest of 30 to 50 is now ordinary grumbling. Strikes and flight from the villages only follow high Unrest when Authority is low.
+- On the map close up: gibbets, heads on the gates, and bunting where the king's progress passes.
+- Save version 26.
+
 ## M24 A Compact top bar
 - The top bar now shows symbols and numbers instead of words: coin (with last month's change in green or red), grain, fuel, iron and cloth, then a slim row of the meters with thin bars.
 - Tap any symbol for its detail; fuel, iron and cloth have new cards. Long press a symbol to see its name.

@@ -4,7 +4,7 @@
 // their own captains. Armies march the roads a stretch a day, fight when
 // they meet an enemy, starve or storm the towns they besiege, and carry off
 // what they can.
-import { nudge } from './meters.js';
+import { nudge, fearCollapse, musterAnswer } from './meters.js';
 import { windfall } from './economy.js';
 import { creditLimit, realmEffect } from './economy.js';
 import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
@@ -21,7 +21,7 @@ import { informed } from './realms.js';
 import { damagePlace, outside } from './works.js';
 import { sendFigure } from './figures.js';
 import {
-  TEMERIA, ownerOf, originOf, placeOf, peopleAt, hasWalls, valueOf, hurtPlace, hostile, warBetween, sideIndex,
+  TEMERIA, warsOf, ownerOf, originOf, placeOf, peopleAt, hasWalls, valueOf, hurtPlace, hostile, warBetween, sideIndex,
   sideName, recordCapture, setOwner, enemiesOf,
 } from './conflict.js';
 
@@ -45,9 +45,12 @@ export function musterPreview(state, world, opts) {
   const houses = [];
   const refuse = [];
   let levyMen = 0;
+  // How many answer the call: fewer under a weak crown, volunteers on top
+  // for a loved one at war (M24 B).
+  const answer = musterAnswer(state, world, warsOf(state, TEMERIA).length > 0);
   for (const [id, s] of Object.entries(state.settlements)) {
     if (s.occupier || s.holder !== 'crown' || !call) continue;
-    const n = Math.floor(totalPopulation(s) * (r.muster.share[world.byId[id].type] ?? 0) * call * integrationFactor(world, s, 'levyAt'));
+    const n = Math.floor(totalPopulation(s) * (r.muster.share[world.byId[id].type] ?? 0) * call * integrationFactor(world, s, 'levyAt') * answer);
     if (n > 0) {
       levy[id] = n;
       levyMen += n;
@@ -881,12 +884,13 @@ export function glory(state, world, kind, a) {
   // each clash, so the swing from battles, and from towns, is capped each
   // month (the capital's fall is not).
   if (kind !== 'capitalLost') {
-    const so = state.meters?.month?.trust?.[why] ?? 0;
+    const so = state.meters?.month?.love?.[why] ?? 0;
     const cap = (kind === 'townLost' || kind === 'townTaken' ? g.townMonthCap : g.monthCap) ?? Infinity;
     v = v > 0 ? Math.max(0, Math.min(v, cap - so)) : Math.min(0, Math.max(v, -cap - so));
   }
-  nudge(state, world, 'trust', v, why);
-  if (v > 0) nudge(state, world, 'dread', -v, 'Victories');
+  nudge(state, world, 'love', v, why);
+  // A battle lost on our own soil breaks the fear the crown is held in.
+  if (kind === 'battleLost' && a && ownerOf(state, world, a.at) === TEMERIA) fearCollapse(state, world, world.meters?.fear.lostBattle ?? 0, 'A battle lost on our soil');
   if (kind === 'battleWon' || kind === 'battleLost') {
     if (state.opinion?.nobles !== undefined) state.opinion.nobles = clamp(state.opinion.nobles + Math.sign(v) * g.nobles, 0, 100);
     const house = W(world).marshals[a?.marshal]?.house;

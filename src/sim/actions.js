@@ -1,6 +1,7 @@
 // Things the crown can order. Each action is checked, then applied to a copy
 // of the state, so the UI can ask "could I?" before it asks "do it".
 import { realmStock, creditLimit } from './economy.js';
+import { canAct, doAct, fearCollapse } from './meters.js';
 import { syncWorld } from './lands.js';
 import { canBattleOrder, battleOrder } from './battle.js';
 import { canSiegeOrder, siegeOrder } from './siege.js';
@@ -129,10 +130,22 @@ export function applyAction(state, world, action) {
     if (!resolveDemand(next, world, action.id, action.choice)) return { state, error: 'That demand has been settled.' };
     return { state: next };
   }
+  // The crown's own acts (M24 B): hangings, gibbets, a feast, a progress.
+  if (action.type === 'act') {
+    const check = canAct(state, world, action.kind, action.settlement ?? null);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    doAct(next, world, action.kind, action.settlement ?? null);
+    return { state: next };
+  }
   if (action.type === 'garrison') {
     const check = canSetGarrison(state, world, action.settlement, action.level);
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
+    // Soldiers withdrawn from a town loosen the crown's grip there (M24 B).
+    const lv = world.military.garrisonLevels;
+    const was = lv[state.garrisonLevel?.[action.settlement] ?? 'standard']?.factor ?? 1;
+    if (lv[action.level].factor < was) fearCollapse(next, world, world.meters?.fear.garrisonCut ?? 0, 'Garrisons withdrawn');
     next.garrisonLevel[action.settlement] = action.level;
     note(next, `${world.byId[action.settlement].name} is to be held with a ${world.military.garrisonLevels[action.level].name.toLowerCase()} garrison.`, 'military');
     return { state: next };

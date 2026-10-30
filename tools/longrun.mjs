@@ -7,7 +7,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadWorld, createState, step, totalPopulation, ledgerNet, realmFaith, holdingsOf, worksSummary } from '../src/sim/index.js';
+import { loadWorld, createState, step, totalPopulation, ledgerNet, realmFaith, holdingsOf, worksSummary, authority } from '../src/sim/index.js';
 import { makeCrowns } from './crowns.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -27,7 +27,7 @@ function report(s, label, totals) {
   const wn = ws.reduce((a, x) => a + x.n, 0);
   const works = `works ${wn ? Math.round(ws.reduce((a, x) => a + x.mean * x.n, 0) / wn) : 100} ruins ${ws.reduce((a, x) => a + x.ruined, 0)}`;
   console.log(`${label.padEnd(10)} pop ${String(pop).padStart(6)} treasury ${String(Math.round(s.treasury)).padStart(7)} net ${String(last ? ledgerNet(last).net : 0).padStart(5)}`
-    + ` maxfield ${totals.maxField} field ${Math.round((s.armies ?? []).filter((a) => a.side === 'temeria').reduce((a, x) => a + x.soldiers, 0))} owed ${Math.round((s.loans ?? []).reduce((a, l) => a + l.payment * l.left, 0))} ${works} trust ${s.trust.toFixed(0).padStart(3)} unrest ${s.unrest.toFixed(0)} dread ${s.dread.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
+    + ` maxfield ${totals.maxField} field ${Math.round((s.armies ?? []).filter((a) => a.side === 'temeria').reduce((a, x) => a + x.soldiers, 0))} owed ${Math.round((s.loans ?? []).reduce((a, l) => a + l.payment * l.left, 0))} ${works} love ${s.love.toFixed(0).padStart(3)} fear ${s.fear.toFixed(0)} auth ${authority(s, world).toFixed(0)} unrest ${s.unrest.toFixed(0)} loyalty ${loyalty.toFixed(0)} lands ${lands} sympathy ${s.sympathy.toFixed(0)}`
     + ` annexed ${Object.values(s.lands ?? {}).filter((l) => l.realm === 'temeria').length} ceded ${Object.keys(s.lands ?? {}).filter((id) => !world.homeOf?.[id] && s.lands[id].realm !== 'temeria').length}`
     + ` sacks ${s.chronicle.filter((c) => /is sacked by Temeria/.test(c.text)).length} expulsions ${s.chronicle.filter((c) => /are driven out of/.test(c.text)).length} risings ${s.chronicle.filter((c) => /rises!/.test(c.text)).length}`
     + ` routes ${s.routes.length} gold ${Math.round(last?.income.gold ?? 0)} wars ${totals.wars} lost ${Object.values(s.settlements).filter((x) => x.occupier).length}`

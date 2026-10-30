@@ -107,7 +107,9 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .m-bar { grid-column: 1 / span 2; height: 3px; border-radius: 2px; background: rgba(239, 227, 198, 0.12); overflow: hidden; display: flex; }
 .m-bar i { display: block; height: 100%; background: var(--gold); }
 .m-bar i.bad { background: #e0745e; }
-.m-bar i + i { opacity: 0.6; }
+.m-bar i.love, #m-love-bar { background: #d07a8a; }
+.m-bar i.fear, #m-fear-bar { background: #9aa3ad; }
+.m-bar i.lesser { opacity: 0.55; }
 /* A long press names a symbol. */
 .tb-tip { position: absolute; z-index: 30; width: 140px; text-align: center; background: var(--panel-2); border: 1px solid var(--gold); border-radius: 6px; padding: 4px 8px; font-size: 13px; pointer-events: none; }
 .tb-tip[hidden] { display: none; }

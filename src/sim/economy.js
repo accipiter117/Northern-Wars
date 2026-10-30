@@ -3,7 +3,7 @@
 // and surplus grain moves along the market to places running short. Once a
 // month the ledger is drawn up: taxes and trade in, garrisons, upkeep, court
 // and interest out. The treasury may go below zero; the bankers lend, at a price.
-import { nudge } from './meters.js';
+import { nudge, taxCollected, sabotage } from './meters.js';
 import { normalise } from './companies.js';
 import { dateOf, MONTHS } from './calendar.js';
 import { integrationFactor } from './conquest.js';
@@ -32,7 +32,7 @@ const GOODS = ['timber', 'stone', 'iron'];
 const EFFECTS = [
   'foodYield', 'goodsYield', 'storage', 'trade', 'prosperity', 'unrest', 'vision', 'goodsStorage', 'sales', 'craft', 'customs',
   'routes', 'routeValue', 'garrisonUpkeep', 'garrisonBonus', 'soldierStrength', 'armyArms', 'ironUse', 'plagueSpread', 'plagueDeaths',
-  'trust', 'tension', 'creditLimit', 'interest', 'traffic', 'gold', 'silver', 'taxBonus',
+  'love', 'fear', 'tension', 'creditLimit', 'interest', 'traffic', 'gold', 'silver', 'taxBonus',
 ];
 
 // What a place's works add up to, each as it stands (M20: the lower of its
@@ -210,11 +210,11 @@ function advanceConstruction(state, world) {
 }
 
 // Called on the first day of each month for the month just ended.
-// The drain of debt on Trust in the Crown (M22 D: the rest of what moves
+// The drain of debt on the crown's Love (M24 B; M22 D: the rest of what moves
 // it, month by month, is in meters.js).
-export function trustDebt(state, world) {
+export function debtLove(state, world) {
   const debt = Math.max(0, -state.treasury);
-  return debt > 0 ? -(debt / 1000) * world.economy.debt.trustPerThousand : 0;
+  return debt > 0 ? -(debt / 1000) * world.economy.debt.lovePerThousand : 0;
 }
 
 // Coin that comes to the crown at once from war and deals (M21): loot,
@@ -371,6 +371,10 @@ export function monthlyLedger(state, world, rng = null) {
   }
   const crowd = (b) => 1 / (1 + e.crafts.crowding * (crafts[b] - 1));
 
+  // What the crown's Authority gathers of the tax due, and the quiet
+  // sabotage of a crown feared but not loved (M24 B).
+  const collect = taxCollected(state, world);
+  const quiet = sabotage(state, world);
   for (const [id, s] of Object.entries(state.settlements)) {
     // An occupied town pays its occupier, not the crown.
     if (s.occupier) continue;
@@ -382,9 +386,12 @@ export function monthlyLedger(state, world, rng = null) {
     // The towns' head tax and market dues, or the villages' hearth tax and
     // tithe (M21), each by its estate's setting.
     const t = placeTaxes(state, world, id, s, law, { fx, tradeMult, month: lastMonth });
+    // Only as much as the crown's Authority can gather (M24 B).
+    t.tax *= collect;
+    t.tithe *= collect;
     income.taxes += t.tax;
-    // Dread empties the roads and the markets with them; low Dread fills
-    // them (M22 D).
+    // Uproar under a weak crown empties the roads and the markets with them;
+    // a calm realm fills them (M24 B; Dread's work in M22 D).
     t.trade *= state.meters?.trade ?? 1;
     income.trade += t.trade;
     income.tithe += t.tithe;
@@ -397,7 +404,7 @@ export function monthlyLedger(state, world, rng = null) {
       if (!world.buildings[b].effects.craft) continue;
       // A strike (M22 D: high Unrest) stops half the workshops.
       const strike = (s.strike ?? 0) > state.day ? 1 - (world.meters?.unrest.strike ?? 0) : 1;
-      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike;
+      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike * (1 - quiet);
       income.crafts[b] = (income.crafts[b] ?? 0) + c * scale;
       put(id, c * scale);
     }
@@ -505,8 +512,8 @@ export function monthlyLedger(state, world, rng = null) {
   // Debt costs the crown its grip on the lords. Past the bankers' limit the
   // soldiers go unpaid, grumble and slip away.
   const debt = Math.max(0, -state.treasury);
-  // Debt drains the folk's Trust in the Crown (M22 D).
-  if (debt > 0) nudge(state, world, 'trust', trustDebt(state, world), 'Debts to the bankers');
+  // Debt drains the folk's Love for the crown.
+  if (debt > 0) nudge(state, world, 'love', debtLove(state, world), 'Debts to the bankers');
   state.unpaid = debt > limit;
   const levied = leviedMap(state);
   for (const [id, s] of Object.entries(state.settlements)) {

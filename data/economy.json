@@ -128,7 +128,7 @@
   "debt": {
     "creditLimit": 8000,
     "interestPerMonth": 0.01,
-    "trustPerThousand": 0.25,
+    "lovePerThousand": 0.25,
     "trustRecovery": 0.5,
     "unpaidUnrest": 12,
     "desertionPerMonth": 0.03,
@@ -149,7 +149,7 @@
     "capShare": 0.8
   },
   "loans": {
-    "note": "Loans from the Vivaldi bank (M21): borrow one of `sums`, repaid over `months` monthly payments of principal x (1 + rate x months) / months. Total owed on loans may not pass capMonths of the realm's monthly income (the mean of the last three months, at least minIncome). A payment the treasury cannot meet is missed: the rate on that loan rises by missedRate, the payment is added to the end, and the folk lose missedTrust of their Trust in the Crown (M22 D).",
+    "note": "Loans from the Vivaldi bank (M21): borrow one of `sums`, repaid over `months` monthly payments of principal x (1 + rate x months) / months. Total owed on loans may not pass capMonths of the realm's monthly income (the mean of the last three months, at least minIncome). A payment the treasury cannot meet is missed: the rate on that loan rises by missedRate, the payment is added to the end, and the folk lose missedLove of their Love for the crown (M24 B).",
     "lender": "the Vivaldi bank",
     "sums": [
       2000,
@@ -161,6 +161,6 @@
     "capMonths": 6,
     "minIncome": 1500,
     "missedRate": 0.004,
-    "missedTrust": 3
+    "missedLove": 3
   }
 }

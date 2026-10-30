@@ -62,10 +62,10 @@ export function resolvePetition(state, world, petitionId, choice, ignored = fals
   const s = state.settlements[pending.place];
   // A grant the treasury cannot pay is a promise broken (M22 D): the coin
   // never comes, the town is angrier than if it had been refused, and the
-  // folk's Trust in the Crown falls.
+  // folk's Love for the crown falls.
   if (!ignored && (c.effects.treasury ?? 0) < 0 && state.treasury + c.effects.treasury < 0) {
-    const b = world.meters?.trust.brokenPromise ?? { trust: 4, unrest: 5 };
-    nudge(state, world, 'trust', -b.trust, 'Promises to petitioners broken');
+    const b = world.meters?.love.brokenPromise ?? { love: 4, unrest: 5 };
+    nudge(state, world, 'love', -b.love, 'Promises to petitioners broken');
     s.unrest = clamp(s.unrest + b.unrest, 0, 100);
     const { title, place } = petitionText(world, pending);
     say(state, `${title} (${place}): the crown promised, but the treasury could not pay. The folk remember.`);
@@ -73,7 +73,7 @@ export function resolvePetition(state, world, petitionId, choice, ignored = fals
   }
   const fx = c.effects;
   if (fx.treasury) state.treasury += fx.treasury;
-  if (fx.trust) nudge(state, world, 'trust', fx.trust, 'Answers to the realm');
+  if (fx.love) nudge(state, world, 'love', fx.love, 'Answers to the realm');
   for (const [g, v] of Object.entries(fx.opinion ?? {})) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
   if (fx.unrest) s.unrest = clamp(s.unrest + fx.unrest, 0, 100);
   if (fx.tension) s.tension = clamp(s.tension + fx.tension, 0, 100);

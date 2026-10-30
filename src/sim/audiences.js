@@ -3,7 +3,7 @@
 // before war and the reasons for it. And what the rulers do of their own
 // accord: ask for audiences with real proposals, tax our caravans when they
 // sour on us, and make and break pacts among themselves by the same rules.
-import { nudge } from './meters.js';
+import { nudge, authority } from './meters.js';
 import { sendFigure, courtOf } from './figures.js';
 import { addDispatch, clamp } from './realm.js';
 import { settleOwnership } from './lands.js';
@@ -254,7 +254,7 @@ function allyAtWarWith(state, pid) {
 
 export function reasonCost(state, world, pid, reason) {
   const W = D(world).war.reasons[reason];
-  return Math.round(declareCost(state, world, pid) * (W?.trust ?? 1));
+  return Math.round(declareCost(state, world, pid) * (W?.cost ?? 1));
 }
 
 export function canDeclareWith(state, world, pid, reason = 'none') {
@@ -263,7 +263,7 @@ export function canDeclareWith(state, world, pid, reason = 'none') {
   const r = warReasons(state, world, pid).find((x) => x.key === reason);
   if (!r || !r.ok) return { ok: false, reason: r ? r.why : 'Unknown reason.' };
   const cost = reasonCost(state, world, pid, reason);
-  if (state.trust < cost) return { ok: false, reason: `Needs ${cost} of the folk's Trust: they would not follow the crown to war.` };
+  if (authority(state, world) < cost) return { ok: false, reason: `Needs Authority of ${cost}: the realm would not follow the crown to war.` };
   return { ok: true, cost };
 }
 
@@ -275,7 +275,7 @@ export function declareWithReason(state, world, rng, pid, reason = 'none') {
   if (reason === 'ally') {
     const ally = allyAtWarWith(state, pid);
     war = warBetween(state, ally, pid);
-    nudge(state, world, 'trust', -cost, 'War declared');
+    nudge(state, world, 'love', -Math.min(state.love, cost), 'War declared');
     war.sides[sideIndex(war, ally)].push(TEMERIA);
     state.neighbours[pid].relation = Math.min(state.neighbours[pid].relation, world.war.atWarRelation);
     addDispatch(state, `Temeria goes to war against ${sideName(world, pid)} at the side of ${sideName(world, ally)}.`, 'military');
