@@ -120,6 +120,9 @@ export function ledgerNet({ income, expenses }) {
   return { in: i, out: o, net: i - o };
 }
 
+// War's takings, for the Steward's report.
+export const WAR_TAKINGS = ['purses', 'raids', 'loot', 'ransom', 'conquests', 'tribute', 'reparations', 'requisition'];
+
 // The Steward's report (M24 C): last month in three numbers, the three
 // costs that weighed most and the kinds of work under half manned, for the
 // inbox and the Treasury. Of the court's cost, `hoard` is what a full
@@ -133,7 +136,9 @@ export function stewardReport(state, world) {
     .map(([key, v]) => ({ key, v: Math.round(sum(v)) })).filter((c) => c.v > 0).sort((a, b) => b.v - a.v).slice(0, 3);
   const u = world.economy.upkeep;
   const hoard = Math.round(Math.max(0, (last.treasury ?? state.treasury) - u.hoardFree) * u.hoardPerMonth);
-  return { month: last.month, year: last.year, in: Math.round(income), out: Math.round(out), net: Math.round(net), costs, hoard };
+  // What fighting brought in (M24 D), line by line.
+  const war = WAR_TAKINGS.map((key) => ({ key, v: Math.round(sum(last.income[key])) })).filter((w) => w.v > 0);
+  return { month: last.month, year: last.year, in: Math.round(income), out: Math.round(out), net: Math.round(net), costs, hoard, war };
 }
 
 export function realmStock(state) {
@@ -243,7 +248,7 @@ export function windfall(state, kind, coin) {
   state.ledger.windfalls[kind] = (state.ledger.windfalls[kind] ?? 0) + coin;
 }
 
-// Commanders Temeria holds are bought back by their realms after a month,
+// Commanders and lords (M24 D) Temeria holds are bought back by their realms after a month,
 // when they can pay: the ransom is war's takings on the ledger (M21).
 export function collectRansoms(state, world) {
   const r = world.war?.battles?.ransom;
@@ -255,7 +260,7 @@ export function collectRansoms(state, world) {
     realm.treasury -= c.ransom;
     windfall(state, 'ransom', c.ransom);
     state.captives = state.captives.filter((x) => x !== c);
-    const who = c.marshal ? world.war.marshals[c.marshal]?.name ?? 'their commander' : 'their commander';
+    const who = c.marshal ? world.war.marshals[c.marshal]?.name ?? 'their commander' : c.lord ? 'a lord taken in battle' : 'their commander';
     say(state, `${sideName(world, c.side)} pays ${number(c.ransom)} crowns to ransom ${who}.`);
   }
 }

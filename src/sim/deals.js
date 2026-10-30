@@ -453,7 +453,7 @@ export function describeItem(world, item, pid) {
     case 'treaty': return `${treatyDef(world, item.treaty).name}${item.years ? ` (${item.years} years)` : ` (${treatyDef(world, item.treaty).years} years)`}`;
     case 'peace': return item.terms === 'keep' ? 'Peace: each keeps what it holds' : item.terms === 'vassal' ? 'Peace: they become our vassal' : 'Peace: every town handed back';
     case 'claimant': return 'The exile they shelter, handed over';
-    case 'captive': return item.from === 'them' ? 'Our captured commander, set free' : 'Their captured commander, set free';
+    case 'captive': return item.from === 'them' ? 'Our captured commander, set free' : item.lord ? 'A captured lord of theirs, set free' : 'Their captured commander, set free';
     default: return item.kind;
   }
 }

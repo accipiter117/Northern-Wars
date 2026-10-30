@@ -41,7 +41,7 @@ export function fearOf(state, rid, of = TEMERIA) {
   return cq(state).fear[rid]?.[of] ?? 0;
 }
 
-function addFear(state, world, of, id, mult = 1) {
+export function addFear(state, world, of, id, mult = 1) {
   const f = C(world).fear;
   const at = world.byId[id];
   for (const rid of livingRealms(state)) {

@@ -21,7 +21,7 @@ export { travellerPositions } from './ambient.js';
 export { threatLevel, localStrength, patrolledSet, crownSoldiers, canSetGarrison, eventText, plagueActive, quarantined } from './military.js';
 export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffects, creditLimit, realmEffect } from './economy.js';
 export { TEMERIA, ownerOf, originOf, sideName, sideColours, placesHeldBy, warsOf, atWar, hostile, warScore, exhaustion, heldValue, sideIndex, crownHolds, valueOf, truceUntil } from './conflict.js';
-export { musterPreview, canRaise, canOrder, armyPosition, armyStrength, describeArmy, crownArmies, canMuster, canMerge, canSplit, daysToArrive } from './armies.js';
+export { musterPreview, canRaise, canOrder, armyPosition, armyStrength, describeArmy, crownArmies, canMuster, canMerge, canSplit, daysToArrive, raidPreview, raidLootAt } from './armies.js';
 export { sendFigure, figurePosition, describeFigure, rideDays, courtOf } from './figures.js';
 export { canDeclare, declareCost, peaceTerms, canMakePeace, warDecisionText, realmPotential } from './war.js';
 export { routeValue, routeLimit, routeCost, routeEndOk, canOpenRoute, routePath, routeKey, routeSafety } from './trade.js';
@@ -32,7 +32,7 @@ export {
   freeCompanies, companiesAt, canRecruit, recruitCost, companySlots, canOrderCompany, huntOdds, bestCompanyFor, targetOf, targetPos,
   describeCompany, companyUpkeep, ORDERS, forceAgainst,
 } from './forces.js';
-export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites, threatScale, threatCap, witcherOnRoad, describeWitcher } from './threats.js';
+export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites, threatScale, threatCap, witcherOnRoad, describeWitcher, threatPurse } from './threats.js';
 export { companyStrength, threatStrength, winChance, oddsWord, resolve, speciesOf, groundAt, foeKind, troopOf } from './combat.js';
 export { levyCompanies, placeMuster, garrisonCompanies, retinueCompanies, mercenaryCompanies, realmCompanies, bandStrength, normalise } from './companies.js';
 export {

@@ -203,8 +203,13 @@
     "prosperity": 12,
     "food": 0.3,
     "unrest": 10,
-    "lootPerPerson": 0.04,
-    "count": 4
+    "lootPerPerson": 0.9,
+    "count": 6,
+    "caravans": { "city": 360, "town": 180 },
+    "herds": { "village": 140, "castle": 80 },
+    "hatred": -8,
+    "fear": 0.5,
+    "note": "M24 D: each place raided yields its people x lootPerPerson x prosperity/50 in plunder, plus the caravans caught at a city or town and the herds driven off from a village or castle (both x prosperity/50). The raided ruler remembers it (hatred, fading as other memories do) and the North fears Temeria a little more (fear x the conquest fear of taking the place)."
   },
   "values": {
     "city": 25,
@@ -534,7 +539,7 @@
       }
     },
     "ransom": {
-      "perSkill": 900,
+      "lord": 450, "lordsPer": 700, "lordsMax": 3, "perSkill": 900,
       "foreign": 600,
       "paidAfterDays": 30,
       "note": "A commander Temeria holds is ransomed by his realm after paidAfterDays, if it can pay (M21); our own are ransomed at the deal table."

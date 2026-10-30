@@ -307,7 +307,7 @@ function presets(app, pid, side) {
   // Commanders taken in battle, ransomed either way (M19).
   for (const c of state.captives ?? []) {
     if (side === 'them' && c.side === TEMERIA && c.by === pid) add(`${c.marshal ? world.war.marshals[c.marshal]?.short ?? 'Our marshal' : 'Our captain'}, their prisoner`, { kind: 'captive', captive: c.id });
-    if (side === 'us' && c.side === pid && c.by === TEMERIA) add('Their captured commander', { kind: 'captive', captive: c.id });
+    if (side === 'us' && c.side === pid && c.by === TEMERIA) add(c.lord ? 'A captured lord' : 'Their captured commander', { kind: 'captive', captive: c.id, ...(c.lord ? { lord: true } : {}) });
   }
   // An exile they shelter, handed over or sent away (M19).
   if (side === 'them' && (state.claimants ?? []).some((c) => c.host === pid && c.against === TEMERIA)) add('Hand over the exile they shelter', { kind: 'claimant' });

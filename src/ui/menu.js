@@ -22,8 +22,10 @@ export const INCOME = [
   ['contracts', 'Shipyard contracts'],
   ['conquests', 'Conquered towns'],
   ['tribute', 'Tribute received'],
-  ['loot', 'Loot'],
-  ['ransom', 'Ransoms'],
+  ['loot', 'Loot from sacked towns'],
+  ['raids', 'Raid loot'],
+  ['purses', 'Purses from outlaws and beasts'],
+  ['ransom', 'Ransoms for lords and commanders'],
   ['reparations', 'Coin in peace terms'],
   ['requisition', 'Requisitions from occupied towns'],
   ['payments', 'Payments under deals'],
@@ -55,7 +57,7 @@ export const INCOME_GROUPS = [
   ['taxes', 'Taxes', ['taxes', 'trade', 'tithe', 'nobles']],
   ['trade', 'Trade and sales', ['exports', 'foreign', 'routes', 'sales', 'customs', 'tolls']],
   ['crafts', 'Crafts and goods', ['crafts', 'goods', 'gold', 'silver', 'homework', 'rents', 'donations', 'contracts']],
-  ['war', 'War', ['conquests', 'tribute', 'loot', 'ransom', 'reparations', 'requisition', 'payments', 'bounties', 'trophies', 'raids', 'seized']],
+  ['war', 'War', ['conquests', 'tribute', 'loot', 'ransom', 'reparations', 'requisition', 'payments', 'purses', 'raids']],
 ];
 export const EXPENSE_GROUPS = [
   ['war', 'War', ['garrisons', 'companies', 'patrols', 'armies', 'occupation', 'tribute', 'witchers']],
@@ -64,8 +66,7 @@ export const EXPENSE_GROUPS = [
 ];
 const EXTRA = {
   exports: 'Sold to partners abroad', routes: 'Crown trade routes', crafts: 'Crafts', goods: 'Goods from the chains',
-  homework: 'Winter work at home', imports: 'Bought from abroad', bounties: 'Bounties', trophies: 'Trophies', raids: 'Raid loot',
-  seized: 'Seized caravans and herds', witchers: "Witchers' fees",
+  homework: 'Winter work at home', imports: 'Bought from abroad', witchers: "Witchers' fees",
 };
 const ESTATES = [['towns', 'towns'], ['peasants', 'villages'], ['nobles', 'lords']];
 const sumOf = (v) => (typeof v === 'number' ? v : Object.values(v ?? {}).reduce((a, b) => a + b, 0));

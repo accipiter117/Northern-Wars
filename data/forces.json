@@ -1,4 +1,12 @@
 {
+  "purses": {
+    "note": "M24 C/D: what clearing a threat pays the crown. Bandits: their hoard (hoardPerMan) and the burghers' bounty (bountyPerMan). Beasts: the villages' reward (reward) and trophies sold (trophyPerStrength of their strength). Scoia'tael: a bounty a head, only while the crown pays bounties. Raiders: the plunder taken back. A witcher's fee is paid when he is hired; the card shows the purse less his fee. A band scattered from its camp pays `bandShare` of its purse.",
+    "bandits": { "hoardPerMan": 5, "bountyPerMan": 2.5 },
+    "monsters": { "reward": 120, "trophyPerStrength": 3 },
+    "scoiatael": { "bountyPerMan": 6 },
+    "raiders": { "plunderPerMan": 4 },
+    "bandShare": 0.4
+  },
   "note": "The crown's standing companies and the threats that roam the realm. Strength is fighting power: men x their worth a man x morale (0.5 + morale/100) x experience (1 + 0.3 x xp) x how well the troop suits the foe and the ground. Upkeep is crowns a man a month. Speeds are map units a day. Since M21 the companies cost 0.55 of their old upkeep, so a well-run realm at peace can keep about 3,000 of them.",
   "companies": {
     "militia": {

@@ -1,5 +1,11 @@
 # Changelog
 
+## M24 D Money from fighting
+- Breaking a bandit camp, a lair or a commando now pays: hoards, bounties, the villages' rewards and trophies. Every threat card shows its purse first, less a witcher's fee where one would be hired.
+- Raids carry off far more: plunder, caravans and herds. The army card shows what a raid on each realm would bring before you order it. The realm raided remembers, and the North fears you more.
+- Lords taken when an enemy army breaks are ransomed by their realm a month later.
+- Each of these is its own line in the War part of the ledger and in the Steward's report.
+
 ## M24 C A rich crown at peace
 - A well-run crown at peace now makes about 1,500 crowns a month. A careless one about breaks even, and an idle one slides slowly into debt. A large army in the field for a season eats most of a year's surplus.
 - The Steward's report heads Decisions and the Treasury each month: in, out, net, and the three costs that weigh most, each with a one-tap fix.

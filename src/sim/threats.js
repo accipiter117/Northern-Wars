@@ -18,6 +18,7 @@ import { threatStrength, speciesOf, winChance, groundAt, companyStrength, foeKin
 import { companiesAt, stationedStrength } from './forces.js';
 import { damagePlace, outside } from './works.js';
 import { nudge } from './meters.js';
+import { windfall } from './economy.js';
 
 const F = (world) => world.forces;
 const T = (world) => world.forces.threats;
@@ -400,9 +401,11 @@ function disperse(state, world, t, text) {
 // weakened; a commando or raiding party is gone.
 export function destroyThreat(state, world, t, partOnly = false) {
   if (partOnly && t.band) {
+    payPurse(state, world, t, world.forces.purses?.bandShare ?? 0);
     t.band = null;
     return;
   }
+  payPurse(state, world, t);
   tally(state).cleared += 1;
   const s = state.settlements[t.near];
   if (s && isCamp(t)) s.cleared = { ...(s.cleared ?? {}), [t.kind]: state.day + 120 };
@@ -538,6 +541,44 @@ function raidVillage(state, world, rng, t, id) {
     raiders: `${who} crossed the border and plundered ${name}${dead ? `: ${dead} dead` : ''}.`,
   }[t.kind];
   say(state, text);
+}
+
+// ---- Purses (M24 D) ----
+
+// What clearing a threat brings the crown, part by part: a bandit camp's
+// hoard and the burghers' bounty; the villages' reward for beasts and the
+// trophies sold; a bounty on Scoia'tael heads while the crown pays
+// bounties; the plunder taken back from raiders. `fee` is what a witcher
+// would charge for it, and `net` the purse less his fee.
+export function threatPurse(state, world, t) {
+  const p = world.forces.purses;
+  const parts = [];
+  if (p && !t.abroad) {
+    const men = (t.band ?? t).men ?? t.men ?? 0;
+    if (t.kind === 'bandits') {
+      parts.push(['hoard', 'their hoard', men * p.bandits.hoardPerMan]);
+      parts.push(['bounty', "the burghers' bounty", men * p.bandits.bountyPerMan]);
+    } else if (t.kind === 'monsters') {
+      parts.push(['reward', "the villages' reward", p.monsters.reward]);
+      parts.push(['trophies', 'trophies', threatStrength(world, t) * p.monsters.trophyPerStrength]);
+    } else if (t.kind === 'scoiatael' && (state.laws.bounties?.option ?? 'none') !== 'none') {
+      parts.push(['bounty', 'a bounty on their heads', men * p.scoiatael.bountyPerMan]);
+    } else if (t.kind === 'raiders') {
+      parts.push(['plunder', 'the plunder taken back', men * p.raiders.plunderPerMan]);
+    }
+  }
+  const rounded = parts.map(([k, label, v]) => ({ key: k, label, v: round(v) })).filter((x) => x.v > 0);
+  const total = rounded.reduce((a, x) => a + x.v, 0);
+  const fee = t.kind === 'monsters' ? witcherCost(state, world, t) : 0;
+  return { parts: rounded, total, fee, net: total - fee };
+}
+
+// Pays a threat's purse into the treasury as war's takings, a share of it
+// for a band scattered from its camp.
+function payPurse(state, world, t, share = 1) {
+  if (t.abroad) return;
+  const coin = round(threatPurse(state, world, t).total * share);
+  if (coin > 0) windfall(state, 'purses', coin);
 }
 
 // ---- Witchers ----
