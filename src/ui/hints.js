@@ -116,11 +116,13 @@ export function helpHtml(app) {
       <button type="button" class="chip${pause ? ' on' : ''}" aria-pressed="${pause}" data-action="${pause ? 'sighting-pause-off' : 'sighting-pause-on'}">Sightings</button>
       <button type="button" class="chip${prefs.pauseOnBattle ? ' on' : ''}" aria-pressed="${!!prefs.pauseOnBattle}" data-action="${prefs.pauseOnBattle ? 'battle-pause-off' : 'battle-pause-on'}">Our battles</button>
     </div></div>
+    <div data-part="power" class="form-row"><span>Device</span><div class="chips">
+      <button type="button" class="chip${prefs.haptics === false ? '' : ' on'}" aria-pressed="${prefs.haptics !== false}" data-action="${prefs.haptics === false ? 'haptics-on' : 'haptics-off'}">Vibration</button>
+      <button type="button" class="chip${prefs.batterySaver ? ' on' : ''}" aria-pressed="${!!prefs.batterySaver}" data-action="${prefs.batterySaver ? 'saver-off' : 'saver-on'}" title="Fewer frames and travellers; the screen may sleep">Battery saver</button>
+      <button type="button" class="chip${prefs.keepAwake ? ' on' : ''}" aria-pressed="${!!prefs.keepAwake}" data-action="${prefs.keepAwake ? 'awake-off' : 'awake-on'}"${prefs.batterySaver || !('wakeLock' in navigator) ? ' disabled' : ''} title="Only while the realm runs, never under Battery saver">Keep screen awake</button>
+    </div></div>
     <div data-part="settings" class="actions">
       <button type="button" class="act" data-action="${enabled ? 'hints-off' : 'hints-on'}"><span class="act-label">${enabled ? 'Turn hints off' : 'Turn hints back on'}</span></button>
-      <button type="button" class="act" data-action="${prefs.haptics === false ? 'haptics-on' : 'haptics-off'}"><span class="act-label">${prefs.haptics === false ? 'Turn vibration on' : 'Turn vibration off'}</span></button>
-      <button type="button" class="act" data-action="${prefs.batterySaver ? 'saver-off' : 'saver-on'}" aria-pressed="${!!prefs.batterySaver}"><span class="act-label">${prefs.batterySaver ? 'Battery saver is on' : 'Battery saver is off'}</span><span class="act-sub">${prefs.batterySaver ? 'On: 30 frames a second, half the travellers, and the screen may sleep. Tap to turn off' : 'Tap to save battery: 30 frames a second, half the travellers, the screen may sleep'}</span></button>
-      <button type="button" class="act" data-action="${prefs.keepAwake ? 'awake-off' : 'awake-on'}"${prefs.batterySaver ? ' disabled' : ''}><span class="act-label">${prefs.keepAwake ? 'Let the screen sleep' : 'Keep the screen awake while playing'}</span><span class="act-sub">${!('wakeLock' in navigator) ? 'Not supported by this browser' : prefs.batterySaver ? 'Not under Battery saver' : 'Only while the realm is running'}</span></button>
     </div>
     <div data-part="search" data-form="help"><label class="search">${icon('search')}<input type="search" data-field="q" value="${escapeHtml(f.q)}" placeholder="Search help" aria-label="Search help" autocomplete="off"></label></div>
     <div data-part="topics">${items || '<p class="sub">Nothing matches.</p>'}</div>

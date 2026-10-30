@@ -138,7 +138,7 @@ test('Battery saver: set in Help, 30 frames even while panning, half the travell
   await page.click('[data-more="help"]');
   await page.click('[data-action="saver-on"]');
   assert.equal(await page.evaluate(() => window.northernWars.prefs.batterySaver), true);
-  assert.match(await page.textContent('[data-action="saver-off"]'), /Battery saver is on/);
+  assert.match(await page.getAttribute('[data-action="saver-off"]', 'aria-pressed'), /true/);
   await page.waitForTimeout(300);
   assert.equal(await page.evaluate(() => window.__wake.held), 0, 'no wake lock under Battery saver');
   // Half the travellers: only those with even numbers are drawn.

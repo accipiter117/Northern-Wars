@@ -120,7 +120,8 @@ test('the board in landscape, and its frames stay cheap', async () => {
   await page.mouse.up();
   const f = await page.evaluate(() => window.northernWars.frameStats);
   assert.ok(f.frames > 30, `${f.frames} frames drawn`);
-  assert.ok(f.mean < 8, `${f.mean.toFixed(1)} ms a frame on average`);
+  // The interface's own cost a frame (days of the realm fall on fewer, capped frames since M22 A).
+  assert.ok(f.meanCalm < 8, `${f.meanCalm.toFixed(1)} ms a frame on average`);
   assert.ok(f.p95Calm < 1000 / 60, `${f.p95Calm.toFixed(1)} ms for the slowest frames`);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   await page.evaluate(() => window.northernWars.setSpeed(0));

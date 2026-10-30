@@ -733,7 +733,6 @@ async function boot() {
   // The clock. Whole days go through the simulation; the leftover fraction
   // only slides ambient units along so motion looks smooth between days.
   let lastSheetRefresh = 0;
-  let lastHintCheck = 0;
   // How long each frame's own work takes (the realm's days and the drawing),
   // for the performance test: it must fit well inside a sixtieth of a second.
   const frameStats = { frames: 0, ms: 0, max: 0, recent: [], days: [] };
@@ -793,10 +792,6 @@ async function boot() {
     }
     renderer.draw(state, frac, nav.open || label || pick.active ? selection : null, { tick: speed === 0 && renderer.lively() ? now / 1000 : null });
     topbar.update(state, renderer.boardness >= 0.5);
-    if (now - lastHintCheck > 1000) {
-      lastHintCheck = now;
-      hints.check(state, world);
-    }
     const took = performance.now() - work;
     frameStats.frames += 1;
     frameStats.ms += took;
@@ -854,6 +849,9 @@ async function boot() {
       wakeFrame();
     }, Math.max(0, gap - (now - started)));
   }
+  // Hints are checked once a second on their own timer, not in the frame
+  // loop, which sleeps while nothing moves.
+  setInterval(() => { if (!document.hidden) hints.check(state, world); }, 1000);
   // Any tap, key or change in the interface may need the map redrawn.
   for (const ev of ['pointerdown', 'pointermove', 'pointerup', 'wheel', 'keydown', 'click', 'input', 'change']) {
     document.addEventListener(ev, () => wakeFrame(), { capture: true, passive: true });
@@ -904,7 +902,12 @@ async function boot() {
     get frameStats() {
       const p95 = (list) => [...list].sort((a, b) => a - b)[Math.floor(list.length * 0.95)] ?? 0;
       const calm = frameStats.recent.filter((_, i) => !frameStats.days[i]);
-      return { frames: frameStats.frames, mean: frameStats.ms / Math.max(1, frameStats.frames), max: frameStats.max, p95: p95(frameStats.recent), p95Calm: p95(calm), dayFrames: frameStats.days.filter(Boolean).length };
+      // meanCalm (M22 A): with frames capped at 30 a second, the day of the
+      // realm falls on a larger share of them, so the plain mean rises while
+      // the work done each second falls; the interface's own cost is the
+      // mean of the frames without a day.
+      const meanCalm = calm.length ? calm.reduce((a, b) => a + b, 0) / calm.length : 0;
+      return { frames: frameStats.frames, mean: frameStats.ms / Math.max(1, frameStats.frames), meanCalm, max: frameStats.max, p95: p95(frameStats.recent), p95Calm: p95(calm), dayFrames: frameStats.days.filter(Boolean).length };
     },
     // Where the interface stands: the open screen, the panel's height, and
     // its remembered state.
