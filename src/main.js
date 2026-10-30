@@ -956,7 +956,7 @@ async function boot() {
     order: (a) => { const r = order(a); wakeFrame(); return r; },
     // The two levels of the map (M20 D): zoom to a share of the opening
     // zoom, how far the board has faded in, and where a realm's marker sits.
-    zoomTo: (rel) => { zoomAt(cam, world, cam.viewW / 2, cam.viewH / 2, (rel * cam.cover) / cam.scale); wakeFrame(); },
+    zoomTo: (rel) => { mapInput.stop(); zoomAt(cam, world, cam.viewW / 2, cam.viewH / 2, (rel * cam.cover) / cam.scale); wakeFrame(); },
     get boardness() { return renderer.boardness; },
     markerOf: (rid) => { const m = markerAt(state, world, rid); const p = toScreen(cam, m.x, m.y); const r = canvas.getBoundingClientRect(); return { x: r.left + p.x, y: r.top + p.y }; },
     get audio() { return { unlocked: audio.unlocked, musicPlaying: audio.musicPlaying, context: audio.context, src: audio.music?.getAttribute('src') ?? null }; },
@@ -996,6 +996,8 @@ async function boot() {
     setSpeed,
     // Bring a map point to the middle of the screen.
     lookAt(x, y) {
+      // A deliberate look elsewhere ends any glide still under way.
+      mapInput.stop();
       panBy(cam, world, (cam.x - x) * cam.scale, (cam.y - y) * cam.scale);
       renderer.recentre();
       wakeFrame();
