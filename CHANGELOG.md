@@ -1,5 +1,12 @@
 # Changelog
 
+## M23 B Labour made easy
+- Labour is now the first thing in the Realm tab, and tapping the line under the top bar opens it.
+- On a phone it fits one screen: a coloured bar of where the hands are (idle hands shown as a gap), five settings at a tap (Harvest, Winter, War footing, Rebuild, Balanced, or Custom once you change anything) and no more than three lines of what matters now.
+- Adjust gives a slider for each kind of work, with the royal calls beneath. The old + and − buttons are gone.
+- The season nudges you: harvest time in August, winter work from November, and back to the usual round afterwards.
+- A town's focus is a single row of chips on its card; one tap sets it.
+
 ## M23 A Questions and Undo
 - No more browser pop-ups. Weighty orders such as declaring war, breaking a treaty or taking a loan happen at once, and their notice carries an Undo button for a few seconds.
 - Only what cannot be taken back asks first, in the game's own dialog: standing a company or an army down, accepting terms of peace and abandoning the reign. Cancel is the safe default; Escape or a tap outside cancels too.

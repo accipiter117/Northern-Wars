@@ -184,10 +184,10 @@ function placesHtml(app) {
 
 export function realmTab(app) {
   const sub = app.memory.sub.realm;
-  const body = sub === 'places' ? placesHtml(app) : sub === 'labour' ? labourHtml(app) : overviewHtml(app);
+  const body = sub === 'places' ? placesHtml(app) : sub === 'overview' ? overviewHtml(app) : labourHtml(app);
   return {
     title: `The Realm of ${escapeHtml(app.world.kingdom.name)}`,
-    html: `${segs([['overview', 'Overview'], ['labour', 'Labour'], ['places', 'Places']], sub)}${body}`,
+    html: `${segs([['labour', 'Labour'], ['overview', 'Overview'], ['places', 'Places']], sub)}${body}`,
   };
 }
 

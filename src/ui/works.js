@@ -4,7 +4,7 @@
 import { spacesOf, repairOptions, canRepairWorks, worksSummary, kindOfWorks, districtOf, handsOf } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
-import { isOpen, form } from './memory.js';
+import { isOpen } from './memory.js';
 import { previewOf, outputLine } from './labour.js';
 
 export function condWord(c) {
@@ -89,10 +89,9 @@ export function worksTabHtml(app, id) {
 }
 
 // A town's focus (M21 C): which work its hinterland's hands lean to, offered
-// only where the district has works of that kind; the chosen option shows
-// what it would do before it is set.
+// only where the district has works of that kind.
 function focusHtml(app, id) {
-  const { world, state, memory } = app;
+  const { world, state } = app;
   const cfg = world.labour?.focus;
   const type = world.byId[id].type;
   if (!cfg || !state.labour || state.settlements[id]?.occupier || (type !== 'town' && type !== 'city')) return '';
@@ -103,17 +102,15 @@ function focusHtml(app, id) {
   kinds.add('fields');
   const opts = Object.entries(cfg.options).filter(([, o]) => o.kinds.some((k) => kinds.has(k)));
   const now = state.labour.focus?.[id] ?? null;
-  const f = form(memory, `focus:${id}`, { pick: now ?? 'none' });
-  const pick = f.pick === 'none' ? null : f.pick;
-  const chips = [['none', 'None'], ...opts.map(([k, o]) => [k, o.name])].map(([k, name]) =>
-    `<button type="button" class="chip${f.pick === k ? ' on' : ''}${(now ?? 'none') === k ? ' current' : ''}" aria-pressed="${f.pick === k}" data-set="pick:${k}">${escapeHtml(name)}</button>`).join('');
-  const same = pick === now;
-  // With no focus and none chosen, the None chip says it all.
-  const line = same ? (now ? `Focused on ${cfg.options[now].name.toLowerCase()}.` : '')
-    : outputLine(previewOf(state, world, `focus:${id}:${pick}`, { focus: { id, focus: pick } }));
-  return `<div data-form="focus:${id}" data-part="focus"><div class="form-row"><span>Focus</span><div class="chips">${chips}</div></div>
-    ${same && !now ? '' : `<p class="sub" data-part="focus-preview">${same ? escapeHtml(line) : `This town and its villages: ${escapeHtml(line)}.`}</p>`}
-    ${same ? '' : `<button type="button" class="act" data-focus-go="${id}" ${orderAttr({ type: 'focus', settlement: id, focus: pick })}><span class="act-label">${pick ? `Focus on ${escapeHtml(cfg.options[pick].name.toLowerCase())}` : 'Clear the focus'}</span></button>`}</div>`;
+  // One row (M23 B): a tap on a chip sets the focus at once; each chip's
+  // title says what it would do to this town and its villages.
+  const chips = [['none', 'None'], ...opts.map(([k, o]) => [k, o.name])].map(([k, name]) => {
+    const on = (now ?? 'none') === k;
+    const pick = k === 'none' ? null : k;
+    const what = on ? (now ? `Focused on ${cfg.options[now].name.toLowerCase()}` : 'No focus') : `This town and its villages: ${outputLine(previewOf(state, world, `focus:${id}:${pick}`, { focus: { id, focus: pick } }))}`;
+    return `<button type="button" class="chip${on ? ' on' : ''}" aria-pressed="${on}" data-focus="${k}" title="${escapeHtml(what)}" ${on ? '' : orderAttr({ type: 'focus', settlement: id, focus: pick })}>${escapeHtml(name)}</button>`;
+  }).join('');
+  return `<div data-part="focus"><div class="form-row focus-row"><span>Focus</span><div class="chips">${chips}</div></div></div>`;
 }
 
 // Hands within a day's walk (M20 C): its own, and the villages' that lend

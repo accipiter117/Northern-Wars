@@ -39,7 +39,10 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
       board = onBoard;
       const food = realmStock(state).food;
       const orders = state.orders?.list.length ?? 0;
-      const key = `${state.day}|${state.treasury}|${Math.round(food)}|${Math.round(state.trust)}|${Math.round(state.unrest)}|${Math.round(state.dread)}|${board}|${orders}`;
+      // The hands' split too, so a new setting refreshes the pressure strip
+      // (and its seasonal prompt) at once (M23 B).
+      const split = state.labour ? Object.values(state.labour.split).join(',') : '';
+      const key = `${state.day}|${state.treasury}|${Math.round(food)}|${Math.round(state.trust)}|${Math.round(state.unrest)}|${Math.round(state.dread)}|${board}|${orders}|${split}`;
       if (key === last) return;
       last = key;
       const d = dateOf(state.day);

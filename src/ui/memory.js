@@ -14,7 +14,7 @@ function fresh() {
     open: false,
     snap: 'half',
     stacks: Object.fromEntries([...TABS, 'map'].map((t) => [t, t === 'map' ? [] : [`tab:${t}`]])),
-    sub: { realm: 'overview', court: 'inbox', treasury: 'ledger', military: 'forces', diplomacy: 'realms', town: 'overview' },
+    sub: { realm: 'labour', court: 'inbox', treasury: 'ledger', military: 'forces', diplomacy: 'realms', town: 'overview' },
     scroll: {},
     expanded: {},
     forms: {},

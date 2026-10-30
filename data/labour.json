@@ -278,7 +278,15 @@
         "repairs": 15,
         "levies": 4
       }
-    }
+    },
+    "balanced": { "name": "Balanced", "blurb": "The kingdom's usual round: the fields first, the crafts next, a little of everything.", "split": { "fields": 47, "woods": 7, "mines": 7, "pastures": 3, "fishing": 4, "crafts": 22, "repairs": 4, "levies": 6 } }
+  },
+  "prompts": {
+    "note": "The seasonal prompt in the pressure strip and on the Labour sheet (M23 B): in these months, unless the hands already stand at `preset` (or, with `from`, only while they stand at that preset), suggest it.",
+    "harvest": { "months": [8, 9], "preset": "harvest", "text": "Harvest time: send the hands to the fields." },
+    "winter": { "months": [11, 12, 1], "preset": "winter", "text": "Winter is coming: turn the hands to fuel and the workshops." },
+    "spring": { "months": [3, 4], "preset": "balanced", "from": "winter", "text": "Spring: send the hands back to the fields." },
+    "after": { "months": [10], "preset": "balanced", "from": "harvest", "text": "The harvest is in: back to the usual round." }
   },
   "focus": {
     "note": "A town's focus (M21 C) pulls more of its district's hands (the town and the villages that lend it theirs) to one kind of work: those kinds' shares there are multiplied by boost, the rest scaled down to keep the whole.",

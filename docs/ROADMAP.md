@@ -33,6 +33,14 @@ Part A, in-app dialogs:
 - A dialog only for what cannot be undone: stand down a company, disband an army, accept terms of peace, abandon the reign.
 - A test fails if confirm(, alert( or prompt( appears in src; the browser tests fail on any browser dialog; the dialog fits 360x640.
 
+Part B, labour made easy:
+- The pressure strip opens Labour; Labour comes first in the Realm tab.
+- One screen at 360x640 with no scrolling: a stacked bar with idle hands as a gap; Harvest, Winter, War footing, Rebuild and Balanced, showing Custom after any change; at most three lines.
+- Adjust: a slider per kind of work; no + and − buttons.
+- A town's focus as one row on its card.
+- A seasonal prompt in the pressure strip.
+- Tests: the sheet fits 360x640 without scrolling; settings, Custom, sliders, calls, the focus row and the prompt.
+
 ## M22 acceptance criteria
 Part A, battery and performance:
 - The map is drawn only when something needs drawing; paused and idle, no frames are asked for until the next event.

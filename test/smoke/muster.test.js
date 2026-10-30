@@ -44,9 +44,9 @@ test('the labour strip, a preset, a town\'s focus, and an army raised with its p
   await page.screenshot({ path: join(OUT, 'portrait-labour-strip.png') });
   await page.click('[data-part="labour-strip"]');
   await page.waitForSelector('[data-part="presets"]');
-  const preview = await page.textContent('[data-preset="harvest"] [data-part="preset-preview"]');
+  // Each setting says what it would change, in its title.
+  const preview = await page.getAttribute('[data-preset="harvest"]', 'title');
   assert.match(preview, /[+−]\d+ [a-z ]+[\s\S]*a month/);
-  await page.evaluate(() => document.querySelector('[data-part="presets"]').scrollIntoView({ block: 'start' }));
   await page.screenshot({ path: join(OUT, 'portrait-preset.png') });
   await page.click('[data-preset="war"]');
   assert.deepEqual(await page.evaluate(() => window.northernWars.state.labour.split), world.labour.presets.war.split);
@@ -58,11 +58,12 @@ test('the labour strip, a preset, a town\'s focus, and an army raised with its p
   await page.touchscreen.tap(mar.x, mar.y);
   await page.waitForSelector('#sheet:not([hidden])');
   await page.click('.segs [data-tsub="works"]');
-  await page.click('[data-form="focus:maribor"] [data-set="pick:food"]');
-  assert.match(await page.textContent('[data-part="focus-preview"]'), /This town and its villages: [\s\S]*a month|Little change/);
+  // The focus is one row on the town card: a chip says what it would do,
+  // and a tap sets it.
+  assert.match(await page.getAttribute('[data-part="focus"] [data-focus="food"]', 'title'), /This town and its villages: [\s\S]*a month|Little change/);
   await page.evaluate(() => document.querySelector('[data-part="focus"]').scrollIntoView({ block: 'start' }));
   await page.screenshot({ path: join(OUT, 'portrait-focus.png') });
-  await page.click('[data-focus-go="maribor"]');
+  await page.click('[data-part="focus"] [data-focus="food"]');
   assert.equal(await page.evaluate(() => window.northernWars.state.labour.focus.maribor), 'food');
 
   // Raise an army: the levy, the lords, a mercenary company, and what it costs.
