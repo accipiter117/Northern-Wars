@@ -477,24 +477,24 @@
     "reasons": {
       "claim": {
         "name": "A border claim",
-        "authority": 0
+        "trust": 0
       },
       "broken": {
         "name": "A broken treaty",
-        "authority": 0.5,
+        "trust": 0.5,
         "within": 1095
       },
       "ally": {
         "name": "Defending an ally",
-        "authority": 0.5
+        "trust": 0.5
       },
       "ultimatum": {
         "name": "Our terms were refused",
-        "authority": 0.5
+        "trust": 0.5
       },
       "none": {
         "name": "No reason given",
-        "authority": 1
+        "trust": 1
       }
     },
     "noCauseMood": -8

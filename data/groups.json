@@ -3,7 +3,7 @@
   "groups": {
     "nobles": {
       "name": "Nobles",
-      "about": "The lords and their households. Their mood feeds the crown's Authority."
+      "about": "The lords and their households. Their mood feeds the realm's Unrest (M22 D)."
     },
     "burghers": {
       "name": "Burghers",
@@ -55,10 +55,10 @@
     },
     "faithUnrest": 0.25,
     "peopleUnrest": 0.6,
-    "nobleAuthority": 0.03,
+    "nobleTrust": 0.03,
     "burgherTrade": 0.004,
-    "authorityRegen": 1,
-    "authorityRegenBelow": 75,
-    "authorityFade": 0.03
+    "trustRegen": 1,
+    "trustRegenBelow": 75,
+    "trustFade": 0.03
   }
 }

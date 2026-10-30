@@ -18,7 +18,7 @@ function checkInvariants(s, label) {
   assertFinite(s, label);
   assert.ok(s.treasury >= -world.economy.debt.creditLimit * 2, `${label} treasury ${s.treasury}`);
   for (const [id, h] of Object.entries(s.houses)) assert.ok(h.loyalty >= 0 && h.loyalty <= 100, `${label} ${id} loyalty`);
-  for (const m of ['authority', 'stability', 'sympathy']) assert.ok(s[m] >= 0 && s[m] <= 100, `${label} ${m} ${s[m]}`);
+  for (const m of ['trust', 'unrest', 'dread', 'sympathy']) assert.ok(s[m] >= 0 && s[m] <= 100, `${label} ${m} ${s[m]}`);
   for (const [id, st] of Object.entries(s.settlements)) {
     for (const m of ['prosperity', 'unrest']) assert.ok(st[m] >= 0 && st[m] <= 100, `${label} ${id}.${m}`);
     for (const [p, n] of Object.entries(st.population)) assert.ok(n >= 0, `${label} ${id} ${p} ${n}`);
@@ -61,14 +61,14 @@ test('different seeds give different reigns', () => {
   assert.notEqual(JSON.stringify(a.settlements), JSON.stringify(b.settlements));
 });
 
-test('thirty untended years: the hoard levels off, Authority is not left at the cap, the realm decays but lives', () => {
+test('thirty untended years: the hoard levels off, Trust is not left at the cap, the realm decays but lives', () => {
   let s = createState(world, 5);
   const pop0 = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
   // Decisions are left to take their defaults, as an absent crown would.
   s = step(s, 30 * YEAR_DAYS, world, { ambient: false });
   checkInvariants(s, 'thirty years');
   assert.ok(s.treasury < 70000, `treasury ${s.treasury}`);
-  assert.ok(s.authority < 90, `authority ${s.authority}`);
+  assert.ok(s.trust < 90, `trust ${s.trust}`);
   const pop = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
   // Since M20 an untended realm's works fall to ruin, its woodpiles run
   // dry once its lumber camps are gone, and its people dwindle.

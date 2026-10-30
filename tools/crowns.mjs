@@ -5,7 +5,7 @@ import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
   strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks, canCall, winterOutlook, foodYield, foodNeed, foodCapacity,
-  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer,
+  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer, holdingsOf, canHouseAction,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -385,6 +385,14 @@ export function makeCrowns(world) {
     const [law, option] = laws[month % laws.length];
     s = act(s, { type: 'law', law, option });
     for (const id of Object.keys(s.houses)) if (month % 12 === 0) s = act(s, { type: 'house', house: id, kind: 'fine' });
+    // Twice a year (M22 D) it strips a lord of a holding, whatever the
+    // towns and the other houses think: the crown that runs high Unrest.
+    if (month % 6 === 3) {
+      for (const id of Object.keys(s.houses)) {
+        const sid = holdingsOf(s, id).find((x) => canHouseAction(s, world, id, 'strip', x).ok);
+        if (sid) { s = act(s, { type: 'house', house: id, kind: 'strip', settlement: sid }); break; }
+      }
+    }
     return s;
   }
 

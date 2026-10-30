@@ -1,5 +1,14 @@
 # Changelog
 
+## M22 D Three meters
+- Authority and Stability are gone. The top bar now shows Treasury, Granary, Trust in the Crown, Unrest and Dread, all five fitting a phone held upright.
+- Tap any meter to see why it moved: three to five plain reasons, biggest first.
+- Trust rises with full granaries through winter, threats cleared, battles won, repairs, light taxes and relief; it falls with hunger, cold, raids left unanswered, ruined works, lost towns and battles, broken promises, heavy taxes and heavy levies. Low Trust sends people away and slows the works.
+- Unrest gathers the towns' anger and the lords' mood. High Unrest brings strikes, then a great house turns against the crown.
+- Dread rises with beasts, camps and Scoia'tael near our towns, plague, enemy armies and refugees, and falls with patrols, garrisons, witchers and victories. High Dread empties villages behind the walls, quietens the roads and swells the Eternal Fire; low Dread means busy roads.
+- Laws, war and acts against the lords now cost Trust or stir Unrest. The crown is deposed only after months of very low Trust together with very high Unrest.
+- Save version 24.
+
 ## M22 C One military
 - Every soldier now belongs to a company: levies, standing companies, the lords' retinues and hired swords alike. Armies are made of companies, and each keeps its name.
 - Strength is worked out one way for everything, so a garrison, a muster, a company and an army can be compared fairly.

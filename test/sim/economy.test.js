@@ -51,7 +51,7 @@ test('food beyond a settlement\'s stores spoils', () => {
   assert.ok(s.settlements.tegmond.stock.food <= foodCapacity(world, s.settlements.tegmond) + 1e-6);
 });
 
-test('the crown can borrow up to the bankers\' limit, and debt costs Authority and interest', () => {
+test('the crown can borrow up to the bankers\' limit, and debt costs Trust and interest', () => {
   let s = createState(world, 1);
   s.treasury = -7500;
   // Since M20 the crown mends rather than builds: a dear rebuild is beyond
@@ -65,7 +65,7 @@ test('the crown can borrow up to the bankers\' limit, and debt costs Authority a
   // About one per cent a month, on what is still owed when the month closes.
   const owed = -(last.treasury - ledgerNet(last).net);
   assert.ok(Math.abs(last.expenses.interest - owed * 0.01) <= owed * 0.003, `interest ${last.expenses.interest} on ${owed}`);
-  assert.ok(s.authority < 60);
+  assert.ok(s.trust < 60);
   assert.ok(s.chronicle.some((d) => d.text.includes('owes')));
 });
 
@@ -78,11 +78,11 @@ test('past the limit, soldiers go unpaid and desert', () => {
   assert.ok(s.settlements.vizima.garrison < garrison);
 });
 
-test('out of debt, Authority slowly returns', () => {
+test('out of debt, Trust slowly returns', () => {
   let s = createState(world, 1);
-  s.authority = 40;
+  s.trust = 30;
   s = run(s, 31);
-  assert.ok(s.authority > 40 && s.authority <= 60);
+  assert.ok(s.trust > 30 && s.trust <= 60, `trust ${s.trust}`);
 });
 
 test('the monthly ledger balances', () => {

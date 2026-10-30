@@ -4,6 +4,7 @@
 // their own captains. Armies march the roads a stretch a day, fight when
 // they meet an enemy, starve or storm the towns they besiege, and carry off
 // what they can.
+import { nudge } from './meters.js';
 import { windfall } from './economy.js';
 import { creditLimit, realmEffect } from './economy.js';
 import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
@@ -748,8 +749,18 @@ export function nearestPlaceName(world, p) {
 // Victories lift the crown and the lords; defeats and lost towns cost it.
 export function glory(state, world, kind, a) {
   const g = W(world).glory;
-  const v = g[kind] ?? 0;
-  state.authority = clamp(state.authority + v, 0, 100);
+  let v = g[kind] ?? 0;
+  const why = { battleWon: 'Battles won', battleLost: 'Battles lost', townTaken: 'Towns taken', townLost: 'Towns sacked or lost', capitalLost: 'Towns sacked or lost' }[kind] ?? (v >= 0 ? 'Battles won' : 'Battles lost');
+  // A war is many battles and many towns: the folk judge the month, not
+  // each clash, so the swing from battles, and from towns, is capped each
+  // month (the capital's fall is not).
+  if (kind !== 'capitalLost') {
+    const so = state.meters?.month?.trust?.[why] ?? 0;
+    const cap = (kind === 'townLost' || kind === 'townTaken' ? g.townMonthCap : g.monthCap) ?? Infinity;
+    v = v > 0 ? Math.max(0, Math.min(v, cap - so)) : Math.min(0, Math.max(v, -cap - so));
+  }
+  nudge(state, world, 'trust', v, why);
+  if (v > 0) nudge(state, world, 'dread', -v, 'Victories');
   if (kind === 'battleWon' || kind === 'battleLost') {
     if (state.opinion?.nobles !== undefined) state.opinion.nobles = clamp(state.opinion.nobles + Math.sign(v) * g.nobles, 0, 100);
     const house = W(world).marshals[a?.marshal]?.house;

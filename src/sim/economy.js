@@ -3,6 +3,7 @@
 // and surplus grain moves along the market to places running short. Once a
 // month the ledger is drawn up: taxes and trade in, garrisons, upkeep, court
 // and interest out. The treasury may go below zero; the bankers lend, at a price.
+import { nudge } from './meters.js';
 import { normalise } from './companies.js';
 import { dateOf, MONTHS } from './calendar.js';
 import { integrationFactor } from './conquest.js';
@@ -31,7 +32,7 @@ const GOODS = ['timber', 'stone', 'iron'];
 const EFFECTS = [
   'foodYield', 'goodsYield', 'storage', 'trade', 'prosperity', 'unrest', 'vision', 'goodsStorage', 'sales', 'craft', 'customs',
   'routes', 'routeValue', 'garrisonUpkeep', 'garrisonBonus', 'soldierStrength', 'armyArms', 'ironUse', 'plagueSpread', 'plagueDeaths',
-  'authority', 'tension', 'creditLimit', 'interest', 'traffic', 'gold', 'silver', 'taxBonus',
+  'trust', 'tension', 'creditLimit', 'interest', 'traffic', 'gold', 'silver', 'taxBonus',
 ];
 
 // What a place's works add up to, each as it stands (M20: the lower of its
@@ -209,23 +210,11 @@ function advanceConstruction(state, world) {
 }
 
 // Called on the first day of each month for the month just ended.
-// What will move Authority on the first of next month, part by part: its
-// slow return by itself, the lords' mood, the laws in force, buildings such
-// as a cathedral of the Fire, and the drain of debt. The monthly ledger uses
-// these very figures, so the meter's card and the rules never disagree.
-export function authorityParts(state, world) {
-  const g = world.groups.effects;
+// The drain of debt on Trust in the Crown (M22 D: the rest of what moves
+// it, month by month, is in meters.js).
+export function trustDebt(state, world) {
   const debt = Math.max(0, -state.treasury);
-  return {
-    regen: state.authority < (g.authorityRegenBelow ?? 100) ? g.authorityRegen : 0,
-    nobles: (state.opinion.nobles - 50) * g.nobleAuthority,
-    laws: lawEffects(state, world).authority,
-    buildings: realmEffect(state, world, 'authority'),
-    debt: debt > 0 ? -(debt / 1000) * world.economy.debt.authorityPerThousand : 0,
-    // Above what a crown regains of itself, prestige fades unless renewed
-    // (M19: in a long peace it no longer creeps to the cap).
-    fade: -Math.max(0, state.authority - (g.authorityRegenBelow ?? 100)) * (g.authorityFade ?? 0),
-  };
+  return debt > 0 ? -(debt / 1000) * world.economy.debt.trustPerThousand : 0;
 }
 
 // Coin that comes to the crown at once from war and deals (M21): loot,
@@ -394,6 +383,9 @@ export function monthlyLedger(state, world, rng = null) {
     // tithe (M21), each by its estate's setting.
     const t = placeTaxes(state, world, id, s, law, { fx, tradeMult, month: lastMonth });
     income.taxes += t.tax;
+    // Dread empties the roads and the markets with them; low Dread fills
+    // them (M22 D).
+    t.trade *= state.meters?.trade ?? 1;
     income.trade += t.trade;
     income.tithe += t.tithe;
     estates[t.estate] += t.tax + t.trade + t.tithe;
@@ -403,7 +395,9 @@ export function monthlyLedger(state, world, rng = null) {
     const scale = e.crafts.placeScale[type] * mult * share;
     for (const b of s.buildings) {
       if (!world.buildings[b].effects.craft) continue;
-      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1);
+      // A strike (M22 D: high Unrest) stops half the workshops.
+      const strike = (s.strike ?? 0) > state.day ? 1 - (world.meters?.unrest.strike ?? 0) : 1;
+      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike;
       income.crafts[b] = (income.crafts[b] ?? 0) + c * scale;
       put(id, c * scale);
     }
@@ -511,14 +505,8 @@ export function monthlyLedger(state, world, rng = null) {
   // Debt costs the crown its grip on the lords. Past the bankers' limit the
   // soldiers go unpaid, grumble and slip away.
   const debt = Math.max(0, -state.treasury);
-  // Authority returns slowly by itself, faster when the lords are content
-  // and the court impresses them, and drains while the crown is in debt.
-  // The crown's grip returns by itself only so far; beyond that it takes
-  // content lords or a court that dazzles them.
-  const parts = authorityParts(state, world);
-  state.authority += parts.regen + parts.nobles + parts.laws + parts.buildings + parts.fade;
-  if (debt > 0) state.authority += parts.debt;
-  state.authority = Math.max(0, Math.min(100, state.authority));
+  // Debt drains the folk's Trust in the Crown (M22 D).
+  if (debt > 0) nudge(state, world, 'trust', trustDebt(state, world), 'Debts to the bankers');
   state.unpaid = debt > limit;
   const levied = leviedMap(state);
   for (const [id, s] of Object.entries(state.settlements)) {

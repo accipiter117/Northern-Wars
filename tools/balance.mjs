@@ -40,7 +40,7 @@ function summary(s) {
   const last = s.ledger.history.at(-1);
   const net = last ? ledgerNet(last).net : 0;
   return `${formatDate(s.day).padEnd(16)} pop ${String(pop).padStart(6)} food ${String(Math.round(stock.food)).padStart(7)} T/S/I ${Math.round(stock.timber)}/${Math.round(stock.stone)}/${Math.round(stock.iron)}`
-    + ` treasury ${String(Math.round(s.treasury)).padStart(6)} net/mo ${String(net).padStart(5)} auth ${s.authority.toFixed(0)} stab ${s.stability.toFixed(0)} pros ${pros.toFixed(0)} unrest ${unrest.toFixed(0)} hungry ${hungry} built ${built}`;
+    + ` treasury ${String(Math.round(s.treasury)).padStart(6)} net/mo ${String(net).padStart(5)} trust ${s.trust.toFixed(0)} realm-unrest ${s.unrest.toFixed(0)} dread ${s.dread.toFixed(0)} pros ${pros.toFixed(0)} unrest ${unrest.toFixed(0)} hungry ${hungry} built ${built}`;
 }
 
 let state = createState(world, Number(seed));

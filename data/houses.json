@@ -5,7 +5,7 @@
   "favourDecay": 0.9,
   "grievanceDecay": 0.95,
   "nobleOpinionWeight": 0.5,
-  "authorityWeight": 0.2,
+  "standingWeight": 0.2,
   "officeLoyalty": 10,
   "maxOffices": 2,
   "ambitionPerMonth": 1.5,
@@ -19,7 +19,7 @@
     "joinBelow": 30,
     "joinChance": 0.5,
     "unrest": 20,
-    "authorityPerMonth": 1,
+    "trustPerMonth": 1,
     "crownCommitted": 0.5,
     "levyPerPeople": 0.2,
     "decideAfter": 3,
@@ -28,11 +28,11 @@
     "endsAbove": 35
   },
   "deposition": {
-    "authorityBelow": 15,
-    "stabilityBelow": 75,
+    "trustBelow": 20,
+    "unrestAbove": 70,
     "months": 6,
-    "regencyAuthority": 40,
-    "note": "Deposed after this many months of Authority below the line together with Stability below its line or any house in rebellion."
+    "regencyTrust": 40,
+    "note": "Deposed after this many months of Trust below its line together with Unrest above its line (M22 D)."
   },
   "actions": {
     "honours": {
@@ -40,7 +40,7 @@
       "favour": 12
     },
     "summon": {
-      "authority": 5,
+      "unrest": 5,
       "ambition": -15,
       "favour": 5,
       "splendidFavour": 5
@@ -50,7 +50,7 @@
       "grievance": 10
     },
     "fine": {
-      "authority": 5,
+      "unrest": 5,
       "perPerson": 0.4,
       "min": 100,
       "grievance": 20
@@ -60,7 +60,7 @@
       "ambition": -20
     },
     "strip": {
-      "authority": 20,
+      "unrest": 20,
       "grievance": 40,
       "othersGrievance": 8
     }

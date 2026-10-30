@@ -1,6 +1,7 @@
 import { dayNumber, seasonOf } from './calendar.js';
+import { defaultMeters, realmUnrest } from './meters.js';
 import { streamSeed } from './rng.js';
-import { computeStability, addDispatch } from './realm.js';
+import { addDispatch } from './realm.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
@@ -27,7 +28,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 23;
+export const STATE_VERSION = 24;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -49,8 +50,11 @@ export function createState(world, seed = 1) {
     day,
     rng: { game: streamSeed(seed, 1), ambient: streamSeed(seed, 2) },
     treasury: k.treasury,
-    authority: k.authority,
-    stability: 0,
+    // Three meters (M22 D): Trust in the Crown, the realm's Unrest, Dread.
+    trust: k.trust ?? 60,
+    unrest: 0,
+    dread: k.dread ?? 15,
+    meters: defaultMeters(),
     unpaid: false,
     settlements,
     ledger: { construction: 0, decrees: 0, history: [], places: {} },
@@ -103,7 +107,7 @@ export function createState(world, seed = 1) {
   }
   state.reign = newReign(state, day);
   for (const id of Object.keys(settlements)) settlements[id].tension = tensionTarget(state, world, id);
-  state.stability = computeStability(state);
+  state.unrest = realmUnrest(state, world);
   if (k.opening) addDispatch(state, k.opening);
   return state;
 }

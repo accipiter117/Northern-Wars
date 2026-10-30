@@ -1,5 +1,5 @@
 {
-  "note": "Demands from the great houses. {lord}, {house}, {target} (a settlement) and {rival} (another house) are filled in. Ops: favour and grievance on the asking house, rivalGrievance and rivalFavour on the rival, othersGrievance on every other house, treasury, authority, ambition, grant (target goes to the house), exempt (days without crown taxes), office (a council seat). Ignored, the default choice is taken.",
+  "note": "Demands from the great houses. {lord}, {house}, {target} (a settlement) and {rival} (another house) are filled in. Ops: favour and grievance on the asking house, rivalGrievance and rivalFavour on the rival, othersGrievance on every other house, treasury, trust (M22 D, was authority), ambition, grant (target goes to the house), exempt (days without crown taxes), office (a council seat). Ignored, the default choice is taken.",
   "demands": {
     "land": {
       "title": "A grant of land", "weight": 3, "needsTarget": true,
@@ -21,7 +21,7 @@
       "title": "A seat on the council", "weight": 2, "needsOffice": true,
       "text": "{lord} would serve the crown on the royal council, and would very much like to be asked.",
       "choices": [
-        { "label": "Give him the seat", "ops": { "office": true, "favour": 15, "authority": -5, "othersGrievance": 5, "ambition": -15 } },
+        { "label": "Give him the seat", "ops": { "office": true, "favour": 15, "trust": -5, "othersGrievance": 5, "ambition": -15 } },
         { "label": "Refuse", "ops": { "grievance": 10 }, "default": true }
       ]
     },

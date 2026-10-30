@@ -726,7 +726,7 @@ async function boot() {
   function sample() {
     const last = app.samples.at(-1);
     if (last?.day === state.day) return;
-    app.samples.push({ day: state.day, treasury: state.treasury, granary: realmStock(state).food, authority: state.authority, stability: state.stability });
+    app.samples.push({ day: state.day, treasury: state.treasury, granary: realmStock(state).food, trust: state.trust, unrest: state.unrest, dread: state.dread });
     if (app.samples.length > 120) app.samples.shift();
   }
 

@@ -1,5 +1,6 @@
 // The realm's day: the economy turns, moods drift, and on the first of each
 // month the ledger and the census are drawn up.
+import { stepMetersDay, monthlyMeters } from './meters.js';
 import { dateOf } from './calendar.js';
 import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed, creditLimit } from './economy.js';
 import { monthlyPopulation } from './population.js';
@@ -28,28 +29,6 @@ export function clamp(v, lo, hi) {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-// Stability is public order. Half of it follows unrest weighted by how many
-// people live under it, half by settlement, so a sullen countryside counts
-// even when the cities are content.
-export function computeStability(state) {
-  let people = 0;
-  let weighted = 0;
-  let sum = 0;
-  // Towns under an enemy's flag are not the crown's to keep in order.
-  const all = Object.values(state.settlements).filter((s) => !s.occupier);
-  for (const s of all) {
-    const pop = popOf(s);
-    people += pop;
-    weighted += pop * s.unrest;
-    sum += s.unrest;
-  }
-  if (!people) return 0;
-  return clamp(100 - (weighted / people + sum / all.length) / 2, 0, 100);
-}
-
-function popOf(s) {
-  return s.population.human + s.population.dwarf + s.population.elf + s.population.halfling;
-}
 
 export function stepRealmDay(state, world, rng) {
   const date = dateOf(state.day);
@@ -97,6 +76,9 @@ export function stepRealmDay(state, world, rng) {
     // Deep in debt, the crown's tax farmers squeeze harder for the bankers.
     if (debtShare > 0) unrestTarget += world.economy.debt.debtUnrest * debtShare;
     unrestTarget -= Math.max(0, s.prosperity - 50) * m.prosperityCalm;
+    // Folk who no longer trust the crown turn sullen, then angry (M22 D).
+    const mt = world.meters?.trust;
+    if (mt && !s.occupier) unrestTarget += Math.max(0, mt.lowBelow - (state.trust ?? 50)) * (mt.lowAnger ?? 0);
     let prosperityTarget = start.prosperity + fx.prosperity + law.prosperity[type] - s.hunger * m.hungerProsperity;
     if (wellFed) prosperityTarget += m.wellFedProsperity;
     if (levied[id]) prosperityTarget -= world.war.raise.levyProsperity * Math.min(1, levied[id] / Math.max(1, levied[id] + s.garrison));
@@ -105,7 +87,7 @@ export function stepRealmDay(state, world, rng) {
     s.unrest = clamp(s.unrest + (clamp(unrestTarget, 0, 100) - s.unrest) * m.drift + (rng.next() - 0.5) * 0.8, 0, 100);
     s.prosperity = clamp(s.prosperity + (clamp(prosperityTarget, 0, 100) - s.prosperity) * m.drift + (rng.next() - 0.5) * 0.6, 0, 100);
   }
-  state.stability = computeStability(state);
+  stepMetersDay(state, world);
 
   if (date.day === 1) {
     monthlyLedger(state, world, rng);
@@ -116,6 +98,9 @@ export function stepRealmDay(state, world, rng) {
     if (!state.diplomacy) monthlyEnvoy(state, world, rng);
     monthlyCulture(state, world, rng);
     monthlyPetition(state, world, rng);
+    // Trust, Unrest and Dread take stock of the month (M22 D), before the
+    // lords weigh the reign.
+    monthlyMeters(state, world, rng);
     monthlyHouses(state, world, rng);
     monthlyThreats(state, world, rng);
     monthlyEvent(state, world, rng, date.season);

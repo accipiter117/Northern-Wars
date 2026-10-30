@@ -7,6 +7,7 @@
 // that never take to their new crown rise; rulers driven from their thrones
 // plot from exile; and every town taken makes the North more afraid.
 // Foreign rulers follow the same rules by their own tempers.
+import { nudge, standing } from './meters.js';
 import { windfall } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
@@ -310,7 +311,7 @@ export function conquestDecisionText(state, world, d) {
   const r = cq(state).revolts.find((x) => x.id === d.revolt);
   return {
     kicker: 'A rising', title: `${name} rises against the crown`,
-    text: `${r ? r.rebels : 'Many'} of its people have taken up arms${r?.claimant ? `, in the name of their exiled ruler` : ''}. We can crush them, or treat with them: lighter taxes and a charter for their people would end it, at a cost to the crown's Authority.`,
+    text: `${r ? r.rebels : 'Many'} of its people have taken up arms${r?.claimant ? `, in the name of their exiled ruler` : ''}. We can crush them, or treat with them: lighter taxes and a charter for their people would end it, at a cost to the folk's Trust.`,
     choices: [`Crush them (${crushOddsWord(state, world, d.town, r)})`, 'Treat with them'],
   };
 }
@@ -640,7 +641,7 @@ function negotiate(state, world, r) {
     s.charter = state.day + rv.charterYears * 365;
     s.unrest = clamp(s.unrest - 20, 0, 100);
   }
-  state.authority = clamp(state.authority + rv.negotiateAuthority, 0, 100);
+  nudge(state, world, 'trust', rv.negotiateTrust, 'Terms made with rebels');
   say(state, `The crown treats with the rebels of ${world.byId[r.town].name}: lighter taxes and a charter for their people. They lay down their arms. The lords mutter that the crown has bent.`);
 }
 
@@ -836,7 +837,7 @@ function monthlyFear(state, world, rng) {
       return;
     }
     // When fear is extreme and Temeria weakened, the league marches.
-    const weak = atWar(state, TEMERIA) || state.stability < f.attackStability;
+    const weak = atWar(state, TEMERIA) || state.unrest > f.attackUnrest;
     if (avg >= f.attackAt && weak && !d.league.members.some((r) => hostile(state, r, TEMERIA)) && rng.chance(f.attackChance) && setWarHook.fn) {
       const [lead, ...rest] = d.league.members;
       const war = warHook(state, world, rng, lead, TEMERIA, 'league');
@@ -861,7 +862,7 @@ export function leagueAllies(state, victim) {
 function monthlyDefection(state, world, rng) {
   const df = C(world).defection;
   for (const [hid, h] of Object.entries(state.houses ?? {})) {
-    if (h.rebel || h.defected || h.loyalty >= df.loyaltyBelow || state.authority >= df.authorityBelow) continue;
+    if (h.rebel || h.defected || h.loyalty >= df.loyaltyBelow || standing(state, world) >= df.standingBelow) continue;
     const lands = Object.keys(state.settlements).filter((id) => state.settlements[id].holder === hid && !state.settlements[id].occupier);
     if (!lands.length || lands.includes(world.kingdom.capital)) continue;
     // A neighbour courting them: near their lands, and hostile to the crown.

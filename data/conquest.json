@@ -274,7 +274,7 @@
     "crushUnrest": -15,
     "crushStrength": 1.3,
     "negotiateIntegration": 20,
-    "negotiateAuthority": -6,
+    "negotiateTrust": -6,
     "charterTax": 0.7,
     "charterYears": 3,
     "decisionDays": 15,
@@ -312,13 +312,13 @@
     "leagueMemberAt": 30,
     "leagueLeaveBelow": 15,
     "attackAt": 65,
-    "attackStability": 45,
+    "attackUnrest": 55,
     "attackChance": 0.15,
     "max": 100
   },
   "defection": {
     "loyaltyBelow": 8,
-    "authorityBelow": 30,
+    "standingBelow": 30,
     "chance": 0.015,
     "relationBelow": -20,
     "range": 220

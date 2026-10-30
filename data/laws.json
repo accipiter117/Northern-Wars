@@ -1,5 +1,5 @@
 {
-  "note": "Laws and their options. Changing a law costs Authority and crowns, then phases in over enactDays. Effects are fractions (0.2 = +20%) or points; unrest and prosperity may be scoped by settlement type. Opinion values shift each group's settled view of the crown while the law stands.",
+  "note": "Laws and their options. Changing a law costs Trust in the Crown (M22 D: the folk must trust the crown to take a new law) and crowns, then phases in over enactDays. Effects are fractions (0.2 = +20%) or points; unrest and prosperity may be scoped by settlement type. Opinion values shift each group's settled view of the crown while the law stands.",
   "enactDays": 30,
   "shock": 0.4,
   "categories": {
@@ -13,7 +13,7 @@
       "name": "Taxes on the towns",
       "category": "taxes",
       "default": "fair",
-      "authority": 3,
+      "trust": 3,
       "coin": 0,
       "options": {
         "light": {
@@ -66,7 +66,7 @@
       "name": "Taxes on the villages",
       "category": "taxes",
       "default": "fair",
-      "authority": 3,
+      "trust": 3,
       "coin": 0,
       "options": {
         "light": {
@@ -117,7 +117,7 @@
       "name": "Taxes on the lords",
       "category": "taxes",
       "default": "fair",
-      "authority": 3,
+      "trust": 3,
       "coin": 0,
       "options": {
         "light": {
@@ -154,7 +154,7 @@
       "name": "Guild charters",
       "category": "economy",
       "default": "chartered",
-      "authority": 10,
+      "trust": 10,
       "coin": 100,
       "options": {
         "free": {
@@ -197,7 +197,7 @@
       "name": "Grain prices",
       "category": "economy",
       "default": "market",
-      "authority": 10,
+      "trust": 10,
       "coin": 100,
       "options": {
         "market": {
@@ -240,7 +240,7 @@
       "name": "Road corvee",
       "category": "economy",
       "default": "none",
-      "authority": 10,
+      "trust": 10,
       "coin": 50,
       "options": {
         "none": {
@@ -269,7 +269,7 @@
       "name": "Conscription",
       "category": "order",
       "default": "seasonal",
-      "authority": 15,
+      "trust": 15,
       "coin": 100,
       "options": {
         "none": {
@@ -308,7 +308,7 @@
       "name": "Public order",
       "category": "order",
       "default": "watch",
-      "authority": 10,
+      "trust": 10,
       "coin": 50,
       "options": {
         "watch": {
@@ -355,7 +355,7 @@
       "name": "The royal court",
       "category": "order",
       "default": "customary",
-      "authority": 5,
+      "trust": 5,
       "coin": 0,
       "options": {
         "frugal": {
@@ -363,7 +363,7 @@
           "blurb": "Plain food, few feasts, fewer courtiers.",
           "effects": {
             "court": -0.3,
-            "authority": -0.3
+            "trust": -0.3
           },
           "opinion": {
             "nobles": -8
@@ -380,7 +380,7 @@
           "blurb": "Tourneys, masques and favours. The lords come to Vizima and stay.",
           "effects": {
             "court": 0.6,
-            "authority": 0.6
+            "trust": 0.6
           },
           "opinion": {
             "nobles": 10,
@@ -393,7 +393,7 @@
       "name": "Monster bounties",
       "category": "order",
       "default": "none",
-      "authority": 5,
+      "trust": 5,
       "coin": 0,
       "options": {
         "none": {
@@ -422,7 +422,7 @@
       "name": "Registration of mages",
       "category": "order",
       "default": "registered",
-      "authority": 10,
+      "trust": 10,
       "coin": 50,
       "options": {
         "free": {
@@ -465,7 +465,7 @@
       "name": "Faith of the crown",
       "category": "faith",
       "default": "tolerance",
-      "authority": 15,
+      "trust": 15,
       "coin": 100,
       "options": {
         "tolerance": {
@@ -510,7 +510,7 @@
       "name": "Non-human rights",
       "category": "faith",
       "default": "restricted",
-      "authority": 20,
+      "trust": 20,
       "coin": 100,
       "options": {
         "charter": {
@@ -554,7 +554,7 @@
       "name": "The Old Ways",
       "category": "faith",
       "default": "tolerated",
-      "authority": 10,
+      "trust": 10,
       "coin": 50,
       "options": {
         "tolerated": {
@@ -583,7 +583,7 @@
       "name": "Poor relief",
       "category": "faith",
       "default": "none",
-      "authority": 5,
+      "trust": 5,
       "coin": 0,
       "options": {
         "none": {

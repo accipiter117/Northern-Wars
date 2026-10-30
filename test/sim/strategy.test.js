@@ -191,8 +191,10 @@ test('deterrence: a weakly held Temeria is invaded, a strongly held one only pro
     for (let m = 0; m < 48; m++) {
       s.neighbours.redania.relation = Math.min(s.neighbours.redania.relation, -70);
       if (mode === 'weak') {
-        s.authority = 15;
-        for (const x of Object.values(s.settlements)) x.garrison = Math.min(x.garrison, 30);
+        // A weak crown: little Trust, much Dread, restless towns (M22 D).
+        s.trust = 5;
+        s.dread = 90;
+        for (const x of Object.values(s.settlements)) { x.garrison = Math.min(x.garrison, 30); x.unrest = Math.max(x.unrest, 45); }
       } else for (const [id, x] of Object.entries(s.settlements)) x.garrison = Math.max(x.garrison, world.settlementData[id].garrison * 3);
       s = step(s, 30, world, { ambient: false });
       s.diplomacy.requests = [];

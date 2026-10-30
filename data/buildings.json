@@ -426,7 +426,7 @@
       "days": 120,
       "upkeep": 8,
       "effects": {
-        "authority": 0.4,
+        "trust": 0.4,
         "unrest": -6,
         "tension": 12,
         "opinion": {
@@ -438,7 +438,7 @@
           "eternal_fire": 1.25
         }
       },
-      "blurb": "A great house of the Fire. Authority and order, but non-humans feel its heat."
+      "blurb": "A great house of the Fire. Order and the folk's trust, but non-humans feel its heat."
     },
     "guildhall": {
       "name": "Guildhall",
@@ -950,7 +950,7 @@
       "upkeep": 6,
       "effects": {
         "craft": 40,
-        "authority": 0.1,
+        "trust": 0.1,
         "taxBonus": 0.04
       },
       "blurb": "Where the crown's orens are struck. A little profit on every coin, and the king's face in every purse."

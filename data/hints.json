@@ -23,7 +23,7 @@
       "id": "ledger",
       "trigger": "firstLedger",
       "title": "The first accounts",
-      "text": "On the first of every month the accounts are drawn up. Treasury, Ledger shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in Authority.",
+      "text": "On the first of every month the accounts are drawn up. Treasury, Ledger shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in Trust in the Crown.",
       "open": "treasury:ledger",
       "openLabel": "Open the Treasury"
     },
@@ -31,7 +31,7 @@
       "id": "laws",
       "trigger": "noDecreeAfter60",
       "title": "Your strongest lever",
-      "text": "Court, Laws changes order, faith, the guilds and more. Every decree costs Authority and pleases some groups while angering others: tap a law to see who. The realm's mood sits at the top. Taxes are set in the Treasury.",
+      "text": "Court, Laws changes order, faith, the guilds and more. Every decree costs some of the folk's Trust and pleases some groups while angering others: tap a law to see who. The realm's mood sits at the top. Taxes are set in the Treasury.",
       "open": "court:laws",
       "openLabel": "Open the Laws"
     },
@@ -53,7 +53,7 @@
       "id": "houses",
       "trigger": "day120",
       "title": "The great houses",
-      "text": "Five houses hold land of the crown and keep their own soldiers (Court, Great houses). Their loyalty rises with favours and falls with grievances. Let it collapse with your Authority and they will depose you.",
+      "text": "Five houses hold land of the crown and keep their own soldiers (Court, Great houses). Their loyalty rises with favours and falls with grievances. Let the folk's Trust collapse while the realm boils with Unrest and they will depose you.",
       "open": "court:houses",
       "openLabel": "Open the great houses"
     },
@@ -66,16 +66,16 @@
       "openLabel": "Open Threats"
     },
     {
-      "id": "authority",
-      "trigger": "lowAuthority",
-      "title": "Authority is slipping",
-      "text": "With little Authority you cannot pass laws or bend the lords. It recovers each month, faster when the houses are content and the court impresses them."
+      "id": "trust",
+      "trigger": "lowTrust",
+      "title": "The folk are losing faith",
+      "text": "With little Trust in the Crown you cannot pass laws, people drift away and levies slip home. Feed them through the winter, answer raids, mend what is broken and keep taxes fair, and it comes back."
     },
     {
       "id": "drums",
       "trigger": "warDrums",
       "title": "War drums",
-      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a strong Authority, or an army of your own may change their minds.",
+      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a realm that trusts its crown, or an army of your own may change their minds.",
       "open": "diplomacy:realms",
       "openLabel": "Open Diplomacy"
     },
@@ -154,7 +154,7 @@
     {
       "id": "meters",
       "title": "The four meters",
-      "text": "Treasury is coin in hand; Granary the food in every store; Authority the crown's grip on the realm, spent by decrees and the lords; Stability the realm's calm, from the unrest of every place. Tap one to see what moved it."
+      "text": "Treasury is coin in hand; Granary the food in every store; Trust whether the folk believe the crown will keep them fed and safe; Unrest their anger at the crown; Dread their fear of what lies beyond the walls. Tap one to see what moved it."
     },
     {
       "id": "pick",

@@ -2,7 +2,7 @@
 // what needs attention, the places in most trouble) and a searchable list of
 // every place. Also the four meter cards that say why a meter moved.
 import {
-  totalPopulation, realmStock, foodNeed, foodYield, seasonOf, dateOf, ledgerNet, creditLimit, authorityParts,
+  totalPopulation, realmStock, foodNeed, foodYield, seasonOf, dateOf, ledgerNet, creditLimit,
   plagueActive, freeCompanies, warsOf, TEMERIA, MONTHS,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
@@ -19,8 +19,9 @@ const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Ca
 const METERS = [
   ['treasury', 'Treasury', 'coin'],
   ['granary', 'Granary', 'wheat'],
-  ['authority', 'Authority', 'crown'],
-  ['stability', 'Stability', 'scales'],
+  ['trust', 'Trust in the Crown', 'crown'],
+  ['unrest', 'Unrest', 'flame'],
+  ['dread', 'Dread', 'moon'],
 ];
 
 export function meterValue(state, key) {
@@ -254,47 +255,42 @@ function granaryCard(app) {
     <div data-part="low"><h3>Shortest of food</h3>${low.length ? `<div class="rows">${low.map((r) => placeRow(app, r.id, r.hunger > 0.05 ? 'going hungry' : `${number(r.days)} days of food`)).join('')}</div>` : '<p class="sub">Every place has a month and a half of food or more.</p>'}</div>`;
 }
 
-function authorityCard(app) {
-  const { state, world } = app;
-  const p = authorityParts(state, world);
-  const total = p.regen + p.nobles + p.laws + p.buildings + p.debt + p.fade;
-  const row = (label, v, note = '') => (Math.abs(v) < 0.05 ? '' : `<div><dt>${label}${note ? ` <small>${note}</small>` : ''}</dt><dd class="${v < 0 ? 'down' : 'up'}">${v < 0 ? '−' : '+'}${Math.abs(v).toFixed(1)}</dd></div>`);
-  return `${cardHead({
-    status: '<span>Authority is the crown\'s grip on the realm: decrees, the lords and war all spend it. It moves on the first of each month.</span>',
-    chips: [
-      { icon: 'crown', label: 'Now', value: Math.round(state.authority), tone: state.authority < 25 ? 'bad' : '' },
-      { label: 'Next month', value: `${total < 0 ? '−' : '+'}${Math.abs(total).toFixed(1)}`, tone: total < 0 ? 'bad' : 'good' },
-      { label: '30 days', value: signed(trend(app, 'authority')) },
-    ],
-  })}
-    <div data-part="parts"><h3>Next month, part by part</h3><dl class="ledger">
-      ${row('Returns by itself', p.regen, p.regen ? '' : '(only below a point)')}
-      ${row("The lords' mood", p.nobles)}
-      ${row('Laws in force', p.laws)}
-      ${row('Buildings', p.buildings)}
-      ${row('Debt to the bankers', p.debt)}
-      ${row('Prestige fades unless renewed', p.fade, '(above a point)')}
-      <div class="total"><dt>In all</dt><dd>${total < 0 ? '−' : '+'}${Math.abs(total).toFixed(1)}</dd></div></dl>
-      <p class="sub">Decrees, summons and fines spend it when ordered, and do not show here.</p></div>`;
+// The three meters of the realm (M22 D): what each is, where it stands, and
+// the main reasons for its change last month, one line each, biggest first.
+const ABOUT = {
+  trust: 'Trust in the Crown: do the common folk believe the crown will keep them fed and safe. Keep it high. Low, people drift away, the works go slack and levies slip home.',
+  unrest: 'Unrest: the realm\'s anger at the crown, from every town\'s unrest and the great houses\' grievances. Keep it low. High, the guilds strike, a house turns, then revolt.',
+  dread: 'Dread: fear of what lies beyond the walls. Keep it low. High, villages empty towards walled towns, the roads go quiet and the folk turn to the Eternal Fire.',
+};
+function reasonsHtml(list, good) {
+  if (!list?.length) return '<p class="sub">Nothing moved it much last month.</p>';
+  return `<dl class="ledger" data-part="reasons">${list.slice(0, 5).map((r) => {
+    const better = good === 'up' ? r.v > 0 : r.v < 0;
+    const v = r.pressure ? `${r.v < 0 ? '−' : '+'}${Math.abs(r.v)}` : `${r.v < 0 ? '−' : '+'}${Math.abs(r.v).toFixed(1)}`;
+    return `<div><dt>${escapeHtml(r.why)}</dt><dd class="${better ? 'up' : 'down'}">${v}</dd></div>`;
+  }).join('')}</dl>`;
 }
-
-function stabilityCard(app) {
+function meterOf(app, key, good, low) {
   const { state } = app;
-  const rows = Object.entries(state.settlements).filter(([, s]) => !s.occupier).sort((a, b) => b[1].unrest - a[1].unrest).slice(0, 5);
+  const v = Math.round(state[key]);
+  const bad = good === 'up' ? v < low : v > low;
   return `${cardHead({
-    status: '<span>Stability is the realm\'s calm: the unrest of every place, the big towns weighing most. Hunger, raids, plague, heavy taxes and bitter tempers raise unrest; garrisons, shrines and good harvests settle it.</span>',
+    status: `<span>${escapeHtml(ABOUT[key])}</span>`,
     chips: [
-      { icon: 'scales', label: 'Now', value: Math.round(state.stability), tone: state.stability < 40 ? 'bad' : '' },
-      { label: '30 days', value: signed(trend(app, 'stability')) },
+      { icon: key === 'trust' ? 'crown' : key === 'unrest' ? 'flame' : 'moon', label: 'Now', value: v, tone: bad ? 'bad' : '' },
+      { label: '30 days', value: signed(trend(app, key)) },
     ],
-    actions: '<button type="button" class="act" data-tab-go="court:laws"><span class="act-label">Laws and the realm\'s mood</span></button>',
+    actions: key === 'unrest' ? '<button type="button" class="act" data-tab-go="court:laws"><span class="act-label">Laws and the realm\'s mood</span></button>' : '',
   })}
-    <div data-part="restless"><h3>Most restless</h3><div class="rows">${rows.map(([id, s]) => placeRow(app, id, `${describeLevel(s.unrest, UNREST_WORDS).toLowerCase()} (${Math.round(s.unrest)})`)).join('')}</div></div>`;
+    <div data-part="why"><h3>${key === 'unrest' ? 'What keeps it there' : 'Last month'}</h3>${reasonsHtml(state.meters?.reasons?.[key], good)}</div>`;
 }
+const trustCard = (app) => meterOf(app, 'trust', 'up', 30);
+const unrestCard = (app) => meterOf(app, 'unrest', 'down', 60);
+const dreadCard = (app) => meterOf(app, 'dread', 'down', 60);
 
 export function meterCard(app, key) {
   const [, label] = METERS.find((m) => m[0] === key) ?? METERS[0];
-  const html = { treasury: treasuryCard, granary: granaryCard, authority: authorityCard, stability: stabilityCard }[key]?.(app) ?? '';
+  const html = { treasury: treasuryCard, granary: granaryCard, trust: trustCard, unrest: unrestCard, dread: dreadCard }[key]?.(app) ?? '';
   return { title: `${icon(METERS.find((m) => m[0] === key)?.[2] ?? 'coin')} ${label}`, html };
 }
 

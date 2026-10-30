@@ -238,7 +238,7 @@ export function realmWarHtml(world, state, rid) {
     ${held.length ? `<p class="warn">They hold Temerian land: ${escapeHtml(held.join(', '))}. We have a just cause.</p>` : ''}
     ${truce > state.day ? `<p class="sub">A truce holds until ${formatDate(truce)}.</p>` : ''}
     <button type="button" class="build danger" data-declare ${orderAttr({ type: 'declare', realm: rid }, `Declare war on ${world.geography.neighbours[rid].name}?`)} data-then="tab:military:war" ${check.ok ? '' : 'disabled'}><span class="build-name">Declare war</span>
-    <span class="build-cost">${check.ok ? (check.cost ? `Costs ${check.cost} Authority: the lords want a cause.` : 'A just cause: it costs no Authority.') : escapeHtml(check.reason)} Trade with them stops.</span></button>`;
+    <span class="build-cost">${check.ok ? (check.cost ? `Costs ${check.cost} Trust: the folk want a cause.` : 'A just cause: it costs no Trust.') : escapeHtml(check.reason)} Trade with them stops.</span></button>`;
 }
 
 // For a Temerian town under an enemy flag.

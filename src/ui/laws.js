@@ -21,7 +21,7 @@ export function lawsHtml(app) {
     return `<div data-part="cat-${cat}"><h3>${escapeHtml(title)}</h3><div class="rows">${rows}</div></div>`;
   }).join('');
   return `
-    <div data-part="estates"><p class="status"><span>Each decree costs Authority (you have ${Math.floor(state.authority)}) and takes a month to take hold.</span></p>${estatesHtml(world, state)}</div>
+    <div data-part="estates"><p class="status"><span>Each decree costs some of the folk's Trust (now ${Math.floor(state.trust)}) and takes a month to take hold.</span></p>${estatesHtml(world, state)}</div>
     ${cats}
   `;
 }
@@ -52,7 +52,7 @@ function lawHtml(world, state, id, law, open) {
     const check = canDecree(state, world, id, oid);
     const r = reactions(state, world, id, oid);
     const mood = [r.pleased.length ? `<span class="mood-good">Pleases ${escapeHtml(names(r.pleased))}.</span>` : '', r.angered.length ? `<span class="mood-bad">Angers ${escapeHtml(names(r.angered))}.</span>` : ''].filter(Boolean).join(' ');
-    const cost = `${law.authority} Authority${law.coin ? `, ${law.coin} crowns` : ''}`;
+    const cost = `${law.trust} Trust${law.coin ? `, ${law.coin} crowns` : ''}`;
     return `<button type="button" class="build law-option" data-decree="${id}:${oid}" ${orderAttr({ type: 'law', law: id, option: oid })} ${check.ok ? '' : 'disabled'}>
       <span class="build-name">Decree: ${escapeHtml(opt.name)}</span>
       <span class="build-blurb">${escapeHtml(opt.blurb)}</span>
