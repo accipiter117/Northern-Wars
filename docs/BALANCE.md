@@ -21,7 +21,7 @@ From `node tools/longrun.mjs 10 <crown> 1,2` and a month-by-month trace of each 
 | Tyrant | 15 after the first year, then 0 | 50 in year 1, then 31 to 59 (mostly the 40s) | about 22 | Every decree, heavy taxes on all three estates, raids left unanswered, hunger and ruined works; it strips a lord twice a year. |
 | Idle | 56, 34, then 0 from year 3 | 22 in the first years, about 35 to 40 once Trust is gone | about 23 | Raids left unanswered (at most 3 a month) and works left in ruins, against the pull back toward 50 (about 2 a month at 0). |
 
-- Low Trust bites in three ways: people drift away (0.1% a month at 0), prosperity slips (0.5 a month at 0) and towns grow angrier (up to +7 to their unrest at 0). An idle realm keeps about 83% of its people after ten years, against 87% before M22 D.
+- Low Trust bites in three ways: people drift away (0.05% a month at 0), prosperity slips (0.5 a month at 0) and towns grow angrier (up to +7 to their unrest at 0). An idle realm keeps a little over 80% of its people after ten years (the long-run test's floor), against about 87% before M22 D.
 - A war is judged by the month: battles move Trust by at most 8 a month and towns lost or taken by at most 10 (the capital's fall, 30, is not capped). Without the caps a single lost war cost the steward 60 Trust from battles alone.
 - Unrest counts a point for every 300 men away with the levies.
 - No crown in these runs was deposed: it takes Trust under 20 and Unrest over 70 together for six months.

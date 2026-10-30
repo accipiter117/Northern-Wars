@@ -21,7 +21,7 @@
     },
     "levies": 25,
     "lowBelow": 30,
-    "lowDrift": 0.001,
+    "lowDrift": 0.0005,
     "lowOutput": 0.05,
     "lowDesert": 0.06,
     "lowAnger": 0.25

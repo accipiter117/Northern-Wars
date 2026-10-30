@@ -59,6 +59,8 @@ test('five meters fit a 360px phone, and each tells why it moved', async () => {
     assert.match(await page.textContent('#sheet-title'), new RegExp(title));
     const lines = await page.$$eval('[data-part="why"] [data-part="reasons"] > div', (els) => els.map((e) => e.textContent));
     assert.ok(lines.length >= 1 && lines.length <= 5, `${key}: ${lines.length} reasons`);
+    await page.evaluate(() => document.querySelector('[data-part="why"]').scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(150);
     await page.screenshot({ path: join(OUT, `portrait-meter-${key}.png`) });
     await page.click('#sheet-close');
   }
