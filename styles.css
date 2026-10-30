@@ -88,12 +88,29 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .speeds button { min-width: 44px; padding: 0 6px; font-size: 15px; }
 .speeds button[aria-pressed="true"] { background: var(--gold); color: #1d1610; border-color: var(--gold); font-weight: 700; }
 
-.meters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; margin: 4px 0 0; }
-.meter { background: rgba(0, 0, 0, 0.22); border-color: transparent; border-radius: 6px; padding: 2px 4px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
-.m-name { font-size: 9px; color: var(--muted); letter-spacing: 0.02em; text-transform: uppercase; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
-.m-name .ico { width: 12px; height: 12px; vertical-align: 0; }
-.m-val { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.goods { display: grid; grid-template-columns: 1.25fr repeat(4, minmax(0, 1fr)); gap: 3px; margin: 4px 0 0; }
+.good { background: rgba(0, 0, 0, 0.22); border-color: transparent; border-radius: 6px; padding: 2px 3px; min-height: 40px; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; column-gap: 3px; text-align: left; }
+.good .g-ico { grid-row: 1 / span 2; display: grid; place-items: center; color: var(--gold); }
+.good .g-ico .ico { width: 16px; height: 16px; }
+.g-val { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
+.good:not(.coin) .g-val { grid-row: 1 / span 2; }
+.g-sub { font-size: 10px; font-variant-numeric: tabular-nums; line-height: 1; white-space: nowrap; }
+.g-sub.up { color: #8fc46a; }
+.g-sub.down { color: #e0745e; }
+.g-val.low { color: #e0745e; }
+.meters { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; gap: 3px; margin: 3px 0 0; }
+.meter { background: rgba(0, 0, 0, 0.18); border-color: transparent; border-radius: 6px; padding: 1px 4px 3px; min-height: 30px; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 3px; align-items: center; column-gap: 4px; }
+.m-ico { display: grid; place-items: center; color: var(--muted); }
+.m-ico .ico { width: 14px; height: 14px; }
+.m-val { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: left; }
 .m-val.low { color: #e0745e; }
+.m-bar { grid-column: 1 / span 2; height: 3px; border-radius: 2px; background: rgba(239, 227, 198, 0.12); overflow: hidden; display: flex; }
+.m-bar i { display: block; height: 100%; background: var(--gold); }
+.m-bar i.bad { background: #e0745e; }
+.m-bar i + i { opacity: 0.6; }
+/* A long press names a symbol. */
+.tb-tip { position: absolute; z-index: 30; width: 140px; text-align: center; background: var(--panel-2); border: 1px solid var(--gold); border-radius: 6px; padding: 4px 8px; font-size: 13px; pointer-events: none; }
+.tb-tip[hidden] { display: none; }
 
 /* One line of seasonal pressure (or the board's orders), a quiet strip at
    the top of the map, under the panel: it leaves the map its full size and
@@ -342,7 +359,12 @@ details.sec .count { font-family: system-ui, sans-serif; font-size: 12px; backgr
 @media (orientation: landscape) and (min-width: 600px) {
   #topbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-left: calc(var(--safe-l) + 8px); }
   .bar-main { flex: 1; min-width: 0; }
-  .meters { margin: 0; flex: none; width: min(400px, 46vw); }
+  /* The goods over the meters, in one block at the right. */
+  .tb-figures { flex: none; width: min(340px, 42vw); display: flex; flex-direction: column; gap: 2px; }
+  .goods { margin: 0; }
+  .good { min-height: 34px; }
+  .meters { margin: 0; }
+  .meter { min-height: 24px; }
   .urgent, .pickbar { flex-basis: 100%; }
   #stage { margin-left: calc(var(--safe-l) + 72px); }
   .tabbar {
@@ -364,8 +386,8 @@ details.sec .count { font-family: system-ui, sans-serif; font-size: 12px; backgr
   .more-menu { top: calc(var(--bar-h, 52px) - 2px); }
 }
 @media (orientation: landscape) and (max-height: 500px) {
-  .m-name { font-size: 9px; }
-  .m-val { font-size: 14px; }
+  .g-val { font-size: 13px; }
+  .m-val { font-size: 12px; }
   #date { font-size: 15px; }
   .tab { min-height: 44px; }
   .tab-label { font-size: 10px; }

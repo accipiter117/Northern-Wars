@@ -25,6 +25,13 @@ const PATHS = {
   target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>',
   up: '<path d="M6 15l6-6 6 6"/>',
   down: '<path d="M6 9l6 6 6-6"/>',
+  // M24 A: the goods and the meters of the compact top bar.
+  logs: '<path d="M4 15l9-5M4 15a2 2 0 1 0 2 3.5M13 10a2 2 0 1 1 2 3.5L6 18.5"/><path d="M11 18l9-5M11 18a2 2 0 1 0 2 3.5M20 13a2 2 0 1 1 1 3.4L13 21.5"/><path d="M15 3c1 2-1 3 0 5M18 4c1 2-1 3 0 5"/>',
+  anvil: '<path d="M4 7h13a4 4 0 0 1-4 4H9v2h3v3H6v-3h3v-2H7a3 3 0 0 1-3-3z"/><path d="M5 20h12"/>',
+  cloth: '<path d="M5 5h11a3 3 0 0 1 0 6H5z"/><path d="M5 11h11a3 3 0 0 1 0 6H5zM5 5v14"/><path d="M16 17v3"/>',
+  heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+  gallows: '<path d="M6 21V4h10M6 8l4-4M16 4v4"/><path d="M14.5 8a1.5 1.5 0 1 0 3 0v2a1.5 1.5 0 1 1-3 0z"/><path d="M3 21h8"/>',
+  sceptre: '<path d="M7 17l10-10"/><circle cx="18" cy="6" r="2.5"/><path d="M5 19l2-2M4 16l4 4"/>',
 };
 
 export function icon(name, cls = '') {

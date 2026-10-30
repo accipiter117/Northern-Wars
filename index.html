@@ -31,12 +31,18 @@
       </div>
       <button type="button" id="more-button" class="icon-button" aria-label="More: chronicle, help, saves" aria-haspopup="true" aria-expanded="false"></button>
     </div>
-    <div class="meters">
-      <button type="button" class="meter" data-go="meter:treasury" aria-label="Treasury: why it changed"><span class="m-name" data-icon="coin">Treasury</span><span class="m-val" id="m-treasury">0</span></button>
-      <button type="button" class="meter" data-go="meter:granary" aria-label="Granary: why it changed"><span class="m-name" data-icon="wheat">Granary</span><span class="m-val" id="m-granary">0</span></button>
-      <button type="button" class="meter" data-go="meter:trust" aria-label="Trust in the Crown: why it changed"><span class="m-name" data-icon="crown">Trust</span><span class="m-val" id="m-trust">0</span></button>
-      <button type="button" class="meter" data-go="meter:unrest" aria-label="Unrest: why it changed"><span class="m-name" data-icon="flame">Unrest</span><span class="m-val" id="m-unrest">0</span></button>
-      <button type="button" class="meter" data-go="meter:dread" aria-label="Dread: why it changed"><span class="m-name" data-icon="moon">Dread</span><span class="m-val" id="m-dread">0</span></button>
+    <!-- M24 A: the realm's goods as symbols and numbers, then the meters
+         with thin bars. Each is a button opening its detail; a long press
+         names it. -->
+    <div class="tb-figures">
+    <div class="goods" role="group" aria-label="The realm's goods">
+      <button type="button" class="good coin" data-go="meter:treasury" data-name="Treasury" aria-label="Treasury"><span class="g-ico" data-icon="coin"></span><span class="g-val" id="m-treasury">0</span><span class="g-sub" id="m-treasury-change"></span></button>
+      <button type="button" class="good" data-go="meter:granary" data-name="Grain" aria-label="Grain"><span class="g-ico" data-icon="wheat"></span><span class="g-val" id="m-granary">0</span></button>
+      <button type="button" class="good" data-go="meter:fuel" data-name="Fuel" aria-label="Fuel"><span class="g-ico" data-icon="logs"></span><span class="g-val" id="m-fuel">0</span></button>
+      <button type="button" class="good" data-go="meter:iron" data-name="Iron" aria-label="Iron"><span class="g-ico" data-icon="anvil"></span><span class="g-val" id="m-iron">0</span></button>
+      <button type="button" class="good" data-go="meter:cloth" data-name="Cloth" aria-label="Cloth"><span class="g-ico" data-icon="cloth"></span><span class="g-val" id="m-cloth">0</span></button>
+    </div>
+    <div class="meters" id="meters" role="group" aria-label="The realm's mood"></div>
     </div>
     <div id="urgent" class="urgent" role="alert" hidden></div>
     <div id="pickbar" class="pickbar" role="status" hidden></div>

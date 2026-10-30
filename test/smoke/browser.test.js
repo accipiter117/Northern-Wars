@@ -73,7 +73,7 @@ for (const vp of VIEWPORTS) {
     // Every traveller has a real source (M22 B): pilgrims and goods carts in
     // a fresh reign, but no patrols until a company rides on patrol orders.
     assert.ok(units.includes('pilgrim') && units.includes('goods') && !units.includes('patrol'), `traffic: ${units}`);
-    assert.match(await page.textContent('#m-granary'), /^[\d,]+$/);
+    assert.match(await page.textContent('#m-granary'), /^[\d,.]+k?$/);
     await page.screenshot({ path: join(OUT, `${vp.name}-map.png`) });
 
     // Tap Vizima: its card opens.
