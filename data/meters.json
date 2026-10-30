@@ -24,7 +24,7 @@
     "lowDrift": 0.001,
     "lowOutput": 0.05,
     "lowDesert": 0.06,
-    "lowAnger": 0.4
+    "lowAnger": 0.25
   },
   "unrest": {
     "nobles": 0.35,
