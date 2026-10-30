@@ -3,6 +3,7 @@
 // and surplus grain moves along the market to places running short. Once a
 // month the ledger is drawn up: taxes and trade in, garrisons, upkeep, court
 // and interest out. The treasury may go below zero; the bankers lend, at a price.
+import { normalise } from './companies.js';
 import { dateOf, MONTHS } from './calendar.js';
 import { integrationFactor } from './conquest.js';
 import { totalPopulation } from './state.js';
@@ -584,7 +585,14 @@ export function armiesAfterLedger(state, world) {
     for (const m of [...(a.mercs ?? [])]) {
       if (m.until > state.day) continue;
       const f = Math.min(1, a.soldiers / Math.max(1, a.raised));
-      const gone = Math.round(m.men * f);
+      let gone = Math.round(m.men * f);
+      // Its own companies march off (M22 C).
+      if (a.bands?.length) {
+        normalise(a);
+        const theirs = a.bands.filter((b) => b.merc === m.id);
+        if (theirs.length) gone = Math.round(theirs.reduce((v, b) => v + b.men, 0));
+        a.bands = a.bands.filter((b) => b.merc !== m.id);
+      }
       a.soldiers = Math.max(0, a.soldiers - gone);
       a.raised = Math.max(1, a.raised - m.men);
       a.mercs = a.mercs.filter((x) => x !== m);

@@ -169,12 +169,14 @@ export function raiseRealmArmy(state, world, rid, foes, order = 'siege') {
   if (!best) return null;
   const count = state.armies.filter((a) => a.side === rid).length;
   realm.army = 0;
+  // Its standing men as men-at-arms, its levies as militia and bowmen, in
+  // companies (M22 C), by the same formula as the crown's.
   const a = newArmy(state, world, rid, best.id, total, levy, {
     order, target: null, stance: (ai.aggression[rid] ?? 0.3) >= 0.5 ? 'bold' : 'cautious',
     name: `The ${count ? 'second ' : ''}army of ${sideName(world, rid)}`,
+    bands: realmCompanies(world, rid, standing, levied),
   });
   a.standing = standing;
-  if (world.strategy && total > 0) a.quality = (standing * 1.15 + levied * 0.9) / total;
   return a;
 }
 

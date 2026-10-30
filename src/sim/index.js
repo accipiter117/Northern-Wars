@@ -31,7 +31,8 @@ export {
   describeCompany, companyUpkeep, ORDERS, forceAgainst,
 } from './forces.js';
 export { threatPos, threatName, threatSize, isCamp, sightedThreats, nearestPlace, witcherCost, crownVision, sees, wildSites, threatScale, threatCap, witcherOnRoad, describeWitcher } from './threats.js';
-export { companyStrength, threatStrength, winChance, oddsWord, resolve, speciesOf, groundAt } from './combat.js';
+export { companyStrength, threatStrength, winChance, oddsWord, resolve, speciesOf, groundAt, foeKind, troopOf } from './combat.js';
+export { levyCompanies, placeMuster, garrisonCompanies, retinueCompanies, mercenaryCompanies, realmCompanies, bandStrength, normalise } from './companies.js';
 export {
   parties, rulerOf, rulerName, rulerShort, agendaText, agendaOf, trustIn, moodReasons, moodTarget, moodWord, treatiesOf, treatyBetween, treatyDef,
   partnerOf, powerOf, fearOf, dangerTo, sharesSight, grievance,

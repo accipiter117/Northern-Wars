@@ -10,6 +10,7 @@ import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
 import { siegesOn, siegeDay } from './siege.js';
 import { onCapture, integrationFactor } from './conquest.js';
 import { stationedStrength, freeCompanies } from './forces.js';
+import { levyCompanies, retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength } from './companies.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import { roadPath, dist } from './world.js';
@@ -185,30 +186,40 @@ export function raiseArmy(state, world, opts) {
   });
   // The realm's armouries arm the levy.
   a.arms = 1 + Math.min(0.3, realmEffect(state, world, 'armyArms'));
-  // Standing companies leave their stations and march under the marshal;
-  // their quality lifts the whole army.
+  // Standing companies leave their stations and march under the marshal.
   a.units = [];
-  let worth = p.soldiers - p.unitMen;
   for (const id of p.units) {
     const c = state.forces.companies.find((x) => x.id === id);
     c.army = a.id;
     c.task = null;
     c.way = [];
     a.units.push({ id, men: c.men });
-    const t = world.forces.companies[c.type];
-    worth += c.men * t.perMan * (1 + (c.xp ?? 0) * world.forces.xp.bonus) * (world.forces.suits.soldiers[c.type] ?? 1);
   }
-  // Mercenaries, hired for a season, fight better than levies (M21).
+  // Mercenaries, hired for a season (M21).
   if (w.raise.muster) {
     const mc = w.raise.mercenaries?.companies ?? {};
     a.folk = true;
     a.levyMen = p.levyMen;
     a.retinueMen = p.retinueMen;
     a.mercs = p.mercs.map((id) => ({ id, men: mc[id].men, until: state.day + w.raise.mercenaries.season }));
-    for (const id of p.mercs) worth += mc[id].men * (mc[id].quality - 1);
     if (p.days > 0) a.gatherUntil = state.day + p.days;
   }
-  a.quality = worth / Math.max(1, p.soldiers);
+  // Every man in a company (M22 C): the levies by their places, the lords'
+  // retinues, the hired companies and the crown's standing companies, each
+  // keeping its name and type inside the army.
+  a.bands = [
+    ...Object.entries(p.levy).flatMap(([id, n]) => levyCompanies(world, id, n)),
+    ...Object.entries(p.retinues ?? {}).flatMap(([h, n]) => retinueCompanies(world, h, n)),
+    ...(p.mercs ?? []).flatMap((id) => mercenaryCompanies(world, id)),
+    ...p.units.map((id) => {
+      const c = state.forces.companies.find((x) => x.id === id);
+      return { type: c.type, men: c.men, xp: c.xp ?? 0, source: 'standing', company: id, name: c.name };
+    }),
+  ];
+  if (p.companies) a.bands.push(...realmCompanies(world, TEMERIA, p.companies * (w.raise.company ?? 200), 0).map((b) => ({ ...b, source: 'hired', name: 'Free company' })));
+  a.soldiers = a.bands.reduce((v, b) => v + b.men, 0) || a.soldiers;
+  a.raised = a.soldiers;
+  delete a.quality;
   const parts = [];
   if (Object.keys(p.levy).length) parts.push(p.houses.length ? `crown and noble levies (${p.houses.map((h) => world.houses.houses[h].name).join(', ')})` : 'the crown levy');
   if (p.companies) parts.push(`${p.companies} free compan${p.companies === 1 ? 'y' : 'ies'}`);
@@ -225,7 +236,7 @@ export function newArmy(state, world, side, at, soldiers, levy, extra = {}) {
     soldiers, raised: soldiers, morale: 80, levy, companies: extra.companies ?? 0, marshal: extra.marshal ?? null,
     stance: extra.stance ?? 'cautious', order: extra.order ?? 'defend', target: extra.target ?? at, home: at,
     at, to: null, along: 0, path: [], dest: at, speed: 0, siege: null, raiding: null, raidTarget: null, raids: 0,
-    retreating: false, fought: -1,
+    retreating: false, fought: -1, bands: extra.bands ?? realmCompanies(world, side, 0, soldiers),
   };
   state.armies.push(a);
   return a;
@@ -350,9 +361,13 @@ function marshalSkill(world, a) {
   return a.marshal ? W(world).marshals[a.marshal]?.skill ?? 1 : 1;
 }
 
+// An army's strength (M22 C): the sum of its companies' by the one formula,
+// then its marshal, its stance and the realm's armouries.
 export function armyStrength(state, world, a, defending = false) {
   const st = W(world).stances[a.stance] ?? W(world).stances.cautious;
-  let v = a.soldiers * marshalSkill(world, a) * (0.5 + a.morale / 100) * (defending ? st.defence : st.attack) * (a.arms ?? 1) * (a.quality ?? 1);
+  if (!a.bands?.length) a.bands = realmCompanies(world, a.side, 0, a.soldiers);
+  normalise(a);
+  let v = bandStrength(world, a.bands, a.morale, 'soldiers') * marshalSkill(world, a) * (defending ? st.defence : st.attack) * (a.arms ?? 1);
   if (!a.to && ownerOf(state, world, a.at) === a.side && hasWalls(state, world, a.at)) v *= W(world).battle.wallsDefence;
   return v;
 }
