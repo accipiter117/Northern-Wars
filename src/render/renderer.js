@@ -4,7 +4,7 @@
 import { prepareMap, drawMap, COLOURS, territoryPaths } from './mapLayer.js';
 import { territoryOwners } from '../sim/territory.js';
 import { drawBattle, drawSiege, smoke, drawRebels } from './war-art.js';
-import { createBoardLayer, boardness } from './board.js';
+import { createBoardLayer, boardness, BOARD } from './board.js';
 import { spacesOf } from '../sim/works.js';
 import { createTiles } from './tiles.js';
 import { getSprite } from './sprites.js';
@@ -55,13 +55,18 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   const countryside = prepareCountryside(world, prep);
   let countryLook = { season: 'spring', snow: false, burnt: new Set(), bare: new Set(), thin: false };
   let countryKey = '';
+  let bareMonth = 0;
+  let bareSet = new Set();
   // The static map, cut into tiles at a few levels of detail (tiles.js).
   // Lines keep their on-screen weight at every level; the far levels draw
   // fewer marks.
   const tiles = createTiles({
     paint: (ctx, view, L) => {
       const zoom = L / dpr;
-      drawMap(ctx, prep, world, dpr / L, tints, view, zoom < 0.45 ? 0 : zoom < 0.9 ? 1 : 2, world.foreign ? territoryOwners(world) : null, { cs: countryside, look: countryLook });
+      // The countryside is left off the levels the board is seen at, so the
+      // board stays clean and cheap to pan (M23 D).
+      const country = zoom >= (cam.cover || 0) * BOARD.full * 0.95 ? { cs: countryside, look: countryLook } : null;
+      drawMap(ctx, prep, world, dpr / L, tints, view, zoom < 0.45 ? 0 : zoom < 0.9 ? 1 : 2, world.foreign ? territoryOwners(world) : null, country);
     },
   });
   const art = createSettlementArt(world, layoutCfg);
@@ -355,10 +360,14 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     for (const realm of Object.values(state.realms ?? {})) {
       for (const [id, s] of Object.entries(realm.settlements ?? {})) if ((s.smoulder ?? 0) > state.day) burnt.add(id);
     }
-    const key = `${look.season}${look.snow}|${[...burnt].sort()}|${[...bare].sort()}|${saver}`;
+    // Hunger is read at the turn of each month only, so a town hovering
+    // at the edge does not have the map redrawn day after day.
+    const month = dateOf(state.day).month;
+    if (month !== bareMonth) { bareMonth = month; bareSet = bare; }
+    const key = `${look.season}${look.snow}|${[...burnt].sort()}|${[...bareSet].sort()}|${saver}`;
     if (key === countryKey) return;
     countryKey = key;
-    countryLook = { season: look.season, snow: look.snow, burnt, bare, thin: saver };
+    countryLook = { season: look.season, snow: look.snow, burnt, bare: bareSet, thin: saver };
     tiles.clear();
     baseDirty = true;
     dirty = true;
