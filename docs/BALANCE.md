@@ -39,6 +39,7 @@ From `node tools/skirmish.mjs` (the chance the defenders win; garrison plus its 
 - **Targets met**: a city beats every ordinary camp, commando and lair (100%); a town beats a small band (100%) and an ordinary camp (89%).
 - **What needs an army**: the largest camps (up to 240 men, raised from 110 in M21 E), the largest commandos (up to 120, from 60), war parties (300) and the famous monsters (three times as dreadful as before). A town wins against these only 42 to 86% of the time, and one standing company 10 to 53%.
 - **Villages cannot stand alone** (37% against even a small band), so patrols and companies near them still matter.
+- **Over twenty years** (`node tools/longrun.mjs 20 <crown> 1,2,3`, M21 E in brackets): the steward saves as before (50,000 to 57,000, net +840 to +1,025) and suffers 9 to 17 raids (14 to 39); the idle crown 562 to 760 raids (675 to 785), now that towns rise in their own defence; the warlord's largest field army is 6,280 to 6,665 men (5,780 to 5,880), its levies now whole companies, and it still saves.
 
 The dials, in data/forces.json:
 
