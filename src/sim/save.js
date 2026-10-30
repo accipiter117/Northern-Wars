@@ -1,7 +1,8 @@
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats, threatCap } from './threats.js';
-import { levyCompanies, retinueCompanies, mercenaryCompanies, realmCompanies, normalise } from './companies.js';
+import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, districtLevy } from './companies.js';
+import { districtOf } from './labour.js';
 import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
@@ -295,7 +296,7 @@ const MIGRATIONS = {
         const levy = Object.entries(a.levy ?? {}).filter(([, n]) => n > 0);
         const levied = levy.reduce((v, [, n]) => v + n, 0);
         const levyMen = a.folk ? (a.levyMen ?? levied) : levied;
-        for (const [id, n] of levy) if (world.byId[id]) bands.push(...levyCompanies(world, id, levied ? (n * levyMen) / levied : n));
+        bands.push(...districtLevy(world, Object.fromEntries(levy.filter(([id]) => world.byId[id]).map(([id, n]) => [id, levied ? (n * levyMen) / levied : n])), districtOf(world)));
         if (a.retinueMen) bands.push(...retinueCompanies(world, 'crown', a.retinueMen).map((b) => ({ ...b, name: 'The lords\' men' })));
         for (const m of a.mercs ?? []) if (mc[m.id]) bands.push(...mercenaryCompanies(world, m.id));
         for (const u of a.units ?? []) {

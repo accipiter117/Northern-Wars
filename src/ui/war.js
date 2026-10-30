@@ -216,11 +216,13 @@ function companiesHtml(app, a) {
   const rows = a.bands.map((b, i) => {
     const men = Math.round((b.men * total) / sum);
     const what = b.source === 'standing' ? 'standing company' : b.source === 'levy' ? 'levy' : b.source === 'retinue' ? 'retinue' : b.source === 'mercenary' ? 'hired' : 'company';
-    return `<li class="company-row"><span>${companyLine(world, { ...b, men })} <small>(${what})</small></span>${a.bands.length > 1 ? `<button type="button" class="chip" data-detach="${i}" ${orderAttr({ type: 'detach', army: a.id, band: i })}>Detach</button>` : ''}</li>`;
-  }).join('');
+    return `<li class="company-row" data-band="${i}"><span>${companyLine(world, { ...b, men })} <small>(${what})</small></span>${a.bands.length > 1 ? `<button type="button" class="chip" data-detach="${i}" ${orderAttr({ type: 'detach', army: a.id, band: i })}>Detach</button>` : ''}</li>`;
+  });
+  // Eight rows, then the rest folded (M21 F).
+  const list = rows.length > 8 ? `${rows.slice(0, 8).join('')}<li><details class="more"><summary>${rows.length - 8} more</summary><ul class="companies">${rows.slice(8).join('')}</ul></details></li>` : rows.join('');
   const others = crownArmies(state).filter((x) => x !== a && canMerge(state, world, x, a).ok);
   const joins = others.map((x) => `<button type="button" class="act" data-merge="${x.id}" ${orderAttr({ type: 'merge', army: x.id, into: a.id })}><span class="act-label">Join ${escapeHtml(x.name)} to this army</span><span class="act-sub">${number(Math.round(x.soldiers))} men, ${x.bands?.length ?? 0} companies</span></button>`).join('');
-  return `<div data-part="companies">${section(memory, `army:${a.id}`, 'companies', `Companies (${a.bands.length})`, `<ul class="companies">${rows}</ul>`)}${joins ? `<div class="actions">${joins}</div>` : ''}</div>`;
+  return `<div data-part="companies">${section(memory, `army:${a.id}`, 'companies', `Companies (${a.bands.length})`, `<ul class="companies">${list}</ul>`)}${joins ? `<div class="actions">${joins}</div>` : ''}</div>`;
 }
 
 // The realm card's war section: declare, or how the war with them stands.

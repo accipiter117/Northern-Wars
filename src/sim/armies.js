@@ -10,7 +10,8 @@ import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
 import { siegesOn, siegeDay } from './siege.js';
 import { onCapture, integrationFactor } from './conquest.js';
 import { stationedStrength, freeCompanies } from './forces.js';
-import { levyCompanies, retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength, placeMuster } from './companies.js';
+import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength, placeMuster, districtLevy } from './companies.js';
+import { districtOf } from './labour.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import { roadPath, dist } from './world.js';
@@ -208,7 +209,7 @@ export function raiseArmy(state, world, opts) {
   // retinues, the hired companies and the crown's standing companies, each
   // keeping its name and type inside the army.
   a.bands = [
-    ...Object.entries(p.levy).flatMap(([id, n]) => levyCompanies(world, id, n)),
+    ...districtLevy(world, p.levy, districtOf(world)),
     ...Object.entries(p.retinues ?? {}).flatMap(([h, n]) => retinueCompanies(world, h, n)),
     ...(p.mercs ?? []).flatMap((id) => mercenaryCompanies(world, id)),
     ...p.units.map((id) => {
@@ -283,7 +284,9 @@ export function detachCompany(state, world, a, index) {
     }
   } else if (b.source === 'levy' && b.from) {
     a.levyMen = Math.max(0, (a.levyMen ?? 0) - men);
-    if (a.levy?.[b.from]) a.levy[b.from] = Math.max(0, a.levy[b.from] - men);
+    // Its men go home to the places they came from.
+    const sum = Object.values(b.places ?? { [b.from]: men }).reduce((v, n) => v + n, 0) || 1;
+    for (const [id, n] of Object.entries(b.places ?? { [b.from]: men })) if (a.levy?.[id]) a.levy[id] = Math.max(0, round(a.levy[id] - (men * n) / sum));
   } else if (b.source === 'retinue') {
     a.retinueMen = Math.max(0, (a.retinueMen ?? 0) - men);
   } else if (b.source === 'mercenary' && !a.bands.some((x) => x.merc === b.merc)) {

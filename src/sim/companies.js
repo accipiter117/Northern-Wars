@@ -30,12 +30,44 @@ export function levyCompanies(world, id, men, extra = {}) {
   const st = world.byId[id];
   if (!l || !st) return split(men, 200, 'militia', { source: 'levy', from: id, ...extra });
   const town = (st.type === 'town' || st.type === 'city') && !world.forestNear?.[id];
-  const spears = Math.round(men * l.spears);
+  // A small levy stands as one company of spears; bows only where there
+  // are enough men for a company of them.
+  const spears = men - Math.round(men * (1 - l.spears)) < 0 || men * (1 - l.spears) < l.size * 0.4 ? men : Math.round(men * l.spears);
   const name = st.name;
   return [
     ...split(spears, l.size, 'militia', { source: 'levy', from: id, name: `${name} spearmen`, ...extra }),
     ...split(men - spears, l.size, town ? l.town : l.country, { source: 'levy', from: id, name: `${name} ${town ? 'crossbowmen' : 'bowmen'}`, ...extra }),
   ];
+}
+
+// A levy from many places (M22 C): each district's (a town and the villages
+// that lend it their hands) pooled into companies of about 200, named for
+// its town, each remembering the places its men came from.
+export function districtLevy(world, levy, district) {
+  const pools = {};
+  for (const [id, n] of Object.entries(levy)) {
+    if (!(n > 0)) continue;
+    const head = district?.[id] ?? id;
+    (pools[head] ??= {})[id] = n;
+  }
+  const out = [];
+  for (const [head, places] of Object.entries(pools)) {
+    const men = Object.values(places).reduce((v, n) => v + n, 0);
+    for (const b of levyCompanies(world, head, men)) out.push({ ...b, places: Object.fromEntries(Object.entries(places).map(([id, n]) => [id, (n * b.men) / men])) });
+  }
+  // The handfuls from out-of-the-way villages and castles stand together as
+  // the village levies, in companies of their own size.
+  const size = F(world).levy?.size ?? 200;
+  const small = out.filter((b) => b.men < size * 0.25);
+  if (small.length < 2) return out;
+  const rest = out.filter((b) => !small.includes(b));
+  const places = {};
+  for (const b of small) for (const [id, n] of Object.entries(b.places)) places[id] = (places[id] ?? 0) + n;
+  const men = small.reduce((v, b) => v + b.men, 0);
+  for (const b of split(men, size, 'militia', { source: 'levy', name: 'Village levies' })) {
+    rest.push({ ...b, from: Object.keys(places)[0], places: Object.fromEntries(Object.entries(places).map(([id, n]) => [id, (n * b.men) / men])) });
+  }
+  return rest;
 }
 
 // What a place could raise at a full call, as companies.
