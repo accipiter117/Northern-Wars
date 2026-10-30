@@ -95,7 +95,7 @@ function levyOrders(world, state, a, id) {
     .sort((x, y) => Math.hypot(threatPos(x).x - here.x, threatPos(x).y - here.y) - Math.hypot(threatPos(y).x - here.x, threatPos(y).y - here.y))[0];
   if (near && canOrder(state, world, a, 'hunt', near.id).ok) {
     const odds = armyHuntOdds(state, world, a, near);
-    out.push(`<button type="button" class="act" data-levy-order="hunt" ${orderAttr({ type: 'army', army: a.id, order: 'hunt', target: near.id })}><span class="act-label">Hunt ${escapeHtml(threatName(world, near).toLowerCase())}</span><span class="act-sub">${escapeHtml(odds.word)} odds; purse about ${number(threatPurse(state, world, near).total)}</span></button>`);
+    out.push(`<button type="button" class="act" data-levy-order="hunt" ${orderAttr({ type: 'army', army: a.id, order: 'hunt', target: near.id })}><span class="act-label">Hunt ${escapeHtml(threatName(world, near).toLowerCase())}</span><span class="act-sub">${escapeHtml(odds.word)}; purse about ${number(threatPurse(state, world, near).total)}</span></button>`);
   }
   for (const b of crownArmies(state).filter((x) => x !== a && !x.muster).slice(0, 3)) {
     if (canMerge(state, world, a, b).ok) out.push(`<button type="button" class="act" data-levy-order="merge" ${orderAttr({ type: 'merge', army: a.id, into: b.id, marshal: b.marshal ?? null }, `The levy of ${here.name} joins ${b.name}.`)}><span class="act-label">Merge into ${escapeHtml(b.name)}</span><span class="act-sub">It stands here</span></button>`);

@@ -25,7 +25,7 @@
 | M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | Done |
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
-| M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E) |
+| M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
 
 ## M24 acceptance criteria
 Part A, a compact top bar:

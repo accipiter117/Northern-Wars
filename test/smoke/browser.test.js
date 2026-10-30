@@ -903,7 +903,7 @@ test('threats and companies on the map, the Forces screen and a Hunt order', asy
     await page.click('[data-sub="threats"]');
     const text = await page.textContent('#sheet-body');
     assert.match(text, /Bandit camp[\s\S]*Drowners[\s\S]*rumour/);
-    assert.match(text, /(Overwhelming|Favourable|Even|Risky|Hopeless) for/);
+    assert.match(text, /(Sure to win|Likely to win|Even|Risky|Hopeless) for/);
     await page.screenshot({ path: join(OUT, `${vp.name}-threats.png`) });
     await page.click('[data-sub="forces"]');
     assert.match(await page.textContent('#sheet-body'), /The crown's companies[\s\S]*Gors Velen Men-at-arms/);
@@ -911,7 +911,7 @@ test('threats and companies on the map, the Forces screen and a Hunt order', asy
     // A company's card: its orders, and the odds of each hunt.
     await page.click('[data-company="2"]');
     await page.waitForSelector('[data-hunt]');
-    assert.match(await page.textContent('#sheet-body'), /Orders[\s\S]*Hunt: Drowners[\s\S]*(Overwhelming|Favourable|Even|Risky|Hopeless)/);
+    assert.match(await page.textContent('#sheet-body'), /Orders[\s\S]*Hunt: Drowners[\s\S]*(Sure to win|Likely to win|Even|Risky|Hopeless)/);
     await page.screenshot({ path: join(OUT, `${vp.name}-company.png`) });
     await page.click('[data-hunt="2"]');
     assert.equal(await page.evaluate(() => window.northernWars.state.forces.companies.find((c) => c.id === 2).order.kind), 'hunt');

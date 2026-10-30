@@ -21,6 +21,7 @@ import { createAudience } from './ui/audience.js';
 import { stopBrowserGestures, instantPress, createHaptics, createWakeLock, registerWorker } from './ui/native.js';
 import { createAudio } from './ui/audio.js';
 import { ask, attachDialog } from './ui/dialog.js';
+import { focusOf } from './ui/focus.js';
 
 const MAX_DAYS_PER_FRAME = 8;
 const params = new URLSearchParams(location.search);
@@ -337,7 +338,9 @@ async function boot() {
     lastNote = out.note ?? null;
     const before = state.chronicle.length;
     const purse = state.treasury;
+    const prev = state;
     state = out.state;
+    followOrder(prev, action);
     orderSound(action, purse, state.treasury);
     topbar.update(state);
     renderer.invalidate();
@@ -599,6 +602,17 @@ async function boot() {
     unitLabel.textContent = text;
     unitLabel.hidden = false;
     unitLabelUntil = performance.now() + 4000;
+  }
+
+  // An order that sends someone (a company after a threat, a witcher, an
+  // army, a town's levy, an escort) glides the camera there and drops the
+  // panel to its title bar, so the player sees it happen (M24 follow-up).
+  const FOLLOW_ZOOM = 2.2;
+  function followOrder(prev, action) {
+    const p = focusOf(prev, world, action);
+    if (!p || !mapInput) return;
+    lowerPanel();
+    mapInput.flyTo(p.x, p.y, Math.max(cam.scale, FOLLOW_ZOOM * (cam.cover || cam.scale)));
   }
 
   // A tap on the map never closes the panel: in portrait it drops to its

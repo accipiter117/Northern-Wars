@@ -79,6 +79,8 @@ export function resolvePetition(state, world, petitionId, choice, ignored = fals
   if (fx.tension) s.tension = clamp(s.tension + fx.tension, 0, 100);
   if (fx.faith) shiftFaith(s, fx.faith);
   if (fx.sympathy) state.sympathy = clamp(state.sympathy + fx.sympathy, 0, 100);
+  // An escort rides with them, on the map (M24 follow-up).
+  if (fx.escort && !ignored) sendFigure(state, world, { kind: 'escort', from: pending.place, to: fx.escort, name: 'Soldiers of the crown', about: 'escorting pilgrims to the Temple of Melitele' });
   const { title, place } = petitionText(world, pending);
   say(state, ignored
     ? `${title} (${place}): Vizima sent no answer, so it was taken as "${c.label.toLowerCase()}".`

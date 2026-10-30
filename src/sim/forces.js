@@ -38,7 +38,7 @@ export function companiesAt(state, id) {
 }
 
 export function stationedStrength(state, world, id, threat = null) {
-  const foe = threat ? foeKind(threat) : 'soldiers';
+  const foe = threat ? foeKind(threat, world) : 'soldiers';
   const walls = hasWalls(state, world, id);
   return companiesAt(state, id).reduce((a, c) => a + companyStrength(world, c, foe, 'open', walls), 0);
 }
@@ -193,7 +193,7 @@ export function targetPos(world, target) {
 export function forceAgainst(state, world, t) {
   const p = targetPos(world, t);
   const ground = groundAt(world, p.x, p.y);
-  const foe = foeKind(t);
+  const foe = foeKind(t, world);
   const theirs = threatStrength(world, t, ground);
   const options = [];
   for (const c of freeCompanies(state)) {
@@ -224,7 +224,7 @@ export function forceAgainst(state, world, t) {
 export function huntOdds(state, world, companies, target) {
   const p = targetPos(world, target);
   const ground = groundAt(world, p.x, p.y);
-  const foe = target.kind ? foeKind(target) : 'soldiers';
+  const foe = target.kind ? foeKind(target, world) : 'soldiers';
   const mine = companies.reduce((a, c) => a + companyStrength(world, c, foe, ground), 0);
   const theirs = target.kind ? threatStrength(world, target, ground) : armyStrength(state, world, target, true);
   const chance = winChance(world, mine, theirs);
@@ -315,6 +315,15 @@ function think(state, world, c) {
       return;
     }
     const p = targetPos(world, target);
+    // Already off the road and making straight for it: keep going, only
+    // following it if it moves. (Re-planning from the last town every few
+    // days sent a company back and forth for ever when the last stretch
+    // through the wilds took longer than that.)
+    if (c.way.length && c.way.every((w) => !w.node)) {
+      c.way = [{ x: p.x, y: p.y }];
+      c.dest = p;
+      return;
+    }
     // Follow a moving quarry, looking again every few days.
     if (!c.way.length || state.day >= (c.replan ?? 0)) {
       plan(world, c, nearestNode(world, p), p);
@@ -400,7 +409,7 @@ function fight(state, world, rng, group, foe) {
   const f = F(world);
   const p = targetPos(world, foe);
   const ground = groundAt(world, p.x, p.y);
-  const kind = foe.kind ? foeKind(foe) : 'soldiers';
+  const kind = foe.kind ? foeKind(foe, world) : 'soldiers';
   const strengths = group.map((c) => companyStrength(world, c, kind, ground));
   const mine = strengths.reduce((a, b) => a + b, 0);
   const their = foe.kind ? threatStrength(world, foe, ground) : armyStrength(state, world, foe, !foe.to);

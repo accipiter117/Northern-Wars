@@ -263,7 +263,7 @@ registerPlaceholder('unit', 'figure', (ctx, x, y, size, opts = {}) => {
   }
   getSprite('unit', 'patrol').draw(ctx, x, y, size, { facing: f, colours: [kind === 'courier' ? '#6b5a3a' : colours[0]] });
   const mx = x - f * r * 0.05;
-  if (kind === 'envoy' || kind === 'commander' || kind === 'progress') {
+  if (kind === 'envoy' || kind === 'commander' || kind === 'progress' || kind === 'escort') {
     ctx.beginPath();
     ctx.moveTo(mx, y - r * 0.3);
     ctx.lineTo(mx, y - r * 1.5);

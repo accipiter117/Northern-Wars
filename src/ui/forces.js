@@ -38,7 +38,7 @@ export function versusLine(world, state, t) {
     : `${isCamp(t) && !t.band ? world.forces.threats[t.kind].name : threatName(world, t)}: about ${number(Math.max(5, Math.round(size / 5) * 5))} men`;
   const f = forceAgainst(state, world, t);
   if (!f) return `${what}.`;
-  return `${what}. ${f.name}: ${number(f.men)}, ${f.word.toLowerCase()} odds.`;
+  return `${what}. ${f.name}: ${number(f.men)}, odds: ${f.word.toLowerCase()}.`;
 }
 
 function companyRow(world, state, c) {
@@ -187,7 +187,9 @@ export function threatCard(app, id) {
   const best = bestCompanyFor(state, world, t);
   const kind = {
     bandits: t.band ? 'A raiding band out of a camp in the wilds. It holds the roads, robbing what passes, and falls on weak villages.' : 'Outlaws camped in the wilds. The camp grows while the country round it is poor and restless, and sends bands to the roads.',
-    monsters: 'Beasts with a lair in the wilds. They prey on the roads and the villages near, and grow bolder with time. Witchers deal with them best; troops can, at a cost in men.',
+    monsters: speciesOf(world, t).supernatural
+      ? 'A creature of the old dark, laired in the wilds. It preys on the roads and the villages near and grows bolder with time. This is witchers\' work: spearmen and archers are slaughtered, and even men-at-arms and knights pay dearly.'
+      : 'Beasts with a lair in the wilds. They prey on the roads and the villages near, and grow bolder with time. Any company, even the town militia, can put them down.',
     scoiatael: 'Elven commandos out of the woods. They strike roads and patrols, then vanish back into the forest.',
     raiders: 'A war party from over the border, come to plunder and go home.',
   }[t.kind];
@@ -203,7 +205,7 @@ export function threatCard(app, id) {
     ? `<div data-part="purse" class="purse">${icon('coin')}<span><b>Purse: about ${number(purse.total)} crowns</b> (${escapeHtml(purse.parts.map((p) => `${p.label} ${number(p.v)}`).join(', '))})${purse.fee ? `; ${purse.net >= 0 ? `${number(purse.net)} left after a witcher's fee` : `a witcher's fee would cost ${number(-purse.net)} more than it brings`}` : ''}.</span></div>`
     : `<div data-part="purse" class="purse sub">${t.kind === 'scoiatael' ? 'No bounty on their heads unless the crown pays bounties.' : 'Nothing to be had from it but peace.'}</div>`;
   const actions = [
-    best && !hunted.length ? `<button type="button" class="act primary" data-send="${t.id}"><span class="act-label">Send nearest suitable company</span><span class="act-sub">${escapeHtml(best.c.name)}, ${best.odds.word.toLowerCase()} odds</span></button>` : '',
+    best && !hunted.length ? `<button type="button" class="act primary" data-send="${t.id}"><span class="act-label">Send nearest suitable company</span><span class="act-sub">${escapeHtml(best.c.name)}: ${best.odds.word.toLowerCase()}</span></button>` : '',
     t.kind === 'monsters' && !contract ? `<button type="button" class="act" data-witcher="${t.id}" ${orderAttr({ type: 'witcher', threat: t.id })}><span class="act-label">Hire a witcher</span><span class="act-sub">${number(witcherCost(state, world, t))} crowns; no soldier need die${purse.total ? `; ${purse.net >= 0 ? `${number(purse.net)} to the good` : `${number(-purse.net)} out of pocket`} after the purse` : ''}</span></button>` : '',
   ].join('');
   return `

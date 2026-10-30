@@ -48,7 +48,7 @@ test('a threat against the nearest force, the Treasury ledger, and a decluttered
   await page.click(`[data-threat="${t.id}"]`);
   await page.waitForSelector('[data-part="versus"]');
   const versus = await page.textContent('[data-part="versus"]');
-  assert.match(versus, /^(Bandit camp|Bandits|Wolves|Drowners|Harpies|A |Wyverns)[^:]*: .+\. .+: [\d,]+, (overwhelming|favourable|even|risky|hopeless) odds\.$/);
+  assert.match(versus, /^(Bandit camp|Bandits|Wolves|Drowners|Harpies|A |Wyverns)[^:]*: .+\. .+: [\d,]+, odds: (sure to win|likely to win|even|risky|hopeless)\.$/);
   await page.screenshot({ path: join(OUT, 'portrait-threat.png') });
 
   // The one ledger.

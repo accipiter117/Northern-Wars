@@ -47,7 +47,7 @@
       "title": "Pilgrims on the road", "weight": 2, "types": ["town", "village"], "minFaith": { "melitele": 40 },
       "text": "Pilgrims bound for the Temple of Melitele gather at {place}, afraid of the road ahead. They ask the crown for an escort.",
       "choices": [
-        { "label": "Send an escort", "effects": { "treasury": -100, "opinion": { "melitele": 5, "peasants": 2 } } },
+        { "label": "Send an escort", "effects": { "treasury": -100, "opinion": { "melitele": 5, "peasants": 2 }, "escort": "temple_melitele" } },
         { "label": "Let them take their chances", "effects": { "opinion": { "melitele": -2 } }, "default": true }
       ]
     },

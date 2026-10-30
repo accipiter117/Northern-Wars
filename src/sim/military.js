@@ -61,7 +61,11 @@ export function localStrength(state, world, id, foe = 'soldiers') {
   const walls = hasWalls(state, world, id);
   const companies = [...garrisonCompanies(world, id, s.garrison), ...placeMuster(state, world, id)];
   const morale = world.forces?.morale?.start ?? 70;
-  return bandStrength(world, companies, morale, foe, 'open', walls) * (1 + localFx(world, s, 'soldierStrength'));
+  // Behind their doors and walls, townsfolk hold off even the supernatural
+  // better than troops sent into the wilds after it (M24 follow-up).
+  const vs = foe === 'supernatural' ? 'monsters' : foe;
+  const k = foe === 'supernatural' ? world.forces?.supernaturalDefence ?? 1 : 1;
+  return bandStrength(world, companies, morale, vs, 'open', walls) * k * (1 + localFx(world, s, 'soldierStrength'));
 }
 
 export function plagueActive(state, s) {
