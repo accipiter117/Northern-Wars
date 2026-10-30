@@ -2,6 +2,7 @@
 // towards where the crown's stance and laws put it; warmth brings trade over
 // the border, and now and then an envoy arrives wanting an answer.
 import { nudge } from './meters.js';
+import { sendFigure, courtOf } from './figures.js';
 import { addDispatch, clamp } from './realm.js';
 import { realmProsperity } from './realms.js';
 import { totalPopulation } from './state.js';
@@ -110,6 +111,9 @@ export function monthlyEnvoy(state, world, rng) {
   let roll = rng.next() * options.reduce((a, o) => a + o.w, 0);
   const pick = options.find((o) => (roll -= o.w) < 0) ?? options[options.length - 1];
   state.envoys.push({ id: state.nextEnvoyId++, envoy: pick.eid, realm: pick.rid, day: state.day });
+  // Their envoy's last stretch to Vizima, if their court is on the map (M23 C).
+  const court = courtOf(world, pick.rid);
+  if (court) sendFigure(state, world, { kind: 'envoy', side: pick.rid, from: court, to: world.kingdom.capital, days: 4 });
 }
 
 export function envoyText(world, pending) {

@@ -102,6 +102,17 @@ export function attachPanelInput(app) {
       app.persist();
       return;
     }
+    // A company chosen to march apart when an army divides (M23 C).
+    const sb = at('[data-split-band]');
+    const sHolder = sb?.closest('[data-form]');
+    if (sb && sHolder) {
+      const f = form(memory, sHolder.dataset.form);
+      const i = Number(sb.dataset.splitBand);
+      f.bands = (f.bands ?? []).includes(i) ? f.bands.filter((x) => x !== i) : [...(f.bands ?? []), i];
+      nav.refresh();
+      app.persist();
+      return;
+    }
     // A mercenary company for the army being raised (M21).
     const merc = at('[data-merc]');
     if (merc) {

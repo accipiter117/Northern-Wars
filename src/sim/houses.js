@@ -5,6 +5,7 @@
 // lands restless; a house pushed too far rebels. A crown that loses both its
 // Trust and its order for half a year is deposed.
 import { nudge, standing } from './meters.js';
+import { sendFigure } from './figures.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
@@ -241,6 +242,7 @@ export function houseAction(state, world, houseId, kind, settlementId) {
   } else if (kind === 'summon') {
     h.ambition = clamp(h.ambition + a.ambition, 0, 100);
     h.favour += a.favour + (state.laws.court?.option === 'splendid' ? a.splendidFavour : 0);
+    sendFigure(state, world, { kind: 'lord', from: def.seat, to: world.kingdom.capital, name: def.lord, about: 'summoned to court' });
     say(state, `${def.lord} is summoned to Vizima and kept close for a season.`);
   } else if (kind === 'levies') {
     let raised = 0;
@@ -251,6 +253,7 @@ export function houseAction(state, world, houseId, kind, settlementId) {
     }
     state.settlements[world.kingdom.capital].garrison += raised;
     h.grievance += a.grievance;
+    sendFigure(state, world, { kind: 'lord', from: def.seat, to: world.kingdom.capital, name: def.lord, about: `bringing ${raised} men at the crown's demand` });
     say(state, `${def.name} sends ${raised} men to Vizima at the crown's demand, with poor grace.`);
   } else if (kind === 'fine') {
     const fine = Math.max(a.min, Math.round(housePower(state, world, houseId).people * a.perPerson));

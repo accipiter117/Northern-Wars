@@ -9,6 +9,7 @@ import { stepNeighboursDay, monthlyEnvoy } from './neighbours.js';
 import { monthlyDiplomacy, stepDiplomacyDay } from './audiences.js';
 import { stepCultureDay, monthlyCulture, tensionUnrest } from './culture.js';
 import { stepPetitionsDay, monthlyPetition } from './petitions.js';
+import { stepFiguresDay } from './figures.js';
 import { stepHousesDay, monthlyHouses, holderUnrest } from './houses.js';
 import { monthlyThreats, monthlyEvent, stepEventsDay, plagueActive } from './military.js';
 import { monthlyRealms } from './realms.js';
@@ -40,6 +41,7 @@ export function stepRealmDay(state, world, rng) {
   stepDiplomacyDay(state, world);
   stepCultureDay(state, world);
   stepPetitionsDay(state, world);
+  stepFiguresDay(state);
   stepHousesDay(state, world);
   stepEventsDay(state, world, rng);
   if (state.gold) stepGoldDay(state, world, rng);

@@ -214,6 +214,12 @@
     "temple": 2,
     "capital": 2
   },
+  "figures": {
+    "note": "Figures on the road (M23 C): a rider covers `speed` map units a day, and no ride is shorter than minDays or longer than maxDays.",
+    "speed": 45,
+    "minDays": 2,
+    "maxDays": 30
+  },
   "glory": {
     "battleWon": 3,
     "battleLost": -4,

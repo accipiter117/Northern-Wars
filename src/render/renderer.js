@@ -24,10 +24,11 @@ import { drawForces, pickForces } from './forces-layer.js';
 import './sprites-forces.js';
 import { visionOf, canSee, hasBit } from '../sim/vision.js';
 import { travellerPositions } from '../sim/ambient.js';
-import { armyPosition } from '../sim/armies.js';
+import { armyPosition, daysToArrive } from '../sim/armies.js';
+import { figurePosition } from '../sim/figures.js';
 import { lineOf } from '../sim/battle.js';
 import { roadPath } from '../sim/world.js';
-import { TEMERIA, ownerOf, originOf, sideColours } from '../sim/conflict.js';
+import { TEMERIA, ownerOf, originOf, sideColours, hostile } from '../sim/conflict.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
 const LABEL_FONT = {
@@ -799,6 +800,18 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       getSprite('unit', 'witcher').draw(ctx, p.x, p.y - 4, UNIT_SIZE * 1.1, { facing: w.facing, fighting: w.phase === 'fight', t: idleT ?? performance.now() / 1000 });
       if (selection?.witcher === c.threat) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
+    // Figures on the road (M23 C): envoys, spies, couriers, lords and
+    // commanders, each on an errand of the crown's or a foreign court's.
+    for (const f of state.figures ?? []) {
+      const w = figurePosition(world, f, state.day + frac);
+      if (f.side !== TEMERIA && !unitInSight(w)) continue;
+      const p = toScreen(cam, w.x, w.y);
+      if (p.x < -20 || p.y < -20 || p.x > cam.viewW + 20 || p.y > cam.viewH + 20) continue;
+      live.life += 1;
+      const house = f.kind === 'lord' ? Object.values(world.houses?.houses ?? {}).find((h) => h.lord === f.name) : null;
+      getSprite('unit', 'figure').draw(ctx, p.x, p.y - 4, UNIT_SIZE * 1.05, { kind: f.kind, facing: Math.cos(w.angle) >= 0 ? 1 : -1, colours: house?.colours ?? sideColours(world, f.side) });
+      if (selection?.figure === f.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
+    }
     drawWar(state, frac, selection);
     drawForces(forceView, state, 'tokens');
     ctx.globalAlpha = 1;
@@ -973,10 +986,39 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
         ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.restore();
+        // How long until it arrives, at its destination (our armies only:
+        // where a foreign army is bound is not ours to know).
+        if (a.side === TEMERIA) {
+          const n = daysToArrive(state, world, a);
+          ctx.font = '600 11px Georgia, serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = '#23365e';
+          haloText(ctx, n === 1 ? '1 day' : `${n} days`, d.x, d.y - 34);
+        }
       }
-      getSprite('army', a.side, 'host').draw(ctx, p.x, p.y - 6, size, {
-        colours: house?.colours ?? sideColours(world, a.side), figures: Math.min(5, Math.ceil(a.soldiers / 600)), facing, dim: a.retreating,
-      });
+      const colours = house?.colours ?? sideColours(world, a.side);
+      // A column sized by its men (M23 C): a figure for every 400, wagons
+      // for a large army, dust on the march; at night, while it marches, it
+      // camps by the road. Battery saver draws a shorter column.
+      const night = a.to && frac >= 0.78;
+      if (night) getSprite('army', a.side, 'camp').draw(ctx, p.x, p.y - 4, size * 1.1, { colours, tents: Math.ceil(a.soldiers / 1200) + 1 });
+      else {
+        getSprite('army', a.side, 'column').draw(ctx, p.x, p.y - 6, size, {
+          colours, figures: Math.round(a.soldiers / 400), max: saver ? 6 : 12, angle: a.to ? Math.atan2(Math.sin(w.angle), Math.cos(w.angle)) : (facing > 0 ? 0 : Math.PI),
+          marching: !!a.to, dust: !saver, wagons: a.soldiers >= 4000 ? 2 : a.soldiers >= 1500 ? 1 : 0, dim: a.retreating, seed: a.id,
+        });
+      }
+      // Foraging parties out from an army living off an enemy's land.
+      if (!a.siege && !a.to && hostile(state, a.side, ownerOf(state, world, a.at)) && ownerOf(state, world, a.at) !== a.side) {
+        for (let i = 0; i < (saver ? 1 : 2); i++) {
+          const ang = ((state.day * 37 + a.id * 101 + i * 173) % 360) * (Math.PI / 180);
+          const fx = p.x + Math.cos(ang) * size * 1.3;
+          const fy = p.y + Math.sin(ang) * size * 0.7;
+          getSprite('military', 'soldier').draw(ctx, fx, fy, size * 0.42, { coat: colours[0] });
+          getSprite('military', 'soldier').draw(ctx, fx + size * 0.2, fy + size * 0.06, size * 0.42, { coat: colours[0] });
+        }
+      }
       if (zoomRel() >= 2.2) armyDetail(ctx, p.x, p.y + size * 0.35, a.soldiers, a.morale);
       if (selection?.army === a.id) ring(ctx, p.x, p.y - 6, size / 2 + 6);
     }
@@ -1048,6 +1090,13 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const p = toScreen(cam, w.x, w.y);
       const d = Math.hypot(p.x - sx, p.y - 4 - sy);
       if (d < 20 && (!best || d < best.d)) best = { d, hit: { witcher: c.threat } };
+    }
+    for (const f of state.figures ?? []) {
+      const w = figurePosition(world, f, state.day + frac);
+      if (f.side !== TEMERIA && !unitInSight(w)) continue;
+      const p = toScreen(cam, w.x, w.y);
+      const d = Math.hypot(p.x - sx, p.y - 4 - sy);
+      if (d < 20 && (!best || d < best.d)) best = { d, hit: { figure: f.id } };
     }
     for (const st of world.geography.settlements) {
       const p = toScreen(cam, st.x, st.y);

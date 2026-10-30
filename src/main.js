@@ -1,5 +1,5 @@
 // Wires the simulation, the map and the panels together, and owns the clock.
-import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, witcherOnRoad, applyAction, describeArmy, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions, markerAt } from './sim/index.js';
+import { loadWorld, createState, step, serialize, deserialize, dateOf, describeUnit, witcherOnRoad, applyAction, describeArmy, describeFigure, figurePosition, daysToArrive, TEMERIA, bestCompanyFor, freeCompanies, realmStock, repairOptions, markerAt } from './sim/index.js';
 import { createCamera, resizeCamera, panBy, toWorld, toScreen, zoomAt } from './render/camera.js';
 import { attachMapInput } from './render/input.js';
 import { createRenderer } from './render/renderer.js';
@@ -654,6 +654,11 @@ async function boot() {
       lowerPanel();
       const u = state.ambient.units.find((v) => v.id === hit.unit);
       showLabel({ unit: hit.unit }, describeUnit(world, u, state));
+    } else if (hit?.figure) {
+      // A figure on the road (M23 C): who it is and what it is about.
+      lowerPanel();
+      const f = state.figures.find((v) => v.id === hit.figure);
+      if (f) showLabel({ figure: f.id }, describeFigure(state, world, f));
     } else {
       lowerPanel();
       hideUnitLabel();
@@ -996,6 +1001,12 @@ async function boot() {
       return p && { x: r.left + p.x, y: r.top + p.y };
     },
     // Where a witcher on contract is on screen (M22 B), by the lair's id.
+    // Where a figure on the road is on screen (M23 C).
+    figureScreenOf(id) {
+      const f = state.figures?.find((x) => x.id === id);
+      const w = f && figurePosition(world, f, state.day + frac);
+      return w ? this.screenOfPoint(w.x, w.y - 4 / cam.scale) : null;
+    },
     witcherScreenOf(threat) {
       const c = state.threats.contracts.find((x) => x.threat === threat);
       const w = c && witcherOnRoad(state, world, c, frac);

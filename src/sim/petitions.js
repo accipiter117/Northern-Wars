@@ -2,6 +2,7 @@
 // grove the priests want felled, a quarter the townsfolk want walled off.
 // Like envoys, they wait for an answer, and take the default if ignored.
 import { nudge } from './meters.js';
+import { sendFigure } from './figures.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import { nonhumanShare, shiftFaith } from './culture.js';
@@ -32,6 +33,8 @@ export function monthlyPetition(state, world, rng) {
   let roll = rng.next() * options.reduce((a, o) => a + o.w, 0);
   const pick = options.find((o) => (roll -= o.w) < 0) ?? options[options.length - 1];
   state.petitions.push({ id: state.nextPetitionId++, petition: pick.pid, place: pick.place, day: state.day });
+  // Its courier on the road to Vizima (M23 C).
+  sendFigure(state, world, { kind: 'courier', from: pick.place, to: world.kingdom.capital, about: world.petitions.petitions[pick.pid].title.toLowerCase() });
 }
 
 export function petitionText(world, pending) {
