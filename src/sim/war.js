@@ -2,6 +2,7 @@
 // invaded by a neighbour it has soured or that smells weakness, be called to
 // a friend's side, or watch its neighbours fight one another. Wars end in a
 // peace: towns handed back or kept, sometimes tribute, and a truce.
+import { realmCompanies } from './companies.js';
 import { windfall } from './economy.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
@@ -169,12 +170,14 @@ export function raiseRealmArmy(state, world, rid, foes, order = 'siege') {
   if (!best) return null;
   const count = state.armies.filter((a) => a.side === rid).length;
   realm.army = 0;
+  // Its standing men as men-at-arms, its levies as militia and bowmen, in
+  // companies (M22 C), by the same formula as the crown's.
   const a = newArmy(state, world, rid, best.id, total, levy, {
     order, target: null, stance: (ai.aggression[rid] ?? 0.3) >= 0.5 ? 'bold' : 'cautious',
     name: `The ${count ? 'second ' : ''}army of ${sideName(world, rid)}`,
+    bands: realmCompanies(world, rid, standing, levied),
   });
   a.standing = standing;
-  if (world.strategy && total > 0) a.quality = (standing * 1.15 + levied * 0.9) / total;
   return a;
 }
 

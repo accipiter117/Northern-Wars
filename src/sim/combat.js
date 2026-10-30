@@ -29,10 +29,18 @@ export function groundAt(world, x, y) {
 
 export const mounted = (world, type) => !!F(world).companies[type]?.horses;
 
-// One company's strength against a kind of foe, on a kind of ground.
+// The kind of a company: one of the troop types, or (M22 C) a garrison.
+export function troopOf(world, type) {
+  const f = F(world);
+  return f.companies[type] ?? (type === 'garrison' ? f.garrison : null) ?? f.companies.militia;
+}
+
+// One company's strength against a kind of foe, on a kind of ground. Since
+// M22 C this is the one way strength is worked out: the crown's companies,
+// garrisons, levies, retinues, hired swords and every army are its sums.
 export function companyStrength(world, c, foe, ground = 'open', walls = false) {
   const f = F(world);
-  const t = f.companies[c.type];
+  const t = troopOf(world, c.type);
   let v = c.men * t.perMan * (0.5 + c.morale / 100) * (1 + (c.xp ?? 0) * f.xp.bonus) * (f.suits[foe]?.[c.type] ?? 1);
   if (t.horses) v *= f.ground.mounted[ground] ?? 1;
   // Behind walls every company fights better (M21), crossbows best of all.

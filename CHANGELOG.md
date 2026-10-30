@@ -1,5 +1,14 @@
 # Changelog
 
+## M22 C One military
+- Every soldier now belongs to a company: levies, standing companies, the lords' retinues and hired swords alike. Armies are made of companies, and each keeps its name.
+- Strength is worked out one way for everything, so a garrison, a muster, a company and an army can be compared fairly.
+- Levies come in companies of about 200: spearmen everywhere, crossbowmen from towns and bowmen from villages and the woods.
+- A town's Military tab shows its garrison, the muster it could raise, and standing companies nearby. Call the muster to put its own people under arms in a day, to defend it or to join an army.
+- Detach any company from an army, or join two armies in the same place into one.
+- A city defends itself against ordinary bandits, elves and beasts, and a town against small bands. The biggest camps, war parties and famous monsters (a leshen, a griffin) now need an army or standing companies.
+- Save version 23.
+
 ## M22 B Life on the map
 - Everything that moves on the map now stands for something real. Merchant caravans carry what the realm sells at home; Temerian and foreign merchants carry the goods of your trade deals; pilgrims walk to a real shrine or cathedral; patrols ride for the companies you have on patrol; barges ply the rivers your towns trade on. Travellers with no reason to be there are gone.
 - Long press any traveller to see what it is in one line: "Patrol: the Maribor Light cavalry on the road from Maribor to Vizima".

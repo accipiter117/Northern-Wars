@@ -688,3 +688,8 @@ ul.orders li .chip { flex: none; }
 .labour-strip .ls-main { font-weight: 600; font-size: 14px; }
 .labour-strip .ls-sub { font-size: 12px; color: var(--muted); }
 .build-list.presets { grid-template-columns: repeat(2, 1fr); }
+/* An army's or a town's companies (M22 C). */
+.companies { list-style: none; margin: 4px 0 8px; padding: 0; }
+.companies li { padding: 4px 0; border-bottom: 1px dotted var(--line); }
+.company-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.company-row small { color: var(--muted); }

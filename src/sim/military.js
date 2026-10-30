@@ -4,6 +4,8 @@
 // levels decide where camps and lairs appear and how they grow (threats.js);
 // the raids themselves are made by bands on the map. Plague, once loose,
 // spreads along the roads.
+import { garrisonCompanies, placeMuster, bandStrength } from './companies.js';
+import { hasWalls } from './conflict.js';
 import { addDispatch, clamp } from './realm.js';
 import { goldThreat } from './gold.js';
 import { lodgeCut } from './industry.js';
@@ -49,13 +51,16 @@ export function threatLevel(state, world, id, kind, patrolled = patrolledSet(sta
   return clamp(v, 0, 100);
 }
 
-// The garrison's strength behind its walls; an armoury's men fight harder.
-export function localStrength(state, world, id) {
+// A place's own strength (M22 C): its garrison as companies, and its own
+// people's muster rising to defend their homes, by the one strength formula,
+// behind its walls while they stand; an armoury's men fight harder.
+export function localStrength(state, world, id, foe = 'soldiers') {
   const s = state.settlements[id];
-  // Walls count in full while they stand at a third or more (M21): a garrison
-  // behind them beats off most raids, and only a breach undoes that.
-  const walls = s.buildings.includes('walls') && (s.cond?.walls ?? 100) >= 35 ? mil(world).walls : 1;
-  return s.garrison * walls * (1 + localFx(world, s, 'soldierStrength'));
+  if (!s) return 0;
+  const walls = hasWalls(state, world, id);
+  const companies = [...garrisonCompanies(world, id, s.garrison), ...placeMuster(state, world, id)];
+  const morale = world.forces?.morale?.start ?? 70;
+  return bandStrength(world, companies, morale, foe, 'open', walls) * (1 + localFx(world, s, 'soldierStrength'));
 }
 
 export function plagueActive(state, s) {

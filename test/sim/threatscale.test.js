@@ -70,7 +70,9 @@ test('walls count in full while they stand, and a walled garrison beats off a ca
   st.cond = { ...(st.cond ?? {}), walls: 100 };
   const full = localStrength(s, world, id);
   st.buildings = st.buildings.filter((b) => b !== 'walls');
-  assert.ok(Math.abs(full - localStrength(s, world, id) * world.military.walls) < 1e-6, 'the full multiplier');
+  // Every company behind the walls fights at the full bonus (crossbowmen
+  // in the muster at more), so the whole is at least the walls' multiplier.
+  assert.ok(full >= localStrength(s, world, id) * world.military.walls - 1e-6, 'the full multiplier');
   st.buildings.push('walls');
   st.cond.walls = 60;
   assert.equal(localStrength(s, world, id), full, 'battered walls still count in full');

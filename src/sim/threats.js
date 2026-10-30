@@ -14,7 +14,7 @@ import { threatLevel, patrolledSet, localStrength } from './military.js';
 import { visionOf } from './vision.js';
 import { TEMERIA, ownerOf, hostile, atWar, sideName } from './conflict.js';
 import { totalPopulation } from './state.js';
-import { threatStrength, speciesOf, winChance, groundAt, companyStrength } from './combat.js';
+import { threatStrength, speciesOf, winChance, groundAt, companyStrength, foeKind } from './combat.js';
 import { companiesAt, stationedStrength } from './forces.js';
 import { damagePlace, outside } from './works.js';
 
@@ -324,7 +324,7 @@ function pickVillage(state, world, t, body) {
     if ((s.raided ?? 0) > state.day) continue;
     const d = near(st, body);
     if (d > T(world)[t.kind].reach) continue;
-    const defence = localStrength(state, world, st.id) + stationedStrength(state, world, st.id, t);
+    const defence = localStrength(state, world, st.id, foeKind(t)) + stationedStrength(state, world, st.id, t);
     if (defence > strength * 0.9) continue;
     if (!best || d < best.d) best = { id: st.id, d };
   }
@@ -491,7 +491,7 @@ function raidVillage(state, world, rng, t, id) {
   if (!s || s.occupier) return;
   const b = t.band;
   const attack = threatStrength(world, t, groundAt(world, b.x, b.y));
-  const defence = localStrength(state, world, id) + stationedStrength(state, world, id, t);
+  const defence = localStrength(state, world, id, foeKind(t)) + stationedStrength(state, world, id, t);
   const name = world.byId[id].name;
   const who = t.kind === 'monsters' ? speciesOf(world, t).name : t.kind === 'raiders' ? `${sideName(world, t.realm)} raiders` : t.kind === 'scoiatael' ? "Scoia'tael" : 'Bandits';
   if (rng.next() < winChance(world, defence, attack)) {

@@ -1,6 +1,8 @@
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats, threatCap } from './threats.js';
+import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, districtLevy } from './companies.js';
+import { districtOf } from './labour.js';
 import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
@@ -278,6 +280,39 @@ const MIGRATIONS = {
       if (t.band?.men) t.band.men = Math.min(t.band.men, cap);
     }
     state.version = 22;
+    return state;
+  },
+  // v23 (M22 C): every army becomes a list of companies. The crown's levies
+  // become levy companies of the places they came from, the lords' men
+  // retinue companies, hired men their companies, standing companies keep
+  // their identity; foreign armies their standing men and levies. Nothing
+  // is lost: the companies add up to the army's men as it stands.
+  22(state, world) {
+    const mc = world.war?.raise?.mercenaries?.companies ?? {};
+    for (const a of state.armies ?? []) {
+      if (a.bands?.length) continue;
+      const bands = [];
+      if (a.side === 'temeria') {
+        const levy = Object.entries(a.levy ?? {}).filter(([, n]) => n > 0);
+        const levied = levy.reduce((v, [, n]) => v + n, 0);
+        const levyMen = a.folk ? (a.levyMen ?? levied) : levied;
+        bands.push(...districtLevy(world, Object.fromEntries(levy.filter(([id]) => world.byId[id]).map(([id, n]) => [id, levied ? (n * levyMen) / levied : n])), districtOf(world)));
+        if (a.retinueMen) bands.push(...retinueCompanies(world, 'crown', a.retinueMen).map((b) => ({ ...b, name: 'The lords\' men' })));
+        for (const m of a.mercs ?? []) if (mc[m.id]) bands.push(...mercenaryCompanies(world, m.id));
+        for (const u of a.units ?? []) {
+          const c = state.forces?.companies.find((x) => x.id === u.id);
+          if (c) bands.push({ type: c.type, men: u.men, xp: c.xp ?? 0, source: 'standing', company: c.id, name: c.name });
+        }
+        const rest = a.raised - bands.reduce((v, b) => v + b.men, 0);
+        if (rest > 1) bands.push(...realmCompanies(world, 'temeria', rest, 0).map((b) => ({ ...b, source: 'hired', name: 'Free company' })));
+      } else {
+        bands.push(...realmCompanies(world, a.side, a.standing ?? 0, Math.max(0, a.raised - (a.standing ?? 0))));
+      }
+      a.bands = bands.length ? bands : realmCompanies(world, a.side, 0, a.soldiers);
+      delete a.quality;
+      normalise(a);
+    }
+    state.version = 23;
     return state;
   },
 };

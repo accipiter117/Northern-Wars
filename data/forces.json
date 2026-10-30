@@ -111,7 +111,8 @@
       "menatarms": 1.1,
       "crossbows": 1.0,
       "lightcav": 1.25,
-      "knights": 1.1
+      "knights": 1.1,
+      "garrison": 1
     },
     "monsters": {
       "militia": 0.7,
@@ -119,7 +120,8 @@
       "menatarms": 1.0,
       "crossbows": 1.1,
       "lightcav": 0.8,
-      "knights": 0.6
+      "knights": 0.6,
+      "garrison": 0.8
     },
     "scoiatael": {
       "militia": 0.8,
@@ -127,15 +129,17 @@
       "menatarms": 1.0,
       "crossbows": 1.0,
       "lightcav": 0.85,
-      "knights": 0.7
+      "knights": 0.7,
+      "garrison": 0.9
     },
     "soldiers": {
-      "militia": 0.8,
+      "militia": 1.1,
       "archers": 0.95,
       "menatarms": 1.15,
       "crossbows": 1.0,
       "lightcav": 1.0,
-      "knights": 1.5
+      "knights": 1.5,
+      "garrison": 1
     }
   },
   "ground": {
@@ -163,6 +167,27 @@
     "winter": 0.6
   },
   "engageRange": 14,
+  "garrison": {
+    "note": "M22 C: a place's garrison counts as companies of garrison soldiers (size men each), by the same strength formula as every other company.",
+    "name": "Garrison",
+    "plural": "garrison soldiers",
+    "perMan": 1,
+    "size": 150
+  },
+  "levy": {
+    "note": "M22 C: levies are raised in companies of about size men, from a place's people: militia spearmen everywhere (spears of the men), and the rest as crossbowmen from towns and cities or archers from villages, castles and anywhere by the woods. Untrained (no experience), cheap, and their men leave the place's hands while away.",
+    "size": 200,
+    "spears": 0.6,
+    "town": "crossbows",
+    "country": "archers"
+  },
+  "retinue": {
+    "note": "M22 C: a great house's men come as companies of men-at-arms and militia, half and half.",
+    "types": [
+      "menatarms",
+      "militia"
+    ]
+  },
   "wallsBonus": 1.5,
   "perPlace": {
     "village": 1,
@@ -282,7 +307,7 @@
       ],
       "speed": 16,
       "reach": 160,
-      "capMax": 110
+      "capMax": 240
     },
     "monsters": {
       "name": "Lair",
@@ -310,7 +335,14 @@
       "witcher": {
         "note": "M22 B: the witcher rides out from the nearest place of ours, fights at the lair at the fight share of the contract's days (the contract is settled then), and rides home if he won.",
         "fight": 0.5,
-        "names": ["Halvard of the School of the Wolf", "Oskar Brenn of the Griffin", "Rhun of the School of the Cat", "Ida Vell of the Viper", "Marten Eel of the Bear", "Sigvald of the Manticore"],
+        "names": [
+          "Halvard of the School of the Wolf",
+          "Oskar Brenn of the Griffin",
+          "Rhun of the School of the Cat",
+          "Ida Vell of the Viper",
+          "Marten Eel of the Bear",
+          "Sigvald of the Manticore"
+        ],
         "base": 150,
         "perStrength": 2.5,
         "days": 20,
@@ -335,7 +367,7 @@
       "life": 30,
       "speed": 22,
       "max": 2,
-      "capMax": 60
+      "capMax": 120
     },
     "raiders": {
       "name": "Raiding party",
@@ -364,7 +396,7 @@
       "garrisonPerPoint": 40
     },
     "scale": {
-      "note": "M21: camps, commandos and raiding parties grow with the realm's people (realm people / basePop), within min and max, and an ordinary threat never grows past its cap, so a standing company or a town's levy beats it.",
+      "note": "M21: camps, commandos and raiding parties grow with the realm's people (realm people / basePop), within min and max, and an ordinary threat never grows past its cap, so a standing company or a town's levy beats it. M22 C: an ordinary threat (a camp of about a hundred, a commando of thirty or forty, a pack or flock) loses to a town's garrison and muster; the largest camps (up to capMax), commandos and famous monsters (three times as dreadful as before) need a field army or standing companies (see tools/skirmish.mjs).",
       "basePop": 54000,
       "min": 0.7,
       "max": 1.3
@@ -387,7 +419,7 @@
         "id": "hag",
         "name": "A water hag",
         "one": "water hag",
-        "power": 30,
+        "power": 90,
         "count": [
           1,
           2
@@ -411,7 +443,7 @@
         "id": "werewolf",
         "name": "A werewolf",
         "one": "werewolf",
-        "power": 45,
+        "power": 135,
         "count": [
           1,
           1
@@ -422,7 +454,7 @@
         "id": "leshen",
         "name": "A leshen",
         "one": "leshen",
-        "power": 75,
+        "power": 225,
         "count": [
           1,
           1
@@ -446,7 +478,7 @@
         "id": "griffin",
         "name": "A griffin",
         "one": "griffin",
-        "power": 55,
+        "power": 165,
         "count": [
           1,
           1
@@ -470,7 +502,7 @@
         "id": "forktail",
         "name": "A forktail",
         "one": "forktail",
-        "power": 50,
+        "power": 150,
         "count": [
           1,
           1
