@@ -1,5 +1,11 @@
 # Changelog
 
+## M24 E Many armies
+- Raise as many armies as the treasury and the men allow. They are numbered (the First Army, the Second) and led by a marshal or a captain.
+- Levies walk the roads to each muster on the map, so several armies can gather at once.
+- A town's levy takes orders from the town's card: hold the town, hunt a threat near it, march to join an army, or merge with one in the town.
+- The War tab lists every army with its men, spirit, pay and orders, and merges any two that stand together.
+
 ## M24 D Money from fighting
 - Breaking a bandit camp, a lair or a commando now pays: hoards, bounties, the villages' rewards and trophies. Every threat card shows its purse first, less a witcher's fee where one would be hired.
 - Raids carry off far more: plunder, caravans and herds. The army card shows what a raid on each realm would bring before you order it. The realm raided remembers, and the North fears you more.

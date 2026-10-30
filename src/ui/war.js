@@ -3,6 +3,7 @@ import {
   TEMERIA, formatDate, sideName, ownerOf, placesHeldBy, warsOf, warScore, exhaustion, heldValue, sideIndex, musterPreview,
   canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer, canMerge, canOrder, canSplit,
   raidPreview,
+  armyPay,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -134,13 +135,26 @@ function raiseHtml(world, state, form) {
     ${refuse.length ? `<p class="warn">${escapeHtml(refuse.join(', '))} would send excuses instead of men.</p>` : ''}`;
 }
 
+const spirit = (m) => (m >= 75 ? 'eager' : m >= 50 ? 'steady' : m >= 30 ? 'shaken' : 'broken');
+
 export function warHtml(app) {
   const { world, state, memory } = app;
   const f = raiseForm(app);
   const wars = warsOf(state, TEMERIA);
   const waiting = state.warDecisions.length;
-  const armies = crownArmies(state).map((a) => `<button type="button" class="row realm-row" data-army="${a.id}" data-go="army:${a.id}">
-    <span class="row-main"><span class="row-name">${escapeHtml(a.name)}</span><span class="row-sub">${escapeHtml(describeArmy(state, world, a).replace(`${a.name}, `, ''))}.</span></span></button>`).join('');
+  // Every army of ours (M24 E): men, spirit, pay and what it is doing, then
+  // a merge for any two that stand in the same place.
+  const ours = crownArmies(state);
+  const armies = ours.map((a) => `<button type="button" class="row realm-row" data-army="${a.id}" data-go="army:${a.id}">
+    <span class="row-main"><span class="row-name">${escapeHtml(a.name)}</span><span class="row-sub">${escapeHtml(describeArmy(state, world, a).replace(`${a.name}, `, ''))}.</span></span>
+    <span class="row-end army-figs"><span>${number(Math.round(a.soldiers))} men</span><span>${spirit(a.morale)}</span><span>${icon('coin')}${number(Math.round(armyPay(state, world, a)))}</span></span></button>`).join('');
+  const merges = [];
+  ours.forEach((a, i) => ours.slice(i + 1).forEach((b) => {
+    if (!canMerge(state, world, a, b).ok) return;
+    const [from, into] = b.soldiers > a.soldiers ? [a, b] : [b, a];
+    merges.push(`<button type="button" class="act" data-merge="${from.id}:${into.id}" ${orderAttr({ type: 'merge', army: from.id, into: into.id, marshal: into.marshal ?? from.marshal ?? null }, `${from.name} joins ${into.name}.`)}><span class="act-label">Merge ${escapeHtml(from.name)} into ${escapeHtml(into.name)}</span><span class="act-sub">Both at ${escapeHtml(world.byId[into.at].name)}: ${number(Math.round(a.soldiers + b.soldiers))} men together</span></button>`);
+  }));
+  const pay = ours.reduce((v, a) => v + armyPay(state, world, a), 0);
   const abroad = (state.wars ?? []).filter((w) => sideIndex(w, TEMERIA) < 0)
     .map((w) => `<li>${escapeHtml(w.sides.map((s) => s.map((r) => sideName(world, r)).join(' and ')).join(' against '))}, since ${formatDate(w.since)}</li>`).join('');
   const tributes = (state.tributes ?? []).filter((t) => t.until > state.day && (t.from === TEMERIA || t.to === TEMERIA))
@@ -149,7 +163,7 @@ export function warHtml(app) {
     <div data-part="head"><p class="status"><span>${wars.length ? 'The realm is at war.' : 'The realm is at peace.'} Declare war from a neighbour\'s card under Diplomacy.</span></p>
       ${waiting ? `<button type="button" class="act wide" data-tab-go="court:inbox"><span class="act-label">${waiting} war decision${waiting === 1 ? '' : 's'} waiting</span><span class="act-sub">Answer under Court, Decisions</span></button>` : ''}</div>
     <div data-part="wars">${wars.map((w) => warRowHtml(world, state, w)).join('')}</div>
-    <div data-part="armies"><h3>Our armies</h3>${armies ? `<div class="rows">${armies}</div>` : '<p class="sub">None in the field.</p>'}</div>
+    <div data-part="armies"><h3>Our armies</h3>${armies ? `<p class="sub">${ours.length} in the field, ${number(Math.round(ours.reduce((v, a) => v + a.soldiers, 0)))} men, ${number(Math.round(pay))} crowns a month. No limit but the treasury and the men.</p><div class="rows">${armies}</div>${merges.length ? `<div data-part="merges">${merges.join('')}</div>` : ''}` : '<p class="sub">None in the field.</p>'}</div>
     <div data-part="raise" data-form="raise">${raiseHtml(world, state, f)}</div>
     ${abroad || tributes ? section(memory, 'tab:military', 'abroad', 'Abroad and tribute', `${abroad ? `<h3>Wars abroad that we know of</h3><ul class="cares">${abroad}</ul>` : ''}${tributes ? `<h3>Tribute</h3><ul class="cares">${tributes}</ul>` : ''}`) : '<div data-part="sec-abroad"></div>'}
   `;

@@ -521,7 +521,7 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   await page.click('[data-set="nobles:true"]');
   await page.click('[data-set="stance:bold"]');
   await page.click('[data-raise]');
-  assert.match(await page.textContent('#sheet'), /The army of Ellander[\s\S]*Orders/);
+  assert.match(await page.textContent('#sheet'), /The First Army[\s\S]*holding Ellander[\s\S]*Orders/);
 
   // The levies take days to gather (M21); let them come in.
   await page.evaluate(() => { for (const a of window.northernWars.state.armies) if (a.side === 'temeria') a.gatherUntil = 0; });

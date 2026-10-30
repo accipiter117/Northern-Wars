@@ -23,9 +23,9 @@
 | M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | Done |
 | M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
 | M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | Done |
-| M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | In progress (A, B and C done, D) |
+| M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
-| M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | In progress (A, B and C done, D) |
+| M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E) |
 
 ## M24 acceptance criteria
 Part A, a compact top bar:
@@ -39,6 +39,13 @@ Part B, Love, Fear, Authority and Unrest:
 - Unrest of 30 to 50 has no penalties; Dread's sources and effects folded into Love, Fear and Unrest.
 - Gibbets, heads on the gates, bunting and a procession on the map, close up and cached.
 - Save upgrade; tests for each meter's causes, the formula, a feared crown's taxes and levies, Fear's fading and collapse, Unrest under 50, and nothing reading Trust, Dread or Standing.
+
+Part E, many armies:
+- Named armies with commanders, no limit beyond the treasury and the men.
+- Every city and town can call its levy as companies from its card: hold, hunt a nearby threat, march to join, merge.
+- Several musters at once, the levies converging on the map.
+- The War tab lists every army (men, spirit, pay, orders) and merges any two where they stand.
+- Tests.
 
 Part D, money from fighting:
 - Threat purses (a bandit hoard and bounty, a beast's reward and trophies, a Scoia'tael bounty under bounties; a witcher's fee netted off), shown on threat cards.
