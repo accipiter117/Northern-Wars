@@ -522,17 +522,25 @@ All numbers are in data/forces.json. Choices the brief left open are marked (cho
 - Forces screen: every company and army (strength, morale, pay, orders, place) and every sighted threat (kind, size, distance to the nearest town) with a button to send the nearest suitable company.
 
 ## Ambient units
-Spawned and steered by the simulation layer (cosmetic only in v1, separate RNG). Kinds and what drives their numbers:
-- Merchant caravans: trade volume between settlements.
-- Grain carts: harvest and food flows towards cities.
-- Patrols: garrison riders out of strongholds (the crown's patrolling companies are on the map in their own right).
-- Goods carts: last month's flows along the production chains, stopping where a band holds the road.
-- Tax collectors: monthly, from towns to Vizima.
-- Pilgrims: faith activity, travelling to the Temple of Melitele.
-- Refugees: unrest, famine or plague, moving away from trouble.
-- River barges: on the Pontar and Ismena.
-- Goods carts: last month's flows along the production chains.
-Units move along the road network (or rivers for barges), at speeds affected by season. Tapping one shows a small label of what it is and where it's going.
+Spawned and steered by the simulation layer (cosmetic only, separate RNG). Since M22 B every traveller stands for something real, carries what it is for, and its numbers follow that source; anything with no source was removed (the old garrison riders, the merchant caravans between random towns, the tax collectors).
+- Merchant caravans: the surplus sold at home (M21), from a place that makes the good to a market town, as often as the home sales are worth (none when nothing is sold).
+- Temerian merchants: the goods we sell under a trade deal, from a place that makes them to the partner's capital. Foreign merchants: the goods we buy under a deal, from their capital to one of our market towns.
+- Caravans under treaty, crown caravans on the old routes, goods carts along the production chains, grain carts from full stores to hungry ones, refugees and exiles: as before, each from its real source.
+- Pilgrims: from wherever the faithful are to the Temple of Melitele, or the nearest cathedral or shrine standing whole.
+- Patrols: outriders of each company on patrol orders, one for each, along its road and back.
+- River barges: on rivers our towns stand on, as often as their trade (home sales and deals) is worth; none in winter while the rivers are frozen.
+- Abroad: the realms' own caravans between their towns and their riders out of their strongholds.
+Units move along the road network (or rivers for barges), at speeds affected by season. A tap shows a small label, a long press the same in a quick look, in one line: "Merchant caravan: grain from Ellander to Maribor, sold at home for about 194 crowns a month", "Patrol: the Maribor Light cavalry on the road from Maribor to Vizima".
+
+### Life at the works (M22 B)
+Kingdom view only, close up (never on the board). Small figures at each of our works, from `worksLife` in src/sim/worklife.js (numbers in data/labour.json `life`), drawn with the settlement art's life sprites so painted art can replace them:
+- Each works shows a few figures by its kind (fields 3, woods 2, mines 2, pastures 1 and a flock, the water 2 boats) at full staffing, more up to half again when overstaffed, fewer when short of hands.
+- The fields follow the year: ploughing with an ox in March to May, tending in June, July and October, harvesting with sheaves in August and September, empty in winter. Woodsmen fell a tree; miners swing picks beside a cart; shepherds stand with their flocks, smaller at the spring shearing; boats go out on the lakes and rivers, none in winter or while storms close the water.
+- A damaged works (below 45) shows no one, only a scorch mark; one under repair shows its builders with hammers.
+- Cheap: drawn only at the life zoom, at most 240 figures on screen (120 under Battery saver, which also halves each group).
+
+### Witchers on the road (M22 B)
+A witcher hired for a lair rides out from the nearest place of ours (four tenths of the contract's days), fights at the lair (the contract is settled halfway through, with his blade flashing on the map), and rides home if he won; if he lost, no one comes back. A long press says who he is and what the contract is worth: "Witcher: Halvard of the School of the Wolf, riding out from Anchor; the crown's contract on drowners near Anchor, 204 crowns".
 
 ## UI
 Rebuilt in M14 around one rule: the player never loses their place.

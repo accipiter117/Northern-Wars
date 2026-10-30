@@ -1,5 +1,5 @@
 {
-  "note": "Placeholder tuning for cosmetic traffic. Speeds are map units per day; Temeria is about 1000 units across.",
+  "note": "Placeholder tuning for cosmetic traffic. Speeds are map units per day; Temeria is about 1000 units across. Since M22 B every kind has a real source: merchant caravans the surplus sold at home (rate against tradeBaseline crowns a month), Temerian and foreign merchants the trade deals, pilgrims a real holy place, patrols the companies on patrol orders (one each), barges the trade of the towns on a river (none in winter).",
   "seasonSpeed": {
     "spring": 1,
     "summer": 1.1,
@@ -12,21 +12,21 @@
       "speed": 28,
       "max": 14,
       "spawnPerDay": 0.8,
-      "tradeBaseline": 600
+      "tradeBaseline": 150
     },
     "patrol": {
       "name": "Patrol",
       "speed": 34,
       "max": 8,
-      "spawnPerDay": 0.5,
-      "reach": 3
+      "spawnPerDay": 0.5
     },
     "barge": {
       "name": "River barge",
       "speed": 40,
       "max": 5,
       "spawnPerDay": 0.35,
-      "winterSpawn": 0.1
+      "winterSpawn": 0,
+      "tradeBaseline": 200
     },
     "grain": {
       "name": "Grain cart",
@@ -36,7 +36,7 @@
       "flowBaseline": 150
     },
     "foreign": {
-      "name": "Foreign caravan",
+      "name": "Foreign merchants",
       "speed": 26,
       "max": 6,
       "spawnPerDay": 0.6,

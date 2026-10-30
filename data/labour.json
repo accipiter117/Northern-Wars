@@ -310,5 +310,42 @@
         ]
       }
     }
+  },
+  "life": {
+    "note": "Life at the works on the map (M22 B, cosmetic): small figures at each staffed works, by kind, at full staffing (more up to half again when overstaffed, fewer when short). A works below damagedBelow shows none and a scorch mark; one under repair shows builders. Fields: ploughing, tending, harvesting by month, none in winter; the water closes in winter and in storms.",
+    "figures": {
+      "fields": 3,
+      "woods": 2,
+      "mines": 2,
+      "pastures": 1,
+      "fishing": 2
+    },
+    "builders": 2,
+    "damagedBelow": 45,
+    "fields": {
+      "plough": [
+        3,
+        4,
+        5
+      ],
+      "tend": [
+        6,
+        7,
+        10
+      ],
+      "harvest": [
+        8,
+        9
+      ]
+    },
+    "shearing": [
+      4,
+      5
+    ],
+    "waterClosed": [
+      12,
+      1,
+      2
+    ]
   }
 }

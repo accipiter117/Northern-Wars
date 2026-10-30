@@ -308,6 +308,9 @@
       "speed": 14,
       "reach": 120,
       "witcher": {
+        "note": "M22 B: the witcher rides out from the nearest place of ours, fights at the lair at the fight share of the contract's days (the contract is settled then), and rides home if he won.",
+        "fight": 0.5,
+        "names": ["Halvard of the School of the Wolf", "Oskar Brenn of the Griffin", "Rhun of the School of the Cat", "Ida Vell of the Viper", "Marten Eel of the Bear", "Sigvald of the Manticore"],
         "base": 150,
         "perStrength": 2.5,
         "days": 20,

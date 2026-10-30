@@ -70,7 +70,9 @@ for (const vp of VIEWPORTS) {
     assert.match(await page.textContent('#date'), /\d+ \w+ 1262/);
     assert.match(await page.textContent('#season'), /Spring|Summer/);
     const units = await page.evaluate(() => window.northernWars.state.ambient.units.map((u) => u.kind));
-    assert.ok(units.includes('caravan') && units.includes('patrol') && units.includes('barge'), `traffic: ${units}`);
+    // Every traveller has a real source (M22 B): pilgrims and goods carts in
+    // a fresh reign, but no patrols until a company rides on patrol orders.
+    assert.ok(units.includes('pilgrim') && units.includes('goods') && !units.includes('patrol'), `traffic: ${units}`);
     assert.match(await page.textContent('#m-granary'), /^[\d,]+$/);
     await page.screenshot({ path: join(OUT, `${vp.name}-map.png`) });
 

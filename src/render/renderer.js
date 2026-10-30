@@ -17,6 +17,8 @@ import { houseCount } from './layout.js';
 import { toScreen, toWorld, worldBounds } from './camera.js';
 import { pointInPolygon } from './geometry.js';
 import { unitPosition } from '../sim/ambient.js';
+import { witcherOnRoad } from '../sim/threats.js';
+import { worksLife } from '../sim/worklife.js';
 import { plagueActive } from '../sim/military.js';
 import { drawForces, pickForces } from './forces-layer.js';
 import './sprites-forces.js';
@@ -685,6 +687,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // sieges, risings) and ambient life, counted on the last full draw, so the
   // loop knows whether a paused map needs any frames at all.
   let live = { war: 0, life: 0 };
+  let lifeDrawn = 0;
   let saver = false;
   let idleT = null;
   function draw(state, frac, selection, { tick = null } = {}) {
@@ -702,6 +705,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // clock on the wall, not the realm's (which has stopped).
     idleT = tick;
     live = { war: 0, life: 0 };
+    lifeDrawn = 0;
     // A new zoom, or a pan past the margin, redraws every layer from here.
     if (fogPending && performance.now() - lastFog > FOG_EVERY_MS) {
       fogPending = false;
@@ -783,6 +787,18 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       }
       if (selection?.unit === u.id) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
     }
+    // Witchers on contract (M22 B): a lone rider out to the lair, the fight
+    // there, and the ride home.
+    for (const c of state.threats?.contracts ?? []) {
+      const w = witcherOnRoad(state, world, c, frac);
+      if (!w) continue;
+      const p = toScreen(cam, w.x, w.y);
+      if (p.x < -20 || p.y < -20 || p.x > cam.viewW + 20 || p.y > cam.viewH + 20) continue;
+      if (w.phase === 'fight') live.war += 1;
+      else live.life += 1;
+      getSprite('unit', 'witcher').draw(ctx, p.x, p.y - 4, UNIT_SIZE * 1.1, { facing: w.facing, fighting: w.phase === 'fight', t: idleT ?? performance.now() / 1000 });
+      if (selection?.witcher === c.threat) ring(ctx, p.x, p.y - 4, UNIT_SIZE / 2 + 5);
+    }
     drawWar(state, frac, selection);
     drawForces(forceView, state, 'tokens');
     ctx.globalAlpha = 1;
@@ -849,16 +865,35 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 
   // Smoke, workers, beasts and boats round the settlements in view, only
   // when close enough to see them.
+  // Life at the works (M22 B), worked out once per state for each of our
+  // places and kept for every frame drawn from it.
+  let lifeState = null;
+  let lifeOf = new Map();
+  function worksLifeOf(state, id) {
+    if (lifeState !== state) {
+      lifeState = state;
+      lifeOf = new Map();
+    }
+    let l = lifeOf.get(id);
+    if (!l) lifeOf.set(id, (l = worksLife(state, world, id)));
+    return l;
+  }
+  // At most this many figures at the works on screen at once; half under
+  // Battery saver. Only drawn zoomed in far enough to see them.
+  const LIFE_CAP = 240;
   function drawLifeLayer(state, frac) {
     if (cam.scale < layoutCfg.zoom.life) return;
     const look = seasonLook(dateOf(state.day).month);
     const time = state.day + frac;
+    const budget = { left: saver ? LIFE_CAP / 2 : LIFE_CAP, half: saver };
     for (const st of [...ordered, ...foreignOrdered]) {
+      const ours = !!state.settlements[st.id] && !state.settlements[st.id].occupier;
       if (!state.settlements[st.id] && !foreignView[st.id]?.visible) continue;
       const p = toScreen(cam, st.x, st.y);
       if (p.x < -120 || p.y < -120 || p.x > cam.viewW + 120 || p.y > cam.viewH + 120) continue;
-      art.drawLife(ctx, st, cam.scale, p.x, p.y, time, look);
+      art.drawLife(ctx, st, cam.scale, p.x, p.y, time, look, ours ? worksLifeOf(state, st.id) : null, budget);
     }
+    lifeDrawn = (saver ? LIFE_CAP / 2 : LIFE_CAP) - budget.left;
   }
 
   // Battlefields of the last days, sieges, and the armies themselves. The
@@ -1007,6 +1042,13 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const d = Math.hypot(p.x - sx, p.y - 4 - sy);
       if (d < 20 && (!best || d < best.d)) best = { d, hit: { unit: u.id } };
     }
+    for (const c of state.threats?.contracts ?? []) {
+      const w = witcherOnRoad(state, world, c, frac);
+      if (!w) continue;
+      const p = toScreen(cam, w.x, w.y);
+      const d = Math.hypot(p.x - sx, p.y - 4 - sy);
+      if (d < 20 && (!best || d < best.d)) best = { d, hit: { witcher: c.threat } };
+    }
     for (const st of world.geography.settlements) {
       const p = toScreen(cam, st.x, st.y);
       const d = Math.hypot(p.x - sx, p.y - sy);
@@ -1057,7 +1099,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // waiting its turn): the loop keeps asking for frames until they are.
     unfinished: () => dirty || baseDirty || fogDirty || fogPending,
     // For browser tests: what is left to draw and what moves on screen.
-    get flags() { return { dirty, baseDirty, fogDirty, fogPending, live }; },
+    get flags() { return { dirty, baseDirty, fogDirty, fogPending, live, lifeDrawn }; },
     unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
     get boardness() { return boardness(cam); },
     get tileStats() { return { size: tiles.size, drawn: tiles.stats.drawn, pending: baseDirty }; },

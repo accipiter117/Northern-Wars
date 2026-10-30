@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeRng, streamSeed } from '../../src/sim/rng.js';
 import { dateOf, dayNumber, formatDate, YEAR_DAYS } from '../../src/sim/calendar.js';
-import { roadPath, createState, step, serialize, deserialize } from '../../src/sim/index.js';
+import { roadPath, createState, step, serialize, deserialize, applyAction, partnerTrade } from '../../src/sim/index.js';
 import { nodeWorld } from '../helpers.js';
 
 const world = await nodeWorld();
@@ -58,6 +58,13 @@ test('ambient traffic spawns every kind on roads and rivers', () => {
   let s = createState(world, 5);
   s.settlements.vizima.stock.food = 0; // Starts grain moving, so carts appear.
   s.settlements.anchor.troubled = 200; // A riot-struck village sends out refugees.
+  // Since M22 B every kind has a real source: a trade deal for the merchants
+  // both ways, a company on patrol for the patrols.
+  s.treasury = 5000;
+  const p = partnerTrade(s, world, 'redania');
+  s = applyAction(s, world, { type: 'trade', realm: 'redania', sell: { good: p.wants[0], qty: 30 }, buy: { good: p.offers[0], qty: 15 } }).state;
+  s = applyAction(s, world, { type: 'recruit', settlement: 'maribor', kind: 'lightcav' }).state;
+  s = applyAction(s, world, { type: 'company', id: s.forces.companies[0].id, order: { kind: 'patrol', from: 'maribor', to: 'vizima' } }).state;
   const seen = new Set();
   for (let i = 0; i < 120; i++) {
     s = step(s, 1, world);

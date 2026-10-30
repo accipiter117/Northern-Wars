@@ -225,10 +225,10 @@ export function planSettlement(world, cfg, place) {
     if (life.includes('steam')) smoke.push({ x: it.x, y: it.y - it.w * 0.5, big: true, steam: true });
   }
   const lifeOf = (it) => (it.kind === 'building' ? cfg.buildings[it.sprite]?.life ?? [] : []);
-  const boats = items.filter((it) => lifeOf(it).includes('boats')).map((it) => ({ x: it.x, y: it.y }));
+  const boats = items.filter((it) => lifeOf(it).includes('boats')).map((it) => ({ x: it.x, y: it.y, b: it.sprite }));
   // Sheep on the downs by a pasture, horses in the paddocks by a stud.
   const herds = items.filter((it) => lifeOf(it).includes('sheep') || lifeOf(it).includes('horses'))
-    .map((it) => ({ x: it.x, y: it.y + it.r * 0.6, w: it.w, horses: lifeOf(it).includes('horses') }));
+    .map((it) => ({ x: it.x, y: it.y + it.r * 0.6, w: it.w, horses: lifeOf(it).includes('horses'), b: it.sprite }));
 
   let extent = R;
   for (const it of [...items, ...fields]) extent = Math.max(extent, Math.hypot(it.x, it.y) + it.r + 1);
