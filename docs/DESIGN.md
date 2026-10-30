@@ -555,6 +555,14 @@ Kingdom view only, close up (never on the board). Small figures at each of our w
 ### Witchers on the road (M22 B)
 A witcher hired for a lair rides out from the nearest place of ours (four tenths of the contract's days), fights at the lair (the contract is settled halfway through, with his blade flashing on the map), and rides home if he won; if he lost, no one comes back. A long press says who he is and what the contract is worth: "Witcher: Halvard of the School of the Wolf, riding out from Anchor; the crown's contract on drowners near Anchor, 204 crowns".
 
+### Beasts, the supernatural and the camera (M24 follow-up)
+- **Hunts finish.** A company sent after a lair off the road used to walk back and forth between the last town and the lair, because it re-planned its route from the town every three days and the last stretch through the wilds took longer. Once off the road it now keeps going, following the quarry if it moves.
+- **Ordinary beasts** (wolves, drowners, harpies) are fought as before but every troop suits them: even the town militia is sure to win against a pack.
+- **The supernatural** (a hag, a werewolf, a leshen, a griffin, wyverns, a forktail) is witchers' work. Militia, archers, crossbows and horse stand almost no chance; men-at-arms and knights fight at under a third of their strength. A town defending itself against one counts at two fifths of its strength (`supernaturalDefence`), since doors and walls still help. Numbers in data/forces.json (`suits.supernatural`, each species' `supernatural` flag).
+- **Odds read plainly**: Sure to win, Likely to win, Even, Risky, Hopeless (they were Overwhelming, Favourable, and so on, and "Overwhelming" read as the enemy's).
+- **The camera follows an order** that sends someone: a company after a threat, a witcher, an army's march, siege, hunt or join, a town's levy called, an escort for pilgrims. It glides there, zooming in, and drops the panel to its title bar so the player watches it happen (jumping straight there under reduced motion).
+- **Escorts ride**: answering pilgrims with "Send an escort" puts soldiers of the crown on the road from their town to the Temple of Melitele.
+
 ### Many armies (M24 E)
 - **No limit on armies** beyond the treasury and the men (the three-army cap is gone). Each is numbered (the First Army, the Second, the lowest number free) and led by its marshal or, without one, by a captain of the crown (a list in data/war.json); the lead's name shows wherever the army is described.
 - **Several musters at once**: raising an army sends its levies down the roads to the muster as figures on the map (one band from each larger district, walking as long as the gathering takes), so armies raised at Vizima and Maribor are seen converging on both.

@@ -44,11 +44,11 @@ test('a threat against the nearest force, the Treasury ledger, and a decluttered
   // The threat, from the Military tab's list, then its card.
   await page.click('[data-tab="military"]');
   await page.click('.segs [data-sub="threats"]');
-  assert.match(await page.textContent(`[data-threat="${t.id}"]`), /about \d+ men\. .+'s levy: [\d,]+, \w+ odds|: [\d,]+, \w+ odds/);
+  assert.match(await page.textContent(`[data-threat="${t.id}"]`), /about \d+ men\. .+'s levy: [\d,]+, odds: [\w ]+|: [\d,]+, odds: [\w ]+/);
   await page.click(`[data-threat="${t.id}"]`);
   await page.waitForSelector('[data-part="versus"]');
   const versus = await page.textContent('[data-part="versus"]');
-  assert.match(versus, /^(Bandit camp|Bandits|Wolves|Drowners|Harpies|A |Wyverns)[^:]*: .+\. .+: [\d,]+, (overwhelming|favourable|even|risky|hopeless) odds\.$/);
+  assert.match(versus, /^(Bandit camp|Bandits|Wolves|Drowners|Harpies|A |Wyverns)[^:]*: .+\. .+: [\d,]+, odds: (sure to win|likely to win|even|risky|hopeless)\.$/);
   await page.screenshot({ path: join(OUT, 'portrait-threat.png') });
 
   // The one ledger.

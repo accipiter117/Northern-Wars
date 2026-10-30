@@ -149,9 +149,9 @@ test('the odds shown before a hunt match outcomes over many fights', () => {
     for (let i = 0; i < n; i++) if (resolve(world, rng, a, b).aWins) wins++;
     assert.ok(Math.abs(wins / n - p) < 0.03, `${a} v ${b}: odds ${p.toFixed(2)}, won ${(wins / n).toFixed(2)}`);
   }
-  // The words run from Overwhelming to Hopeless as the odds fall.
+  // The words run from Sure to win to Hopeless as the odds fall.
   const words = [[300, 100], [150, 100], [100, 100], [70, 100], [30, 100]].map(([a, b]) => oddsWord(world, winChance(world, a, b)));
-  assert.deepEqual(words, ['Overwhelming', 'Favourable', 'Even', 'Risky', 'Hopeless']);
+  assert.deepEqual(words, ['Sure to win', 'Likely to win', 'Even', 'Risky', 'Hopeless']);
   // And troops suit some foes better: knights against beasts do worse than archers.
   const s = createState(world, 1);
   const lair = { kind: 'monsters', terrain: 'forest', species: 'wolves', x: 600, y: 300, count: 12, morale: 70 };

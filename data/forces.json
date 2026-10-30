@@ -122,15 +122,8 @@
       "knights": 1.1,
       "garrison": 1
     },
-    "monsters": {
-      "militia": 0.7,
-      "archers": 1.2,
-      "menatarms": 1.0,
-      "crossbows": 1.1,
-      "lightcav": 0.8,
-      "knights": 0.6,
-      "garrison": 0.8
-    },
+    "monsters": { "militia": 1.0, "archers": 1.2, "menatarms": 1.1, "crossbows": 1.1, "lightcav": 0.9, "knights": 0.9, "garrison": 1.0 },
+    "supernatural": { "militia": 0.04, "archers": 0.06, "menatarms": 0.3, "crossbows": 0.08, "lightcav": 0.05, "knights": 0.3, "garrison": 0.04 },
     "scoiatael": {
       "militia": 0.8,
       "archers": 1.15,
@@ -175,6 +168,8 @@
     "winter": 0.6
   },
   "engageRange": 14,
+  "supernaturalDefence": 0.4,
+  "supernaturalNote": "M24 follow-up: ordinary beasts (wolves, drowners, harpies) are fought as monsters, which any troops can put down; the supernatural species are fought at suits.supernatural, where only men-at-arms and knights stand much chance and witchers are the sure way. A town defending itself against the supernatural counts at supernaturalDefence of its strength against ordinary beasts.",
   "garrison": {
     "note": "M22 C: a place's garrison counts as companies of garrison soldiers (size men each), by the same strength formula as every other company.",
     "name": "Garrison",
@@ -257,11 +252,11 @@
   "odds": [
     {
       "at": 0.9,
-      "word": "Overwhelming"
+      "word": "Sure to win"
     },
     {
       "at": 0.65,
-      "word": "Favourable"
+      "word": "Likely to win"
     },
     {
       "at": 0.35,
@@ -424,7 +419,7 @@
         "weight": 8
       },
       {
-        "id": "hag",
+        "id": "hag", "supernatural": true,
         "name": "A water hag",
         "one": "water hag",
         "power": 90,
@@ -448,7 +443,7 @@
         "weight": 8
       },
       {
-        "id": "werewolf",
+        "id": "werewolf", "supernatural": true,
         "name": "A werewolf",
         "one": "werewolf",
         "power": 135,
@@ -459,7 +454,7 @@
         "weight": 1.5
       },
       {
-        "id": "leshen",
+        "id": "leshen", "supernatural": true,
         "name": "A leshen",
         "one": "leshen",
         "power": 225,
@@ -483,7 +478,7 @@
         "weight": 8
       },
       {
-        "id": "griffin",
+        "id": "griffin", "supernatural": true,
         "name": "A griffin",
         "one": "griffin",
         "power": 165,
@@ -496,7 +491,7 @@
     ],
     "mountains": [
       {
-        "id": "wyverns",
+        "id": "wyverns", "supernatural": true,
         "name": "Wyverns",
         "one": "wyvern",
         "power": 18,
@@ -507,7 +502,7 @@
         "weight": 5
       },
       {
-        "id": "forktail",
+        "id": "forktail", "supernatural": true,
         "name": "A forktail",
         "one": "forktail",
         "power": 150,

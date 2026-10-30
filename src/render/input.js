@@ -93,6 +93,35 @@ export function attachMapInput(canvas, cam, world, { onTap, onDoubleTap, onLongP
     requestAnimationFrame(step);
   }
 
+  // Glide the view to a map point at a given scale (M24 follow-up): pan and
+  // zoom together, easing in and out, so the player sees where an order
+  // has sent someone. Reduced motion jumps straight there.
+  function flyTo(x, y, scale, ms = 900) {
+    stopMotion();
+    const s0 = cam.scale;
+    const x0 = cam.x;
+    const y0 = cam.y;
+    const place = (e) => {
+      zoomAt(cam, world, cam.viewW / 2, cam.viewH / 2, (s0 * (scale / s0) ** e) / cam.scale);
+      const cx = x0 + (x - x0) * e;
+      const cy = y0 + (y - y0) * e;
+      panBy(cam, world, (cam.x - cx) * cam.scale, (cam.y - cy) * cam.scale);
+      onChange();
+    };
+    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return place(1);
+    const start = performance.now();
+    zoomAnim = {};
+    const anim = zoomAnim;
+    const step = (now) => {
+      if (zoomAnim !== anim) return;
+      const t = Math.min(1, (now - start) / ms);
+      place(t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+      if (t < 1) requestAnimationFrame(step);
+      else zoomAnim = null;
+    };
+    requestAnimationFrame(step);
+  }
+
   canvas.addEventListener('pointerdown', (e) => {
     stopMotion();
     canvas.setPointerCapture(e.pointerId);
@@ -197,5 +226,6 @@ export function attachMapInput(canvas, cam, world, { onTap, onDoubleTap, onLongP
     get gliding() { return !!glide || !!zoomAnim; },
     stop: stopMotion,
     animateZoom,
+    flyTo,
   };
 }

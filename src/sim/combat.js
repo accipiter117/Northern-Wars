@@ -65,8 +65,13 @@ export function speciesOf(world, t) {
 }
 
 // What kind of foe a threat is, for how well each troop suits it.
-export function foeKind(t) {
+// Ordinary beasts (wolves, drowners, harpies) any troops can put down;
+// the supernatural (a hag, a werewolf, a leshen, a griffin) is witchers'
+// work, and only men-at-arms and knights stand much chance without one
+// (M24 follow-up).
+export function foeKind(t, world = null) {
   if (t.kind === 'raiders') return 'soldiers';
+  if (t.kind === 'monsters' && world && speciesOf(world, t).supernatural) return 'supernatural';
   return t.kind;
 }
 

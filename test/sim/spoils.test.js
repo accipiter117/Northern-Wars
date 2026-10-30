@@ -39,7 +39,7 @@ test('beasts pay a reward and trophies; a witcher\'s fee comes off; Scoia\'tael 
   assert.equal(p.fee, witcherCost(s, world, beast));
   assert.equal(p.net, p.total - p.fee);
   // A big beast is worth the witcher; the trophies grow with its strength.
-  const big = { ...beast, count: beast.count * 20 };
+  const big = { ...beast, band: null, count: (beast.band ?? beast).count * 20 };
   assert.ok(threatPurse(s, world, big).net > p.net);
   const elves = { kind: 'scoiatael', men: 30, near: beast.near };
   assert.equal(threatPurse(s, world, elves).total, 0, 'no bounty without the law');

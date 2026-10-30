@@ -1,5 +1,12 @@
 # Changelog
 
+## M24 follow-up: beasts, witchers and the camera
+- Companies sent after wolves and other lairs in the wilds now reach them and finish the job (they used to wander back and forth for ever).
+- Even town militia can deal with wolves, drowners and harpies. Werewolves, leshens, griffins, hags, wyverns and forktails are witchers' work: other troops barely stand a chance.
+- The odds now read Sure to win, Likely to win, Even, Risky or Hopeless.
+- When you send a company, a witcher, an army, a town's levy or an escort, the camera glides there so you can watch.
+- Escorts sent with pilgrims can be seen riding to the Temple of Melitele.
+
 ## M24 E Many armies
 - Raise as many armies as the treasury and the men allow. They are numbered (the First Army, the Second) and led by a marshal or a captain.
 - Levies walk the roads to each muster on the map, so several armies can gather at once.
