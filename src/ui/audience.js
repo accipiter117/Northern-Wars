@@ -483,14 +483,14 @@ function warPanel(app, cur) {
       </div><p class="sub">Crowns, tribute and towns can be added at the deal table.</p>` : '<p class="sub">Our ally leads this war; only it can make the peace. The War screen can withdraw us.</p>'}`;
   }
   const base = canDeclare(state, world, pid);
-  if (!base.ok && !/Authority/.test(base.reason)) return `<p class="sub">${escapeHtml(base.reason)}</p>`;
+  if (!base.ok && !/Trust/.test(base.reason)) return `<p class="sub">${escapeHtml(base.reason)}</p>`;
   const reasons = warReasons(state, world, pid);
   const chosen = cur.reason && reasons.find((r) => r.key === cur.reason && r.ok) ? cur.reason : reasons.find((r) => r.ok && r.key !== 'none')?.key ?? 'none';
   const list = reasons.map((r) => `<button type="button" class="reason${r.key === chosen ? ' on' : ''}" data-aud-reason="${r.key}" ${r.ok ? '' : 'disabled'}>
-    <span class="build-name">${escapeHtml(r.name)}</span><span class="build-cost">${escapeHtml(r.why)}${r.ok ? ` ${reasonCost(state, world, pid, r.key)} Authority.` : ''}</span></button>`).join('');
+    <span class="build-name">${escapeHtml(r.name)}</span><span class="build-cost">${escapeHtml(r.why)}${r.ok ? ` Costs ${reasonCost(state, world, pid, r.key)} Trust.` : ''}</span></button>`).join('');
   const check = canDeclareWith(state, world, pid, chosen);
   const declare = `<button type="button" class="act danger" ${orderAttr({ type: 'declare', realm: pid, reason: chosen }, `Declare war on ${sideName(world, pid)}${chosen === 'none' ? ' without a cause? Every court in the North will trust us less' : ''}?`)} ${check.ok ? '' : 'disabled'}>
-    <span class="act-label">Declare war</span><span class="act-sub">${escapeHtml(check.ok ? `${check.cost} Authority. Every treaty with them ends.` : check.reason)}</span></button>`;
+    <span class="act-label">Declare war</span><span class="act-sub">${escapeHtml(check.ok ? `Costs ${check.cost} Trust. Every treaty with them ends.` : check.reason)}</span></button>`;
   // Terms before war.
   const fear = fearOf(state, world, pid);
   const hint = fear >= 1.2 ? 'They fear us.' : fear >= 0.8 ? 'They are wary of us.' : 'They do not fear us.';

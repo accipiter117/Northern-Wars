@@ -1,12 +1,12 @@
 {
-  "note": "Petitions from the crown's own settlements. Conditions pick a fitting settlement ({place}). Effects: treasury, authority, opinion (by group), and for the settlement: unrest, tension, faith (shift in percentage points); sympathy moves Scoia'tael sympathy. The default choice is taken if the petition is ignored.",
+  "note": "Petitions from the crown's own settlements. Conditions pick a fitting settlement ({place}). Effects: treasury, trust (M22 D, was authority), opinion (by group), and for the settlement: unrest, tension, faith (shift in percentage points); sympathy moves Scoia'tael sympathy. The default choice is taken if the petition is ignored.",
   "petitions": {
     "fire_preacher": {
       "title": "A preacher of the Eternal Fire", "weight": 3, "types": ["city", "town"], "minFaith": { "eternal_fire": 20 },
       "text": "A preacher of the Eternal Fire draws crowds in the square at {place}, railing against sorcerers, heretics and the non-humans who live among honest folk.",
       "choices": [
         { "label": "Let him preach", "effects": { "faith": { "eternal_fire": 8 }, "tension": 12, "opinion": { "eternal_fire": 4 } }, "default": true },
-        { "label": "Have him moved on", "effects": { "authority": -2, "opinion": { "eternal_fire": -6 } } }
+        { "label": "Have him moved on", "effects": { "trust": -2, "opinion": { "eternal_fire": -6 } } }
       ]
     },
     "hospice": {
@@ -40,7 +40,7 @@
       "choices": [
         { "label": "Search the woods", "effects": { "sympathy": 8, "opinion": { "elf": -6, "eternal_fire": 2 } } },
         { "label": "Leave it be", "effects": { "sympathy": 5 }, "default": true },
-        { "label": "Offer an amnesty", "effects": { "authority": -5, "sympathy": -12, "opinion": { "eternal_fire": -4, "elf": 4 } } }
+        { "label": "Offer an amnesty", "effects": { "trust": -5, "sympathy": -12, "opinion": { "eternal_fire": -4, "elf": 4 } } }
       ]
     },
     "pilgrim_escort": {

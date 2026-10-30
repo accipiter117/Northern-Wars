@@ -1,6 +1,7 @@
 // Petitions from the crown's own settlements: a preacher in the square, a
 // grove the priests want felled, a quarter the townsfolk want walled off.
 // Like envoys, they wait for an answer, and take the default if ignored.
+import { nudge } from './meters.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 import { nonhumanShare, shiftFaith } from './culture.js';
@@ -55,10 +56,21 @@ export function resolvePetition(state, world, petitionId, choice, ignored = fals
   const c = world.petitions.petitions[pending.petition].choices[choice];
   if (!c) return false;
   state.petitions.splice(i, 1);
-  const fx = c.effects;
   const s = state.settlements[pending.place];
+  // A grant the treasury cannot pay is a promise broken (M22 D): the coin
+  // never comes, the town is angrier than if it had been refused, and the
+  // folk's Trust in the Crown falls.
+  if (!ignored && (c.effects.treasury ?? 0) < 0 && state.treasury + c.effects.treasury < 0) {
+    const b = world.meters?.trust.brokenPromise ?? { trust: 4, unrest: 5 };
+    nudge(state, world, 'trust', -b.trust, 'Promises to petitioners broken');
+    s.unrest = clamp(s.unrest + b.unrest, 0, 100);
+    const { title, place } = petitionText(world, pending);
+    say(state, `${title} (${place}): the crown promised, but the treasury could not pay. The folk remember.`);
+    return true;
+  }
+  const fx = c.effects;
   if (fx.treasury) state.treasury += fx.treasury;
-  if (fx.authority) state.authority = clamp(state.authority + fx.authority, 0, 100);
+  if (fx.trust) nudge(state, world, 'trust', fx.trust, 'Answers to the realm');
   for (const [g, v] of Object.entries(fx.opinion ?? {})) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
   if (fx.unrest) s.unrest = clamp(s.unrest + fx.unrest, 0, 100);
   if (fx.tension) s.tension = clamp(s.tension + fx.tension, 0, 100);

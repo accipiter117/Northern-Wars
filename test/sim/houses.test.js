@@ -60,10 +60,10 @@ test('crown actions: honours, a grant of land, a fine and stripping a title', ()
   assert.ok(s.treasury >= t1 + 100);
   assert.ok(s.houses.gelbrand.grievance >= 40, 'greedy houses take fines hard');
   assert.match(act(s, { type: 'house', house: 'gelbrand', kind: 'strip', settlement: 'red_fort' }).error, /seat/);
-  const a = s.authority;
+  const a = s.unrest;
   s = act(s, { type: 'house', house: 'gelbrand', kind: 'strip', settlement: 'dregsdon' }).state;
   assert.equal(s.settlements.dregsdon.holder, 'crown');
-  assert.equal(s.authority, a - 20);
+  assert.ok(s.unrest > a, 'stripping a house angers the towns');
   assert.ok(s.houses.wolbrecht.grievance > 0, 'every house takes note');
 });
 
@@ -111,17 +111,17 @@ test('a house pushed past breaking rebels, withholds its taxes, and is broken by
   assert.deepEqual(holdingsOf(s, 'ostrowicz'), ['petrelsteyn']);
 });
 
-test('a crown without Authority amid disorder is deposed, and a regency takes over', () => {
+test('a crown without Trust amid Unrest is deposed, and a regency takes over', () => {
   let s = createState(world, 1);
   for (let m = 0; m < 12; m++) {
-    s.authority = 0;
+    s.trust = 0;
     for (const st of Object.values(s.settlements)) st.unrest = 80;
     s = run(s, 30);
     if (s.depositions.length) break;
   }
   assert.equal(s.depositions.length, 1);
   assert.equal(s.reign.number, 2);
-  assert.ok(s.authority >= 39);
+  assert.ok(s.trust >= world.houses.deposition.regencyTrust - 1);
   const d = s.depositions[0];
   assert.equal(d.reign, 1);
   assert.ok(d.to > d.from && d.popEnd > 0);

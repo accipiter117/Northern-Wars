@@ -43,9 +43,9 @@ export function noblesHtml(app) {
 
 const ACTIONS = [
   ['honours', 'Bestow honours', (a) => `${a.coin} crowns.`],
-  ['summon', 'Summon to court', (a) => `${a.authority} Authority. Cools his ambition.`],
+  ['summon', 'Summon to court', (a) => `Raises Unrest by ${a.unrest}. Cools his ambition.`],
   ['levies', 'Demand levies', () => 'A quarter of his soldiers march to Vizima. He will resent it.'],
-  ['fine', 'Impose a fine', (a) => `${a.authority} Authority. Coin for the crown, a grievance for him.`],
+  ['fine', 'Impose a fine', (a) => `Raises Unrest by ${a.unrest}. Coin for the crown, a grievance for him.`],
 ];
 
 export function houseCard(app, id) {
@@ -72,7 +72,7 @@ export function houseCard(app, id) {
     pickList = `<h3>Grant which land?</h3><div class="chips">${crown.map((sid) => `<button type="button" class="chip" data-grant="${sid}" ${orderAttr({ type: 'house', house: id, kind: 'grant', settlement: sid }, `Grant ${world.byId[sid].name} to ${def.name}?`)}>${escapeHtml(world.byId[sid].name)}</button>`).join(' ')}</div>`;
   } else if (picking === 'strip') {
     const theirs = holdingsOf(state, id).filter((sid) => canHouseAction(state, world, id, 'strip', sid).ok);
-    pickList = `<h3>Strip which land? (${world.houses.actions.strip.authority} Authority)</h3><div class="chips">${theirs.map((sid) => `<button type="button" class="chip" data-strip="${sid}" ${orderAttr({ type: 'house', house: id, kind: 'strip', settlement: sid }, `Strip ${def.name} of ${world.byId[sid].name}? Every house will remember.`)}>${escapeHtml(world.byId[sid].name)}</button>`).join(' ') || '<p class="sub">Nothing but the seat.</p>'}</div>`;
+    pickList = `<h3>Strip which land? (raises Unrest by ${world.houses.actions.strip.unrest})</h3><div class="chips">${theirs.map((sid) => `<button type="button" class="chip" data-strip="${sid}" ${orderAttr({ type: 'house', house: id, kind: 'strip', settlement: sid }, `Strip ${def.name} of ${world.byId[sid].name}? Every house will remember.`)}>${escapeHtml(world.byId[sid].name)}</button>`).join(' ') || '<p class="sub">Nothing but the seat.</p>'}</div>`;
   }
   const demands = pendingDecisions(state, world).filter((x) => x.kind === 'demand' && x.house === id);
   return `
@@ -116,7 +116,7 @@ export function depositionHtml(summary) {
       <div><dt>Pogroms</dt><dd>${summary.pogroms}</dd></div>
     </dl>
     <div class="build-list">
-      <button type="button" class="build" data-regency><span class="build-name">Continue under a regency</span><span class="build-cost">The realm stays as it is. The council restores some Authority.</span></button>
+      <button type="button" class="build" data-regency><span class="build-name">Continue under a regency</span><span class="build-cost">The realm stays as it is. The council restores some of the folk's Trust.</span></button>
       <button type="button" class="build danger" data-new-reign><span class="build-name">Start a new reign</span><span class="build-cost">A fresh Temeria.</span></button>
     </div>
   `;

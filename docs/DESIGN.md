@@ -5,7 +5,7 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 
 ## Structure
 - Sandbox: no fixed goal, rule as long as you like.
-- Soft failure: if Authority and Stability both collapse for a sustained period, the great houses depose you. Show a short chronicle of the reign and offer to continue under a regency (reset Authority, keep the world).
+- Soft failure: if the folk lose all Trust in the Crown while Unrest runs very high for months, the great houses depose you. Show a short chronicle of the reign and offer to continue under a regency (Trust restored in part, keep the world).
 
 ## Time
 - Real-time with pause. 1 simulation tick = 1 in-game day.
@@ -23,8 +23,7 @@ You are the crown of Temeria. You never place buildings tile by tile or march in
 
 ## Realm-level meters
 - Treasury (crowns), Granary (food stores).
-- Authority (0 to 100): the crown's power over the nobility. Spent to pass laws and act against lords.
-- Stability (0 to 100): public order across the realm, derived from settlement unrest.
+- Trust in the Crown, Unrest and Dread (0 to 100 each) since M22 D, in place of Authority and Stability: see "Three meters (M22 D)". Older sections that mention Authority now mean Trust (a cost) or Standing (a read); Stability now means Unrest, inverted.
 
 ## Settlements
 - Types: city, town, village, castle, temple. Three cities: Vizima (capital), Maribor, Gors Velen.
@@ -553,11 +552,20 @@ Kingdom view only, close up (never on the board). Small figures at each of our w
 ### Witchers on the road (M22 B)
 A witcher hired for a lair rides out from the nearest place of ours (four tenths of the contract's days), fights at the lair (the contract is settled halfway through, with his blade flashing on the map), and rides home if he won; if he lost, no one comes back. A long press says who he is and what the contract is worth: "Witcher: Halvard of the School of the Wolf, riding out from Anchor; the crown's contract on drowners near Anchor, 204 crowns".
 
+### Three meters (M22 D)
+Authority and Stability are retired. Three meters say how the realm feels, each a button in the top bar that opens its reasons (three to five lines, biggest first). Numbers in data/meters.json; code in src/sim/meters.js.
+- **Trust in the Crown** (keep high): do the common folk believe the crown will keep them fed and safe. Each month it settles a little toward 50, rises with full granaries through the winter, threats cleared, battles won, repairs under way, light taxes and welcome laws, and falls with hunger, cold hearths, raids (worse when no company answers them, at most 3 a month), works left in ruins, towns sacked or lost, battles lost, broken promises to petitioners, heavy taxes, men taken for the levies and debt. Laws, war declarations, house actions and petitions that used to cost Authority now cost Trust. Below 30: people drift away (up to 0.1% a month), the works go slack, levies slip home and the towns grow angrier. Battles move it by at most 8 a month and towns won or lost by at most 10 (the capital's fall is not capped).
+- **Unrest** (keep low): the realm's figure for the towns' anger (their own unrest, half by people and half by place, occupied towns left out) plus the great houses' mood (sullen lords and rebels add to it) and a point for every 300 men away with the levies. Its reasons are the pressures on it now (heavy taxes, men taken from work, harsh laws, persecution, overcrowding, refugees, the angriest towns) and last month's jolts. Above 60: the angriest town strikes (half its workshops idle for a month); above 75, the least loyal house nurses a grievance, and from there, rebellion.
+- **Dread** (keep low): fear of what lies beyond the walls. Each month it moves three tenths of the way toward a target built from beasts, bandit camps and Scoia'tael seen near our towns, plague, enemy armies on our soil, sacked towns and refugees, less patrols and garrisons; threats cleared, witchers and victories bring it down, and it ebbs with time. Above 60: villagers crowd behind the nearest walls, trade falls (up to a quarter) and the folk turn to the Eternal Fire. Below 25: busy roads (trade a tenth better).
+- **Standing**, never shown, is what the lords, the rulers abroad and the bankers read as the strength of the reign: half Trust, three tenths calm (100 less Unrest) and a fifth courage (100 less Dread). Everything that read Authority (house loyalty, a neighbour smelling weakness, a pact breaker's nerve, a defection) reads Standing.
+- **Deposition**: six months (a good month eases the count) of Trust below 20 together with Unrest above 70. The regency restores Trust to 40.
+- Save version 24 turns Authority and the realm's mood into Trust, the towns into Unrest and the threats in sight and plague into Dread.
+
 ## UI
 Rebuilt in M14 around one rule: the player never loses their place.
 
 ### Getting about
-- Top bar: date and season, the speed buttons, and a small overflow menu (three dots) holding Chronicle, Help, Save, Load, Export, Import and New reign. Below them the four meters (Treasury, Granary, Authority, Stability), each with a small icon; tapping one opens a card saying why it moved (last month's biggest lines in and out; food grown against food eaten and the places shortest of it; next month's Authority part by part; the most restless places).
+- Top bar: date and season, the speed buttons, and a small overflow menu (three dots) holding Chronicle, Help, Save, Load, Export, Import and New reign. Below them five compact meters (Treasury, Granary, Trust, Unrest, Dread), each with a small icon, fitting a 360px phone in one row; tapping one opens a card saying why it moved (last month's biggest lines in and out; food grown against food eaten and the places shortest of it; for the three meters, three to five one-line reasons, biggest first).
 - A tab bar along the foot in portrait (down the left side in landscape), safe-area aware, with badges: Realm, Court, Treasury, Military, Diplomacy. Each tab has segmented sub-tabs and reopens on the last one used.
   - Realm: Overview (the meters with their month's movement, what needs attention, the five places in most trouble) and Places (every place, searchable and filtered).
   - Court: Decisions (the inbox), Laws, Great houses, Faith.

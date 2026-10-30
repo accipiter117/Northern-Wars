@@ -66,7 +66,7 @@ export function createHints(data, { disabled = false, onOpen = () => {} } = {}) 
         case 'day120': return state.day - state.reign.since > 120;
         case 'raid': return Object.values(state.settlements).some((s) => (s.raided ?? 0) > state.day);
         case 'sighted': return (state.threats?.list ?? []).some((t) => t.sighted || t.campSeen);
-        case 'lowAuthority': return state.authority < 20;
+        case 'lowTrust': return state.trust < 20;
         case 'day45': return state.day - state.reign.since > 45;
         case 'day60': return state.day - state.reign.since > 60;
         case 'day150NoRoutes': return state.day - state.reign.since > 150 && !(state.routes ?? []).length;

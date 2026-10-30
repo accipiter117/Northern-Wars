@@ -1,0 +1,72 @@
+{
+  "note": "M22 D: three meters in place of Authority and Stability. Trust in the Crown (keep high): do the common folk believe the crown will keep them fed and safe. Unrest (keep low): the realm's figure for the towns' anger at the crown (their unrest underneath), with the great houses' grievances. Dread (keep low): fear of what lies beyond the walls. Each month the causes below move them; the biggest are shown as the reasons. Standing is worked out from the three, never shown: what the lords, the rulers abroad and the bankers read as the strength of the reign.",
+  "trust": {
+    "rest": 50,
+    "pull": 0.04,
+    "hunger": 30,
+    "cold": 12,
+    "winterStores": 1.5,
+    "winterStoresDays": 90,
+    "cleared": 1.5,
+    "raided": 1.2,
+    "raidedUnanswered": 0.6,
+    "raidsCap": 3,
+    "brokenPromise": { "trust": 4, "unrest": 5 },
+    "repairs": 0.4,
+    "ruined": 0.3,
+    "taxes": {
+      "light": 0.6,
+      "fair": 0,
+      "heavy": -0.8
+    },
+    "levies": 25,
+    "lowBelow": 30,
+    "lowDrift": 0.001,
+    "lowOutput": 0.05,
+    "lowDesert": 0.06,
+    "lowAnger": 0.4
+  },
+  "unrest": {
+    "nobles": 0.35,
+    "rebel": 8,
+    "levyPer": 300,
+    "highAbove": 60,
+    "strike": 0.5,
+    "strikeDays": 30,
+    "turnAbove": 75,
+    "turnGrievance": 6
+  },
+  "dread": {
+    "start": 15,
+    "drift": 0.3,
+    "decay": 2,
+    "monster": 4,
+    "camp": 2.5,
+    "near": 120,
+    "scoiatael": 6,
+    "plague": 8,
+    "enemyArmy": 10,
+    "sacked": 12,
+    "refugees": 3,
+    "cleared": 3,
+    "witcher": 4,
+    "patrol": 1.5,
+    "garrisonPer": 400,
+    "victory": 6,
+    "highAbove": 60,
+    "flee": 0.004,
+    "tradeCut": 0.25,
+    "fire": 0.6,
+    "lowBelow": 25,
+    "tradeBoost": 0.1
+  },
+  "standing": {
+    "trust": 0.5,
+    "calm": 0.3,
+    "courage": 0.2
+  },
+  "deposition": {
+    "trustBelow": 20,
+    "unrestAbove": 70
+  }
+}

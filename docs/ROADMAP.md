@@ -23,7 +23,7 @@
 | M19 Conquest and battles | Towns that change hands change realm for good: occupation, annexation into full crown settlements, the capture choice (spare, sack, expel), grants, integration, revolts, claimants, fear and a league against Temeria, vassals; battles fought in phases with reserves and retreats, sieges you can watch, field attrition; borders that follow the towns | Done |
 | M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
 | M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | Done |
-| M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | In progress (A and B done, C) |
+| M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | In progress (A, B and C done, D) |
 
 ## M22 acceptance criteria
 Part A, battery and performance:
@@ -47,6 +47,15 @@ Part C, one military:
 - Raise an army gathers standing companies, levies, retinues and hired companies, with the same preview; companies keep their identity and can be detached; armies in one place can merge.
 - tools/skirmish.mjs: a city's garrison and muster beats ordinary threats at least 80% of the time, a town's a small band at least 75%; only large bands, famous monsters and war parties need an army. Table in BALANCE.md.
 - Save version 23: armies become lists of companies, with nothing lost.
+
+Part D, three meters:
+- The top bar shows Treasury, Granary, Trust in the Crown, Unrest and Dread; all five fit 360px, each a button opening three to five reasons, biggest first.
+- Trust, Unrest and Dread each move with the causes in the brief and do what the brief says when high or low.
+- Every Authority cost becomes a Trust cost or an Unrest rise; every read of Authority becomes Standing (from the three, never shown).
+- Deposition after months of very low Trust together with very high Unrest.
+- Tests: each meter moves with its causes; nothing reads or spends Authority; deposition follows Trust and Unrest; the five meters fit 360px.
+- tools/crowns.mjs: the steward keeps Trust high and Dread low; the tyrant runs high Unrest; the idle crown loses Trust. Recorded in BALANCE.md.
+- Save version 24.
 
 ## M21 acceptance criteria
 Part A, trade in five goods:

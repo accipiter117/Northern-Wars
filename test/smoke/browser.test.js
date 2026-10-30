@@ -140,11 +140,11 @@ for (const vp of VIEWPORTS) {
     await page.click('[data-sub="laws"]');
     assert.match(await page.textContent('#sheet-body'), /Peasants[\s\S]*Grain prices/);
     assert.doesNotMatch(await page.textContent('#sheet-body'), /Taxes on the towns/, 'taxes are set in the Treasury');
-    const authority = await page.evaluate(() => window.northernWars.state.authority);
+    const trust = await page.evaluate(() => window.northernWars.state.trust);
     await page.click('[data-law="grain_prices"]');
     await page.click('[data-decree="grain_prices:controlled"]');
     assert.equal(await page.evaluate(() => window.northernWars.state.laws.grain_prices.option), 'controlled');
-    assert.equal(await page.evaluate(() => window.northernWars.state.authority), authority - 10);
+    assert.equal(await page.evaluate(() => window.northernWars.state.trust), trust - 10);
     assert.match(await page.textContent('[data-law="grain_prices"]'), /Price controls[\s\S]*Taking hold/);
     await page.screenshot({ path: join(OUT, `${vp.name}-laws.png`) });
 
@@ -271,7 +271,8 @@ test('great houses, rebellion and deposition', async () => {
   s.demands = [];
   s.houses.ostrowicz.rebel = { since: s.day, months: 1 };
   s.houses.ostrowicz.loyalty = 5;
-  s.authority = 2;
+  s.trust = 2;
+  for (const st of Object.values(s.settlements)) st.unrest = Math.max(st.unrest, 85);
   s.crisisMonths = 5;
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   const page = await context.newPage();
@@ -501,7 +502,7 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   // Declare war from Kaedwen's card; the war panel opens.
   await page.click('[data-tab="diplomacy"]');
   await page.click('[data-realm="kaedwen"]');
-  assert.match(await page.textContent('#sheet-body'), /Declare war[\s\S]*Authority/);
+  assert.match(await page.textContent('#sheet-body'), /Declare war[\s\S]*Trust/);
   await page.click('[data-declare]');
   assert.match(await page.textContent('#sheet-body'), /Against Kaedwen[\s\S]*Raise an army/);
 

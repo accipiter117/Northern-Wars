@@ -4,6 +4,7 @@
 // levels decide where camps and lairs appear and how they grow (threats.js);
 // the raids themselves are made by bands on the map. Plague, once loose,
 // spreads along the roads.
+import { nudge } from './meters.js';
 import { garrisonCompanies, placeMuster, bandStrength } from './companies.js';
 import { hasWalls } from './conflict.js';
 import { addDispatch, clamp } from './realm.js';
@@ -176,7 +177,7 @@ export function resolveEvent(state, world, eventId, choice, ignored = false, rng
   const fx = c.effects;
   const s = state.settlements[pending.place];
   if (fx.treasury) state.treasury += fx.treasury;
-  if (fx.authority) state.authority = clamp(state.authority + fx.authority, 0, 100);
+  if (fx.trust) nudge(state, world, 'trust', fx.trust, 'Answers to the realm');
   for (const [g, v] of Object.entries(fx.opinion ?? {})) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
   if (fx.unrest) s.unrest = clamp(s.unrest + fx.unrest, 0, 100);
   if (fx.prosperity) s.prosperity = clamp(s.prosperity + fx.prosperity, 0, 100);

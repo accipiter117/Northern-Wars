@@ -12,6 +12,20 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### Three meters (M22 D)
+From `node tools/longrun.mjs 10 <crown> 1,2` and a month-by-month trace of each crown, seeds 1 to 3, rounded down. Numbers in data/meters.json.
+
+| Crown | Trust | Unrest | Dread | What drives it |
+| --- | --- | --- | --- | --- |
+| Steward | 48 to 58 in peace | about 18 | 0 to 6 | Full granaries in winter, threats cleared, repairs; decrees cost it a little. A war it chooses and loses (seed 3, year 9) drops it to near 0 for a year, then it climbs back. |
+| Tyrant | 15 after the first year, then 0 | 38 in year 1, 45 to 52 from year 5 | about 22 | Every decree, heavy taxes on all three estates, raids left unanswered, hunger and ruined works; it strips a lord twice a year. |
+| Idle | 56, 34, then 0 from year 3 | 22 in the first years, 43 to 51 once Trust is gone | about 23 | Raids left unanswered (at most 3 a month) and works left in ruins, against the pull back toward 50 (about 2 a month at 0). |
+
+- Low Trust bites in three ways: people drift away (0.1% a month at 0), prosperity slips (0.5 a month at 0) and towns grow angrier (up to +12 to their unrest at 0). An idle realm keeps about 83% of its people after ten years, against 87% before M22 D.
+- A war is judged by the month: battles move Trust by at most 8 a month and towns lost or taken by at most 10 (the capital's fall, 30, is not capped). Without the caps a single lost war cost the steward 60 Trust from battles alone.
+- Unrest counts a point for every 300 men away with the levies.
+- No crown in these runs was deposed: it takes Trust under 20 and Unrest over 70 together for six months.
+
 ### One military (M22 C)
 Every soldier is in a company, and everything is measured by the one strength formula in data/forces.json: garrisons as companies of garrison soldiers (1 a man), levies as militia spearmen (1.1 against soldiers since M22, from 0.8) with crossbowmen from towns or bowmen from villages and the woods, retinues as men-at-arms and militia, hired companies by their troop type. A place defends itself with its garrison and its own muster, behind its walls.
 

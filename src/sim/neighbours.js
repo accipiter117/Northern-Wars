@@ -1,6 +1,7 @@
 // The kingdoms around Temeria. Each holds a view of the crown that drifts
 // towards where the crown's stance and laws put it; warmth brings trade over
 // the border, and now and then an envoy arrives wanting an answer.
+import { nudge } from './meters.js';
 import { addDispatch, clamp } from './realm.js';
 import { realmProsperity } from './realms.js';
 import { totalPopulation } from './state.js';
@@ -133,7 +134,7 @@ export function resolveEnvoy(state, world, envoyId, choice, ignored = false) {
   const gate = state.settlements[realm.gateway];
   if (fx.relation) state.neighbours[pending.realm].relation = clamp(state.neighbours[pending.realm].relation + fx.relation, -100, 100);
   if (fx.treasury) state.treasury += fx.treasury;
-  if (fx.authority) state.authority = clamp(state.authority + fx.authority, 0, 100);
+  if (fx.trust) nudge(state, world, 'trust', fx.trust, 'Answers to the realm');
   for (const [g, v] of Object.entries(fx.opinion ?? {})) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
   if (fx.settlers) gate.population.human += fx.settlers;
   if (fx.losses) gate.garrison = Math.max(0, gate.garrison - fx.losses);

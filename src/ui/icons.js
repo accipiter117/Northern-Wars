@@ -8,6 +8,7 @@ const PATHS = {
   people: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15 14c3 0 6 2 6 5"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
   flame: '<path d="M12 21c-4 0-6-3-6-6 0-4 4-6 4-11 3 2 7 6 7 11 0 3-2 6-5 6z"/><path d="M12 21c-2 0-3-1-3-3 0-2 2-3 2-5 2 1 4 3 4 5s-1 3-3 3z"/>',
+  moon: '<path d="M15 3a9 9 0 1 0 6 14.5A7.5 7.5 0 0 1 15 3z"/>',
   shield: '<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',
   sword: '<path d="M19 3l-9 9M14 3h5v5M10 12l-3 3M5 13l6 6M3 21l3-3"/>',
   scroll: '<path d="M7 4h11a2 2 0 0 1 2 2v1h-4M7 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7"/><path d="M8 9h7M8 12h7M8 15h5"/>',

@@ -186,12 +186,12 @@ test('a conquered town rises: the revolt spreads, and can be crushed or treated 
   const r = s.conquest.revolts[0];
   const d = s.conquest.decisions.find((x) => x.kind === 'revolt' && x.revolt === r.id);
   assert.ok(d);
-  // Treating with them ends it, at a cost in Authority, and wins the town over.
-  const auth = s.authority;
+  // Treating with them ends it, at a cost in Trust, and wins the town over.
+  const auth = s.trust;
   const before = s.settlements[r.town].integration;
   resolveConquestDecision(s, world, d.id, 1);
   assert.ok(!s.conquest.revolts.some((x) => x.id === r.id));
-  assert.ok(s.authority < auth);
+  assert.ok(s.trust < auth);
   assert.ok(s.settlements[r.town].integration > before);
   assert.ok(s.settlements[r.town].charter > s.day);
   // A rising met with a strong garrison is crushed.

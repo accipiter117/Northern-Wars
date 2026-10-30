@@ -3,6 +3,7 @@
 // is missed: the bank raises the rate, adds the payment to the end, and the
 // lords take note of a crown that cannot pay its debts. What the crown may
 // owe on loans is capped by its income.
+import { nudge } from './meters.js';
 import { addDispatch } from './realm.js';
 import { ledgerNet, windfall } from './economy.js';
 import { number } from './text.js';
@@ -100,7 +101,7 @@ export function loanLedger(state, world, expenses, available) {
     const remaining = l.payment * l.left;
     l.left += 1;
     l.payment = Math.round((remaining * (1 + c.missedRate * l.left)) / l.left);
-    state.authority = Math.max(0, state.authority - c.missedAuthority);
+    nudge(state, world, 'trust', -c.missedTrust, 'A loan payment missed');
     say(state, `The crown misses a payment to ${c.lender}. The bank raises its rate, and the lords hear of it.`);
   }
   state.loans = state.loans.filter((l) => l.left > 0);

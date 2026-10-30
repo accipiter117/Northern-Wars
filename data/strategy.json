@@ -213,7 +213,7 @@
     "at": 8
   },
   "pactBreak": {
-    "weakAuthority": 25,
+    "weakStanding": 25,
     "strippedShare": 0.5,
     "veryWeakFactor": 2,
     "chance": 0.25

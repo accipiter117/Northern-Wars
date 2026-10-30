@@ -19,12 +19,12 @@ const quiet = (s) => {
   return s;
 };
 
-test('declaring war costs Authority without a cause, closes trade, and cannot be repeated', () => {
+test('declaring war costs Trust without a cause, closes trade, and cannot be repeated', () => {
   let s = createState(world, 1);
-  const auth = s.authority;
+  const auth = s.trust;
   assert.ok(foreignTrade(s, world).by.redania > 0);
   s = act(s, { type: 'declare', realm: 'redania' });
-  assert.ok(s.authority < auth);
+  assert.ok(s.trust < auth);
   assert.equal(warsOf(s, 'temeria').length, 1);
   assert.equal(foreignTrade(s, world).by.redania, 0);
   assert.match(applyAction(s, world, { type: 'declare', realm: 'redania' }).error, /already at war/);
@@ -88,7 +88,7 @@ test('an occupied Temerian town pays no taxes and is left out of the realm\'s or
   s.settlements.maribor.unrest = 100;
   const after = run(s, 31);
   assert.ok(after.ledger.history.at(-1).income.taxes < before * 0.9);
-  assert.ok(after.stability > 50, 'occupied town does not drag stability down');
+  assert.ok(after.unrest < 50, 'an occupied town does not count in the realm Unrest');
   after.settlements.maribor.cond = { market: 40 };
   assert.match(applyAction(after, world, { type: 'repair', settlement: 'maribor', building: 'market', kind: 'patch' }).error, /enemy flag/);
 });
@@ -135,8 +135,10 @@ test('a weakly held crown is warned, then invaded by a soured neighbour', () => 
     s.diplomacy.treaties = s.diplomacy.treaties.filter((t) => !(t.a === 'temeria' || t.b === 'temeria'));
     for (let m = 0; m < 48; m++) {
       s.neighbours.redania.relation = Math.min(s.neighbours.redania.relation, -70);
-      s.authority = 15;
-      for (const x of Object.values(s.settlements)) x.garrison = Math.min(x.garrison, 30);
+      // A weak crown: little Trust, much Dread, restless towns (M22 D).
+      s.trust = 5;
+      s.dread = 90;
+      for (const x of Object.values(s.settlements)) { x.garrison = Math.min(x.garrison, 30); x.unrest = Math.max(x.unrest, 45); }
       s = run(s, 30);
       s.warDecisions = s.warDecisions.filter((d) => d.kind !== 'offer');
       if (s.wars.some((w) => w.sides[0][0] === 'redania' && w.sides[1][0] === 'temeria')) {

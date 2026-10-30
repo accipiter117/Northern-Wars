@@ -1,6 +1,7 @@
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats, threatCap } from './threats.js';
+import { defaultMeters, realmUnrest } from './meters.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
 import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
@@ -313,6 +314,26 @@ const MIGRATIONS = {
       normalise(a);
     }
     state.version = 23;
+    return state;
+  },
+  // v24 (M22 D): Trust, Unrest and Dread in place of Authority and
+  // Stability. Trust from the old Authority and the realm's mood; Unrest
+  // from the towns (as Stability was, inverted); Dread from the threats in
+  // sight and any plague.
+  23(state, world) {
+    const mood = Object.values(state.opinion ?? {});
+    const avg = mood.length ? mood.reduce((a, v) => a + v, 0) / mood.length : 50;
+    state.trust = Math.max(0, Math.min(100, Math.round(((state.authority ?? 50) + avg) / 2)));
+    const d = world.meters?.dread;
+    const seen = (state.threats?.list ?? []).filter((t) => !t.abroad && (t.sighted || t.campSeen)).length;
+    const plague = Object.values(state.settlements).filter((x) => (x.plague ?? 0) > state.day).length;
+    state.dread = Math.max(0, Math.min(100, (d?.start ?? 15) + seen * (d?.camp ?? 2.5) + plague * (d?.plague ?? 8)));
+    state.meters = defaultMeters();
+    state.meters.last = { cleared: state.threats?.tally?.cleared ?? 0, raids: state.threats?.tally?.raids ?? 0 };
+    state.unrest = realmUnrest(state, world);
+    delete state.authority;
+    delete state.stability;
+    state.version = 24;
     return state;
   },
 };

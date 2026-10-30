@@ -220,6 +220,8 @@
     "townTaken": 3,
     "townLost": -5,
     "capitalLost": -30,
+    "monthCap": 8,
+    "townMonthCap": 10,
     "nobles": 3,
     "houseFavour": 8,
     "holdingLostGrievance": 20
@@ -232,7 +234,7 @@
   "ai": {
     "declareChance": 0.01,
     "hostileBelow": -25,
-    "weakAuthority": 25,
+    "weakStanding": 25,
     "weakBonus": 25,
     "claimHostility": 12,
     "musterDays": 45,
@@ -324,8 +326,8 @@
     "cityPrizeAt": 90
   },
   "declare": {
-    "authorityBase": 5,
-    "authorityPerRelation": 0.25,
+    "trustBase": 5,
+    "trustPerRelation": 0.25,
     "warlikeFavour": 6,
     "cautiousGrievance": 6,
     "burghers": -8

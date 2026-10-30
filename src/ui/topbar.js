@@ -5,15 +5,17 @@ import { number } from './format.js';
 import { icon } from './icons.js';
 
 // The top bar: the date, the speed buttons, the overflow menu button and the
-// four meters. Each meter is a button that opens why it changed.
+// five meters (M22 D: Treasury, Granary, Trust, Unrest, Dread). Each meter
+// is a button that opens why it changed.
 export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
   const el = {
     date: document.getElementById('date'),
     season: document.getElementById('season'),
     treasury: document.getElementById('m-treasury'),
     granary: document.getElementById('m-granary'),
-    authority: document.getElementById('m-authority'),
-    stability: document.getElementById('m-stability'),
+    trust: document.getElementById('m-trust'),
+    unrest: document.getElementById('m-unrest'),
+    dread: document.getElementById('m-dread'),
     pressure: document.getElementById('pressure'),
   };
   el.pressure?.addEventListener('click', () => onPressure?.(board));
@@ -37,7 +39,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
       board = onBoard;
       const food = realmStock(state).food;
       const orders = state.orders?.list.length ?? 0;
-      const key = `${state.day}|${state.treasury}|${Math.round(food)}|${Math.round(state.authority)}|${Math.round(state.stability)}|${board}|${orders}`;
+      const key = `${state.day}|${state.treasury}|${Math.round(food)}|${Math.round(state.trust)}|${Math.round(state.unrest)}|${Math.round(state.dread)}|${board}|${orders}`;
       if (key === last) return;
       last = key;
       const d = dateOf(state.day);
@@ -65,14 +67,17 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
       el.treasury.textContent = state.treasury < 0 ? `\u2212${number(-state.treasury)}` : number(state.treasury);
       el.granary.textContent = number(food);
       el.treasury.classList.toggle('low', state.treasury < 0);
-      el.authority.textContent = Math.round(state.authority);
-      el.stability.textContent = Math.round(state.stability);
+      el.trust.textContent = Math.round(state.trust);
+      el.unrest.textContent = Math.round(state.unrest);
+      el.dread.textContent = Math.round(state.dread);
       // Under a month of food across the realm is worth a red number.
       const season = seasonOf(state.day);
       const need = Object.values(state.settlements).reduce((a, st) => a + foodNeed(world, st, season), 0);
       el.granary.classList.toggle('low', food < need * 30);
-      el.stability.classList.toggle('low', state.stability < 40);
-      el.authority.classList.toggle('low', state.authority < 25);
+      // Trust is kept high, Unrest and Dread low: red when they go wrong.
+      el.trust.classList.toggle('low', state.trust < 30);
+      el.unrest.classList.toggle('low', state.unrest > 60);
+      el.dread.classList.toggle('low', state.dread > 60);
     },
     setSpeed(speed) {
       for (const b of speedButtons) b.setAttribute('aria-pressed', String(Number(b.dataset.speed) === speed));

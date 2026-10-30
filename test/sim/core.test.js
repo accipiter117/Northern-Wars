@@ -43,7 +43,7 @@ test('the start state covers every settlement with sane values', () => {
   assert.equal(Object.keys(state.settlements).length, world.geography.settlements.length);
   assert.equal(state.settlements.vizima.population.human + state.settlements.vizima.population.dwarf
     + state.settlements.vizima.population.elf + state.settlements.vizima.population.halfling, 18000);
-  assert.ok(state.stability > 0 && state.stability < 100);
+  for (const m of ['trust', 'unrest', 'dread']) assert.ok(state[m] >= 0 && state[m] < 100, m);
 });
 
 test('step does not mutate its input and advances the calendar', () => {
