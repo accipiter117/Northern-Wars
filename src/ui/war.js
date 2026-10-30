@@ -2,6 +2,7 @@
 import {
   TEMERIA, formatDate, sideName, ownerOf, placesHeldBy, warsOf, warScore, exhaustion, heldValue, sideIndex, musterPreview,
   canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer, canMerge, canOrder, canSplit,
+  raidPreview,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -176,7 +177,7 @@ export function armyCard(app, id) {
   const w = world.war;
   const t = targets(world, state, a);
   const m = w.marshals[a.marshal];
-  const raidChips = t.raid.map((r) => `<button type="button" class="chip" data-raid="${r}" ${orderAttr({ type: 'army', army: id, order: 'raid', target: r })}>${escapeHtml(sideName(world, r))}</button>`).join(' ');
+  const raidChips = t.raid.map((r) => `<button type="button" class="chip" data-raid="${r}" ${orderAttr({ type: 'army', army: id, order: 'raid', target: r })}>${escapeHtml(sideName(world, r))}<small data-raid-loot>about ${number(raidPreview(state, world, r).loot)} in loot</small></button>`).join(' ');
   const pick = (kind, label, sub, ok = true) => `<button type="button" class="act" data-order-kind="${kind}" data-pick-start='{"kind":"${kind}","army":${id}}' ${ok ? '' : 'disabled'}><span class="act-label">${icon('target')} ${label}</span><span class="act-sub">${sub}</span></button>`;
   return `
     ${cardHead({
@@ -196,7 +197,7 @@ export function armyCard(app, id) {
         ${pick('hold', 'Hold a place', 'Meets any enemy that comes near')}
         ${pick('siege', 'Besiege', t.siege.length ? 'Starves or storms it, then holds it' : 'No enemy place we know of', t.siege.length > 0)}
       </div>
-      ${raidChips ? `<div class="form-row"><span>Raid a realm</span><div class="chips">${raidChips}</div></div><p class="sub">Burns and plunders their unwalled towns and villages, then comes home.</p>` : ''}</div>
+      ${raidChips ? `<div class="form-row"><span>Raid a realm</span><div class="chips">${raidChips}</div></div><p class="sub">Burns and plunders their unwalled towns and villages, then comes home. The loot shown is what its ${['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'][world.war.raid.count] ?? world.war.raid.count} richest would yield; the realm raided will hate us for it, and the North fear us more.</p>` : ''}</div>
     <div data-part="stance"><h3>Stance</h3>
       <div class="chips">${Object.entries(w.stances).map(([sid, s]) => `<button type="button" class="chip${a.stance === sid ? ' on' : ''}" data-stance="${sid}" ${orderAttr({ type: 'army', army: id, order: a.order, target: a.target, stance: sid })} aria-pressed="${a.stance === sid}">${s.name}</button>`).join(' ')}</div>
       <p class="sub">${escapeHtml(w.stances[a.stance].blurb)}</p></div>

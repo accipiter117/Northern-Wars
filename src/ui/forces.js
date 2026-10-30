@@ -2,7 +2,7 @@
 import {
   TEMERIA, freeCompanies, crownArmies, describeArmy, describeCompany, companyUpkeep, huntOdds, bestCompanyFor, canRecruit, recruitCost,
   companySlots, threatPos, threatName, threatSize, isCamp, nearestPlace, witcherCost, speciesOf, ledgerNet, targetOf, hostile, sideName,
-  armyPay, forceAgainst,
+  armyPay, forceAgainst, threatPurse,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -59,7 +59,7 @@ function threatRow(world, state, t) {
   else act = `<button type="button" class="act primary" data-send="${t.id}" ${best ? '' : 'disabled'}><span class="act-label">Send nearest suitable company</span><span class="act-sub">${best ? `${best.odds.word} for ${escapeHtml(best.c.name)}` : 'No company is free'}</span></button>`;
   return `<div class="decision"><button type="button" class="row" data-threat="${t.id}" data-go="threat:${t.id}">
       ${icon('target')}<span class="row-main"><span class="row-name">${escapeHtml(threatLabel(world, t))}</span>
-      <span class="row-sub">${escapeHtml(versusLine(world, state, t))} ${escapeHtml(distanceWord(world, threatPos(t)))}.</span></span></button>
+      <span class="row-sub">${escapeHtml(versusLine(world, state, t))} ${escapeHtml(distanceWord(world, threatPos(t)))}.${threatPurse(state, world, t).total ? ` Purse about ${number(threatPurse(state, world, t).total)}.` : ''}</span></span></button>
     <div class="actions">${act}</div></div>`;
 }
 
@@ -197,15 +197,21 @@ export function threatCard(app, id) {
     const o = huntOdds(state, world, [c], t);
     return `<button type="button" class="build" ${orderAttr({ type: 'company', id: c.id, order: { kind: 'hunt', threat: t.id } })}><span class="build-name">Send ${escapeHtml(c.name)}</span><span class="build-cost">${o.word}.</span></button>`;
   }).join('');
+  // What clearing it pays (M24 D), part by part, and less a witcher's fee.
+  const purse = threatPurse(state, world, t);
+  const purseLine = purse.total
+    ? `<div data-part="purse" class="purse">${icon('coin')}<span><b>Purse: about ${number(purse.total)} crowns</b> (${escapeHtml(purse.parts.map((p) => `${p.label} ${number(p.v)}`).join(', '))})${purse.fee ? `; ${purse.net >= 0 ? `${number(purse.net)} left after a witcher's fee` : `a witcher's fee would cost ${number(-purse.net)} more than it brings`}` : ''}.</span></div>`
+    : `<div data-part="purse" class="purse sub">${t.kind === 'scoiatael' ? 'No bounty on their heads unless the crown pays bounties.' : 'Nothing to be had from it but peace.'}</div>`;
   const actions = [
     best && !hunted.length ? `<button type="button" class="act primary" data-send="${t.id}"><span class="act-label">Send nearest suitable company</span><span class="act-sub">${escapeHtml(best.c.name)}, ${best.odds.word.toLowerCase()} odds</span></button>` : '',
-    t.kind === 'monsters' && !contract ? `<button type="button" class="act" data-witcher="${t.id}" ${orderAttr({ type: 'witcher', threat: t.id })}><span class="act-label">Hire a witcher</span><span class="act-sub">${number(witcherCost(state, world, t))} crowns; no soldier need die</span></button>` : '',
+    t.kind === 'monsters' && !contract ? `<button type="button" class="act" data-witcher="${t.id}" ${orderAttr({ type: 'witcher', threat: t.id })}><span class="act-label">Hire a witcher</span><span class="act-sub">${number(witcherCost(state, world, t))} crowns; no soldier need die${purse.total ? `; ${purse.net >= 0 ? `${number(purse.net)} to the good` : `${number(-purse.net)} out of pocket`} after the purse` : ''}</span></button>` : '',
   ].join('');
   return `
     ${cardHead({
       status: `<span><b data-part="versus">${escapeHtml(versusLine(world, state, t))}</b> ${escapeHtml(distanceWord(world, threatPos(t)))}.${hunted.length ? ` ${escapeHtml(hunted.map((c) => c.name).join(', '))} ${hunted.length === 1 ? 'is' : 'are'} on the way.` : ''}${contract ? ' A witcher is on the trail.' : ''}${!best && !hunted.length ? ' No company is free to send.' : ''}</span>`,
       infoText: kind + (t.kind === 'monsters' ? ' Nine in ten witchers come back with a trophy.' : '') + ' The odds are for the force named beside it; a levy must be raised first.',
       actions,
+      extra: purseLine,
     })}
     ${others ? `<div data-part="others"><h3>Or send another</h3><div class="build-list">${others}</div></div>` : ''}`;
 }

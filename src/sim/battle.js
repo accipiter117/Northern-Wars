@@ -339,6 +339,17 @@ function rout(state, world, rng, f, loser) {
     note(f, state, `${marshal ? world.war.marshals[marshal].short ?? world.war.marshals[marshal].name : `${sideName(world, f.sides[loser])}'s commander`} is taken prisoner.`);
     if (marshal) lead.marshal = null;
   }
+  // Lords who rode with the beaten army are taken for ransom too (M24 D):
+  // one for about every `lordsPer` men broken, when the crown wins.
+  const r = bt.ransom;
+  if (f.sides[winner] === TEMERIA && r?.lordsPer) {
+    const lords = Math.min(r.lordsMax ?? 3, Math.floor((men * share) / r.lordsPer + rng.next()));
+    for (let i = 0; i < lords; i++) {
+      state.nextCaptiveId = (state.nextCaptiveId ?? 0) + 1;
+      (state.captives ??= []).push({ id: state.nextCaptiveId, side: f.sides[loser], by: TEMERIA, marshal: null, lord: true, day: state.day, ransom: r.lord });
+    }
+    if (lords) note(f, state, `${lords === 1 ? 'A lord' : `${lords} lords`} of ${sideName(world, f.sides[loser])} ${lords === 1 ? 'is' : 'are'} taken, to be ransomed.`);
+  }
   end(state, world, rng, f, winner);
 }
 

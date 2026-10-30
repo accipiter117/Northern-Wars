@@ -1,7 +1,7 @@
 import { stewardReport, halfStaffed, canDecree, MONTHS } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { orderAttr } from './card.js';
-import { EXPENSES } from './menu.js';
+import { EXPENSES, INCOME } from './menu.js';
 
 // The Steward's report (M24 C): what came in last month, what went out,
 // the net, and the three costs that weighed most, each with the one tap
@@ -10,6 +10,7 @@ import { EXPENSES } from './menu.js';
 
 const signed = (n) => (n < 0 ? `−${number(-n)}` : `+${number(n)}`);
 const LABEL = Object.fromEntries([...EXPENSES, ['imports', 'Goods bought abroad']]);
+const IN_LABEL = Object.fromEntries(INCOME);
 
 // Where each cost is trimmed: a tab to open, or (the court) the decree itself.
 const GO = {
@@ -58,6 +59,7 @@ export function stewardHtml(app) {
     <div class="decision-top"><span class="envoy-from">The Steward's report</span><span class="left">${MONTHS[r.month - 1].name} ${r.year}</span></div>
     <div class="st-figs"><div><small>In</small><b>${number(r.in)}</b></div><div><small>Out</small><b>${number(r.out)}</b></div><div class="${r.net < 0 ? 'down' : 'up'}"><small>Net</small><b>${signed(r.net)}</b></div></div>
     ${warn}
+    ${r.war.length ? `<h4>What fighting brought in</h4><dl class="ledger" data-part="war-takings">${r.war.map((w) => `<div data-take="${w.key}"><dt>${escapeHtml(IN_LABEL[w.key] ?? w.key)}</dt><dd>+${number(w.v)}</dd></div>`).join('')}</dl>` : ''}
     <h4>What cost most</h4>
     ${costs}
     <button type="button" class="act wide" data-tab-go="treasury:ledger"><span class="act-label">The full ledger</span></button>

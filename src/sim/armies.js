@@ -9,7 +9,8 @@ import { windfall } from './economy.js';
 import { creditLimit, realmEffect } from './economy.js';
 import { battlesOn, startBattle, stepBattlesDay } from './battle.js';
 import { siegesOn, siegeDay } from './siege.js';
-import { onCapture, integrationFactor } from './conquest.js';
+import { onCapture, integrationFactor, addFear } from './conquest.js';
+import { remember } from './diplomacy.js';
 import { stationedStrength, freeCompanies } from './forces.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength, placeMuster, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
@@ -1033,17 +1034,47 @@ function raidTick(state, world, rng, a) {
   if (a.raiding.days < r.days) return;
   const id = a.at;
   const p = placeOf(state, world, id);
-  const loot = round(peopleAt(state, world, id) * r.lootPerPerson * (p.prosperity / 50));
+  const loot = raidLootAt(state, world, id);
   hurtPlace(state, world, id, { prosperity: r.prosperity, food: r.food, unrest: r.unrest });
   damagePlace(state, world, rng, id, { count: 2, amount: world.works?.capture?.amount ?? [10, 25], why: 'Plundered by an enemy army', pick: outside });
   p.sacked = state.day + W(world).capture.sackedDays;
-  if (a.side === TEMERIA) windfall(state, 'loot', loot);
-  else if (state.realms[a.side]) state.realms[a.side].treasury += loot;
+  if (a.side === TEMERIA) {
+    windfall(state, 'raids', loot);
+    // The raided remember it, and the North fears us a little more (M24 D).
+    const victim = ownerOf(state, world, id);
+    if (victim && victim !== TEMERIA) {
+      remember(state, world, victim, `Temerian raiders burned ${world.byId[id].name}`, r.hatred ?? 0, { cause: 'we raided their villages' });
+      if (r.fear) addFear(state, world, TEMERIA, id, r.fear);
+    }
+  } else if (state.realms[a.side]) state.realms[a.side].treasury += loot;
   a.raiding = null;
   a.raidTarget = null;
   a.raids += 1;
   const text = `${a.name} (${sideName(world, a.side)}) plundered ${world.byId[id].name}${loot ? ` and carried off ${loot} crowns` : ''}.`;
   if (a.side === TEMERIA || ownerOf(state, world, id) === TEMERIA) say(state, text);
+}
+
+// What raiding a place carries off (M24 D): plunder by its people, the
+// caravans caught in a town's market and the herds driven off from a
+// village, all by how prosperous it is.
+export function raidLootAt(state, world, id) {
+  const r = W(world).raid;
+  const p = placeOf(state, world, id);
+  if (!p) return 0;
+  const type = world.byId[id].type;
+  const rich = p.prosperity / 50;
+  return round((peopleAt(state, world, id) * r.lootPerPerson + (r.caravans?.[type] ?? 0) + (r.herds?.[type] ?? 0)) * rich);
+}
+
+// The loot a raid on a realm should bring (M24 D), for the order before it
+// is given: the `count` richest places of that realm an army could reach.
+export function raidPreview(state, world, rid) {
+  const r = W(world).raid;
+  // The places a raid could fall on: as a raiding army of ours would pick them.
+  const list = Object.keys(world.byId).filter((id) => placeOf(state, world, id) && (ownerOf(state, world, id) === rid || originOf(world, id) === rid)
+    && !hasWalls(state, world, id) && ['village', 'town'].includes(world.byId[id].type) && (placeOf(state, world, id).sacked ?? 0) <= state.day)
+    .map((id) => raidLootAt(state, world, id)).sort((x, y) => y - x).slice(0, r.count);
+  return { places: list.length, loot: list.reduce((a, v) => a + v, 0) };
 }
 
 // Marching wears an army down, in enemy country and in winter most of all;

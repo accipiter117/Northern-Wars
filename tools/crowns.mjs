@@ -451,7 +451,7 @@ export function makeCrowns(world) {
         if (hostile(s, 'temeria', best.pid)) {
           const mercs = Object.keys(world.war.raise.mercenaries?.companies ?? {}).filter((id) => mercenaryOffer(s, world, id).ok);
           const units = s.forces.companies.filter((c) => !c.task && !c.army).map((c) => c.id);
-          s = act(s, { type: 'raise', muster: 'vizima', levy: 'all', nobles: true, mercs, units, marshal: 'vestibor', stance: 'bold' });
+          s = act(s, { type: 'raise', muster: 'vizima', levy: 'third', nobles: true, mercs: mercs.slice(0, 1), units, marshal: 'vestibor', stance: 'bold' });
           const a = crownArmies(s)[0];
           const target = (world.foreignByRealm[best.pid] ?? [])
             .sort((x, y) => Math.min(...Object.keys(s.settlements).map((h) => Math.hypot(world.byId[h].x - world.byId[x].x, world.byId[h].y - world.byId[x].y)))
@@ -460,16 +460,34 @@ export function makeCrowns(world) {
         }
       }
     }
-    // Once the levies are in, march.
+    // Once the levies are in, plunder first (M24 D): a raid across their
+    // villages and towns to pay for the war, then the siege.
     if (s.pendingSiege) {
-      const a = crownArmies(s).find((x) => x.id === s.pendingSiege.army);
+      const p = s.pendingSiege;
+      const a = crownArmies(s).find((x) => x.id === p.army);
       if (!a) delete s.pendingSiege;
-      else if (!(a.gatherUntil > s.day)) {
-        s = act(s, { type: 'army', army: a.id, order: 'siege', target: s.pendingSiege.target, stance: 'bold' });
+      else if (!(a.gatherUntil > s.day) && !p.raided && world.war.raid) {
+        s = act(s, { type: 'army', army: a.id, order: 'raid', target: ownerOf(s, world, p.target), stance: 'bold' });
+        s.pendingSiege = { ...p, raided: true };
+      } else if (!(a.gatherUntil > s.day) && a.order !== 'raid') {
+        s = act(s, { type: 'army', army: a.id, order: 'siege', target: p.target, stance: 'bold' });
         delete s.pendingSiege;
       }
     }
     for (const w of wars) for (const t of w.taken) if (canRequisition(s, world, t.id).ok) s = act(s, { type: 'requisition', settlement: t.id });
+    // What it takes, it sacks for the loot (M24 D).
+    for (const d of [...(s.conquest?.decisions ?? [])]) if (d.kind === 'capture') s = act(s, { type: 'conquestDecision', id: d.id, choice: d.options.indexOf('sack') });
+    // It pays for its wars with plunder (M24 D): an army standing idle in a
+    // war rides out to raid the enemy, and at home its companies hunt
+    // outlaws and beasts for their purses, with bounties on.
+    for (const a of crownArmies(s)) {
+      const foe = wars.flatMap((w) => w.sides.flat()).find((p) => p !== 'temeria' && hostile(s, 'temeria', p));
+      if (foe && !a.to && !a.siege && !a.raiding && a.order !== 'raid' && !(a.gatherUntil > s.day) && !s.pendingSiege) {
+        s = act(s, { type: 'army', army: a.id, order: 'raid', target: foe, stance: 'bold' });
+      }
+    }
+    if (month === 2) s = act(s, { type: 'law', law: 'bounties', option: 'witchers' });
+    s = keepThePeace(s, month);
     return s;
   }
 

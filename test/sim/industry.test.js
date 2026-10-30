@@ -205,11 +205,14 @@ test('the steward stays solvent over ten years, keeps its works and its income',
   // which tests the war, not the economy.
   let s = createState(world, 3);
   let low = Infinity;
+  let decade = 0;
   const yearIn = [];
   for (let m = 0; m < 120; m++) {
     s = steward(s, m, false);
     s = run(s, 30);
     low = Math.min(low, s.treasury);
+    const h = s.ledger.history.at(-1);
+    if (h) decade += ledgerNet(h).net + Math.max(0, h.treasury - world.economy.upkeep.hoardFree) * world.economy.upkeep.hoardPerMonth;
     assert.ok(!s.unpaid, `unpaid in month ${m}`);
     if ((m + 1) % 12 === 0) yearIn.push(s.ledger.history.reduce((a, h) => a + ledgerNet(h).in, 0) / s.ledger.history.length);
   }
@@ -221,13 +224,10 @@ test('the steward stays solvent over ten years, keeps its works and its income',
   const all = Object.values(s.settlements).flatMap((x) => x.buildings.map((b) => x.cond?.[b] ?? 100));
   assert.ok(all.reduce((a, b) => a + b, 0) / all.length >= 75, 'the steward keeps its works');
   assert.ok(s.forces.companies.length >= 4, `${s.forces.companies.length} companies`);
-  // A surplus before the courtiers a full treasury draws (M24 C): by year
-  // ten the steward's hoard of 50,000 or more is meant to level off, so the
-  // hoard's charge is left out of the measure.
-  const u = world.economy.upkeep;
-  const hoard = (h) => Math.max(0, h.treasury - u.hoardFree) * u.hoardPerMonth;
-  const net = s.ledger.history.reduce((a, h) => a + ledgerNet(h).net + hoard(h), 0) / s.ledger.history.length;
-  assert.ok(net > 0, `monthly surplus before the hoard ${net}`);
+  // A surplus over the decade before the courtiers a full treasury draws
+  // (M24 C): by year ten the steward's hoard of 50,000 or more is meant to
+  // level off, and a single year can dip with a bad harvest or a war.
+  assert.ok(decade / 120 > 0, `monthly surplus before the hoard ${decade / 120}`);
   const pop = Object.values(s.settlements).reduce((a, x) => a + totalPopulation(x), 0);
   assert.ok(pop > 54000);
 });

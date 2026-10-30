@@ -12,6 +12,19 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
+### Money from fighting (M24 D)
+The warlord over six years (`tools/crowns.mjs`, seeds 1 to 3), rounded down. It now raises a third of the levy, the lords and one mercenary company, raids the enemy's villages and towns before it besieges, sacks what it takes, hunts outlaws and beasts with bounties on, and no longer borrows.
+
+| Seed | Purses | Raid loot | Tribute | Armies and occupation | Share of the war paid by fighting |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 1,121 | 4,982 | 546 | 15,965 | 41% |
+| 2 | 1,492 | 5,008 | 0 | 14,342 | 45% |
+| 3 | 1,797 | 4,736 | 624 | 14,871 | 48% |
+
+- **Fighting pays part of a war, never all of it.** A raid on a small realm such as Sodden brings a few thousand; one on Redania's six richest open places about 13,000 (the army card shows it first). A campaign that raids and then sits down to a siege still costs more than it brings, so peace stays the richer course.
+- **Purses are pocket money at peace.** The steward's companies earn about 20 to 30 a month from camps and lairs; a big beast is worth a witcher (a leshen's trophies are several hundred), small ones are not.
+- **Dials worth knowing.** `raid.lootPerPerson` (0.9), `raid.caravans`, `raid.herds` and `raid.count` (6) in data/war.json set what raiding is worth; `purses` in data/forces.json what clearing a threat pays; `battles.ransom.lordsPer` (700) and `lord` (450) how often lords are taken and what they fetch.
+
 ### A rich crown at peace (M24 C)
 Each crown's average month over the year named, from a ledger trace of the crowns in `tools/crowns.mjs` on seeds 1, 2 and 3 (all at peace), rounded down. The test in test/sim/peace.test.js checks seed 3.
 
