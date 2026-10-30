@@ -9,6 +9,7 @@
 //   data-expand="key"        open or fold a row in place
 //   data-form + data-set     set a remembered form field ("key:value")
 //   data-form + data-field   a typed field, kept as it is typed
+//   data-slide="kind"        a labour slider: the hands move when let go
 //   data-pick-start='{...}'  start picking a target on the map
 //   data-info                show or hide a card's longer text
 import { setOpen, form, isOpen } from './memory.js';
@@ -150,7 +151,23 @@ export function attachPanelInput(app) {
     else nav.push(then);
   }
 
+  // A labour slider (M23 B): its number follows the thumb as it moves, and
+  // the hands move when it is let go; the others give way in proportion.
+  body.addEventListener('change', (e) => {
+    const slide = e.target.closest('input[data-slide]');
+    if (!slide) return;
+    const kind = slide.dataset.slide;
+    const step = Number(slide.value) - (app.state.labour?.split?.[kind] ?? 0);
+    if (step) app.order({ type: 'labourShift', kind, step });
+  });
+
   body.addEventListener('input', (e) => {
+    const slide = e.target.closest('input[data-slide]');
+    if (slide) {
+      const out = slide.closest('.slide-row')?.querySelector('output');
+      if (out) out.textContent = slide.value;
+      return;
+    }
     const field = e.target.closest('[data-field]');
     const holder = field?.closest('[data-form]');
     if (!field || !holder) return;

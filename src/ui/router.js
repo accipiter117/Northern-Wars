@@ -20,7 +20,7 @@ import { helpHtml } from './hints.js';
 import { boardCard, boardTitle, ordersHtml } from './board.js';
 
 export const SUBS = {
-  realm: [['overview', 'Overview'], ['labour', 'Labour'], ['places', 'Places']],
+  realm: [['labour', 'Labour'], ['overview', 'Overview'], ['places', 'Places']],
   court: [['inbox', 'Decisions'], ['laws', 'Laws'], ['houses', 'Great houses'], ['faith', 'Faith']],
   treasury: [['ledger', 'Ledger'], ['taxes', 'Taxes and loans'], ['trade', 'Trade'], ['industry', 'Mines and industry']],
   military: [['forces', 'Forces'], ['threats', 'Threats'], ['garrisons', 'Garrisons'], ['war', 'War']],

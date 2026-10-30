@@ -539,8 +539,36 @@ export function fuelNeed(state, world) {
 }
 
 // One line of seasonal pressure for the top bar.
+// Which preset the hands stand at, if any (M23 B): null means Custom.
+export function presetNow(state, world) {
+  const now = state.labour?.split;
+  if (!now) return null;
+  const found = Object.entries(L(world)?.presets ?? {}).find(([id, p]) => id !== 'note' && KINDS.every((k) => (p.split[k] ?? 0) === (now[k] ?? 0)));
+  return found ? found[0] : null;
+}
+
+// The season's suggestion (M23 B): harvest hands in August, winter hands
+// from November, the usual round again after the harvest and in spring.
+// Null when the hands already stand where the season wants them.
+export function seasonalPrompt(state, world) {
+  const prompts = L(world)?.prompts;
+  if (!prompts || !state.labour) return null;
+  const month = dateOf(state.day).month;
+  const now = presetNow(state, world);
+  for (const [id, p] of Object.entries(prompts)) {
+    if (id === 'note' || !p.months.includes(month) || now === p.preset) continue;
+    if (p.from && now !== p.from) continue;
+    if (!canPreset(state, world, p.preset).ok) continue;
+    return { id, preset: p.preset, text: p.text };
+  }
+  return null;
+}
+
 export function pressureLine(state, world, fns) {
   if (!state.labour || !L(world)) return '';
+  // The season's suggestion comes first: it is the thing to do now.
+  const prompt = seasonalPrompt(state, world);
+  if (prompt) return `${prompt.text} Tap to set them.`;
   const o = winterOutlook(state, world, fns);
   const month = dateOf(state.day).month;
   const wintry = month >= 11 || month <= 2;

@@ -179,3 +179,23 @@ test('a version 17 save gains the kingdom\'s hands', () => {
   assert.ok(later.labour.report.fields.hands > 0);
   assert.equal(deserialize(serialize(later), world).version, STATE_VERSION);
 });
+
+test('the season suggests a setting, and Custom is any split that matches none (M23 B)', async () => {
+  const { presetNow, seasonalPrompt, applyAction: act, dateOf: date } = await import('../../src/sim/index.js');
+  let s = createState(world, 7);
+  assert.equal(presetNow(s, world), 'balanced', 'the kingdom starts at its usual round');
+  while (date(s.day).month !== 8) s = step(s, 5, world, { ambient: false });
+  assert.equal(seasonalPrompt(s, world).preset, 'harvest');
+  s = act(s, world, { type: 'preset', preset: 'harvest' }).state;
+  assert.equal(presetNow(s, world), 'harvest');
+  assert.equal(seasonalPrompt(s, world), null, 'no prompt once the hands are where the season wants them');
+  // After the harvest, back to the usual round; but not from a custom split.
+  while (date(s.day).month !== 10) s = step(s, 5, world, { ambient: false });
+  assert.equal(seasonalPrompt(s, world).preset, 'balanced');
+  s = act(s, world, { type: 'labourShift', kind: 'woods', step: 3 }).state;
+  assert.equal(presetNow(s, world), null, 'Custom');
+  assert.equal(seasonalPrompt(s, world), null);
+  // Winter hands from November.
+  while (date(s.day).month !== 11) s = step(s, 5, world, { ambient: false });
+  assert.equal(seasonalPrompt(s, world).preset, 'winter');
+});

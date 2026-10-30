@@ -38,7 +38,15 @@ export function createPanel({ onBack, onClose, onSnap }) {
       return;
     }
     el.style.transform = '';
-    el.style.height = `${heightOf(snap)}px`;
+    el.style.height = `${fitted(heightOf(snap))}px`;
+  }
+
+  // A screen made to be seen whole ([data-fit], the Labour sheet of M23 B)
+  // raises a half-open sheet as far as it needs, up to full height.
+  function fitted(h) {
+    if (snap !== 'half' || !body.querySelector('[data-fit]')) return h;
+    const need = el.offsetHeight - body.clientHeight + body.scrollHeight;
+    return Math.min(avail(), Math.max(h, need));
   }
 
   function setSnap(s, { remember = true, instant = false } = {}) {
@@ -125,6 +133,7 @@ export function createPanel({ onBack, onClose, onSnap }) {
     }
     if (keepScroll !== null) body.scrollTop = keepScroll;
     else if (!same) body.scrollTop = 0;
+    if (!side()) place();
     return body;
   }
 
@@ -151,6 +160,7 @@ export function createPanel({ onBack, onClose, onSnap }) {
       });
     }
     lastHtml = html;
+    if (open && !side() && body.querySelector('[data-fit]')) place();
     return body;
   }
 
