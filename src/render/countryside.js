@@ -12,6 +12,7 @@ import { makeRng } from '../sim/rng.js';
 import { pointInPolygon } from '../sim/geometry.js';
 
 const STEP = 11;
+const BAND = 32;
 const CAP = 12000;
 // How many people a foreign place stands for (their numbers are not ours
 // to know exactly; the map only needs their weight).
@@ -128,7 +129,15 @@ export function prepareCountryside(world, prep) {
     }
   }
   marks.sort((a, b) => a.y - b.y);
-  return { marks };
+  // Bands of rows, so a tile looks only at the marks in its own band
+  // (each band keeps the back-to-front order).
+  const bands = new Map();
+  for (const m of marks) {
+    const k = Math.floor(m.y / BAND);
+    if (!bands.has(k)) bands.set(k, []);
+    bands.get(k).push(m);
+  }
+  return { marks, bands };
 }
 
 // Field colours through the year, three crops to a season.
@@ -146,7 +155,9 @@ export function drawCountryside(ctx, cs, px, v, detail, look) {
   if (!cs || detail <= 0) return 0;
   let n = 0;
   const season = look.snow ? 'winter' : look.season;
-  for (const m of cs.marks) {
+  const from = Math.floor((v.y0 - 8) / BAND);
+  const to = Math.floor((v.y1 + 8) / BAND);
+  for (let k = from; k <= to; k++) for (const m of cs.bands?.get(k) ?? []) {
     if (m.x < v.x0 - 8 || m.x > v.x1 + 8 || m.y < v.y0 - 8 || m.y > v.y1 + 8) continue;
     // Battery saver: half the marks, the fields kept.
     if (look.thin && m.kind !== 'field' && m.seed > 0.5) continue;

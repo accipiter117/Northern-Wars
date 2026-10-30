@@ -100,7 +100,7 @@ export function attachMapInput(canvas, cam, world, { onTap, onDoubleTap, onLongP
     pointers.set(e.pointerId, p);
     if (pointers.size === 1) {
       tapStart = { ...p, t: performance.now(), moved: 0, pressed: false };
-      samples = [{ ...p, t: performance.now() }];
+      samples = [{ ...p, t: e.timeStamp || performance.now() }];
       press = {
         x: p.x, y: p.y, shown: false,
         ring: setTimeout(() => { if (press) { press.shown = true; onPress?.({ x: p.x, y: p.y, ms: PRESS_MS - RING_AFTER }); } }, RING_AFTER),
@@ -130,7 +130,9 @@ export function attachMapInput(canvas, cam, world, { onTap, onDoubleTap, onLongP
       if (tapStart) tapStart.moved = Math.max(tapStart.moved, Math.hypot(p.x - tapStart.x, p.y - tapStart.y));
       if (press && Math.hypot(p.x - press.x, p.y - press.y) > TAP_SLOP) cancelPress();
       panBy(cam, world, p.x - prev.x, p.y - prev.y);
-      samples.push({ ...p, t: performance.now() });
+      // When the finger moved, not when the event was handled: a long
+      // frame (tiles being painted) must not swallow a flick.
+      samples.push({ ...p, t: e.timeStamp || performance.now() });
       if (samples.length > 8) samples.shift();
       onChange();
     } else if (pointers.size === 2 && pinch) {
@@ -165,11 +167,13 @@ export function attachMapInput(canvas, cam, world, { onTap, onDoubleTap, onLongP
         lastTap = dbl ? null : { x: p.x, y: p.y, t: now };
         if (!(dbl && onDoubleTap?.(p.x, p.y, (f) => animateZoom(p.x, p.y, f)))) onTap(p.x, p.y);
       } else if (e.type === 'pointerup' && tapStart && !tapStart.pressed && tapStart.moved >= TAP_SLOP) {
-        // A flick: the speed over the last tenth of a second carries on.
-        const recent = samples.filter((s) => now - s.t < 100);
+        // A flick: the speed over the last tenth of a second carries on,
+        // timed by when the finger moved and lifted.
+        const lift = e.timeStamp || now;
+        const recent = samples.filter((s) => lift - s.t < 100);
         const a = recent[0];
         const b = recent.at(-1);
-        if (a && b && b.t > a.t && now - b.t < 60) {
+        if (a && b && b.t > a.t && lift - b.t < 60) {
           const vx = (b.x - a.x) / (b.t - a.t);
           const vy = (b.y - a.y) / (b.t - a.t);
           if (Math.hypot(vx, vy) > FLICK) startGlide(vx, vy);
