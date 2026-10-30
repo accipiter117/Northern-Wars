@@ -28,7 +28,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 24;
+export const STATE_VERSION = 25;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -63,6 +63,8 @@ export function createState(world, seed = 1) {
     neighbours: defaultNeighbours(world),
     envoys: [],
     nextEnvoyId: 1,
+    figures: [],
+    nextFigureId: 1,
     sympathy: 20,
     petitions: [],
     nextPetitionId: 1,

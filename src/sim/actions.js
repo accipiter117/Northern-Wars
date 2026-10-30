@@ -23,7 +23,7 @@ import { depositAt, canProspect, startProspect } from './gold.js';
 import { canOpenRoute, openRoute, closeRoute } from './trade.js';
 import { canTrade, makeDeal, endDeal } from './market.js';
 import { canBorrow, borrow, canPayOff, payOff } from './loans.js';
-import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy, canMuster, callMuster, detachCompany, canMerge, mergeArmies } from './armies.js';
+import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy, canMuster, callMuster, detachCompany, canMerge, mergeArmies, canSplit, splitArmy } from './armies.js';
 import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision } from './war.js';
 import { TEMERIA, sideIndex } from './conflict.js';
 import { addDispatch as note } from './realm.js';
@@ -205,7 +205,7 @@ export function applyAction(state, world, action) {
     return { state: next };
   }
   if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
-  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege', 'muster', 'detach', 'merge'].includes(action.type)) return warAction(state, world, action);
+  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege', 'muster', 'detach', 'merge', 'split'].includes(action.type)) return warAction(state, world, action);
   // Labour (M20 C): the split of the kingdom's hands, a shift of a few in
   // a hundred, royal calls, and works pinned to be manned first.
   if (action.type === 'labour' || action.type === 'labourShift') {
@@ -378,9 +378,14 @@ function warAction(state, world, action) {
     detachCompany(next, world, army, action.band);
   } else if (action.type === 'merge') {
     const into = next.armies.find((a) => a.id === action.into);
-    const check = canMerge(next, world, army, into);
+    const check = canMerge(next, world, army, into, action.marshal);
     if (!check.ok) return { state, error: check.reason };
-    mergeArmies(next, world, army, into);
+    mergeArmies(next, world, army, into, action.marshal);
+  } else if (action.type === 'split') {
+    // Part of an army marches apart (M23 C).
+    const check = canSplit(next, world, army, action.bands, action.marshal ?? null);
+    if (!check.ok) return { state, error: check.reason };
+    splitArmy(next, world, army, action.bands, action.marshal ?? null);
   } else if (action.type === 'peace') {
     const check = canMakePeace(state, world, action.war, action.terms);
     if (!check.ok) return { state, error: check.reason };

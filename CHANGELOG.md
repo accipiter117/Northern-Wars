@@ -1,5 +1,12 @@
 # Changelog
 
+## M23 C Armies and figures on the move
+- Armies march as columns sized by their men, with a standard at the head, wagons at the tail and dust behind. At night they camp by the road, and in an enemy's land their foragers spread out around them.
+- Your armies on the march show their route and how many days they have left. Long press one for its men, companies, marshal, spirit and arrival.
+- Envoys, spies, couriers, lords and marshals now ride the roads when something real sends them: an envoy to a court, a spy into a realm, a petition to Vizima, a lord summoned to court, a marshal to his new army. Long press any of them to see who they are and when they arrive.
+- From an army's card: join another army here under the marshal you choose, march to join an army elsewhere, or divide the army and send some companies off on their own.
+- Save version 25.
+
 ## M23 B Labour made easy
 - Labour is now the first thing in the Realm tab, and tapping the line under the top bar opens it.
 - On a phone it fits one screen: a coloured bar of where the hands are (idle hands shown as a gap), five settings at a tap (Harvest, Winter, War footing, Rebuild, Balanced, or Custom once you change anything) and no more than three lines of what matters now.

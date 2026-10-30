@@ -4,6 +4,7 @@
 // accord: ask for audiences with real proposals, tax our caravans when they
 // sour on us, and make and break pacts among themselves by the same rules.
 import { nudge } from './meters.js';
+import { sendFigure, courtOf } from './figures.js';
 import { addDispatch, clamp } from './realm.js';
 import { settleOwnership } from './lands.js';
 import { creditLimit } from './economy.js';
@@ -322,6 +323,9 @@ export function requestText(state, world, q) {
 function newRequest(state, world, pid, kind, items) {
   const q = { id: state.diplomacy.nextId++, realm: pid, kind, items, day: state.day };
   state.diplomacy.requests.push(q);
+  // Their envoy's last stretch to Vizima (M23 C).
+  const court = courtOf(world, pid);
+  if (court) sendFigure(state, world, { kind: 'envoy', side: pid, from: court, to: world.kingdom.capital, days: 4 });
   setCooldown(state, pid, 'request', D(world).requests.cooldown);
   return q;
 }

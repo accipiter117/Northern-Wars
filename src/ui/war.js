@@ -1,7 +1,7 @@
 // The war panel, army cards and the war's part of the realm and town cards.
 import {
   TEMERIA, formatDate, sideName, ownerOf, placesHeldBy, warsOf, warScore, exhaustion, heldValue, sideIndex, musterPreview,
-  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer, canMerge,
+  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer, canMerge, canOrder, canSplit,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -220,9 +220,44 @@ function companiesHtml(app, a) {
   });
   // Eight rows, then the rest folded (M21 F).
   const list = rows.length > 8 ? `${rows.slice(0, 8).join('')}<li><details class="more"><summary>${rows.length - 8} more</summary><ul class="companies">${rows.slice(8).join('')}</ul></details></li>` : rows.join('');
+  const marshalName = (m) => (m ? world.war.marshals[m]?.name : null);
   const others = crownArmies(state).filter((x) => x !== a && canMerge(state, world, x, a).ok);
-  const joins = others.map((x) => `<button type="button" class="act" data-merge="${x.id}" ${orderAttr({ type: 'merge', army: x.id, into: a.id })}><span class="act-label">Join ${escapeHtml(x.name)} to this army</span><span class="act-sub">${number(Math.round(x.soldiers))} men, ${x.bands?.length ?? 0} companies</span></button>`).join('');
-  return `<div data-part="companies">${section(memory, `army:${a.id}`, 'companies', `Companies (${a.bands.length})`, `<ul class="companies">${list}</ul>`)}${joins ? `<div class="actions">${joins}</div>` : ''}</div>`;
+  // Join another army here to this one; when both have marshals, the crown
+  // chooses who commands the whole (M23 C).
+  const joins = others.map((x) => {
+    const sub = `${number(Math.round(x.soldiers))} men, ${x.bands?.length ?? 0} companies`;
+    const one = (m, label) => `<button type="button" class="act" data-merge="${x.id}" data-merge-marshal="${m ?? ''}" ${orderAttr({ type: 'merge', army: x.id, into: a.id, marshal: m ?? null })}><span class="act-label">${label}</span><span class="act-sub">${sub}</span></button>`;
+    if (a.marshal && x.marshal && a.marshal !== x.marshal) {
+      return one(a.marshal, `Join ${escapeHtml(x.name)} to this army, under ${escapeHtml(marshalName(a.marshal))}`)
+        + one(x.marshal, `Join ${escapeHtml(x.name)} to this army, under ${escapeHtml(marshalName(x.marshal))}`);
+    }
+    return one(a.marshal ?? x.marshal, `Join ${escapeHtml(x.name)} to this army${(a.marshal ?? x.marshal) ? `, under ${escapeHtml(marshalName(a.marshal ?? x.marshal))}` : ''}`);
+  }).join('');
+  // March to join an army elsewhere (M23 C).
+  const far = crownArmies(state).filter((x) => x !== a && !others.includes(x) && canOrder(state, world, a, 'join', x.id).ok);
+  const marches = a.order === 'join'
+    ? `<p class="sub" data-part-line="joining">Marching to join ${escapeHtml(state.armies.find((x) => x.id === a.target)?.name ?? 'another army')}.</p>`
+    : far.map((x) => `<button type="button" class="act" data-join="${x.id}" ${orderAttr({ type: 'army', army: a.id, order: 'join', target: x.id })}><span class="act-label">March to join ${escapeHtml(x.name)}</span><span class="act-sub">${escapeHtml(x.to ? `on the road to ${world.byId[x.to].name}` : `at ${world.byId[x.at].name}`)}, ${number(Math.round(x.soldiers))} men</span></button>`).join('');
+  return `<div data-part="companies">${section(memory, `army:${a.id}`, 'companies', `Companies (${a.bands.length})`, `<ul class="companies">${list}</ul>`)}${joins || marches ? `<div class="actions">${joins}${marches}</div>` : ''}${splitHtml(app, a)}</div>`;
+}
+
+// Divide the army (M23 C): pick the companies to march apart, and a free
+// marshal for them if there is one.
+function splitHtml(app, a) {
+  const { world, state, memory } = app;
+  if (a.bands.length < 2 || a.to || a.battle || a.siege) return '';
+  // Keyed by the number of companies too, so a choice never outlives a change.
+  const key = `split:${a.id}:${a.bands.length}`;
+  const f = form(memory, key, { bands: [], marshal: '' });
+  const picked = (f.bands ?? []).filter((i) => a.bands[i]);
+  const chips = a.bands.map((b, i) => `<button type="button" class="chip${picked.includes(i) ? ' on' : ''}" aria-pressed="${picked.includes(i)}" data-split-band="${i}">${escapeHtml(b.name ?? `Company ${i + 1}`)}</button>`).join(' ');
+  const busy = new Set(crownArmies(state).map((x) => x.marshal).filter(Boolean));
+  const free = Object.entries(world.war.marshals).filter(([id]) => !busy.has(id) && !(state.captives ?? []).some((c) => c.marshal === id && c.side === TEMERIA));
+  const marshals = [['', 'None'], ...free.map(([id, m]) => [id, m.name])].map(([id, name]) => `<button type="button" class="chip${(f.marshal ?? '') === id ? ' on' : ''}" data-set="marshal:${id}">${escapeHtml(name)}</button>`).join(' ');
+  const check = canSplit(state, world, a, picked, f.marshal || null);
+  const men = picked.reduce((v, i) => v + a.bands[i].men, 0);
+  const go = `<button type="button" class="act" data-split ${orderAttr({ type: 'split', army: a.id, bands: picked, marshal: f.marshal || null })} ${check.ok ? '' : 'disabled'}><span class="act-label">March these apart</span><span class="act-sub">${picked.length ? `${number(Math.round(men))} men in ${picked.length} ${picked.length === 1 ? 'company' : 'companies'}${check.ok ? '' : `. ${escapeHtml(check.reason)}`}` : 'Choose the companies above'}</span></button>`;
+  return section(memory, `army:${a.id}`, 'split', 'Divide the army', `<div data-form="${key}" data-part-inner="split"><p class="sub">The companies to march apart as a new army:</p><div class="chips">${chips}</div><div class="form-row"><span>Marshal</span><div class="chips">${marshals}</div></div>${go}</div>`);
 }
 
 // The realm card's war section: declare, or how the war with them stands.

@@ -41,6 +41,13 @@ Part B, labour made easy:
 - A seasonal prompt in the pressure strip.
 - Tests: the sheet fits 360x640 without scrolling; settings, Custom, sliders, calls, the focus row and the prompt.
 
+Part C, armies and figures on the move:
+- Columns sized by men, with banner, dust and wagons; camps at night; foraging parties.
+- Routes with days to arrive; a long press shows an army's details.
+- Figures (commanders, envoys, couriers, spies, witchers and lords), each tied to a real action, with a long press; fog of war respected.
+- Merge under a chosen commander; march to join; divide.
+- Tests: days to arrive, merge, join, divide with nothing lost, figures from real acts and gone on arrival, the same seed with or without figures, the save upgrade, and the browser.
+
 ## M22 acceptance criteria
 Part A, battery and performance:
 - The map is drawn only when something needs drawing; paused and idle, no frames are asked for until the next event.

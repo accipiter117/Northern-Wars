@@ -336,6 +336,13 @@ const MIGRATIONS = {
     state.version = 24;
     return state;
   },
+  // v25 (M23 C): figures on the road, none yet on the way.
+  24(state) {
+    state.figures ??= [];
+    state.nextFigureId ??= 1;
+    state.version = 25;
+    return state;
+  },
 };
 
 // Swap every reference to a vanished foreign town for its replacement: as a

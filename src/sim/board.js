@@ -7,6 +7,7 @@
 // march and fight in real time as before.
 import { canTrade, makeDeal, dealPreview } from './market.js';
 import { addDispatch, clamp } from './realm.js';
+import { sendFigure, courtOf } from './figures.js';
 import { pointInPolygon, distanceToPolygon } from './geometry.js';
 import { TEMERIA, ownerOf, hostile, sideName, placesHeldBy, placeOf, warBetween } from './conflict.js';
 import { informed } from './realms.js';
@@ -15,7 +16,7 @@ import { weighDeal, canSign, signDeal, counterOffer, itemProblem } from './deals
 import { treatyBetween } from './diplomacy.js';
 import { canOrder, orderArmy } from './armies.js';
 import { roadPath } from './world.js';
-import { dateOf } from './calendar.js';
+import { dateOf, MONTHS } from './calendar.js';
 
 export const ORDERS_A_MONTH = 3;
 const say = (state, text) => addDispatch(state, text, 'abroad');
@@ -220,6 +221,12 @@ export function giveOrder(state, world, o) {
   const trade = o.kind !== 'trade' ? {} : world.market ? { sell: o.sell ?? null, buy: o.buy ?? null } : { give: o.give, take: o.take };
   const clean = { kind: o.kind, realm: o.realm, ...(o.kind === 'march' ? { army: o.army } : {}), ...trade, day: state.day };
   orders(state).list.push(clean);
+  // An envoy rides out at once and reaches the court as the month turns,
+  // when the orders are carried out (M23 C).
+  if (o.kind === 'envoy') {
+    const d = dateOf(state.day);
+    sendFigure(state, world, { kind: 'envoy', from: world.kingdom.capital, to: courtOf(world, o.realm), days: Math.max(1, MONTHS[d.month - 1].days - d.day + 1), about: `to ${sideName(world, o.realm)}` });
+  }
 }
 
 export function cancelOrder(state, i) {

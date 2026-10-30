@@ -19,6 +19,7 @@ import { roadPath, dist } from './world.js';
 import { seasonOf } from './calendar.js';
 import { informed } from './realms.js';
 import { damagePlace, outside } from './works.js';
+import { sendFigure } from './figures.js';
 import {
   TEMERIA, ownerOf, originOf, placeOf, peopleAt, hasWalls, valueOf, hurtPlace, hostile, warBetween, sideIndex,
   sideName, recordCapture, setOwner, enemiesOf,
@@ -227,6 +228,8 @@ export function raiseArmy(state, world, opts) {
   if (p.companies) parts.push(`${p.companies} free compan${p.companies === 1 ? 'y' : 'ies'}`);
   if (p.mercs?.length) parts.push(p.mercs.map((id) => w.raise.mercenaries.companies[id].name).join(' and '));
   if (p.units.length) parts.push(`${p.units.length} of the crown's standing compan${p.units.length === 1 ? 'y' : 'ies'}`);
+  // Its marshal rides out from the court to take command (M23 C).
+  if (a.marshal && opts.muster !== world.kingdom.capital) sendFigure(state, world, { kind: 'commander', from: world.kingdom.capital, to: opts.muster, name: w.marshals[a.marshal].name, about: a.name });
   say(state, `${a.name} gathers at ${world.byId[opts.muster].name}: ${round(a.soldiers)} men from ${parts.join(' and ')}${a.marshal ? `, under ${w.marshals[a.marshal].name}` : ''}.${a.gatherUntil ? ` The levies will be in within ${p.days} days.` : ''}`);
   for (const hid of p.refuse) say(state, `${world.houses.houses[hid].name} sends excuses instead of men.`);
   return a;
@@ -300,13 +303,15 @@ export function detachCompany(state, world, a, index) {
 
 // Two of the crown's armies in one place become one: every company keeps
 // its name inside it; morale is the weighted mean; pay and hands add up.
-export function canMerge(state, world, a, b) {
+export function canMerge(state, world, a, b, marshal) {
   if (!a || !b || a === b || a.side !== TEMERIA || b.side !== TEMERIA) return { ok: false, reason: 'No such army.' };
   if (a.to || b.to || a.at !== b.at) return { ok: false, reason: 'Both armies must stand in the same place.' };
   if (a.battle || b.battle) return { ok: false, reason: 'Not in the middle of a battle.' };
+  // The joined army is led by one of the two marshals, as the crown chooses (M23 C).
+  if (marshal !== undefined && marshal !== a.marshal && marshal !== b.marshal) return { ok: false, reason: 'Choose one of the two marshals.' };
   return { ok: true };
 }
-export function mergeArmies(state, world, from, into) {
+export function mergeArmies(state, world, from, into, marshal) {
   normalise(from);
   normalise(into);
   const men = from.soldiers + into.soldiers;
@@ -320,7 +325,7 @@ export function mergeArmies(state, world, from, into) {
   into.mercs = [...(into.mercs ?? []), ...(from.mercs ?? [])];
   into.units = [...(into.units ?? []), ...(from.units ?? [])];
   into.folk = into.folk || from.folk;
-  into.marshal ??= from.marshal;
+  into.marshal = marshal !== undefined ? marshal : (into.marshal ?? from.marshal);
   into.gatherUntil = Math.max(into.gatherUntil ?? 0, from.gatherUntil ?? 0) || undefined;
   if (into.muster && !from.muster) delete into.muster;
   for (const u of from.units ?? []) {
@@ -328,12 +333,87 @@ export function mergeArmies(state, world, from, into) {
     if (c) c.army = into.id;
   }
   state.armies = state.armies.filter((x) => x !== from);
-  say(state, `${from.name} joins ${into.name}: ${round(men)} men under one command.`);
+  const lead = into.marshal ? `, under ${W(world).marshals[into.marshal].name}` : '';
+  say(state, `${from.name} joins ${into.name}: ${round(men)} men under one command${lead}.`);
+}
+
+// Part of an army marches off on its own (M23 C): the chosen companies
+// form a new army in the same place, with a free marshal or none, its
+// levies, retinues, hired men and standing companies carried with them.
+export function canSplit(state, world, a, bands, marshal = null) {
+  if (!a || a.side !== TEMERIA) return { ok: false, reason: 'No such army.' };
+  if (a.to || a.battle || a.siege || a.raiding) return { ok: false, reason: 'Only an army standing in a place can divide.' };
+  normalise(a);
+  const pick = [...new Set(bands ?? [])].filter((i) => a.bands[i]);
+  if (!pick.length || pick.length >= a.bands.length) return { ok: false, reason: 'Choose some of its companies, not all of them.' };
+  const men = pick.reduce((v, i) => v + a.bands[i].men, 0);
+  const min = W(world).minArmy;
+  if (men < min || a.soldiers - men < min) return { ok: false, reason: `Each part needs at least ${min} men.` };
+  if (marshal && (!W(world).marshals[marshal] || crownArmies(state).some((x) => x.marshal === marshal))) return { ok: false, reason: 'That marshal already leads an army.' };
+  return { ok: true, men };
+}
+export function splitArmy(state, world, a, bands, marshal = null) {
+  normalise(a);
+  const pick = new Set(bands);
+  const moving = a.bands.filter((_, i) => pick.has(i));
+  const men = moving.reduce((v, b) => v + b.men, 0);
+  const share = men / Math.max(1, a.soldiers);
+  a.bands = a.bands.filter((_, i) => !pick.has(i));
+  const target = ownerOf(state, world, a.at) === TEMERIA ? a.at : refuge(state, world, a);
+  const b = newArmy(state, world, TEMERIA, a.at, men, {}, {
+    name: `${a.name.replace(/, a column$/, '')}, a column`, marshal, stance: a.stance, target, bands: moving,
+  });
+  Object.assign(b, { morale: a.morale, folk: a.folk, arms: a.arms, home: a.home, raised: Math.max(1, round(a.raised * share)), levyMen: 0, retinueMen: 0, mercs: [], units: [] });
+  a.raised = Math.max(1, a.raised - b.raised);
+  a.soldiers -= men;
+  for (const x of moving) {
+    const n = round(x.men);
+    if (x.source === 'levy') {
+      a.levyMen = Math.max(0, (a.levyMen ?? 0) - n);
+      b.levyMen += n;
+      const sum = Object.values(x.places ?? { [x.from]: n }).reduce((v, k) => v + k, 0) || 1;
+      for (const [id, k] of Object.entries(x.places ?? (x.from ? { [x.from]: n } : {}))) {
+        const part = round((n * k) / sum);
+        if (a.levy?.[id]) a.levy[id] = Math.max(0, a.levy[id] - part);
+        b.levy[id] = (b.levy[id] ?? 0) + part;
+      }
+    } else if (x.source === 'retinue') {
+      a.retinueMen = Math.max(0, (a.retinueMen ?? 0) - n);
+      b.retinueMen += n;
+    } else if (x.source === 'mercenary') {
+      const m = (a.mercs ?? []).find((y) => y.id === x.merc);
+      if (m && !b.mercs.some((y) => y.id === m.id)) b.mercs.push(m);
+      if (!a.bands.some((y) => y.merc === x.merc)) a.mercs = (a.mercs ?? []).filter((y) => y.id !== x.merc);
+    } else if (x.source === 'standing') {
+      const u = (a.units ?? []).find((y) => y.id === x.company);
+      if (u) {
+        b.units.push(u);
+        a.units = a.units.filter((y) => y !== u);
+      }
+      const c = state.forces?.companies.find((y) => y.id === x.company);
+      if (c) c.army = b.id;
+    }
+  }
+  say(state, `${b.name} marches apart from ${a.name}: ${round(men)} men in ${moving.length} ${moving.length === 1 ? 'company' : 'companies'}${marshal ? `, under ${W(world).marshals[marshal].name}` : ''}.`);
+  return b;
+}
+
+// No two armies of a side share a name: a second raised at the same town
+// is "The second army of ..." (M23 C, so a join or a split reads clearly).
+const ORDINALS = ['second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
+function uniqueName(state, side, name) {
+  const taken = new Set(state.armies.filter((x) => x.side === side).map((x) => x.name));
+  if (!taken.has(name)) return name;
+  for (const o of ORDINALS) {
+    const n = /^The army of /.test(name) ? name.replace(/^The army of /, `The ${o} army of `) : `${name}, the ${o}`;
+    if (!taken.has(n)) return n;
+  }
+  return `${name} (${state.nextArmyId})`;
 }
 
 export function newArmy(state, world, side, at, soldiers, levy, extra = {}) {
   const a = {
-    id: state.nextArmyId++, side, name: extra.name ?? `The army of ${sideName(world, side)}`,
+    id: state.nextArmyId++, side, name: uniqueName(state, side, extra.name ?? `The army of ${sideName(world, side)}`),
     soldiers, raised: soldiers, morale: 80, levy, companies: extra.companies ?? 0, marshal: extra.marshal ?? null,
     stance: extra.stance ?? 'cautious', order: extra.order ?? 'defend', target: extra.target ?? at, home: at,
     at, to: null, along: 0, path: [], dest: at, speed: 0, siege: null, raiding: null, raidTarget: null, raids: 0,
@@ -386,6 +466,11 @@ export function canOrder(state, world, a, order, target) {
     if (!roadPath(world, a.to ?? a.at, target, true)) return { ok: false, reason: 'No road leads there.' };
   } else if (order === 'raid') {
     if (!hostile(state, TEMERIA, target)) return { ok: false, reason: 'We are not at war with them.' };
+  } else if (order === 'join') {
+    // March to join another of the crown's armies, and become one with it (M23 C).
+    const b = state.armies.find((x) => x.id === Number(target));
+    if (!b || b === a || b.side !== TEMERIA) return { ok: false, reason: 'Choose another of the crown\'s armies.' };
+    if (!roadPath(world, a.to ?? a.at, b.to ?? b.at, true) && (b.to ?? b.at) !== (a.to ?? a.at)) return { ok: false, reason: 'No road leads there.' };
   } else return { ok: false, reason: 'Unknown order.' };
   return { ok: true };
 }
@@ -402,7 +487,9 @@ export function orderArmy(state, world, a, order, target, stance) {
     defend: () => `${a.name} is to hold ${world.byId[target].name}.`,
     siege: () => `${a.name} marches to besiege ${world.byId[target].name}.`,
     raid: () => `${a.name} rides into ${sideName(world, target)} to burn and plunder.`,
+    join: () => `${a.name} marches to join ${state.armies.find((x) => x.id === Number(target))?.name ?? 'the army'}.`,
   };
+  if (order === 'join') a.target = Number(target);
   say(state, words[order]());
 }
 
@@ -488,6 +575,34 @@ export function placeDefence(state, world, id, withWalls = true) {
 
 // ---- The day ----
 
+// An army marching to join another becomes one with it once both stand in
+// the same place, under the marshal of the army it joined (or its own, if
+// that army had none).
+function joins(state, world) {
+  for (const a of [...state.armies]) {
+    if (a.order !== 'join' || !state.armies.includes(a)) continue;
+    const b = state.armies.find((x) => x.id === a.target);
+    if (!b || a.to || b.to || a.at !== b.at || a.battle || b.battle) continue;
+    b.order = b.order === 'join' ? 'defend' : b.order;
+    mergeArmies(state, world, a, b, b.marshal ?? a.marshal);
+  }
+}
+
+// How many days until an army reaches where it is going, at today's pace.
+export function daysToArrive(state, world, a) {
+  if (!a.to && !a.path?.length) return 0;
+  const w = W(world);
+  const speed = w.speed * (w.seasonSpeed[seasonOf(state.day)] ?? 1);
+  let left = a.to ? Math.max(0, dist(world.byId[a.at], world.byId[a.to]) - a.along) : 0;
+  let prev = a.to ?? a.at;
+  for (const id of a.path ?? []) {
+    if (id === prev) continue;
+    left += dist(world.byId[prev], world.byId[id]);
+    prev = id;
+  }
+  return Math.max(1, Math.ceil(left / speed));
+}
+
 export function stepArmiesDay(state, world, rng) {
   if (!state.armies?.length) return;
   const w = W(world);
@@ -498,6 +613,7 @@ export function stepArmiesDay(state, world, rng) {
     if (a.siege || a.raiding || a.battle || (a.gatherUntil ?? 0) > state.day) { a.speed = 0; continue; }
     move(world, a, speed);
   }
+  joins(state, world);
   battles(state, world, rng);
   if (battlesOn(world)) stepBattlesDay(state, world, rng);
   for (const a of [...state.armies]) if (state.armies.includes(a) && !a.battle) siegeOrRaid(state, world, rng, a);
@@ -577,6 +693,16 @@ function thinkCrown(state, world, a) {
     const near = nearestEnemy(state, world, a, pos.x, pos.y, 60);
     if (near && ratio(state, world, a, near.army) >= st.engageAt) return chase(world, a, near.army);
     return routeTo(world, a, a.target);
+  }
+  if (a.order === 'join') {
+    const b = state.armies.find((x) => x.id === a.target && x.side === TEMERIA);
+    if (!b) {
+      a.order = 'defend';
+      a.target = ownerOf(state, world, a.at) === TEMERIA ? a.at : refuge(state, world, a);
+      return routeTo(world, a, a.target);
+    }
+    // Make for where it stands, or where it is going.
+    return routeTo(world, a, b.to ? b.dest ?? b.to : b.at);
   }
   if (a.order === 'raid') {
     if (!hostile(state, TEMERIA, a.target) || a.raids >= w.raid.count) {
@@ -991,6 +1117,7 @@ export function describeArmy(state, world, a) {
   else if (a.raiding) doing = `plundering ${world.byId[a.at].name}`;
   else if (a.order === 'siege' && a.target) doing = `marching on ${world.byId[a.target].name}`;
   else if (a.order === 'raid') doing = `raiding ${sideName(world, a.target)}`;
+  else if (a.order === 'join') doing = `marching to join ${state.armies.find((x) => x.id === a.target)?.name ?? 'another army'}`;
   else if (a.order === 'defend' && a.target) doing = a.at === a.target && !a.to ? `holding ${world.byId[a.target].name}` : `making for ${world.byId[a.target].name}`;
   else doing = 'awaiting orders';
   return `${a.name}, ${round(a.soldiers)} men, ${doing}, ${where}`;

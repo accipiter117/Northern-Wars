@@ -3,6 +3,7 @@
 // garrisons, and fires, raids, sickness and fairs come and go. What the
 // crown hears of it depends on its embassies, spies and friends.
 import { creditLimit } from './economy.js';
+import { sendFigure, courtOf } from './figures.js';
 import { addDispatch, clamp } from './realm.js';
 import { ownerOf, leviedMap, besieged } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
@@ -361,5 +362,7 @@ export function sendSpy(state, world, rng, rid) {
     return;
   }
   state.spies[rid] = state.day + c.days;
+  // His road there, on the map (M23 C).
+  sendFigure(state, world, { kind: 'spy', from: world.kingdom.capital, to: courtOf(world, rid), about: `a season's watch on ${name}` });
   say(state, `An agent is in place in ${name}. For a season we shall know what happens there.`);
 }

@@ -3,7 +3,7 @@
 // company or army: its orders. A threat: send the nearest suitable company.
 // Anything foreign: what is known of it. Open land: what is here.
 import {
-  TEMERIA, describeArmy, describeUnit, describeWitcher, groundAt, threatLevel, routeEndOk, bestCompanyFor, sideName, ownerOf, threatPos,
+  TEMERIA, describeArmy, describeUnit, describeWitcher, groundAt, threatLevel, routeEndOk, bestCompanyFor, sideName, ownerOf, threatPos, describeFigure, daysToArrive, hostile,
 } from '../sim/index.js';
 import { pointInPolygon } from '../sim/geometry.js';
 import { escapeHtml, number, describeLevel } from './format.js';
@@ -58,6 +58,19 @@ export function whatsHere(world, state, x, y) {
   return { title: 'What’s here', lines };
 }
 
+const capital = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// An army of ours in a few lines (M23 C): men and companies, its marshal,
+// its spirit, what it is doing, and how long until it gets there.
+function armyDetailsHtml(state, world, a) {
+  const marshal = a.marshal ? world.war.marshals[a.marshal]?.name : null;
+  const n = a.bands?.length ?? 0;
+  const days = daysToArrive(state, world, a);
+  const foraging = !a.to && hostile(state, TEMERIA, ownerOf(state, world, a.at));
+  return `<p data-part="army-details">${number(Math.round(a.soldiers))} men in ${n} ${n === 1 ? 'company' : 'companies'}${marshal ? `, under ${escapeHtml(marshal)}` : ', with no marshal'}. Spirit ${Math.round(a.morale)}.</p>
+    <p>${escapeHtml(capital(describeArmy(state, world, a).split(', ').slice(2).join(', ')))}${days ? `; arrives in ${days} ${days === 1 ? 'day' : 'days'}` : ''}.${foraging ? ' Its foragers are out stripping the land.' : ''}</p>`;
+}
+
 // Build the answer to a long press at canvas point (x, y). `ctx` carries
 // what the map needs: the renderer's pick, navigation and orders.
 export function longPress(app, ctx, x, y) {
@@ -103,10 +116,11 @@ export function longPress(app, ctx, x, y) {
     const a = state.armies.find((v) => v.id === hit.army);
     if (!a) return null;
     if (a.side === TEMERIA) {
-      return ctx.ring(x, y, a.name, [
-        { label: 'Hold', icon: 'castle', run: () => app.startPick({ kind: 'hold', army: a.id }) },
-        { label: 'Besiege', icon: 'target', run: () => app.startPick({ kind: 'siege', army: a.id }) },
-        { label: 'Open card', icon: 'sword', run: () => app.nav.push(`army:${a.id}`) },
+      // Its details at a glance (M23 C), with the orders a touch away.
+      return ctx.peek(page.x, page.y, escapeHtml(a.name), armyDetailsHtml(state, world, a), [
+        { label: 'Open card', run: () => app.nav.push(`army:${a.id}`) },
+        { label: 'Hold', run: () => app.startPick({ kind: 'hold', army: a.id }) },
+        { label: 'Besiege', run: () => app.startPick({ kind: 'siege', army: a.id }) },
       ]);
     }
     return ctx.peek(page.x, page.y, escapeHtml(a.name), `<p>${escapeHtml(describeArmy(state, world, a))}.</p><p class="sub">${escapeHtml(sideName(world, a.side))}.</p>`);
@@ -134,6 +148,10 @@ export function longPress(app, ctx, x, y) {
   if (hit?.distant) {
     const t = world.distantTowns.find((v) => v.id === hit.distant);
     if (t) return ctx.peek(page.x, page.y, escapeHtml(t.name), `<p>A ${t.type} of ${escapeHtml(world.lands[t.land]?.name ?? t.land)}, beyond the realms the crown deals with. Our maps show where it stands; no more.</p>`);
+  }
+  if (hit?.figure) {
+    const f = state.figures.find((v) => v.id === hit.figure);
+    if (f) return ctx.peek(page.x, page.y, 'On the road', `<p data-part="what-unit">${escapeHtml(describeFigure(state, world, f))}</p>`);
   }
   if (hit?.witcher !== undefined) {
     const c = state.threats.contracts.find((v) => v.threat === hit.witcher);
