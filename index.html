@@ -66,6 +66,16 @@
 
   <div id="hint" class="hint" role="note" hidden></div>
   <div id="toast" class="toast" role="status" hidden></div>
+  <div id="undo" class="toast undo" role="status" hidden><span id="undo-text"></span><button type="button" id="undo-go" class="act small"><span class="act-label">Undo</span></button></div>
+  <div id="dialog" class="dialog-veil" hidden>
+    <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialog-text">
+      <p id="dialog-text"></p>
+      <div class="dialog-actions">
+        <button type="button" id="dialog-no" class="act"><span class="act-label">Cancel</span></button>
+        <button type="button" id="dialog-yes" class="act danger"><span class="act-label">Yes</span></button>
+      </div>
+    </div>
+  </div>
   <div id="peek" class="peek" role="dialog" hidden></div>
   <div id="audience" class="audience" role="dialog" aria-modal="true" aria-label="An audience" hidden></div>
   <div id="update" class="update" role="status" hidden>A new version is ready. <button type="button" id="update-restart">Restart</button></div>

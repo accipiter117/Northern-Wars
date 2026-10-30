@@ -40,7 +40,7 @@ async function open(save, query = '?paused&nohints', vp = { width: 390, height: 
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  page.on('dialog', (d) => d.accept());
+  page.on('dialog', (d) => { errors.push(`browser dialog: ${d.message()}`); d.dismiss(); });
   if (save) await page.addInitScript((sv) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('northern-wars.save', sv); sessionStorage.setItem('seeded', '1'); } }, save);
   await page.goto(`${base}${query}`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);

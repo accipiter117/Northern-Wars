@@ -155,7 +155,7 @@ export function companyCard(app, id) {
       ${routes ? `<div class="form-row"><span>Escort a route</span><div class="chips">${routes}</div></div>` : ''}
     </div>
     ${section(memory, route, 'hunt', 'Hunt something sighted', hunts || armies ? `<div class="build-list">${hunts}${armies}</div>` : '', { open: true })}
-    <div data-part="disband"><button type="button" class="act danger" data-disband-company ${orderAttr({ type: 'company', id, disband: true }, 'Stand this company down? Its men go home.')} data-then="back"><span class="act-label">Stand the company down</span></button></div>`;
+    <div data-part="disband"><button type="button" class="act danger" data-disband-company ${orderAttr({ type: 'company', id, disband: true }, 'Stand this company down? Its men go home, and a company once gone must be raised anew.', { final: true })} data-then="back"><span class="act-label">Stand the company down</span></button></div>`;
   return `
     ${cardHead({
       status: `<span>${escapeHtml(describeCompany(state, world, c).replace(`${c.name}, `, ''))}.${target ? ` Odds against its quarry: ${huntOdds(state, world, [c], target).word}.` : ''}</span>`,

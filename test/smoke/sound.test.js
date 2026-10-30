@@ -26,7 +26,7 @@ async function open(prefs = null) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  page.on('dialog', (d) => d.accept());
+  page.on('dialog', (d) => { errors.push(`browser dialog: ${d.message()}`); d.dismiss(); });
   if (prefs) await page.addInitScript((p) => localStorage.setItem('northern-wars.prefs', p), JSON.stringify(prefs));
   await page.goto(`${base}?seed=7&fresh&paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);

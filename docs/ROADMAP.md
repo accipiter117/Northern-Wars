@@ -24,6 +24,14 @@
 | M20 One map, a kingdom already built | The crown no longer builds: every place starts with the works its land gives it (spaces from the traced geography), works wear and break and are rebuilt, patched or left; labour through the seasons with fuel, royal calls and a Labour screen; one map with two levels (the kingdom up close, a board of the North far off) and three orders a month on the board | Done |
 | M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | Done |
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | In progress (A, B and C done, D) |
+| M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | In progress (A) |
+
+## M23 acceptance criteria
+Part A, in-app dialogs:
+- One dialog in the game's style (src/ui/dialog.js) that returns a promise; no confirm, alert or prompt anywhere in src.
+- Reversible orders happen at once with an Undo in their notice; Undo restores the realm exactly.
+- A dialog only for what cannot be undone: stand down a company, disband an army, accept terms of peace, abandon the reign.
+- A test fails if confirm(, alert( or prompt( appears in src; the browser tests fail on any browser dialog; the dialog fits 360x640.
 
 ## M22 acceptance criteria
 Part A, battery and performance:

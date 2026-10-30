@@ -53,7 +53,11 @@ export function button(label, attrs, { cls = 'act', disabled = false, sub = '' }
   return `<button type="button" class="${cls}" ${attrs}${disabled ? ' disabled' : ''}><span class="act-label">${label}</span>${sub ? `<span class="act-sub">${sub}</span>` : ''}</button>`;
 }
 
-// An action carried as JSON in the button, applied through the rules.
-export function orderAttr(action, confirmText = '') {
-  return `data-order='${escapeHtml(JSON.stringify(action))}'${confirmText ? ` data-confirm="${escapeHtml(confirmText)}"` : ''}`;
+// An action carried as JSON in the button, applied through the rules. With
+// a line of text, the order is weighty: it happens at once and its notice
+// offers Undo for a few seconds (data-undo). Only what cannot be taken back
+// (`final`) asks first, in the game's own dialog (data-confirm) (M23 A).
+export function orderAttr(action, text = '', { final = false } = {}) {
+  const extra = text ? ` ${final ? 'data-confirm' : 'data-undo'}="${escapeHtml(text)}"` : '';
+  return `data-order='${escapeHtml(JSON.stringify(action))}'${extra}`;
 }

@@ -11,7 +11,7 @@ import { form } from './memory.js';
 import { RAISE_DEFAULTS } from './war.js';
 
 // What each kind of pick wants, how to describe a candidate and what to do
-// on confirm. `accept` returns null when the tap is no use for this pick,
+// on confirm (`done`). `accept` returns null when the tap is no use for this pick,
 // or { ok, text, detail } to show in the banner.
 function kinds(app) {
   const { world } = app;
@@ -38,7 +38,7 @@ function kinds(app) {
         }
         return null;
       },
-      confirm(p, hit) { app.order({ type: 'company', id: p.company, order: hit.threat ? { kind: 'hunt', threat: hit.threat } : { kind: 'hunt', army: hit.army } }); },
+      done(p, hit) { app.order({ type: 'company', id: p.company, order: hit.threat ? { kind: 'hunt', threat: hit.threat } : { kind: 'hunt', army: hit.army } }); },
     },
     station: {
       prompt: 'Tap a town of ours on the map to station the company there',
@@ -48,7 +48,7 @@ function kinds(app) {
         if (!s || s.occupier) return { ok: false, text: name(hit.settlement), detail: 'Not ours to station men in.' };
         return { ok: true, text: `Station at ${name(hit.settlement)}`, detail: 'Holds it, and rides out to nothing.' };
       },
-      confirm(p, hit) { app.order({ type: 'company', id: p.company, order: { kind: 'station', place: hit.settlement } }); },
+      done(p, hit) { app.order({ type: 'company', id: p.company, order: { kind: 'station', place: hit.settlement } }); },
     },
     patrol: {
       prompt: 'Tap the first town of the road to patrol',
@@ -61,7 +61,7 @@ function kinds(app) {
         return { ok: true, text: `Patrol ${name(p.from)} to ${name(hit.settlement)}`, detail: 'Rides the road between them, back and forth.' };
       },
       next(p, hit) { return { ...p, from: hit.settlement, prompt: `From ${name(hit.settlement)}: now tap where the patrol rides to` }; },
-      confirm(p, hit) { app.order({ type: 'company', id: p.company, order: { kind: 'patrol', from: p.from, to: hit.settlement } }); },
+      done(p, hit) { app.order({ type: 'company', id: p.company, order: { kind: 'patrol', from: p.from, to: hit.settlement } }); },
     },
     route: {
       prompt: 'Tap a town or city to trade with',
@@ -78,7 +78,7 @@ function kinds(app) {
         const pv = routePreview(app, p.from, to);
         return { ok: pv.check.ok, text: `${name(p.from)} to ${name(to)}`, detail: pv.check.ok ? `${pv.estimate} Opening costs ${number(pv.check.cost)}.` : pv.check.reason };
       },
-      confirm(p, hit) {
+      done(p, hit) {
         const f = routeForm(app);
         f.to = hit.settlement ?? hit.foreign;
         app.order({ type: 'route', from: p.from, to: f.to });
@@ -91,7 +91,7 @@ function kinds(app) {
         if (!routeEnds(world, app.state).ours.includes(hit.settlement)) return { ok: false, text: name(hit.settlement), detail: 'Not a market of ours that can run a route.' };
         return { ok: true, text: `Trade from ${name(hit.settlement)}`, detail: 'Then pick where to.' };
       },
-      confirm(p, hit) {
+      done(p, hit) {
         const f = routeForm(app);
         f.from = hit.settlement;
         if (f.to === f.from) f.to = null;
@@ -104,7 +104,7 @@ function kinds(app) {
         if (!musterPlaces(world, app.state).includes(hit.settlement)) return { ok: false, text: name(hit.settlement), detail: 'Armies muster only at our towns, cities and castles.' };
         return { ok: true, text: `Muster at ${name(hit.settlement)}`, detail: 'The levies gather there.' };
       },
-      confirm(p, hit) { form(app.memory, 'raise', RAISE_DEFAULTS).muster = hit.settlement; },
+      done(p, hit) { form(app.memory, 'raise', RAISE_DEFAULTS).muster = hit.settlement; },
     },
     hold: {
       prompt: 'Tap a place of ours for the army to hold',
@@ -115,7 +115,7 @@ function kinds(app) {
         if (!placesHeldBy(app.state, world, TEMERIA).includes(hit.settlement)) return { ok: false, text: name(hit.settlement), detail: 'Not ours to hold. Besiege it instead.' };
         return { ok: true, text: `Hold ${name(hit.settlement)}`, detail: 'Marches there and meets any enemy that comes near.' };
       },
-      confirm(p, hit) { app.order({ type: 'army', army: p.army, order: 'defend', target: hit.settlement }); },
+      done(p, hit) { app.order({ type: 'army', army: p.army, order: 'defend', target: hit.settlement }); },
     },
     siege: {
       prompt: 'Tap an enemy town or castle to besiege',
@@ -130,7 +130,7 @@ function kinds(app) {
         const garrison = app.foreignView(id)?.garrison;
         return { ok: true, text: `Besiege ${name(id)}`, detail: `Held by ${sideName(world, owner)}. ${seen ? (garrison ? `About ${number(garrison)} soldiers inside against our ${number(a.soldiers)}.` : `Our ${number(a.soldiers)} men march on it.`) : 'Unscouted: we know nothing of its walls.'}` };
       },
-      confirm(p, hit) { app.order({ type: 'army', army: p.army, order: 'siege', target: hit.settlement ?? hit.foreign }); },
+      done(p, hit) { app.order({ type: 'army', army: p.army, order: 'siege', target: hit.settlement ?? hit.foreign }); },
     },
   };
 }
@@ -188,21 +188,21 @@ export function createPick(app, { onStart, onEnd }) {
     return true;
   }
 
-  function confirm() {
+  function settle() {
     if (!active?.choice?.ok) return;
     const { kind, params, hit } = active;
     end();
-    kind.confirm(params, hit);
+    kind.done(params, hit);
     app.afterPick();
   }
 
   bar.addEventListener('click', (e) => {
-    if (e.target.closest('[data-pick-confirm]')) confirm();
+    if (e.target.closest('[data-pick-confirm]')) settle();
     else if (e.target.closest('[data-pick-cancel]')) { end(); app.afterPick(); }
   });
 
   return {
-    start, end, tap, confirm,
+    start, end, tap, confirm: settle,
     get active() { return !!active; },
     get wants() { return active?.kind.wants ?? []; },
   };

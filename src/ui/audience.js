@@ -119,8 +119,8 @@ export function createAudience(app) {
   }
 
   // After an order: the ruler's answer, if the rules gave one, as their line.
-  function doOrder(action) {
-    const ok = app.order(action);
+  function doOrder(action, undo = '') {
+    const ok = undo ? app.orderWithUndo(action, undo) : app.order(action);
     const note = app.takeNote?.();
     if (note) cur.line = note;
     else if (ok) cur.line = null;
@@ -194,9 +194,8 @@ export function createAudience(app) {
       return render();
     }
     if (d.order) {
-      if (d.confirm && !confirm(d.confirm)) return;
       const action = JSON.parse(d.order);
-      doOrder(action);
+      doOrder(action, d.undo);
       // A declaration ends the audience: the envoys go home.
       if (action.type === 'declare' && hostile(state(), TEMERIA, cur.pid)) cur.line = `${rulerShort(world(), cur.pid)} sends our envoy home. It is war.`;
       return render();

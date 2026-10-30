@@ -1,5 +1,9 @@
 # Changelog
 
+## M23 A Questions and Undo
+- No more browser pop-ups. Weighty orders such as declaring war, breaking a treaty or taking a loan happen at once, and their notice carries an Undo button for a few seconds.
+- Only what cannot be taken back asks first, in the game's own dialog: standing a company or an army down, accepting terms of peace and abandoning the reign. Cancel is the safe default; Escape or a tap outside cancels too.
+
 ## M22 D Three meters
 - Authority and Stability are gone. The top bar now shows Treasury, Granary, Trust in the Crown, Unrest and Dread, all five fitting a phone held upright.
 - Tap any meter to see why it moved: three to five plain reasons, biggest first.

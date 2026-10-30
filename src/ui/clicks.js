@@ -3,14 +3,16 @@
 //   data-go="route"          open a card on top of the current screen
 //   data-tab-go="tab:sub"    jump to a tab and one of its sub-tabs
 //   data-sub / data-tsub     switch a tab's or a town card's sub-tab
-//   data-order='{...}'       an order through the rules (data-confirm asks
-//                            first; data-then says where to go after)
+//   data-order='{...}'       an order through the rules (data-undo offers
+//                            Undo after it; data-confirm asks first, for what
+//                            cannot be undone; data-then says where to go)
 //   data-expand="key"        open or fold a row in place
 //   data-form + data-set     set a remembered form field ("key:value")
 //   data-form + data-field   a typed field, kept as it is typed
 //   data-pick-start='{...}'  start picking a target on the map
 //   data-info                show or hide a card's longer text
 import { setOpen, form, isOpen } from './memory.js';
+import { ask } from './dialog.js';
 
 const parse = (v) => (v === 'true' ? true : v === 'false' ? false : v !== '' && !Number.isNaN(Number(v)) ? Number(v) : v);
 
@@ -50,10 +52,15 @@ export function attachPanelInput(app) {
     }
     const ord = at('[data-order]');
     if (ord) {
-      if (ord.dataset.confirm && !confirm(ord.dataset.confirm)) return;
       const action = JSON.parse(ord.dataset.order);
-      const ok = app.order(action);
-      if (ok) after(action, ord.dataset.then);
+      const go = () => {
+        const ok = ord.dataset.undo ? app.orderWithUndo(action, ord.dataset.undo) : app.order(action);
+        if (ok) after(action, ord.dataset.then);
+      };
+      // What cannot be taken back asks first, in the game's own dialog.
+      if (ord.dataset.confirm) {
+        ask(ord.dataset.confirm, { yes: ord.querySelector('.act-label, .build-name')?.textContent.trim() || 'Yes' }).then((yes) => { if (yes) go(); });
+      } else go();
       return;
     }
     const exp = at('[data-expand]');

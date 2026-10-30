@@ -20,6 +20,7 @@ import { longPress } from './ui/longpress.js';
 import { createAudience } from './ui/audience.js';
 import { stopBrowserGestures, instantPress, createHaptics, createWakeLock, registerWorker } from './ui/native.js';
 import { createAudio } from './ui/audio.js';
+import { ask, attachDialog } from './ui/dialog.js';
 
 const MAX_DAYS_PER_FRAME = 8;
 const params = new URLSearchParams(location.search);
@@ -89,6 +90,7 @@ async function boot() {
     samples: [],
     acked: () => acked,
     order,
+    orderWithUndo,
     persist: () => saveMemory(memory),
     foreignView,
     looseThreats,
@@ -141,6 +143,7 @@ async function boot() {
   app.nav = nav;
   const audience = createAudience(app);
   attachPanelInput(app);
+  attachDialog();
   const pick = createPick(app, {
     onStart: () => {
       hideUnitLabel();
@@ -152,6 +155,8 @@ async function boot() {
   // ---- Notices ----
 
   let toastTimer = 0;
+  // How long a weighty order's notice offers Undo.
+  const UNDO_MS = 6000;
   function toast(text) {
     toastEl.textContent = text;
     toastEl.hidden = false;
@@ -296,6 +301,7 @@ async function boot() {
   }
 
   function replaceState(next, message) {
+    dropUndo();
     audience.close();
     state = next;
     frac = 0;
@@ -321,6 +327,7 @@ async function boot() {
   // The answer a ruler gave to the last order, for the audience to show.
   let lastNote = null;
   function order(action) {
+    dropUndo();
     const out = applyAction(state, world, action);
     if (out.error) {
       audio.play('knock');
@@ -344,6 +351,49 @@ async function boot() {
     audience?.render();
     return true;
   }
+
+  // A weighty order that can be taken back (M23 A): it happens at once, and
+  // its notice offers Undo for a few seconds, until a day passes or another
+  // order is given. Undo puts the realm back exactly as it was.
+  const undoEl = document.getElementById('undo');
+  let undoable = null;
+  let undoTimer = 0;
+  function dropUndo() {
+    undoable = null;
+    clearTimeout(undoTimer);
+    undoEl.hidden = true;
+  }
+  function orderWithUndo(action) {
+    const prev = state;
+    if (!order(action)) return false;
+    // The same words the order's own notice would have said, with Undo.
+    toastEl.hidden = true;
+    clearTimeout(toastTimer);
+    undoable = { prev, day: prev.day };
+    const said = lastNote ?? (state.chronicle.length > prev.chronicle.length ? state.chronicle.at(-1).text : 'Done.');
+    document.getElementById('undo-text').textContent = said;
+    undoEl.hidden = false;
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(dropUndo, UNDO_MS);
+    return true;
+  }
+  function undo() {
+    if (!undoable) return;
+    const { prev } = undoable;
+    dropUndo();
+    state = prev;
+    audio.play('knock');
+    topbar.update(state);
+    renderer.invalidate();
+    nav.refresh();
+    updateBadges();
+    updateUrgent();
+    decisionsSeen = new Set(decisionKeys());
+    audience?.render();
+    toast('Undone.');
+    wakeFrame();
+  }
+  document.getElementById('undo-go').addEventListener('click', undo);
 
   // Laws and peace are sealed; war is declared with a horn; everything else
   // lands with a wooden thunk, and coin clinks when the treasury moves.
@@ -513,10 +563,11 @@ async function boot() {
       downloadText(`northern-wars-${world.kingdom.id}-${d.year}-${String(d.month).padStart(2, '0')}.json`, serialize(state));
     } else if (action === 'import') document.getElementById('import-file').click();
     else if (action === 'new') {
-      if (confirm('Abandon this reign and start anew? Unsaved progress will be lost.')) {
+      ask('Abandon this reign and start anew? Unsaved progress will be lost.', { yes: 'Abandon it' }).then((yes) => {
+        if (!yes) return;
         replaceState(createState(world, freshSeed()), 'A new reign begins.');
         save(true);
-      }
+      });
     }
   }
 
@@ -767,6 +818,7 @@ async function boot() {
         frac -= days;
         const month = dateOf(state.day).month;
         state = step(state, days, world);
+        if (undoable) dropUndo();
         if (dateOf(state.day).month !== month) save(true);
         uiDue += 1;
         if (newSightings()) setSpeed(0);

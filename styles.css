@@ -312,6 +312,30 @@ details.sec .count { font-family: system-ui, sans-serif; font-size: 12px; backgr
   pointer-events: none;
 }
 .toast[hidden] { display: none; }
+/* An order that can be taken back: its notice carries Undo for a few
+   seconds, and that button takes taps (M23 A). */
+.toast.undo { pointer-events: auto; display: flex; align-items: center; gap: 12px; padding: 6px 8px 6px 16px; }
+.toast.undo[hidden] { display: none; }
+.toast.undo .act { min-height: 44px; min-width: 64px; flex: none; }
+
+/* The game's own dialog, kept for what cannot be undone (M23 A). Anchored
+   near the top, as fixed modals sit best in iOS Safari. */
+.dialog-veil {
+  position: fixed; inset: 0; z-index: 60; background: rgba(10, 7, 4, 0.62);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: calc(var(--safe-t, 0px) + 18vh) 16px 16px;
+}
+.dialog-veil[hidden] { display: none; }
+.dialog {
+  width: min(380px, 100%); background: var(--panel-2); border: 1px solid var(--gold); border-radius: 12px;
+  padding: 18px 16px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); animation: dialog-in 140ms ease-out;
+}
+.dialog p { margin: 0 0 16px; font-size: 17px; line-height: 1.45; }
+.dialog-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.dialog-actions .act { min-height: 44px; flex: 1; justify-content: center; }
+.dialog-actions .act[hidden] { display: none; }
+@keyframes dialog-in { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dialog { animation: none; } }
 
 /* Landscape phones and wider screens: a one-row top bar, the tabs down the
    left side and the panel down the right, leaving the map between. */
