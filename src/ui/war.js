@@ -48,7 +48,7 @@ function warRowHtml(world, state, war) {
       const [name, blurb] = TERMS[term.key];
       const price = term.lump ? ` We pay ${number(term.lump)} crowns.` : term.monthly ? ` They pay ${term.monthly} crowns a month.` : '';
       const verdict = !t.ready ? `Too soon: no one makes peace in the first ${world.war.peace.minMonths} months.` : term.accept ? 'They would accept.' : 'They would refuse.';
-      return `<button type="button" class="build" data-peace="${war.id}:${term.key}" ${orderAttr({ type: 'peace', war: war.id, terms: term.key }, 'Make peace on these terms?')} ${term.accept ? '' : 'disabled'}>
+      return `<button type="button" class="build" data-peace="${war.id}:${term.key}" ${orderAttr({ type: 'peace', war: war.id, terms: term.key }, 'Make peace on these terms? A peace once sealed cannot be unsaid.', { final: true })} ${term.accept ? '' : 'disabled'}>
         <span class="build-name">${name}</span><span class="build-blurb">${blurb}${price}</span><span class="build-cost">${verdict}</span></button>`;
     }).join('');
   }
@@ -201,7 +201,7 @@ export function armyCard(app, id) {
       <div class="chips">${Object.entries(w.stances).map(([sid, s]) => `<button type="button" class="chip${a.stance === sid ? ' on' : ''}" data-stance="${sid}" ${orderAttr({ type: 'army', army: id, order: a.order, target: a.target, stance: sid })} aria-pressed="${a.stance === sid}">${s.name}</button>`).join(' ')}</div>
       <p class="sub">${escapeHtml(w.stances[a.stance].blurb)}</p></div>
     ${companiesHtml(app, a)}
-    <div data-part="disband"><button type="button" class="act danger" data-disband ${orderAttr({ type: 'disband', army: id }, `Stand down ${a.name}?`)} data-then="back"><span class="act-label">Stand the army down</span><span class="act-sub">The levies go home to their garrisons; the companies are paid off.</span></button></div>
+    <div data-part="disband"><button type="button" class="act danger" data-disband ${orderAttr({ type: 'disband', army: id }, `Stand down ${a.name}? Its men go home and the army is gone.`, { final: true })} data-then="back"><span class="act-label">Stand the army down</span><span class="act-sub">The levies go home to their garrisons; the companies are paid off.</span></button></div>
   `;
 }
 

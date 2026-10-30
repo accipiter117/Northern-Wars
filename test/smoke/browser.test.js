@@ -31,7 +31,7 @@ for (const vp of VIEWPORTS) {
     const errors = [];
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     page.on('pageerror', (e) => errors.push(e.message));
-    page.on('dialog', (d) => d.accept());
+    page.on('dialog', (d) => { errors.push(`browser dialog: ${d.message()}`); d.dismiss(); });
 
     await page.goto(`${base}?seed=1262&fresh&nohints`);
     await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
@@ -279,7 +279,7 @@ test('great houses, rebellion and deposition', async () => {
   const errors = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('dialog', (d) => d.accept());
+  page.on('dialog', (d) => { errors.push(`browser dialog: ${d.message()}`); d.dismiss(); });
   await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
   await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
@@ -454,7 +454,7 @@ test('foreign realms under the fog of war', async () => {
   const errors = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('dialog', (d) => d.accept());
+  page.on('dialog', (d) => { errors.push(`browser dialog: ${d.message()}`); d.dismiss(); });
   await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
   await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
@@ -495,7 +495,7 @@ test('war: declare, raise an army, send it to besiege, and see an invasion on th
   const errors = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('dialog', (d) => d.accept());
+  page.on('dialog', (d) => { errors.push(`browser dialog: ${d.message()}`); d.dismiss(); });
   await page.goto(`${base}?seed=1262&fresh&paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
 
@@ -606,7 +606,7 @@ test('trade deals and gold from the Trade screen and the town cards', async () =
   const errors = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('dialog', (d) => d.accept());
+  page.on('dialog', (d) => { errors.push(`browser dialog: ${d.message()}`); d.dismiss(); });
   await page.addInitScript((save) => localStorage.setItem('northern-wars.save', save), serialize(s));
   await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);

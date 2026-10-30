@@ -600,6 +600,12 @@ Rebuilt in M14 around one rule: the player never loses their place.
 - Put away or closed, the game saves and pauses, and stays paused on return. Help has settings for vibration (short ticks for long presses, orders and alerts, on Android; iOS has none) and for keeping the screen awake while the realm runs.
 - The layout uses the dynamic viewport height, so the sheet and tab bar do not jump as the browser's bars come and go. The map canvas is drawn at no more than two device pixels per CSS pixel, and while paused with nothing moving it is not redrawn at all.
 
+### Questions and Undo (M23 A)
+The browser's own confirm, alert and prompt are gone: they look foreign, freeze the page and sit badly on a phone. Instead (src/ui/dialog.js):
+- A weighty order that can be taken back (declaring war, breaking a treaty, an ultimatum, a loan, a spy, a fine, granting or stripping land, storming or lifting a siege, sounding the retreat, ending a trade or a route, resettling a town, paying off a claimant) happens at once. Its notice says what happened and carries an Undo button for six seconds, until a day passes or another order is given. Undo puts the realm back exactly as it was before the order.
+- Only what cannot be taken back asks first, in the game's own dialog: standing a company down, standing an army down, accepting terms of peace and abandoning the reign. The dialog sits near the top of the screen, names the act on its confirm button, and focuses Cancel, so a stray tap or Enter never confirms; Escape or a tap outside cancels.
+- A test fails if anything in src calls confirm(, alert( or prompt(, and every browser test fails if a browser dialog appears.
+
 ### Battery (M22 A)
 - Frames on demand: a frame is asked for only when something needs drawing (the realm stepping, the camera moving or gliding, a tap or key, the panel changing, layers still filling in, or something on screen that moves of itself). Paused with nothing moving, no frames are asked for at all until the next event.
 - Paused with travellers in sight, the map draws a gentle 8 frames a second (each traveller stirs a little on the spot); with smoke, battles or sieges in sight, 15. Running, it draws at most 30 a second, full rate only while the camera moves.
