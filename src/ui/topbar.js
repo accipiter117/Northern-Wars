@@ -1,5 +1,5 @@
 import {
-  formatDate, seasonOf, SEASON_NAMES, realmStock, foodNeed, foodYield, foodCapacity, pressureLine, dateOf, MONTHS, ORDERS_A_MONTH, ledgerNet,
+  formatDate, seasonOf, SEASON_NAMES, realmStock, foodNeed, foodYield, foodCapacity, pressureLine, dateOf, MONTHS, ORDERS_A_MONTH, ledgerNet, authority,
 } from '../sim/index.js';
 import { number } from './format.js';
 import { icon } from './icons.js';
@@ -12,10 +12,12 @@ import { icon } from './icons.js';
 
 // The meters' row, in order: key, name, icon, which way is good, and the
 // line past which it shows red.
+// M24 B: Love, Fear, Authority (worked out from the two) and Unrest.
 export const TOP_METERS = [
-  { key: 'trust', name: 'Trust in the Crown', icon: 'crown', good: 'up', bad: 30 },
+  { key: 'love', name: 'Love', icon: 'heart', good: 'up', bad: 25 },
+  { key: 'fear', name: 'Fear', icon: 'gallows', good: 'up', bad: 10 },
+  { key: 'authority', name: 'Authority', icon: 'sceptre', good: 'up', bad: 35, split: true },
   { key: 'unrest', name: 'Unrest', icon: 'flame', good: 'down', bad: 60 },
-  { key: 'dread', name: 'Dread', icon: 'moon', good: 'down', bad: 60 },
 ];
 
 // Numbers short enough for a phone held upright: 6,678; 29.2k; 104k.
@@ -45,7 +47,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
   // The meters' row is built from TOP_METERS.
   const row = $('meters');
   row.innerHTML = TOP_METERS.map((m) => `<button type="button" class="meter" data-go="meter:${m.key}" data-name="${m.name}" aria-label="${m.name}">
-    <span class="m-ico">${icon(m.icon)}</span><span class="m-val" id="m-${m.key}">0</span><span class="m-bar"><i id="m-${m.key}-bar"></i></span></button>`).join('');
+    <span class="m-ico">${icon(m.icon)}</span><span class="m-val" id="m-${m.key}">0</span><span class="m-bar"><i id="m-${m.key}-bar"></i>${m.split ? `<i id="m-${m.key}-bar2" class="lesser"></i>` : ''}</span></button>`).join('');
   for (const g of document.querySelectorAll('.goods .g-ico')) g.innerHTML = icon(g.dataset.icon);
   el.pressure?.addEventListener('click', () => onPressure?.(board));
   // The kingdom view or the board of the North (M20 D).
@@ -108,7 +110,8 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
       // The hands' split too, so a new setting refreshes the pressure strip
       // (and its seasonal prompt) at once (M23 B).
       const split = state.labour ? Object.values(state.labour.split).join(',') : '';
-      const meterKey = TOP_METERS.map((m) => Math.round(state[m.key] ?? 0)).join(',');
+      const valueOf = (key) => (key === 'authority' ? authority(state, world) : state[key] ?? 0);
+      const meterKey = TOP_METERS.map((m) => Math.round(valueOf(m.key))).join(',');
       const key = `${state.day}|${state.treasury}|${Math.round(food)}|${meterKey}|${board}|${orders}|${split}|${net}`;
       if (key === last) return;
       last = key;
@@ -158,7 +161,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
         el.cloth.classList.toggle('low', cloth !== null && cloth < 0);
       }
       for (const m of TOP_METERS) {
-        const v = Math.round(state[m.key] ?? 0);
+        const v = Math.round(valueOf(m.key));
         const val = $(`m-${m.key}`);
         if (!val) continue;
         val.textContent = v;
@@ -166,8 +169,23 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
         val.classList.toggle('low', bad);
         const bar = $(`m-${m.key}-bar`);
         if (bar) {
-          bar.style.width = `${Math.max(0, Math.min(100, v))}%`;
-          bar.classList.toggle('bad', bad);
+          // Authority's bar is split: the part from the greater of Love and
+          // Fear, then the quarter of the lesser, each in its own colour.
+          if (m.split) {
+            const loveLeads = (state.love ?? 0) >= (state.fear ?? 0);
+            const major = Math.min(100, Math.max(state.love ?? 0, state.fear ?? 0));
+            const minor = Math.max(0, Math.min(100 - major, v - major));
+            bar.style.width = `${major}%`;
+            bar.className = loveLeads ? 'love' : 'fear';
+            const bar2 = $(`m-${m.key}-bar2`);
+            if (bar2) {
+              bar2.style.width = `${minor}%`;
+              bar2.className = `lesser ${loveLeads ? 'fear' : 'love'}`;
+            }
+          } else {
+            bar.style.width = `${Math.max(0, Math.min(100, v))}%`;
+            bar.classList.toggle('bad', bad);
+          }
         }
       }
     },

@@ -88,7 +88,7 @@ export function decisionHtml(d, { compact = false } = {}) {
   let text = d.text ?? '';
   if (d.kind === 'deposition') {
     text = 'The great houses met at Vizima and agreed, for once, on one thing. A regency council already holds the crown.';
-    choices = `<button type="button" data-regency><b>Continue under a regency</b><br><small>The realm stays as it is. The council restores some of the folk's Trust.</small></button>
+    choices = `<button type="button" data-regency><b>Continue under a regency</b><br><small>The realm stays as it is. The council restores some of the folk's Love.</small></button>
       <button type="button" class="danger" data-new-reign><b>Start a new reign</b><br><small>A fresh Temeria.</small></button>
       <button type="button" data-go="deposition">The reign in full</button>`;
   } else {

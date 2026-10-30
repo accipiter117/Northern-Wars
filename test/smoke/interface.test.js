@@ -102,8 +102,8 @@ test('the tap targets, counted from the map', async () => {
   const t = tapper(page);
 
   // See why a meter changed: one tap.
-  await t.tap('.meter[data-go="meter:trust"]');
-  assert.match(await page.textContent('#sheet-title'), /Trust in the Crown/);
+  await t.tap('.meter[data-go="meter:love"]');
+  assert.match(await page.textContent('#sheet-title'), /Love/);
   assert.match(await page.textContent('#sheet-body'), /Last month/);
   assert.equal(t.count, 1, 'meter: taps');
   await page.screenshot({ path: join(OUT, 'm14-meter.png') });

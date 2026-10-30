@@ -177,7 +177,7 @@ export function resolveEvent(state, world, eventId, choice, ignored = false, rng
   const fx = c.effects;
   const s = state.settlements[pending.place];
   if (fx.treasury) state.treasury += fx.treasury;
-  if (fx.trust) nudge(state, world, 'trust', fx.trust, 'Answers to the realm');
+  if (fx.love) nudge(state, world, 'love', fx.love, 'Answers to the realm');
   for (const [g, v] of Object.entries(fx.opinion ?? {})) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
   if (fx.unrest) s.unrest = clamp(s.unrest + fx.unrest, 0, 100);
   if (fx.prosperity) s.prosperity = clamp(s.prosperity + fx.prosperity, 0, 100);

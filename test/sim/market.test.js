@@ -129,7 +129,7 @@ test('each estate pays as the Treasury says under its setting, and heavier taxes
   assert.equal(world.laws.laws.tax_towns.category, 'taxes');
 });
 
-test('a loan comes at once and is repaid with interest; a missed payment costs more and costs Trust', () => {
+test('a loan comes at once and is repaid with interest; a missed payment costs more and costs Love', () => {
   let s = run(quiet(createState(world, 6)), 62);
   const t0 = s.treasury;
   s = act(s, { type: 'loan', sum: 5000 });
@@ -146,13 +146,13 @@ test('a loan comes at once and is repaid with interest; a missed payment costs m
   assert.equal(last(s).income.borrowed, 5000);
   // An empty treasury misses the next payment.
   s.treasury = -20000;
-  const auth = s.trust;
+  const auth = s.love;
   const owed = owedOnLoans(s);
   s = toMonth(s);
   assert.equal(s.loans[0].missed, 1);
   assert.ok(s.loans[0].rate > c.rate);
   assert.ok(owedOnLoans(s) > owed, 'the bank adds the missed payment and more');
-  assert.ok(s.trust < auth + 1);
+  assert.ok(s.love < auth + 1);
   assert.ok(s.chronicle.some((d) => /misses a payment/.test(d.text)));
 });
 

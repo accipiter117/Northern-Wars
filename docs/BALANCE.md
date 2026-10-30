@@ -12,7 +12,20 @@ From `node tools/longrun.mjs 30 <crown> 1,2,3`, averaged over three seeds and ro
 | Spendthrift | As the steward, audiences included, but borrows to the bankers' limit to build faster, and recruits only once out of debt | about 42,600 (70,200), a quarter of its towns lost for good in two of three seeds | at the limit or close to it (152,400) | about 661 (435) | about 12 (3) | 3 to 8 (1 to 3) |
 | Tyrant | Heavy taxes, lords taxed and fined yearly, martial law, the Fire, expulsion, a frugal court; no companies; no audiences | about 24,500 (47,900), 14 to 16 towns lost for good | at the limit (13,800) | about 792 (1,140) | about 11 (1) | 7 to 8 (9 to 11) |
 
-### Three meters (M22 D)
+### Love, Fear and Authority (M24 B)
+From `node tools/longrun.mjs 10 <crown> 1` and a month-by-month trace of the steward, seed 1, rounded down.
+
+| Crown | Love | Fear | Authority | Unrest | What drives it |
+| --- | --- | --- | --- | --- | --- |
+| Steward | 46 after year 1 (decrees cost it), then 65, 72, 78, 84, 86, 88 and 96 in year 8 | 0 to 7 | follows Love | 15 to 21 | A feast each winter (Love 6) and a royal progress each summer (Love 8 over its five towns), full granaries, threats cleared, repairs. In year 9 it picks a war and loses: towns lost (25), hunger (21), the declaration (17) drop Love to 24, and it ends year 10 at 19. |
+| Tyrant | 0 from year 2 | 94 | 94 | 38 | Hangings in the angriest town whenever the rope is free, gibbets every three months, the king's riders, expulsion, hostages twice a year. It keeps its Authority and its taxes, and pays for it in people (32,800 from 54,240) and twenty risings. |
+| Idle | 0 | 9 | 9 | 46 | Nothing renews Fear and nothing wins Love; raids left unanswered and ruined works wear it away. |
+
+- Love settles very slowly toward 30 (1.2% of the gap a month), so a crown that stops tending it keeps most of it for a year.
+- Fear fades by 12% a month: the tyrant's renewed punishments hold it in the nineties; a crown that hangs once and stops is back near nothing within a year.
+- A feared but unloved crown gathers its taxes in full; one neither loved nor feared gathers 60 to 75% of them (the test checks that a feared crown's month of taxes is a fifth more than a weak one's).
+
+### Three meters (M22 D, replaced by M24 B)
 From `node tools/longrun.mjs 10 <crown> 1,2` and a month-by-month trace of each crown, seeds 1 to 3, rounded down. Numbers in data/meters.json.
 
 | Crown | Trust | Unrest | Dread | What drives it |

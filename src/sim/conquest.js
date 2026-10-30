@@ -7,7 +7,7 @@
 // that never take to their new crown rise; rulers driven from their thrones
 // plot from exile; and every town taken makes the North more afraid.
 // Foreign rulers follow the same rules by their own tempers.
-import { nudge, standing } from './meters.js';
+import { nudge, authority, fearCollapse, canRiot } from './meters.js';
 import { windfall } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
@@ -311,7 +311,7 @@ export function conquestDecisionText(state, world, d) {
   const r = cq(state).revolts.find((x) => x.id === d.revolt);
   return {
     kicker: 'A rising', title: `${name} rises against the crown`,
-    text: `${r ? r.rebels : 'Many'} of its people have taken up arms${r?.claimant ? `, in the name of their exiled ruler` : ''}. We can crush them, or treat with them: lighter taxes and a charter for their people would end it, at a cost to the folk's Trust.`,
+    text: `${r ? r.rebels : 'Many'} of its people have taken up arms${r?.claimant ? `, in the name of their exiled ruler` : ''}. We can crush them, or treat with them: lighter taxes and a charter for their people would end it, at a cost to the crown's Love and the fear it is held in.`,
     choices: [`Crush them (${crushOddsWord(state, world, d.town, r)})`, 'Treat with them'],
   };
 }
@@ -512,7 +512,8 @@ function monthlyRevolts(state, world, rng) {
     if (s.integration === undefined || s.occupier || d.revolts.some((r) => r.town === id)) continue;
     if (s.integration >= rv.integrationBelow || s.unrest <= rv.unrestAbove) continue;
     const cl = (state.claimants ?? []).find((c) => c.realm === s.origin);
-    if (!rng.chance(rv.chance * (cl ? rv.claimantBoost : 1))) continue;
+    // A strong crown, loved or feared, makes a troubled town think twice (M24 B).
+    if (!rng.chance(rv.chance * (cl ? rv.claimantBoost : 1) * (canRiot(state, world) ? 1 : 0.4))) continue;
     rise(state, world, rng, id, s.origin, TEMERIA, !!cl);
   }
   // Conquered towns abroad rise against their foreign masters too.
@@ -624,6 +625,8 @@ function crush(state, world, r) {
       s.population.human = Math.max(0, s.population.human - Math.round(r.rebels * 0.6));
       s.garrison = Math.max(s.garrison, Math.round(r.rebels * 0.3));
     }
+    // Crushing a revolt is a lesson the whole realm learns (M24 B).
+    nudge(state, world, 'fear', 8, 'A revolt crushed');
     say(state, `The rising at ${name} is crushed. The ringleaders hang in the square; the town is quiet, and sullen.`);
   } else {
     if (s) s.garrison = Math.round(s.garrison * 0.5);
@@ -641,7 +644,9 @@ function negotiate(state, world, r) {
     s.charter = state.day + rv.charterYears * 365;
     s.unrest = clamp(s.unrest - 20, 0, 100);
   }
-  nudge(state, world, 'trust', rv.negotiateTrust, 'Terms made with rebels');
+  nudge(state, world, 'love', rv.negotiateTrust, 'Terms made with rebels');
+  // Rebels who win terms have shown the crown can be defied.
+  fearCollapse(state, world, world.meters?.fear.revoltWon ?? 0, 'A revolt that won its terms');
   say(state, `The crown treats with the rebels of ${world.byId[r.town].name}: lighter taxes and a charter for their people. They lay down their arms. The lords mutter that the crown has bent.`);
 }
 
@@ -862,7 +867,7 @@ export function leagueAllies(state, victim) {
 function monthlyDefection(state, world, rng) {
   const df = C(world).defection;
   for (const [hid, h] of Object.entries(state.houses ?? {})) {
-    if (h.rebel || h.defected || h.loyalty >= df.loyaltyBelow || standing(state, world) >= df.standingBelow) continue;
+    if (h.rebel || h.defected || h.loyalty >= df.loyaltyBelow || authority(state, world) >= df.standingBelow) continue;
     const lands = Object.keys(state.settlements).filter((id) => state.settlements[id].holder === hid && !state.settlements[id].occupier);
     if (!lands.length || lands.includes(world.kingdom.capital)) continue;
     // A neighbour courting them: near their lands, and hostile to the crown.

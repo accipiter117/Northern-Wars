@@ -795,6 +795,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     if (b >= 0.99) return;
     ctx.globalAlpha = 1 - b;
     drawLifeLayer(state, frac);
+    drawCrownMarks(state);
     if (b < 0.3) drawPips(state);
     if (selectedId) {
       const st = world.byId[selectedId];
@@ -933,7 +934,8 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const type = world.byId[id].type;
       const s = state.settlements[id];
       if ((type === 'city' || type === 'town') && s && !s.occupier) {
-        const fear = (state.dread ?? 0) > 60 ? 0.4 : 1;
+        // Fewer abroad in the streets when the realm is in uproar (M24 B).
+        const fear = (state.unrest ?? 0) > 60 ? 0.4 : 1;
         const cold = seasonLook(dateOf(state.day).month).snow ? 0.6 : 1;
         l.folk = Math.round(Math.min(12, totalPopulation(s) / 1500) * fear * cold);
       }
@@ -944,6 +946,53 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // At most this many figures at the works on screen at once; half under
   // Battery saver. Only drawn zoomed in far enough to see them.
   const LIFE_CAP = 240;
+  // The crown's hand on the map (M24 B), only close up: gibbets at the
+  // crossroads round a town and heads over its gate while Fear is high and
+  // fed by punishment; bunting and banners round Vizima during a feast and
+  // round the town the king's progress has just reached. Static marks, so a
+  // paused map asks for no frames.
+  function drawCrownMarks(state) {
+    const m = state.meters;
+    if (!m || zoomRel() < 1.4) return;
+    const size = 12 * Math.max(0.9, Math.min(1.8, Math.sqrt(zoomRel())));
+    const reach = (id) => Math.max(iconSize(world.byId[id].type) / 2 + 10, (footprint[id] ?? 0) * 0.95 + 6);
+    const feared = (state.fear ?? 0) >= 40;
+    for (const [id, until] of Object.entries(m.gibbets ?? {})) {
+      if (until <= state.day || !world.byId[id]) continue;
+      const st = world.byId[id];
+      const p = toScreen(cam, st.x, st.y);
+      if (p.x < -80 || p.y < -80 || p.x > cam.viewW + 80 || p.y > cam.viewH + 80) continue;
+      // Out along its first roads, at the crossroads.
+      for (const e of (world.adjacency[id] ?? []).slice(0, 3)) {
+        const q = world.byId[e.to];
+        if (!q) continue;
+        const a = Math.atan2(q.y - st.y, q.x - st.x);
+        const r = reach(id) + size;
+        getSprite('mark', 'gibbet').draw(ctx, p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, size);
+      }
+    }
+    if (feared) {
+      for (const [id, until] of Object.entries(m.hanged ?? {})) {
+        if (until <= state.day || !world.byId[id]) continue;
+        const st = world.byId[id];
+        const p = toScreen(cam, st.x, st.y);
+        if (p.x < -80 || p.y < -80 || p.x > cam.viewW + 80 || p.y > cam.viewH + 80) continue;
+        getSprite('mark', 'heads').draw(ctx, p.x, p.y - reach(id) + 2, size * 0.9);
+      }
+    }
+    const festive = [];
+    if ((m.feastUntil ?? 0) > state.day) festive.push(world.kingdom.capital);
+    const at = m.progress?.visited?.at(-1);
+    if (at) festive.push(at);
+    for (const id of festive) {
+      const st = world.byId[id];
+      if (!st) continue;
+      const p = toScreen(cam, st.x, st.y);
+      if (p.x < -120 || p.y < -120 || p.x > cam.viewW + 120 || p.y > cam.viewH + 120) continue;
+      getSprite('mark', 'bunting').draw(ctx, p.x, p.y - reach(id) * 0.6, reach(id) * 1.6, { colours: sideColours(world, TEMERIA) });
+    }
+  }
+
   function drawLifeLayer(state, frac) {
     if (cam.scale < layoutCfg.zoom.life) return;
     const look = seasonLook(dateOf(state.day).month);

@@ -3,8 +3,8 @@
 // drifts with the lords' mood, the crown's Standing, the laws a house cares
 // about, favours granted and grievances nursed. Disloyal houses make their
 // lands restless; a house pushed too far rebels. A crown that loses both its
-// Trust and its order for half a year is deposed.
-import { nudge, standing } from './meters.js';
+// Authority and its order for half a year is deposed.
+import { nudge, authority, fearCollapse } from './meters.js';
 import { sendFigure } from './figures.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
@@ -51,7 +51,7 @@ export function loyaltyTarget(state, world, houseId) {
   const h = state.houses[houseId];
   let t = c.houses[houseId].loyalty;
   t += (state.opinion.nobles - 50) * c.nobleOpinionWeight;
-  t += (standing(state, world) - 50) * c.standingWeight;
+  t += (authority(state, world) - 50) * c.standingWeight;
   t += h.favour - h.grievance;
   if (h.office) t += c.officeLoyalty;
   for (const tr of traitsOf(world, houseId)) {
@@ -180,7 +180,7 @@ export function resolveDemand(state, world, demandId, choice, ignored = false) {
   if (o.grievance) h.grievance += o.grievance * proud;
   if (o.ambition) h.ambition = clamp(h.ambition + o.ambition, 0, 100);
   if (o.treasury) state.treasury += o.treasury;
-  if (o.trust) nudge(state, world, 'trust', o.trust, 'Answers to the great houses');
+  if (o.love) nudge(state, world, 'love', o.love, 'Answers to the great houses');
   if (o.exempt) h.exemptUntil = state.day + o.exempt;
   if (o.office) h.office = true;
   if (o.grant && pending.target && state.settlements[pending.target].holder === 'crown') state.settlements[pending.target].holder = pending.house;
@@ -208,7 +208,7 @@ export function canHouseAction(state, world, houseId, kind, settlementId) {
   if (!h || !a) return { ok: false, reason: 'Unknown.' };
   if (h.rebel && kind !== 'honours') return { ok: false, reason: 'The house is in rebellion.' };
   const last = h.lastAction[kind];
-  if (['honours', 'summon', 'levies', 'fine'].includes(kind) && last !== undefined && state.day - last < c.cooldownDays) {
+  if (['honours', 'summon', 'levies', 'fine', 'hostages'].includes(kind) && last !== undefined && state.day - last < c.cooldownDays) {
     return { ok: false, reason: `Too soon (${c.cooldownDays - (state.day - last)} days).` };
   }
   // Acting against a house angers the realm (M22 D); not while it boils.
@@ -255,6 +255,14 @@ export function houseAction(state, world, houseId, kind, settlementId) {
     h.grievance += a.grievance;
     sendFigure(state, world, { kind: 'lord', from: def.seat, to: world.kingdom.capital, name: def.lord, about: `bringing ${raised} men at the crown's demand` });
     say(state, `${def.name} sends ${raised} men to Vizima at the crown's demand, with poor grace.`);
+  } else if (kind === 'hostages') {
+    // A child of the house kept at court (M24 B): the lords fear the crown
+    // more, and resent it.
+    h.grievance += a.grievance;
+    h.ambition = clamp(h.ambition + a.ambition, 0, 100);
+    nudge(state, world, 'fear', a.fear, 'Hostages from the great houses');
+    sendFigure(state, world, { kind: 'lord', from: def.seat, to: world.kingdom.capital, name: `A child of ${def.name}`, about: 'a hostage for the house\'s good behaviour' });
+    say(state, `${def.name} sends a son to court as a hostage for its good behaviour. The other houses take note.`);
   } else if (kind === 'fine') {
     const fine = Math.max(a.min, Math.round(housePower(state, world, houseId).people * a.perPerson));
     state.treasury += fine;
@@ -302,7 +310,7 @@ function rebellions(state, world, rng) {
   for (const id of rebels) {
     const h = state.houses[id];
     h.rebel.months += 1;
-    nudge(state, world, 'trust', -r.trustPerMonth, 'A great house in rebellion');
+    nudge(state, world, 'love', -r.trustPerMonth, 'A great house in rebellion');
     if (h.loyalty > r.endsAbove) {
       h.rebel = null;
       say(state, `${name(id)} lays down its arms and sends hostages to Vizima. The rising is over.`);
@@ -320,7 +328,8 @@ function rebellions(state, world, rng) {
       Object.assign(h, { rebel: null, loyalty: 35, favour: 0, grievance: 0, ambition: 0, office: false });
       say(state, `The crown's soldiers break ${name(id)}. Its lands are forfeit, all but its seat, and its lord bends the knee.`);
     }
-    nudge(state, world, 'trust', 10, 'A rising crushed');
+    nudge(state, world, 'love', 4, 'A rising crushed');
+    nudge(state, world, 'fear', 12, 'A rising crushed');
   } else if (months >= r.concedeAfter) {
     for (const id of still) {
       const h = state.houses[id];
@@ -329,7 +338,8 @@ function rebellions(state, world, rng) {
       Object.assign(h, { rebel: null, favour: h.favour + 30, grievance: 0 });
       say(state, `Too weak to win, the crown makes terms with ${name(id)}${land ? ` and cedes ${world.byId[land].name}` : ''}.`);
     }
-    nudge(state, world, 'trust', -15, 'Terms made with rebels');
+    nudge(state, world, 'love', -8, 'Terms made with rebels');
+    fearCollapse(state, world, world.meters?.fear.revoltWon ?? 0, 'A rising that won its terms');
   }
 }
 
@@ -340,9 +350,9 @@ function deposition(state, world) {
   const rising = Object.values(state.houses).some((h) => h.rebel);
   // A bad month adds to the crisis; a good one only eases it, so a crown
   // cannot escape by scraping through one month in six.
-  // M22 D: very low Trust and very high Unrest together, month after month.
+  // M24 B: very low Authority and very high Unrest together, month after month.
   void rising;
-  if (state.trust < d.trustBelow && state.unrest > d.unrestAbove) state.crisisMonths += 1;
+  if (authority(state, world) < d.authorityBelow && state.unrest > d.unrestAbove) state.crisisMonths += 1;
   else state.crisisMonths = Math.max(0, state.crisisMonths - 1);
   if (state.crisisMonths === Math.ceil(d.months / 2)) {
     say(state, 'In the great halls the lords speak openly of a regency.');
@@ -351,7 +361,7 @@ function deposition(state, world) {
   const pop = Object.values(state.settlements).reduce((a, s) => a + totalPopulation(s), 0);
   const summary = { reign: state.reign.number, from: state.reign.since, to: state.day, popStart: state.reign.popStart, popEnd: pop, treasury: Math.round(state.treasury), decrees: state.reign.decrees, built: state.reign.built, riots: state.reign.riots, pogroms: state.reign.pogroms };
   state.depositions.push(summary);
-  state.trust = d.regencyTrust;
+  state.love = d.regencyLove;
   state.crisisMonths = 0;
   for (const h of Object.values(state.houses)) h.grievance /= 2;
   state.reign = { number: state.reign.number + 1, since: state.day, popStart: pop, decrees: 0, built: 0, riots: 0, pogroms: 0 };

@@ -28,11 +28,11 @@
     "endsAbove": 35
   },
   "deposition": {
-    "trustBelow": 20,
+    "authorityBelow": 20,
     "unrestAbove": 70,
     "months": 6,
-    "regencyTrust": 40,
-    "note": "Deposed after this many months of Trust below its line together with Unrest above its line (M22 D)."
+    "regencyLove": 40,
+    "note": "Deposed after this many months of Authority below its line together with Unrest above its line (M24 B)."
   },
   "actions": {
     "honours": {
@@ -58,6 +58,12 @@
     "grant": {
       "favour": 20,
       "ambition": -20
+    },
+    "hostages": {
+      "fear": 5,
+      "grievance": 15,
+      "ambition": -10,
+      "note": "M24 B: a son or daughter of the house kept at court against its good behaviour. The realm fears a crown that takes hostages from its lords."
     },
     "strip": {
       "unrest": 20,

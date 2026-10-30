@@ -5,7 +5,7 @@ import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
   strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks, canCall, winterOutlook, foodYield, foodNeed, foodCapacity,
-  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer, holdingsOf, canHouseAction,
+  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer, holdingsOf, canHouseAction, canAct,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -209,6 +209,12 @@ export function makeCrowns(world) {
     }
     if (month === 6 && canDecree(s, world, 'nonhumans', 'charter').ok) s = act(s, { type: 'law', law: 'nonhumans', option: 'charter' });
     s = keepThePeace(s, month);
+    // Win the people's love (M24 B): a feast in winter and a royal progress
+    // in summer, when the treasury can bear them.
+    if (world.meters?.acts) {
+      if (month % 12 === 0 && s.treasury > 3000 && canAct(s, world, 'feast').ok) s = act(s, { type: 'act', kind: 'feast' });
+      if (month % 12 === 6 && s.treasury > 4000 && canAct(s, world, 'progress').ok) s = act(s, { type: 'act', kind: 'progress' });
+    }
     // Keep the lords sweet.
     for (const id of Object.keys(s.houses)) {
       if (s.houses[id].loyalty < 35) s = act(s, { type: 'house', house: id, kind: 'honours' });
@@ -381,10 +387,25 @@ export function makeCrowns(world) {
     s = warPolicy(s, 'harsh');
     // The tyrant goes looking for plunder whenever its coffers allow.
     s = campaign(s, month, -8000);
-    const laws = [['tax_towns', 'heavy'], ['tax_peasants', 'heavy'], ['tax_nobles', 'heavy'], ['public_order', 'martial'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
+    const laws = [['tax_towns', 'heavy'], ['tax_peasants', 'heavy'], ['tax_nobles', 'heavy'], ['public_order', 'riders'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
     const [law, option] = laws[month % laws.length];
     s = act(s, { type: 'law', law, option });
     for (const id of Object.keys(s.houses)) if (month % 12 === 0) s = act(s, { type: 'house', house: id, kind: 'fine' });
+    // It rules by Fear (M24 B): the ringleaders in the angriest town hang,
+    // gibbets go up where the roads are worst, and a house sends a hostage.
+    if (world.meters?.acts) {
+      const live = Object.keys(s.settlements).filter((id) => !s.settlements[id].occupier);
+      const angry = live.sort((a, b) => s.settlements[b].unrest - s.settlements[a].unrest)[0];
+      if (angry && canAct(s, world, 'hang', angry).ok) s = act(s, { type: 'act', kind: 'hang', settlement: angry });
+      if (month % 3 === 1) {
+        const road = live.find((id) => canAct(s, world, 'gibbets', id).ok && ['city', 'town'].includes(world.byId[id].type));
+        if (road) s = act(s, { type: 'act', kind: 'gibbets', settlement: road });
+      }
+      if (month % 6 === 2) {
+        const hid = Object.keys(s.houses).find((id) => canHouseAction(s, world, id, 'hostages').ok);
+        if (hid) s = act(s, { type: 'house', house: hid, kind: 'hostages' });
+      }
+    }
     // Twice a year (M22 D) it strips a lord of a holding, whatever the
     // towns and the other houses think: the crown that runs high Unrest.
     if (month % 6 === 3) {

@@ -149,7 +149,7 @@ function loansHtml(app) {
       <button type="button" class="chip" data-pay-off="${l.id}" ${orderAttr({ type: 'payOff', id: l.id })} ${check.ok ? '' : 'disabled'} title="${escapeHtml(check.ok ? '' : check.reason)}">Pay off ${number(payOffCost(state, world, l.id))}</button></div>`;
   }).join('');
   return `<div data-part="loans"><h3>Loans from ${escapeHtml(c.lender)}</h3>
-    <p class="sub">Owed on loans: ${number(owed)} of the ${number(cap)} the bank allows (six months of income). A missed payment raises the rate and costs the folk's Trust.</p>
+    <p class="sub">Owed on loans: ${number(owed)} of the ${number(cap)} the bank allows (six months of income). A missed payment raises the rate and costs the folk's Love.</p>
     ${loans}<div class="actions">${offers}</div></div>`;
 }
 

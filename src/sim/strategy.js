@@ -5,7 +5,7 @@
 // it: the size of its standing army, what it builds, the war it chooses and
 // how it probes a neighbour too strong to attack. Works for any party with a
 // realm in data/realms.json and a ruler in data/diplomacy.json.
-import { standing } from './meters.js';
+import { authority } from './meters.js';
 import { addDispatch, clamp } from './realm.js';
 import { informed } from './realms.js';
 import { realmPotential, raiseRealmArmy, soldiersOf } from './war.js';
@@ -95,7 +95,7 @@ export function crownWeak(state, world) {
   const garrisons = Object.values(state.settlements).reduce((a, s) => a + s.garrison, 0);
   const stripped = levied > 0 && levied / Math.max(1, levied + garrisons) >= pb.strippedShare;
   // The strength of the reign as the rulers read it (M22 D: Standing).
-  const st = standing(state, world);
+  const st = authority(state, world);
   return { weak: st < pb.weakStanding || atWar(state, TEMERIA) || rebel || stripped, very: st < pb.weakStanding / pb.veryWeakFactor || (atWar(state, TEMERIA) && rebel), rebel, stripped };
 }
 

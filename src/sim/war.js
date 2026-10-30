@@ -2,7 +2,7 @@
 // invaded by a neighbour it has soured or that smells weakness, be called to
 // a friend's side, or watch its neighbours fight one another. Wars end in a
 // peace: towns handed back or kept, sometimes tribute, and a truce.
-import { nudge, standing } from './meters.js';
+import { nudge, authority } from './meters.js';
 import { realmCompanies } from './companies.js';
 import { windfall } from './economy.js';
 import { creditLimit } from './economy.js';
@@ -202,13 +202,13 @@ export function canDeclare(state, world, rid) {
   const truce = truceUntil(state, TEMERIA, rid);
   if (truce > state.day) return { ok: false, reason: `A truce holds for ${Math.ceil((truce - state.day) / 30)} more months.` };
   const cost = declareCost(state, world, rid);
-  if (state.trust < cost) return { ok: false, reason: `Needs ${cost} of the folk's Trust: they would not follow the crown to war.` };
+  if (authority(state, world) < cost) return { ok: false, reason: `Needs Authority of ${cost}: the realm would not follow the crown to war.` };
   return { ok: true, cost };
 }
 
 export function declareWar(state, world, rng, rid, { cost = declareCost(state, world, rid), cause = 'declared' } = {}) {
   const d = W(world).declare;
-  nudge(state, world, 'trust', -cost, 'War declared');
+  nudge(state, world, 'love', -Math.min(state.love, cost), 'War declared');
   const traits = (hid) => world.houses.houses[hid].traits;
   for (const hid of Object.keys(state.houses ?? {})) {
     if (traits(hid).includes('warlike')) state.houses[hid].favour += d.warlikeFavour;
@@ -218,7 +218,7 @@ export function declareWar(state, world, rng, rid, { cost = declareCost(state, w
   state.neighbours[rid].stance = 'cold';
   state.neighbours[rid].stanceSince = state.day;
   say(state, cost
-    ? `The crown declares war on ${sideName(world, rid)}. The folk ask what cause there is; ${cost} of their Trust is spent.`
+    ? `The crown declares war on ${sideName(world, rid)}. The folk ask what cause there is, and love the crown less for it.`
     : `The crown declares war on ${sideName(world, rid)} to win back what is ours.`);
   return startWar(state, world, rng, TEMERIA, rid, cause);
 }
@@ -261,7 +261,7 @@ export function warMonths(state) {
 // shrinks as Temeria looks strong or warm. Below zero, they are content.
 export function hostilityTo(state, world, rid) {
   const ai = W(world).ai;
-  const weak = standing(state, world) < ai.weakStanding || Object.values(state.houses ?? {}).some((h) => h.rebel);
+  const weak = authority(state, world) < ai.weakStanding || Object.values(state.houses ?? {}).some((h) => h.rebel);
   const rel = state.neighbours[rid].relation;
   const odds = clamp(realmPotential(state, world, rid) / Math.max(1, soldiersOf(state, world, TEMERIA) * 0.3), 0, 1.5);
   // Working gold mines whet the appetite of the greedy.
@@ -512,7 +512,7 @@ export function applyPeace(state, world, war, { towns, prize = null, tribute = n
   if (war.sides.flat().includes(TEMERIA)) {
     const me = sideIndex(war, TEMERIA);
     const gained = (towns === 'keep' ? heldValue(state, world, war, me) - heldValue(state, world, war, 1 - me) : 0) + (tribute?.to === TEMERIA ? 10 : 0) - (tribute?.from === TEMERIA || lump?.from === TEMERIA ? 10 : 0);
-    nudge(state, world, 'trust', Math.sign(gained) * 5, gained >= 0 ? 'A war ended well' : 'A war ended badly');
+    nudge(state, world, 'love', Math.sign(gained) * 5, gained >= 0 ? 'A war ended well' : 'A war ended badly');
     say(state, text);
   } else if (war.sides.flat().some((r) => informed(state, world, r))) abroad(state, text);
 }

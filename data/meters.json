@@ -1,30 +1,59 @@
 {
-  "note": "M22 D: three meters in place of Authority and Stability. Trust in the Crown (keep high): do the common folk believe the crown will keep them fed and safe. Unrest (keep low): the realm's figure for the towns' anger at the crown (their unrest underneath), with the great houses' grievances. Dread (keep low): fear of what lies beyond the walls. Each month the causes below move them; the biggest are shown as the reasons. Standing is worked out from the three, never shown: what the lords, the rulers abroad and the bankers read as the strength of the reign.",
-  "trust": {
-    "rest": 50,
-    "pull": 0.04,
+  "note": "M24 B: the crown's hold on the realm, as the kings of the North held it. Love (0 to 100): the people's affection for the crown; it builds slowly and lasts, and decays very slowly toward `rest`. Fear (0 to 100): the people's fear of the crown; it rises quickly with punishment, fades by `fade` of itself each month unless renewed, and collapses after a defeat on our soil, a revolt that succeeds or garrisons withdrawn. Authority is derived, never set: the higher of Love and Fear plus a quarter of the lower (authority.lowerShare). Unrest (anger at the crown) is the realm view of the towns' unrest and the lords' mood; 30 to 50 is the grumbling of a grim land and costs nothing.",
+  "love": {
+    "rest": 30,
+    "pull": 0.012,
     "hunger": 30,
     "cold": 12,
     "winterStores": 1.5,
     "winterStoresDays": 90,
-    "cleared": 1.5,
-    "raided": 1.2,
+    "cleared": 1.2,
+    "raided": 1.0,
     "raidedUnanswered": 0.6,
     "raidsCap": 3,
-    "brokenPromise": { "trust": 4, "unrest": 5 },
-    "repairs": 0.4,
+    "brokenPromise": { "love": 4, "unrest": 5 },
+    "repairs": 0.3,
     "ruined": 0.3,
-    "taxes": {
-      "light": 0.6,
-      "fair": 0,
-      "heavy": -0.8
-    },
+    "taxes": { "light": 0.6, "fair": 0, "heavy": -0.8 },
     "levies": 25,
-    "lowBelow": 30,
+    "lowBelow": 20,
     "lowDrift": 0.0005,
-    "lowOutput": 0.05,
-    "lowDesert": 0.06,
-    "lowAnger": 0.25
+    "lowAnger": 0.2
+  },
+  "fear": {
+    "fade": 0.12,
+    "lostBattle": 15,
+    "revoltWon": 20,
+    "garrisonCut": 3,
+    "collapseUnrest": 0.35,
+    "riseFrom": "punishments"
+  },
+  "authority": {
+    "lowerShare": 0.25,
+    "taxAt": 60,
+    "taxFloor": 0.6,
+    "levyAt": 50,
+    "levyFloor": 0.5,
+    "riotBelow": 45
+  },
+  "flavour": {
+    "lovedAbove": 55,
+    "volunteers": 0.25,
+    "siegeResolve": 0.15,
+    "loveCalm": 0.05,
+    "softFearBelow": 20,
+    "softGrievance": 0.6,
+    "fearedAbove": 55,
+    "fearCalm": 0.06,
+    "sabotageLoveBelow": 30,
+    "sabotage": 0.06
+  },
+  "acts": {
+    "note": "The crown's own acts (M24 B). hang: in a restless town, Fear and the town quiet, a little Love lost, the gibbet standing there for `days`. gibbets: at the crossroads round a town, Fear each month while they stand and the roads near it calmer. feast: feasts and tournaments at court. progress: the king tours his greatest towns for `days` days, away from court (no decrees meanwhile), Love and calm in each town he visits.",
+    "hang": { "fear": 6, "love": -2, "unrest": -8, "cooldown": 30, "days": 60 },
+    "gibbets": { "coin": 150, "fear": 4, "monthly": 1.5, "days": 120, "roads": 0.5 },
+    "feast": { "coin": 600, "love": 6, "nobles": 4, "cooldown": 180, "days": 10 },
+    "progress": { "coin": 800, "love": 1.5, "unrest": -8, "towns": 5, "days": 30, "cooldown": 240 }
   },
   "unrest": {
     "nobles": 0.35,
@@ -34,39 +63,19 @@
     "strike": 0.5,
     "strikeDays": 30,
     "turnAbove": 75,
-    "turnGrievance": 6
-  },
-  "dread": {
-    "start": 15,
-    "drift": 0.3,
-    "decay": 2,
-    "monster": 4,
-    "camp": 2.5,
+    "turnGrievance": 6,
+    "beast": 4,
+    "camp": 3,
     "near": 120,
-    "scoiatael": 6,
-    "plague": 8,
-    "enemyArmy": 10,
-    "sacked": 12,
-    "refugees": 3,
-    "cleared": 3,
-    "witcher": 4,
-    "patrol": 1.5,
-    "garrisonPer": 400,
-    "victory": 6,
-    "highAbove": 60,
+    "threatCap": 10,
     "flee": 0.004,
     "tradeCut": 0.25,
     "fire": 0.6,
-    "lowBelow": 25,
+    "calmBelow": 25,
     "tradeBoost": 0.1
   },
-  "standing": {
-    "trust": 0.5,
-    "calm": 0.3,
-    "courage": 0.2
-  },
   "deposition": {
-    "trustBelow": 20,
+    "authorityBelow": 20,
     "unrestAbove": 70
   }
 }

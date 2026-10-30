@@ -1,5 +1,5 @@
 {
-  "note": "Events in the realm that wait on the crown. {place} is filled in. Conditions: types, seasons, minThreat, minPeople, produces, needs (unpaid, plagueFree, noPlagueAnywhere), laws. Effects: treasury, trust (M22 D, was authority), opinion; for the place: unrest, prosperity and garrison (signed changes), food and people (fractions lost), clear (threat: days), plague (true starts it), quarantine (days), priestesses (true halves plague deaths there), nearbyFood (fraction lost in its village neighbours). The default is taken if the crown does not answer.",
+  "note": "Events in the realm that wait on the crown. {place} is filled in. Conditions: types, seasons, minThreat, minPeople, produces, needs (unpaid, plagueFree, noPlagueAnywhere), laws. Effects: treasury, love (M24 B, was trust), opinion; for the place: unrest, prosperity and garrison (signed changes), food and people (fractions lost), clear (threat: days), plague (true starts it), quarantine (days), priestesses (true halves plague deaths there), nearbyFood (fraction lost in its village neighbours). The default is taken if the crown does not answer.",
   "events": {
     "plague": {
       "title": "Plague",
@@ -164,7 +164,7 @@
             "clear": {
               "bandits": 180
             },
-            "trust": -3
+            "love": -3
           }
         },
         {
@@ -174,7 +174,7 @@
             "clear": {
               "bandits": 365
             },
-            "trust": 2
+            "love": 2
           }
         },
         {
@@ -198,14 +198,14 @@
         {
           "label": "Pardon them if they return",
           "effects": {
-            "trust": -3,
+            "love": -3,
             "garrison": 15
           }
         },
         {
           "label": "Hang those who are caught",
           "effects": {
-            "trust": 2,
+            "love": 2,
             "unrest": 4,
             "opinion": {
               "peasants": -2

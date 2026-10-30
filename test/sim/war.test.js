@@ -19,12 +19,12 @@ const quiet = (s) => {
   return s;
 };
 
-test('declaring war costs Trust without a cause, closes trade, and cannot be repeated', () => {
+test('declaring war costs Love without a cause, closes trade, and cannot be repeated', () => {
   let s = createState(world, 1);
-  const auth = s.trust;
+  const auth = s.love;
   assert.ok(foreignTrade(s, world).by.redania > 0);
   s = act(s, { type: 'declare', realm: 'redania' });
-  assert.ok(s.trust < auth);
+  assert.ok(s.love < auth);
   assert.equal(warsOf(s, 'temeria').length, 1);
   assert.equal(foreignTrade(s, world).by.redania, 0);
   assert.match(applyAction(s, world, { type: 'declare', realm: 'redania' }).error, /already at war/);
@@ -135,9 +135,9 @@ test('a weakly held crown is warned, then invaded by a soured neighbour', () => 
     s.diplomacy.treaties = s.diplomacy.treaties.filter((t) => !(t.a === 'temeria' || t.b === 'temeria'));
     for (let m = 0; m < 48; m++) {
       s.neighbours.redania.relation = Math.min(s.neighbours.redania.relation, -70);
-      // A weak crown: little Trust, much Dread, restless towns (M22 D).
-      s.trust = 5;
-      s.dread = 90;
+      // A weak crown: neither loved nor feared, restless towns (M24 B).
+      s.love = 5;
+      s.fear = 5;
       for (const x of Object.values(s.settlements)) { x.garrison = Math.min(x.garrison, 30); x.unrest = Math.max(x.unrest, 45); }
       s = run(s, 30);
       s.warDecisions = s.warDecisions.filter((d) => d.kind !== 'offer');

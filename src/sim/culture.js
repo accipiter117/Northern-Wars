@@ -5,6 +5,8 @@
 // go to the woods, and the woods start shooting back.
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
+// A strong crown, loved or feared, keeps a troubled town from rioting (M24 B).
+import { canRiot } from './meters.js';
 
 const say = (state, text) => addDispatch(state, text, 'faith');
 
@@ -82,7 +84,7 @@ export function monthlyCulture(state, world, rng) {
     const name = world.byId[id].name;
     if (s.tension > c.pogrom.above && rng.chance(c.pogrom.chance)) {
       pogrom(state, world, rng, id, s, name);
-    } else if (s.tension > c.riot.above && rng.chance(((s.tension - c.riot.above) / (100 - c.riot.above)) * c.riot.chance)) {
+    } else if (s.tension > c.riot.above && rng.chance(((s.tension - c.riot.above) / (100 - c.riot.above)) * c.riot.chance * (canRiot(state, world) ? 1 : 0.3))) {
       s.unrest = clamp(s.unrest + c.riot.unrest, 0, 100);
       s.prosperity = clamp(s.prosperity - c.riot.prosperity, 0, 100);
       s.troubled = c.riot.troubledDays;

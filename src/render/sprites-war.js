@@ -263,7 +263,7 @@ registerPlaceholder('unit', 'figure', (ctx, x, y, size, opts = {}) => {
   }
   getSprite('unit', 'patrol').draw(ctx, x, y, size, { facing: f, colours: [kind === 'courier' ? '#6b5a3a' : colours[0]] });
   const mx = x - f * r * 0.05;
-  if (kind === 'envoy' || kind === 'commander') {
+  if (kind === 'envoy' || kind === 'commander' || kind === 'progress') {
     ctx.beginPath();
     ctx.moveTo(mx, y - r * 0.3);
     ctx.lineTo(mx, y - r * 1.5);
@@ -275,7 +275,8 @@ registerPlaceholder('unit', 'figure', (ctx, x, y, size, opts = {}) => {
     ctx.lineTo(mx - f * r * 0.7, y - r * 1.35);
     ctx.lineTo(mx, y - r * 1.15);
     ctx.closePath();
-    ctx.fillStyle = kind === 'envoy' ? '#f4efe2' : colours[0];
+    // The king's progress flies gold.
+    ctx.fillStyle = kind === 'envoy' ? '#f4efe2' : kind === 'progress' ? '#d2ab5f' : colours[0];
     ctx.fill();
     ctx.lineWidth = 0.6;
     ctx.stroke();
@@ -290,5 +291,83 @@ registerPlaceholder('unit', 'figure', (ctx, x, y, size, opts = {}) => {
   } else if (kind === 'courier') {
     ctx.fillStyle = '#8a6a3a';
     ctx.fillRect(x - f * r * 0.45, y - r * 0.15, r * 0.3, r * 0.25);
+  }
+});
+
+// ---- The crown's hand on the map (M24 B) ----
+
+// A gibbet at a crossroads, its cage swinging.
+registerPlaceholder('mark', 'gibbet', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = Math.max(1, size * 0.09);
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.4, y + r);
+  ctx.lineTo(x - r * 0.4, y - r);
+  ctx.lineTo(x + r * 0.5, y - r);
+  ctx.moveTo(x - r * 0.4, y - r * 0.55);
+  ctx.lineTo(x - r * 0.05, y - r);
+  ctx.stroke();
+  ctx.lineWidth = Math.max(0.6, size * 0.05);
+  ctx.beginPath();
+  ctx.moveTo(x + r * 0.4, y - r);
+  ctx.lineTo(x + r * 0.4, y - r * 0.6);
+  ctx.stroke();
+  ctx.strokeRect(x + r * 0.22, y - r * 0.6, r * 0.36, r * 0.6);
+});
+
+// Heads on spikes over a town's gate.
+registerPlaceholder('mark', 'heads', (ctx, x, y, size) => {
+  const r = size / 2;
+  for (const dx of [-0.5, 0, 0.5]) {
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = Math.max(0.6, size * 0.06);
+    ctx.beginPath();
+    ctx.moveTo(x + dx * r, y + r * 0.6);
+    ctx.lineTo(x + dx * r, y - r * 0.4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + dx * r, y - r * 0.55, r * 0.17, 0, Math.PI * 2);
+    ctx.fillStyle = '#b89a7a';
+    ctx.fill();
+  }
+});
+
+// Bunting and banners round a town for a feast or the king's progress.
+registerPlaceholder('mark', 'bunting', (ctx, x, y, size, opts = {}) => {
+  const r = size / 2;
+  const [a, b] = opts.colours ?? ['#23365e', '#d2ab5f'];
+  ctx.strokeStyle = 'rgba(43, 33, 22, 0.6)';
+  ctx.lineWidth = Math.max(0.6, size * 0.02);
+  for (let k = 0; k < 2; k++) {
+    const y0 = y - r * (0.15 + k * 0.25);
+    ctx.beginPath();
+    ctx.moveTo(x - r, y0);
+    ctx.quadraticCurveTo(x, y0 + r * 0.3, x + r, y0);
+    ctx.stroke();
+    for (let i = 1; i < 8; i++) {
+      const t = i / 8;
+      const px = x - r + 2 * r * t;
+      const py = y0 + r * 0.3 * 2 * t * (1 - t) * 2 * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(px - r * 0.05, py);
+      ctx.lineTo(px + r * 0.05, py);
+      ctx.lineTo(px, py + r * 0.11);
+      ctx.closePath();
+      ctx.fillStyle = (i + k) % 2 ? a : b;
+      ctx.fill();
+    }
+  }
+  // Two tall banners at the sides.
+  for (const s of [-1, 1]) {
+    const bx = x + s * r * 1.05;
+    ctx.beginPath();
+    ctx.moveTo(bx, y + r * 0.2);
+    ctx.lineTo(bx, y - r * 0.8);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = Math.max(0.8, size * 0.025);
+    ctx.stroke();
+    ctx.fillStyle = a;
+    ctx.fillRect(bx, y - r * 0.8, s * r * 0.22, r * 0.45);
   }
 });

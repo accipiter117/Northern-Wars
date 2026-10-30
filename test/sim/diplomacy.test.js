@@ -148,7 +148,7 @@ test('breaking a treaty costs trust with that ruler and with every other', () =>
   assert.match(w.reason, /does not trust us after we broke our defensive pact/);
   // A war without a cause costs trust everywhere.
   const t = quiet(createState(world, 6));
-  t.trust = 100;
+  t.love = 100;
   const prior = trustIn(t, world, 'cintra', 'temeria');
   assert.ok(canDeclareWith(t, world, 'kaedwen', 'none').ok);
   assert.ok(!warReasons(t, world, 'kaedwen').find((r) => r.key === 'claim').ok);

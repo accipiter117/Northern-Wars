@@ -564,8 +564,6 @@ function witcherContracts(state, world, rng) {
         c.won = rng.chance(w.success);
         if (c.won) {
           destroyThreat(state, world, t);
-          // A witcher's trophy in the square eases the folk's fear (M22 D).
-          nudge(state, world, 'dread', -(world.meters?.dread.witcher ?? 0), 'Witchers at work');
           say(state, `The witcher came back from the wilds near ${world.byId[t.near].name} with a trophy and a bill. ${name}: dealt with.`);
         } else {
           say(state, `The witcher sent after ${name.toLowerCase()} near ${world.byId[t.near].name} has not come back.`);

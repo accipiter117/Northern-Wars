@@ -1,5 +1,5 @@
 {
-  "note": "Envoys from neighbouring realms. {ruler}, {realm} and {gateway} are filled in. Effects: relation, treasury, trust (M22 D, was authority), opinion (by group), settlers (people added to the gateway), losses (soldiers lost at the gateway). If ignored for envoyDefaultDays, the choice marked default is taken.",
+  "note": "Envoys from neighbouring realms. {ruler}, {realm} and {gateway} are filled in. Effects: relation, treasury, trust (M24 B: Love, was Trust), opinion (by group), settlers (people added to the gateway), losses (soldiers lost at the gateway). If ignored for envoyDefaultDays, the choice marked default is taken.",
   "envoys": {
     "trade_pact": {
       "title": "A trade pact", "weight": 3, "minRelation": 10, "needsTrade": true,
@@ -13,7 +13,7 @@
       "title": "A border dispute", "weight": 3,
       "text": "Surveyors from {realm} have planted stakes in the meadows beyond {gateway} and claim them for {ruler}.",
       "choices": [
-        { "label": "Cede the meadows", "effects": { "relation": 10, "trust": -5, "opinion": { "nobles": -5 } } },
+        { "label": "Cede the meadows", "effects": { "relation": 10, "love": -5, "opinion": { "nobles": -5 } } },
         { "label": "Pull up the stakes", "effects": { "relation": -15, "opinion": { "nobles": 4 } }, "default": true },
         { "label": "Buy them off", "effects": { "relation": 5, "treasury": -300 } }
       ]
@@ -30,7 +30,7 @@
       "title": "An offer of marriage", "weight": 1, "minRelation": 15, "excludes": ["brokilon", "mahakam"],
       "text": "{ruler} proposes a match between a child of {realm}'s royal house and a Temerian lord's heir. A dowry is expected.",
       "choices": [
-        { "label": "Accept the match", "effects": { "relation": 20, "trust": 3, "treasury": -200, "opinion": { "nobles": 3 } } },
+        { "label": "Accept the match", "effects": { "relation": 20, "love": 3, "treasury": -200, "opinion": { "nobles": 3 } } },
         { "label": "Decline the match", "effects": { "relation": -10 }, "default": true }
       ]
     },
@@ -46,8 +46,8 @@
       "title": "Smugglers", "weight": 2, "needsTrade": true,
       "text": "Carts from {realm} are slipping untaxed goods past the customs house at {gateway}. Their merchants say it was ever thus.",
       "choices": [
-        { "label": "Hang the ringleaders", "effects": { "relation": -5, "trust": 2, "opinion": { "burghers": -3 } } },
-        { "label": "Look the other way", "effects": { "trust": -3, "opinion": { "burghers": 3 } }, "default": true }
+        { "label": "Hang the ringleaders", "effects": { "relation": -5, "love": 2, "opinion": { "burghers": -3 } } },
+        { "label": "Look the other way", "effects": { "love": -3, "opinion": { "burghers": 3 } }, "default": true }
       ]
     },
     "dwarven_smiths": {
@@ -70,7 +70,7 @@
       "title": "A spy in Vizima", "weight": 2, "only": ["redania", "kaedwen"],
       "text": "The watch has taken a man in Vizima with letters for {ruler} sewn into his coat.",
       "choices": [
-        { "label": "Hang him", "effects": { "relation": -15, "trust": 4 } },
+        { "label": "Hang him", "effects": { "relation": -15, "love": 4 } },
         { "label": "Send him home for a ransom", "effects": { "relation": 5, "treasury": 150 }, "default": true }
       ]
     }

@@ -9,7 +9,7 @@ import { addDispatch, clamp } from './realm.js';
 import { informed } from './realms.js';
 import { foodNeed } from './economy.js';
 import { seasonOf } from './calendar.js';
-import { TEMERIA, placeOf, peopleAt, hasWalls, sideName, hostile, warBetween, sideIndex } from './conflict.js';
+import { TEMERIA, ownerOf, placeOf, peopleAt, hasWalls, sideName, hostile, warBetween, sideIndex } from './conflict.js';
 import { armyStrength, armyPosition, placeDefence, capture } from './armies.js';
 import { damagePlace, outside } from './works.js';
 
@@ -56,7 +56,10 @@ export function defenceNow(state, world, a) {
   const sg = a.siege;
   const base = placeDefence(state, world, a.at, false);
   const walls = sg ? sg.walls : wallsOf(state, world, a.at);
-  return base * (1 + (walls / 100) * (S(world).storm.walls - 1 + world.war.battle.wallsDefence - 1));
+  // The towns of a loved crown hold out for it (M24 B).
+  const f = world.meters?.flavour;
+  const loved = f && ownerOf(state, world, a.at) === TEMERIA && (state.love ?? 0) > f.lovedAbove ? 1 + f.siegeResolve * ((state.love - f.lovedAbove) / (100 - f.lovedAbove)) : 1;
+  return base * loved * (1 + (walls / 100) * (S(world).storm.walls - 1 + world.war.battle.wallsDefence - 1));
 }
 
 // What a storm would bring: the odds, and the men it would likely cost.

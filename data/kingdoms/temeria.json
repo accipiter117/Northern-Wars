@@ -24,8 +24,9 @@
     "day": 1
   },
   "treasury": 2500,
-  "trust": 60,
-  "dread": 15,
+  "love": 60,
+  "fear": 20,
+
   "rivers": {
     "navigable": [
       "Pontar",

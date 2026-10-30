@@ -343,6 +343,23 @@ const MIGRATIONS = {
     state.version = 25;
     return state;
   },
+  // v26 (M24 B): Love and Fear in place of Trust and Dread. Love from the
+  // old Trust; Fear from the old Dread inverted (a crown that kept its
+  // people unafraid of the wilds was not feared itself) and the harsh laws
+  // in force; Unrest as it was.
+  25(state, world) {
+    state.love = Math.max(0, Math.min(100, Math.round(state.trust ?? 50)));
+    const harsh = [['public_order', ['martial', 'curfew']], ['nonhumans', ['restricted', 'expulsion']], ['mages', ['banished']], ['old_ways', ['suppressed']]]
+      .filter(([l, opts]) => opts.includes(state.laws?.[l]?.option)).length;
+    state.fear = Math.max(0, Math.min(100, Math.round((100 - (state.dread ?? 15)) * 0.25 + harsh * 8)));
+    const old = state.meters ?? {};
+    state.meters = { ...defaultMeters(), last: old.last ?? { cleared: 0, raids: 0 }, trade: old.trade ?? 1 };
+    state.unrest = realmUnrest(state, world);
+    delete state.trust;
+    delete state.dread;
+    state.version = 26;
+    return state;
+  },
 };
 
 // Swap every reference to a vanished foreign town for its replacement: as a

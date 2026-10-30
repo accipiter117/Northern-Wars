@@ -23,7 +23,7 @@
       "id": "ledger",
       "trigger": "firstLedger",
       "title": "The first accounts",
-      "text": "On the first of every month the accounts are drawn up. Treasury, Ledger shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in Trust in the Crown.",
+      "text": "On the first of every month the accounts are drawn up. Treasury, Ledger shows every crown that came in and went out, and which towns earned and cost the most. A purse that runs dry can borrow from the dwarven banks, at a price in the folk's Love.",
       "open": "treasury:ledger",
       "openLabel": "Open the Treasury"
     },
@@ -66,16 +66,16 @@
       "openLabel": "Open Threats"
     },
     {
-      "id": "trust",
-      "trigger": "lowTrust",
-      "title": "The folk are losing faith",
-      "text": "With little Trust in the Crown you cannot pass laws, people drift away and levies slip home. Feed them through the winter, answer raids, mend what is broken and keep taxes fair, and it comes back."
+      "id": "authority",
+      "trigger": "lowAuthority",
+      "title": "The crown's grip is slipping",
+      "text": "Authority is the greater of Love and Fear, with a quarter of the lesser. Low, taxes go uncollected, levies stay home, lords defy you and troubled towns riot. Win love with full granaries, feasts and a royal progress, or fear with hangings, gibbets and the king's riders."
     },
     {
       "id": "drums",
       "trigger": "warDrums",
       "title": "War drums",
-      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a realm that trusts its crown, or an army of your own may change their minds.",
+      "text": "A neighbour is gathering an army. Realms that dislike the crown, or smell weakness, attack. Better relations, a crown with Authority, or an army of your own may change their minds.",
       "open": "diplomacy:realms",
       "openLabel": "Open Diplomacy"
     },
@@ -153,8 +153,8 @@
     },
     {
       "id": "meters",
-      "title": "The four meters",
-      "text": "Treasury is coin in hand; Granary the food in every store; Trust whether the folk believe the crown will keep them fed and safe; Unrest their anger at the crown; Dread their fear of what lies beyond the walls. Tap one to see what moved it."
+      "title": "The symbols in the top bar",
+      "text": "The first row is the realm's goods: coin (with last month's change), grain, fuel, iron and cloth. The second is the crown's hold: Love (the people's affection), Fear (their fear of the crown), Authority (the greater of the two and a quarter of the lesser) and Unrest (their anger). Tap one to see what moved it; hold one to see its name."
     },
     {
       "id": "pick",

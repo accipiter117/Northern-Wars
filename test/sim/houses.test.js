@@ -111,17 +111,18 @@ test('a house pushed past breaking rebels, withholds its taxes, and is broken by
   assert.deepEqual(holdingsOf(s, 'ostrowicz'), ['petrelsteyn']);
 });
 
-test('a crown without Trust amid Unrest is deposed, and a regency takes over', () => {
+test('a crown with no Authority amid Unrest is deposed, and a regency takes over', () => {
   let s = createState(world, 1);
   for (let m = 0; m < 12; m++) {
-    s.trust = 0;
+    s.love = 0;
+    s.fear = 0;
     for (const st of Object.values(s.settlements)) st.unrest = 80;
     s = run(s, 30);
     if (s.depositions.length) break;
   }
   assert.equal(s.depositions.length, 1);
   assert.equal(s.reign.number, 2);
-  assert.ok(s.trust >= world.houses.deposition.regencyTrust - 1);
+  assert.ok(s.love >= world.houses.deposition.regencyLove - 1);
   const d = s.depositions[0];
   assert.equal(d.reign, 1);
   assert.ok(d.to > d.from && d.popEnd > 0);
