@@ -25,7 +25,7 @@
 | M21 Wealth, hands and armies | Trade in five goods with surplus, shortage and prices; one deal per partner; home sales of surplus; taxes by estate; war income; loans; labour as a front-line lever with presets and town focus; armies mustered by population, retinues, mercenaries and pay; threats scaled to the realm; screens cleared of figures that lead to no decision | Done |
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | In progress (A, B and C done, D) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
-| M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | In progress (A done, B) |
+| M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | In progress (A and B done, C) |
 
 ## M24 acceptance criteria
 Part A, a compact top bar:
@@ -39,6 +39,13 @@ Part B, Love, Fear, Authority and Unrest:
 - Unrest of 30 to 50 has no penalties; Dread's sources and effects folded into Love, Fear and Unrest.
 - Gibbets, heads on the gates, bunting and a procession on the map, close up and cached.
 - Save upgrade; tests for each meter's causes, the formula, a feared crown's taxes and levies, Fear's fading and collapse, Unrest under 50, and nothing reading Trust, Dread or Standing.
+
+Part C, a rich crown at peace:
+- A well-run crown at peace about +1,500 a month, a careless one about break-even, an idle one slowly into debt; a large army in the field for a season eats most of a year's peace surplus; checked with tools/crowns.mjs and recorded in BALANCE.md.
+- Higher yields (head tax, tithe, goods sold abroad and at home, mines); upkeep follows staffing; a works being mended costs only its repair.
+- Conquered towns pay their garrison and upkeep from their own takings and never cost the crown; income from about a quarter up to the whole with integration and repair; a sacked town pays its loot, then almost nothing.
+- The Steward's report each month (inbox and Treasury) with the top three costs and a one-tap fix each; a pressure-strip warning for work under half manned; the ledger in Taxes, Trade and sales, Crafts and goods, War and Other, each opening to its lines.
+- Balanced mans crafts, mines, pastures and woods properly and never leaves thousands idle.
 
 ## M23 acceptance criteria
 Part A, in-app dialogs:

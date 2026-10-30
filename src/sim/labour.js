@@ -29,7 +29,7 @@ export function defaultLabour(world) {
   return {
     split: { ...l.split },
     calls: {},
-    winterTurn: false,
+    winterTurn: true,
     pins: {},
     focus: {},
     closed: 0,
@@ -244,7 +244,18 @@ export function stepLabourDay(state, world) {
     }
   }
   state.labour.crews = Math.max(1, Math.floor(report.repairs.hands / l.crew));
-  state.labour.report = Object.fromEntries(Object.entries(report).map(([k, v]) => [k, { hands: Math.round(v.hands), need: Math.round(v.need), staffed: Math.round(v.staffed), idle: Math.round(v.idle ?? 0) }]));
+  // Under the winter turn (M24 C) the hands the woods, mines and workshops
+  // cannot take sit at their own hearths spinning, mending and carting:
+  // winter work, a little coin rather than idleness.
+  const wintry = state.labour.winterTurn && (month >= l.calls.winter.frost || month < l.calls.winter.spring);
+  if (wintry) {
+    for (const k of KINDS) {
+      if (k === 'fields' || !report[k].idle) continue;
+      report[k].home = report[k].idle;
+      report[k].idle = 0;
+    }
+  }
+  state.labour.report = Object.fromEntries(Object.entries(report).map(([k, v]) => [k, { hands: Math.round(v.hands), need: Math.round(v.need), staffed: Math.round(v.staffed), idle: Math.round(v.idle ?? 0), ...(v.home ? { home: Math.round(v.home) } : {}) }]));
 }
 
 // How a place's harvest stands to its hands: a floor from the old and the
@@ -566,6 +577,10 @@ export function seasonalPrompt(state, world) {
 
 export function pressureLine(state, world, fns) {
   if (!state.labour || !L(world)) return '';
+  // A kind of work under half manned (M24 C) comes before all else: its
+  // works stand mostly idle and the crown loses what they would earn.
+  const half = halfStaffed(state, world)[0];
+  if (half) return `${half.name} under half manned (${Math.round(half.pct * 100)}%): their works stand idle. Tap to move the hands.`;
   // The season's suggestion comes first: it is the thing to do now.
   const prompt = seasonalPrompt(state, world);
   if (prompt) return `${prompt.text} Tap to set them.`;
@@ -584,6 +599,20 @@ export function pressureLine(state, world, fns) {
   const hands = worst ? ` ${worst.name} short of hands.` : '';
   if (wintry) return `Winter. ${state.labour.short > 0.05 ? 'Hearths are going cold.' : `Fuel for about ${Math.max(0, Math.round((o.fuel / Math.max(1, o.fuelNeed)) * 5))} months.`}${hands}`;
   return `First frost in ${o.days} days. ${o.short ? 'Grain is short for winter.' : 'Grain enough for winter.'}${fuel}${hands}`;
+}
+
+// The kinds of work (not the fields, the repairs or the levies) under half
+// the hands they need this month, worst first (M24 C).
+export function halfStaffed(state, world) {
+  const out = [];
+  for (const k of KINDS) {
+    if (['fields', 'repairs', 'levies'].includes(k)) continue;
+    const x = state.labour?.report?.[k];
+    if (!x || x.need < 50) continue;
+    const pct = x.staffed / x.need;
+    if (pct < 0.5) out.push({ kind: k, pct, name: L(world).kinds[k].name });
+  }
+  return out.sort((a, b) => a.pct - b.pct);
 }
 
 // v18: a reign from before Part C gets the default split, with the winter

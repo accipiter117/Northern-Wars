@@ -34,8 +34,8 @@ test('taxes rise with development: richer places and market halls pay more, citi
   const rate = world.economy.taxes.perPersonMonth;
   assert.ok(rate.city > rate.town && rate.town > rate.village);
   // A kingdom already built (M20) taxes more than the bare one of M12 did
-  // (514), but not wildly so.
-  assert.ok(last(base).income.taxes <= 720, `${last(base).income.taxes}`);
+  // (514), and the head tax rose by two fifths in M24 C, but not wildly so.
+  assert.ok(last(base).income.taxes <= 1000, `${last(base).income.taxes}`);
 });
 
 test('industries stand only where the land gives them (M20)', () => {
@@ -215,13 +215,19 @@ test('the steward stays solvent over ten years, keeps its works and its income',
   }
   assert.ok(low > -world.economy.debt.creditLimit / 2, `lowest treasury ${low}`);
   assert.ok(s.treasury > 0);
-  // Within a sixth of where it began: the gold seams run out over the decade.
-  assert.ok(yearIn[9] >= yearIn[0] * 0.85, `year 1 ${yearIn[0]}, year 10 ${yearIn[9]}`);
+  // Within a fifth of where it began: the gold seams, worked harder since
+  // M24 C, run out over the decade.
+  assert.ok(yearIn[9] >= yearIn[0] * 0.8, `year 1 ${yearIn[0]}, year 10 ${yearIn[9]}`);
   const all = Object.values(s.settlements).flatMap((x) => x.buildings.map((b) => x.cond?.[b] ?? 100));
   assert.ok(all.reduce((a, b) => a + b, 0) / all.length >= 75, 'the steward keeps its works');
   assert.ok(s.forces.companies.length >= 4, `${s.forces.companies.length} companies`);
-  const net = s.ledger.history.reduce((a, h) => a + ledgerNet(h).net, 0) / s.ledger.history.length;
-  assert.ok(net > 0, `monthly surplus ${net}`);
+  // A surplus before the courtiers a full treasury draws (M24 C): by year
+  // ten the steward's hoard of 50,000 or more is meant to level off, so the
+  // hoard's charge is left out of the measure.
+  const u = world.economy.upkeep;
+  const hoard = (h) => Math.max(0, h.treasury - u.hoardFree) * u.hoardPerMonth;
+  const net = s.ledger.history.reduce((a, h) => a + ledgerNet(h).net + hoard(h), 0) / s.ledger.history.length;
+  assert.ok(net > 0, `monthly surplus before the hoard ${net}`);
   const pop = Object.values(s.settlements).reduce((a, x) => a + totalPopulation(x), 0);
   assert.ok(pop > 54000);
 });

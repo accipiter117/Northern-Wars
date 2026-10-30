@@ -5,6 +5,7 @@ import { battleCard, battleTitle } from './battle.js';
 import { segs } from './card.js';
 import { realmTab, meterCard } from './realmTab.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
+import { stewardHtml } from './steward.js';
 import { lawsHtml } from './laws.js';
 import { noblesHtml, houseCard, swatch, depositionHtml } from './nobles.js';
 import { faithHtml } from './faith.js';
@@ -48,12 +49,12 @@ function tabScreen(app, tab) {
     if (sub === 'laws') html = lawsHtml(app);
     else if (sub === 'houses') html = noblesHtml(app);
     else if (sub === 'faith') html = faithHtml(app);
-    else html = inboxHtml(pendingDecisions(app.state, app.world, app.acked()));
+    else html = stewardHtml(app) + inboxHtml(pendingDecisions(app.state, app.world, app.acked()));
   } else if (tab === 'treasury') {
     if (sub === 'trade' || sub === 'routes') html = marketHtml(app);
     else if (sub === 'taxes') html = taxesHtml(app);
     else if (sub === 'industry') html = industryHtml(app);
-    else html = ledgerHtml(app);
+    else html = stewardHtml(app) + ledgerHtml(app);
   } else if (tab === 'military') {
     if (sub === 'threats') html = threatsHtml(app);
     else if (sub === 'garrisons') html = garrisonsHtml(app);

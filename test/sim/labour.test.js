@@ -64,7 +64,13 @@ test('the seasons move the work: fields from spring to harvest, the water shut b
   assert.ok(s.settlements.white_orchard.farmStaff > 60);
   const w = onMonth(2, 12);
   assert.equal(w.labour.report.fields.need, 0);
-  assert.ok(w.labour.report.fields.hands > 1000, 'field hands with nothing to do');
+  // The winter turn stands from the start (M24 C), so the field hands are
+  // at the woods and the workshops; called off, they sit idle.
+  assert.equal(w.labour.report.fields.hands, 0, 'the field hands turned to other work');
+  const off = structuredClone(w);
+  off.labour.winterTurn = false;
+  stepLabourDay(off, world);
+  assert.ok(off.labour.report.fields.hands > 1000, 'field hands with nothing to do');
   // Ice and storms close the water.
   w.labour.closed = w.day + 20;
   assert.equal(needOf(w, world, 'murky_waters', 'fishery', 12), 0);
@@ -72,6 +78,9 @@ test('the seasons move the work: fields from spring to harvest, the water shut b
 
 test('the crown splits its hands by kind of work, and the works go short or full as it does', () => {
   let s = onMonth(3, 6);
+  // Fewer hands for the crafts than Balanced gives them, then more.
+  s = act(s, { type: 'labourShift', kind: 'crafts', step: -10 });
+  stepLabourDay(s, world);
   const crafts = s.labour.report.crafts.staffed;
   s = act(s, { type: 'labourShift', kind: 'crafts', step: 10 });
   assert.equal(Object.values(s.labour.split).reduce((a, b) => a + b, 0), 100);
@@ -127,10 +136,12 @@ test('raising the levies fills the garrisons, empties the works and costs the tr
 });
 
 test('the winter turn sends the field hands to the woods; winter burns the fuel; cold kills', () => {
-  // Called, the field hands cut fuel from first frost.
+  // Called (it stands from the start since M24 C), the field hands cut
+  // fuel from first frost; called off, they do not.
   const s = onMonth(6, 11);
-  const plain = structuredClone(s);
-  const turned = act(s, { type: 'call', call: 'winter' });
+  const turned = structuredClone(s);
+  const plain = act(s, { type: 'call', call: 'winter' });
+  assert.ok(turned.labour.winterTurn && !plain.labour.winterTurn);
   stepLabourDay(plain, world);
   stepLabourDay(turned, world);
   assert.ok(splitNow(turned, world).fields === 0 && splitNow(turned, world).woods > plain.labour.split.woods);

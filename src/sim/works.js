@@ -134,12 +134,15 @@ export function worksFactor(s, b) {
 }
 const OVERSTAFF = 0.5;
 
-// What a works costs to keep: never less than a share of its upkeep, even
-// in ruins (watchmen, the roof over the wreck). The crown's works cost
-// `upkeepScale` times their old upkeep (its ledger was calibrated for a
-// realm that built a few at a time); foreign realms pay the plain rate.
+// What a works costs to keep (M24 C): it follows the hands, so a works
+// half manned costs half, down to a small floor for the watchmen and the
+// roof. A works being mended costs nothing beyond its repair: the masons'
+// bill is the whole of it. The crown's works cost `upkeepScale` times their
+// old upkeep (its ledger was calibrated for a realm that built a few at a
+// time); foreign realms pay the plain rate.
 export function upkeepFactor(world, s, b, crown = true) {
   const c = C(world);
+  if (s.repair?.[b]) return 0;
   return Math.max(c?.upkeepFloor ?? 0.3, worksFactor(s, b)) * (crown ? c?.upkeepScale ?? 1 : 1);
 }
 

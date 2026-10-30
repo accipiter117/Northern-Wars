@@ -1,5 +1,15 @@
 # Changelog
 
+## M24 C A rich crown at peace
+- A well-run crown at peace now makes about 1,500 crowns a month. A careless one about breaks even, and an idle one slides slowly into debt. A large army in the field for a season eats most of a year's surplus.
+- The Steward's report heads Decisions and the Treasury each month: in, out, net, and the three costs that weigh most, each with a one-tap fix.
+- The ledger is grouped into Taxes, Trade and sales, Crafts and goods, War and Other; tap a group to see its lines.
+- Works cost their keep as they are manned, and nothing beyond the repair while they are mended.
+- Conquered towns never cost the crown: they pay their garrison and works from their own takings. They yield about a quarter at first and climb to the whole as they settle and are mended; a sacked town yields almost nothing for years.
+- The pressure strip warns when a kind of work is under half manned.
+- Balanced now mans the crafts, mines, pastures and woods properly, the winter turn stands from the start, and hands with no winter work earn a little at home.
+- Partners pay more for our goods, surplus sells better at home, gold mines yield more, the head tax is higher, and the court and the levies cost more.
+
 ## M24 B Love, Fear, Authority and Unrest
 - Trust and Dread are gone. The crown is now held by Love and Fear, and Authority (the greater of the two plus a quarter of the lesser) decides how much tax is gathered, how many answer the muster, whether lords obey and whether troubled towns riot.
 - A loved king gets volunteers, towns that hold out and calmer streets, but soft-seeming lords. A feared king gets taxes and levies on time, but quiet sabotage, and his grip breaks after a defeat.

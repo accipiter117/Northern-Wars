@@ -50,9 +50,9 @@
       "refuseBelow": 30
     },
     "pay": {
-      "levy": 0.22,
-      "retinue": 0.28,
-      "field": 1.5
+      "levy": 0.55,
+      "retinue": 0.7,
+      "field": 1.8
     },
     "unpaid": {
       "morale": 20,

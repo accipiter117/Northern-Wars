@@ -8,10 +8,10 @@
     "luxuries": { "name": "Luxuries", "short": "luxuries", "base": 2.2, "of": { "spirit": 1, "salt": 0.7, "horses": 2.3 }, "blurb": "Rye spirit, salt and horses (silver pays the crown directly)." }
   },
   "price": { "swing": 0.6, "min": 0.6, "max": 1.8, "ease": 0.35, "cut": 0.25, "cutMonths": 3 },
-  "home": 0.6,
-  "export": { "want": 1.25 },
+  "home": 0.8,
+  "export": { "want": 2.0 },
   "import": { "offer": 0.85 },
-  "deals": { "minRelation": 10, "perPerson": 0.0025, "minQty": 5 },
+  "deals": { "minRelation": 10, "perPerson": 0.009, "minQty": 5 },
   "grainReserveMonths": 3,
   "materialsReserve": 50,
   "realmWorks": {

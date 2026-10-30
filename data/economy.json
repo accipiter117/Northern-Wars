@@ -70,22 +70,23 @@
       "iron": 1.2
     }
   },
+  "homeWork": 0.03,
   "prosperityYield": {
     "min": 0.6,
     "perPoint": 0.008
   },
   "taxes": {
     "perPersonMonth": {
-      "city": 0.009,
-      "town": 0.008,
-      "village": 0.006,
-      "castle": 0.0055,
-      "temple": 0.003
+      "city": 0.0126,
+      "town": 0.0112,
+      "village": 0.0084,
+      "castle": 0.0077,
+      "temple": 0.0042
     },
     "prosperityBase": 0.3,
     "perProsperity": 0.014,
     "note": "Tax a head a month by kind of place, times a fortunes factor (prosperityBase + perProsperity x prosperity), times any tax bonus from market halls, guildhalls and merchants' quarters. Since M21 the crown sets three estates: the towns (head tax in cities and towns, and their market dues), the villages (head tax in villages, castles and temples, and a tithe of the harvest at the grain price) and the lords (each great house pays a due of base plus perPerson for its lands).",
-    "tithe": 0.15,
+    "tithe": 0.2,
     "nobles": {
       "base": 40,
       "perPerson": 0.02
@@ -105,8 +106,8 @@
   },
   "upkeep": {
     "garrisonPerSoldierMonth": 0.1,
-    "courtMonth": 420,
-    "hoardFree": 5000,
+    "courtMonth": 1600,
+    "hoardFree": 15000,
     "hoardPerMonth": 0.01
   },
   "population": {

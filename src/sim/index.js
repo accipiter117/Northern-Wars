@@ -10,7 +10,7 @@ export { loadWorld } from './load.js';
 export { canBuild, applyAction } from './actions.js';
 export { canDecree, reactions, enactment, lawEffects, opinionTargets } from './laws.js';
 export { relationTarget, foreignTrade, tradeFactor, canSetStance, envoyText } from './neighbours.js';
-export { ledgerNet, taxProsperity, debtLove } from './economy.js';
+export { ledgerNet, taxProsperity, debtLove, stewardReport } from './economy.js';
 export { authority, realmUnrest, unrestPressures, nudge, canAct, ACT_NAMES, taxCollected, musterAnswer, onProgress, threatUnrest, canRiot, sabotage, crownCalm } from './meters.js';
 export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
 export { petitionText } from './petitions.js';
@@ -62,7 +62,7 @@ export {
   spacesOf, condOf, staffOf, worksFactor, repairOptions, canRepairWorks, worksDecisionText, worksSummary, spaceKindOf,
 } from './works.js';
 export {
-  KINDS as LABOUR_KINDS, splitNow, districtOf, handsOf, kindOfWorks, needOf, canSetSplit, shiftSplit, canCall, canPin, winterOutlook, pressureLine, presetNow, seasonalPrompt, fuelNeed, farmFactor,
+  KINDS as LABOUR_KINDS, splitNow, districtOf, handsOf, kindOfWorks, needOf, canSetSplit, shiftSplit, canCall, canPin, winterOutlook, pressureLine, halfStaffed, presetNow, seasonalPrompt, fuelNeed, farmFactor,
 } from './labour.js';
 export {
   ORDERS_A_MONTH, boardRealms, boardRealm, boardLinks, neighboursOnBoard, realmGeometry, markerAt, realmAtPoint, marches, canGiveOrder, marchTarget, envoysWaiting, seesRealm, realmWorks, TRADE_GIVE, tradeItems,

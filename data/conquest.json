@@ -240,6 +240,7 @@
       "expel": 3
     },
     "taxAt": 0.35,
+    "yield": { "note": "M24 C: the crown's share of a conquered town's takings, (floor + (1 - floor) x ramp) x (works + (1 - works) x mean condition), where ramp runs from 0 at integration `from` to 1 at 100.", "from": 25, "floor": 0.08, "works": 0.4 },
     "levyAt": 0.3,
     "unrest": 0.45,
     "unrestBelow": 55,
