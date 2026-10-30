@@ -5,6 +5,7 @@
 // Marks are scattered once with a fixed seed so the map looks the same on
 // every visit.
 import { makeRng } from '../sim/rng.js';
+import { drawCountryside } from './countryside.js';
 import { pointInPolygon, centroid, bounds, pathOf, linePath } from './geometry.js';
 
 export const COLOURS = {
@@ -288,7 +289,7 @@ function chaikin(pts) {
   return out;
 }
 
-export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 2, territory = null) {
+export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 2, territory = null, country = null) {
   const land = territory?.any ? territoryPaths(territory) : null;
   const g = world.geography;
   const seen = (box) => !view || overlaps(box, view);
@@ -374,6 +375,8 @@ export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 
   }
 
   if (detail > 0) drawScatter(ctx, prep, px, v, detail);
+  // The countryside between the towns (M23 D), under the rivers and roads.
+  if (country) drawCountryside(ctx, country.cs, px, v, detail, country.look);
 
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';

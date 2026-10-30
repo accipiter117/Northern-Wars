@@ -1,5 +1,11 @@
 # Changelog
 
+## M23 D A fuller map
+- The land between the towns is now full of life: patchwork fields, farmsteads, orchards and windmills where people live, thinning into copses, heath, shrines, ruins and old watchtowers where few do. Foreign realms too.
+- Fields follow the year: green in spring, gold in summer, stooked at the harvest, pale in winter. They burn round a sacked town and lie bare round a hungry one.
+- Close up, townsfolk walk the streets of your towns and cities, fewer in deep winter and when fear keeps them indoors.
+- Nothing is drawn over roads, rivers or names; the board stays clean; and Battery saver thins it all.
+
 ## M23 C Armies and figures on the move
 - Armies march as columns sized by their men, with a standard at the head, wagons at the tail and dust behind. At night they camp by the road, and in an enemy's land their foragers spread out around them.
 - Your armies on the march show their route and how many days they have left. Long press one for its men, companies, marshal, spirit and arrival.

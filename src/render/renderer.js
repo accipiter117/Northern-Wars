@@ -4,13 +4,14 @@
 import { prepareMap, drawMap, COLOURS, territoryPaths } from './mapLayer.js';
 import { territoryOwners } from '../sim/territory.js';
 import { drawBattle, drawSiege, smoke, drawRebels } from './war-art.js';
-import { createBoardLayer, boardness } from './board.js';
+import { createBoardLayer, boardness, BOARD } from './board.js';
 import { spacesOf } from '../sim/works.js';
 import { createTiles } from './tiles.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
 import './sprites-war.js';
 import { createSettlementArt, seasonLook } from './settlementArt.js';
+import { prepareCountryside } from './countryside.js';
 import { dateOf } from '../sim/calendar.js';
 import { totalPopulation } from '../sim/state.js';
 import { houseCount } from './layout.js';
@@ -49,13 +50,23 @@ const MAX_FIGURES = 5;
 
 export function createRenderer(canvas, world, cam, layoutCfg) {
   const prep = prepareMap(world);
+  // The countryside (M23 D), placed once; how it looks follows the season,
+  // sacks and hunger, and Battery saver.
+  const countryside = prepareCountryside(world, prep);
+  let countryLook = { season: 'spring', snow: false, burnt: new Set(), bare: new Set(), thin: false };
+  let countryKey = '';
+  let bareMonth = 0;
+  let bareSet = new Set();
   // The static map, cut into tiles at a few levels of detail (tiles.js).
   // Lines keep their on-screen weight at every level; the far levels draw
   // fewer marks.
   const tiles = createTiles({
     paint: (ctx, view, L) => {
       const zoom = L / dpr;
-      drawMap(ctx, prep, world, dpr / L, tints, view, zoom < 0.45 ? 0 : zoom < 0.9 ? 1 : 2, world.foreign ? territoryOwners(world) : null);
+      // The countryside is left off the levels the board is seen at, so the
+      // board stays clean and cheap to pan (M23 D).
+      const country = zoom >= (cam.cover || 0) * BOARD.full * 0.95 ? { cs: countryside, look: countryLook } : null;
+      drawMap(ctx, prep, world, dpr / L, tints, view, zoom < 0.45 ? 0 : zoom < 0.9 ? 1 : 2, world.foreign ? territoryOwners(world) : null, country);
     },
   });
   const art = createSettlementArt(world, layoutCfg);
@@ -335,9 +346,37 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
   }
 
+  // The countryside's look: the season, fields burnt round towns sacked or
+  // smouldering, bare round hungry ones. The tiles are redrawn only when it
+  // changes.
+  function updateCountry(state) {
+    const look = seasonLook(dateOf(state.day).month);
+    const burnt = new Set();
+    const bare = new Set();
+    for (const [id, s] of Object.entries(state.settlements)) {
+      if ((s.smoulder ?? 0) > state.day || (s.sacked ?? 0) > state.day) burnt.add(id);
+      else if ((s.hunger ?? 0) > 0.2) bare.add(id);
+    }
+    for (const realm of Object.values(state.realms ?? {})) {
+      for (const [id, s] of Object.entries(realm.settlements ?? {})) if ((s.smoulder ?? 0) > state.day) burnt.add(id);
+    }
+    // Hunger is read at the turn of each month only, so a town hovering
+    // at the edge does not have the map redrawn day after day.
+    const month = dateOf(state.day).month;
+    if (month !== bareMonth) { bareMonth = month; bareSet = bare; }
+    const key = `${look.season}${look.snow}|${[...burnt].sort()}|${[...bareSet].sort()}|${saver}`;
+    if (key === countryKey) return;
+    countryKey = key;
+    countryLook = { season: look.season, snow: look.snow, burnt, bare: bareSet, thin: saver };
+    tiles.clear();
+    baseDirty = true;
+    dirty = true;
+  }
+
   function updateInfra(state) {
     if (state === infraState) return;
     infraState = state;
+    updateCountry(state);
     updateVision(state);
     const foreignKey = updateForeign(state);
     const marks = (id, s) => `${plagueActive(state, s) ? 'p' : ''}${(s.raided ?? 0) > state.day ? 'r' : ''}`;
@@ -888,7 +927,18 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       lifeOf = new Map();
     }
     let l = lifeOf.get(id);
-    if (!l) lifeOf.set(id, (l = worksLife(state, world, id)));
+    if (!l) {
+      l = { ...worksLife(state, world, id) };
+      // Townsfolk in our towns and cities (M23 D).
+      const type = world.byId[id].type;
+      const s = state.settlements[id];
+      if ((type === 'city' || type === 'town') && s && !s.occupier) {
+        const fear = (state.dread ?? 0) > 60 ? 0.4 : 1;
+        const cold = seasonLook(dateOf(state.day).month).snow ? 0.6 : 1;
+        l.folk = Math.round(Math.min(12, totalPopulation(s) / 1500) * fear * cold);
+      }
+      lifeOf.set(id, l);
+    }
     return l;
   }
   // At most this many figures at the works on screen at once; half under
@@ -1143,7 +1193,12 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // Anything on screen that moves of itself: 'war' (smoke, battles), 'life'
     // (travellers on the roads), or null.
     lively: () => (live.war ? 'war' : live.life ? 'life' : null),
-    setSaver(on) { saver = !!on; dirty = true; },
+    setSaver(on) {
+      saver = !!on;
+      dirty = true;
+      if (infraState) updateCountry(infraState);
+    },
+    get countryStats() { return { marks: countryside.marks.length, look: { season: countryLook.season, burnt: countryLook.burnt.size, bare: countryLook.bare.size, thin: countryLook.thin } }; },
     // Layers still to finish (tiles filled in over several frames, the fog
     // waiting its turn): the loop keeps asking for frames until they are.
     unfinished: () => dirty || baseDirty || fogDirty || fogPending,

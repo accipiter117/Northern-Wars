@@ -142,6 +142,20 @@ export function createSettlementArt(world, cfg) {
     for (const [i, s] of plan.smoke.slice(0, 24).entries()) {
       getSprite('life', 'smoke').draw(ctx, x + at(s.x), y + at(s.y), unit * (s.big ? 0.9 : 0.6), { phase: (time * 0.6 + h + i * 0.37) % 1, steam: s.steam });
     }
+    // City life (M23 D): townsfolk going between their doors and the
+    // middle of the town, as many as its people warrant (fewer in winter
+    // and when Dread keeps them indoors), from the same budget.
+    if (life?.folk) {
+      const houses = plan.items.filter((it) => it.kind === 'house');
+      const n = houses.length ? take(life.folk) : 0;
+      const coats = ['#6e5a3e', '#7a3a2e', '#3e5a6e', '#5a6e3e', '#8a7a5a'];
+      for (let j = 0; j < n; j++) {
+        const home = houses[(Math.floor(h * 997) + j * 7) % houses.length];
+        const t = (time * 0.35 + j * 0.37 + h) % 1;
+        const k = t < 0.5 ? t * 2 : 2 - t * 2;
+        getSprite('life', 'worker').draw(ctx, x + at(home.x * (1 - k * 0.8)), y + at(home.y * (1 - k * 0.8) + home.w * 0.4), unit * 0.8, { phase: time * 2 + j, colour: coats[(j + Math.floor(h * 31)) % coats.length] });
+      }
+    }
     const workers = cfg.workersPerSite;
     for (const [i, s] of plan.sites.entries()) {
       const sx = x + at(s.x);
