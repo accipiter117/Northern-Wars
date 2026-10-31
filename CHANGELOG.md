@@ -1,5 +1,14 @@
 # Changelog
 
+## M26 A and B The Book of Laws
+- The laws are now a Book of Laws in five chapters: Order, Economy, War, People, and Faith and Peoples. Each chapter has two rival paths of three laws, and signing one path locks the other until you repeal it from the top down.
+- Every law has one headline effect you will feel within a season (Unrest −10, crafts +30%, musters doubled, half the hunger deaths), its cost and who will cheer or grumble, shown before you sign.
+- Signing moves Love, Fear and Unrest at once, with a line from the people and the court. Repealing costs: the groups who liked the law are angry.
+- The ink dries for 30 days after each signing or repeal, and a law rests 90 days after it is changed.
+- New acts unlocked by laws: Pardon, Open the granaries, Summon the court mage and Witch hunt, on a town's card; Hang the ringleaders and Hold a feast now need their laws.
+- Taxes and the court are quick settings in the Treasury, monster bounties in Military, each resting 30 days between changes.
+- Old saves keep their laws as the nearest laws of the Book. Save version 27.
+
 ## M24 follow-up: beasts, witchers and the camera
 - Companies sent after wolves and other lairs in the wilds now reach them and finish the job (they used to wander back and forth for ever).
 - Even town militia can deal with wolves, drowners and harpies. Werewolves, leshens, griffins, hags, wyverns and forktails are witchers' work: other troops barely stand a chance.

@@ -140,14 +140,16 @@ test('the tap targets, counted from the map', async () => {
   assert.ok(t.count <= 4, `repair: ${t.count} taps`);
   await page.click('#sheet-close');
 
-  // Change a law: four taps or fewer.
+  // Sign a law: five taps or fewer, the last to confirm (M26: signing locks
+  // the rival path, so it asks once).
   t.reset();
   await t.tap('[data-tab="court"]');
   await t.tap('[data-sub="laws"]');
-  await t.tap('[data-law="grain_prices"]');
-  await t.tap('[data-decree="grain_prices:controlled"]');
-  assert.equal(await page.evaluate(() => window.northernWars.state.laws.grain_prices.option), 'controlled');
-  assert.ok(t.count <= 4, `law: ${t.count} taps`);
+  await t.tap('[data-book-law="assizes"]');
+  await t.tap('[data-sign="assizes"]');
+  await t.tap('#dialog-yes');
+  await page.waitForFunction(() => !!window.northernWars.state.book.signed.assizes);
+  assert.ok(t.count <= 5, `law: ${t.count} taps`);
   await page.click('#sheet-close');
   assert.deepEqual(errors, []);
   await context.close();

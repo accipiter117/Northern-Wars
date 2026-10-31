@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createState, step, applyAction, loyaltyTarget, holdingsOf, crownShare, demandText, serialize, deserialize } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
-import { nodeWorld } from '../helpers.js';
+import { nodeWorld, signLaws } from '../helpers.js';
 
 const world = await nodeWorld();
 const run = (s, days) => step(s, days, world, { ambient: false });
@@ -38,7 +38,7 @@ test('the crown takes half the taxes of held lands and pays none of their soldie
 test('loyalty follows favour, grievance, the lords\' mood and the laws a house cares about', () => {
   const s = createState(world, 1);
   const base = loyaltyTarget(s, world, 'wolbrecht');
-  s.laws.patronage = { option: 'melitele', previous: 'tolerance', since: s.day };
+  signLaws(s, world, 'faith_of_the_crown:melitele');
   assert.equal(loyaltyTarget(s, world, 'wolbrecht'), base + 10);
   s.houses.wolbrecht.grievance = 30;
   assert.equal(loyaltyTarget(s, world, 'wolbrecht'), base - 20);

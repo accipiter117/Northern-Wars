@@ -8,6 +8,7 @@ import { nudge, authority, fearCollapse } from './meters.js';
 import { sendFigure } from './figures.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
+import { lawStands } from './book.js';
 import { totalPopulation } from './state.js';
 
 const say = (state, text) => addDispatch(state, text, 'nobles');
@@ -57,8 +58,7 @@ export function loyaltyTarget(state, world, houseId) {
   for (const tr of traitsOf(world, houseId)) {
     t += tr.loyalty ?? 0;
     for (const [key, v] of Object.entries(tr.cares ?? {})) {
-      const [law, option] = key.split(':');
-      if (state.laws[law]?.option === option) t += v;
+      if (lawStands(state, key)) t += v;
     }
   }
   return clamp(t, 0, 100);

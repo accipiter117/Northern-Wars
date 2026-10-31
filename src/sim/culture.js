@@ -6,6 +6,7 @@
 import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 // A strong crown, loved or feared, keeps a troubled town from rioting (M24 B).
+import { lawStands, crownFaith } from './book.js';
 import { canRiot } from './meters.js';
 
 const say = (state, text) => addDispatch(state, text, 'faith');
@@ -17,21 +18,18 @@ export function nonhumanShare(s) {
   return pop > 0 ? (s.population.dwarf + s.population.elf + s.population.halfling) / pop : 0;
 }
 
-function lawActive(state, key) {
-  const [law, option] = key.split(':');
-  return state.laws[law]?.option === option;
-}
+const lawActive = lawStands;
 
 // Where a settlement's faith is heading: its founding mix, bent by the
 // crown's patronage, laws and, in cities, the Fire's appeal to the crowd.
 export function faithTarget(state, world, id) {
   const c = world.culture.faith;
   const base = world.settlementData[id].faith;
-  const patron = state.laws.patronage?.option;
+  const patron = crownFaith(state);
   const w = {};
   for (const [f, v] of Object.entries(base)) {
     let m = 1;
-    if (patron && patron !== 'tolerance') m *= f === patron ? c.patron : c.rival;
+    if (patron) m *= f === patron ? c.patron : c.rival;
     if (f === 'eternal_fire' && world.byId[id].type === 'city') m *= c.cityFire;
     for (const [key, pulls] of Object.entries(c.lawPulls)) if (lawActive(state, key) && pulls[f]) m *= pulls[f];
     // A cathedral or a hospice draws the faithful of its own.

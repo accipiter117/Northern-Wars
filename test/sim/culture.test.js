@@ -2,11 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createState, step, applyAction, realmFaith, tensionTarget, petitionText, serialize, deserialize } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
-import { nodeWorld } from '../helpers.js';
+import { nodeWorld, signLaws } from '../helpers.js';
 
 const world = await nodeWorld();
 const run = (s, days) => step(s, days, world, { ambient: false });
-const decreeNow = (s, law, option) => { s.laws[law] = { option, previous: s.laws[law].option, since: s.day }; return s; };
+// The Book of Laws (M26): the crown's faith, and the harsh laws against non-humans.
+const sign = (s, ...ids) => signLaws(s, world, ...ids);
+const persecute = (s) => sign(s, 'faith_of_the_crown:eternal_fire', 'restrictions');
 
 test('petition data is sound', () => {
   for (const [id, p] of Object.entries(world.petitions.petitions)) {
@@ -20,9 +22,9 @@ test('under the customary laws the realm keeps the peace', () => {
   assert.equal(s.chronicle.filter((d) => /^(Riot|Pogrom)/.test(d.text)).length, 0);
 });
 
-test('faith follows patronage: Melitele gains when the crown backs her', () => {
+test('faith follows the crown: Melitele gains when the crown takes her for its own', () => {
   const base = realmFaith(run(createState(world, 2), 1825));
-  const backed = realmFaith(run(decreeNow(createState(world, 2), 'patronage', 'melitele'), 1825));
+  const backed = realmFaith(run(sign(createState(world, 2), 'faith_of_the_crown:melitele'), 1825));
   assert.ok(backed.melitele > base.melitele + 5, `${backed.melitele} vs ${base.melitele}`);
   for (const f of Object.values(backed)) assert.ok(f >= 0 && f <= 100);
 });
@@ -35,19 +37,19 @@ test('the Eternal Fire grows in the cities', () => {
   assert.ok(Math.abs(sum - 100) < 1e-6);
 });
 
-test('Fire patronage and expulsion raise tension; a charter lowers it', () => {
+test('Fire patronage and restrictions raise tension; a charter lowers it', () => {
   const s = createState(world, 1);
   const base = tensionTarget(s, world, 'carreras');
-  decreeNow(s, 'patronage', 'eternal_fire');
-  decreeNow(s, 'nonhumans', 'expulsion');
+  persecute(s);
   assert.equal(tensionTarget(s, world, 'carreras'), base + 33);
-  decreeNow(s, 'nonhumans', 'charter');
-  decreeNow(s, 'patronage', 'tolerance');
+  s.book.signed = {};
+  s.book.faith = null;
+  sign(s, 'freedom_of_worship', 'nonhuman_charter');
   assert.equal(tensionTarget(s, world, 'carreras'), base - 10);
 });
 
 test('persecution brings riots and Scoia\'tael commandos, and drives elves to sympathy', () => {
-  let s = decreeNow(decreeNow(createState(world, 1), 'patronage', 'eternal_fire'), 'nonhumans', 'expulsion');
+  let s = persecute(createState(world, 1));
   let commandos = 0;
   for (let d = 0; d < 3650; d += 30) {
     s = run(s, 30);
@@ -61,7 +63,7 @@ test('persecution brings riots and Scoia\'tael commandos, and drives elves to sy
 test('a pogrom kills and scatters non-humans and angers Mahakam', () => {
   let s = createState(world, 1);
   for (const st of Object.values(s.settlements)) st.tension = 100;
-  s = decreeNow(decreeNow(s, 'patronage', 'eternal_fire'), 'nonhumans', 'expulsion');
+  s = persecute(s);
   for (const st of Object.values(s.settlements)) st.hunger = 1;
   const dwarves = s.settlements.carreras.population.dwarf;
   const rel = s.neighbours.mahakam.relation;

@@ -1,4 +1,5 @@
-import { relationTarget, foreignTrade, canSetStance, formatDate, canOpenEmbassy, canSendSpy, hostile, TEMERIA } from '../sim/index.js';
+import { relationTarget, foreignTrade, canSetStance, formatDate, canOpenEmbassy, canSendSpy, hostile, TEMERIA, lawLabel,
+} from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { realmWarHtml, siegeNote } from './war.js';
 import { sideName } from '../sim/index.js';
@@ -141,8 +142,7 @@ export function realmCard(app, id) {
   const n = state.neighbours[id];
   const route = `realm:${id}`;
   const cares = Object.entries(r.cares).map(([key, v]) => {
-    const [law, option] = key.split(':');
-    const name = world.laws.laws[law].options[option].name;
+    const name = lawLabel(world, key);
     return `<li class="${v > 0 ? 'up' : 'down'}">${v > 0 ? 'Pleased by' : 'Angered by'} ${escapeHtml(name.toLowerCase())}</li>`;
   }).join('');
   const stances = Object.entries(world.neighbours.stances).map(([sid, st]) => {

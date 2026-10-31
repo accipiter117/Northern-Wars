@@ -3,6 +3,7 @@
 const PATHS = {
   coin: '<circle cx="12" cy="12" r="8"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 0 1 0 3.5h-3a1.8 1.8 0 0 0 0 3.5h4"/>',
   wheat: '<path d="M12 21V8"/><path d="M12 8c-3-1-4-4-3-6 2 1 3 3 3 6zM12 8c3-1 4-4 3-6-2 1-3 3-3 6zM12 13c-3-1-4-4-3-6 2 1 3 3 3 6zM12 13c3-1 4-4 3-6-2 1-3 3-3 6z"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   crown: '<path d="M4 17l-1-9 5 4 4-6 4 6 5-4-1 9z"/><path d="M5 20h14"/>',
   scales: '<path d="M12 4v16M7 20h10M5 7h14"/><path d="M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z"/>',
   people: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15 14c3 0 6 2 6 5"/>',

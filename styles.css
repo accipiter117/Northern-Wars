@@ -800,3 +800,29 @@ ul.orders li .chip { flex: none; }
 .army-figs { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
 .army-figs svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 2px; }
 [data-part="merges"] .act, [data-part="levy-orders"] .act { width: 100%; min-height: 44px; margin-top: 6px; }
+
+/* The Book of Laws (M26 A): a chapter as two columns, its rival paths. */
+.book-chapters { margin: 8px 0; }
+.book-chapters .chip small { opacity: 0.8; }
+.book { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+.book-path { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.book-path h4 { margin: 4px 0; font-size: 15px; line-height: 1.2; }
+.book-path h4 small { color: var(--muted); font-weight: normal; }
+.book-law { position: relative; display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 10px; padding: 8px 8px 8px 30px; background: rgba(0, 0, 0, 0.14); color: inherit; font: inherit; font-size: 13px; min-height: 44px; }
+.book-law b { display: inline; font-size: 14px; }
+.book-law .bl-head { display: block; margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
+.book-law p { margin: 4px 0; }
+.book-law .bl-tier { position: absolute; left: 8px; top: 8px; width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--line); font-size: 11px; line-height: 15px; text-align: center; color: var(--muted); }
+.book-law.signed { border-color: #b98f3e; background: rgba(185, 143, 62, 0.12); }
+.book-law.signed .seal { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%; background: #8c2d22; display: flex; align-items: center; justify-content: center; }
+.book-law.signed .seal svg { width: 15px; height: 15px; color: #f1d69a; }
+.book-law.locked { opacity: 0.45; }
+.book-law .bl-why { font-size: 12px; display: flex; gap: 4px; align-items: center; }
+.book-law .bl-why svg { width: 13px; height: 13px; flex: none; }
+.book-law .bl-taking { color: #d8b45a; font-size: 12px; }
+.book-law .act { width: 100%; min-height: 44px; margin-top: 6px; }
+.book-law .act.small .act-sub { font-size: 11.5px; }
+.book-law.detail { border-color: #d8b45a; }
+.book-law .bl-close { position: absolute; right: 2px; top: 2px; width: 36px; height: 36px; background: none; border: 0; color: var(--muted); }
+.book-law .bl-close svg { width: 16px; height: 16px; }
+.rest { color: #d8b45a; }

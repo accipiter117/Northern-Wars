@@ -15,6 +15,7 @@ import { routePath, routeKey } from './trade.js';
 import { foreignTrade } from './neighbours.js';
 import { intersectSegments } from './geometry.js';
 import { worksFactor } from './works.js';
+import { bookEffect, outputMult } from './book.js';
 import { noteMade, noteUsed, noteShort, offer } from './market.js';
 
 const I = (world) => world.industry;
@@ -205,7 +206,9 @@ export function industryLedger(state, world, income, put, season) {
   if (!i) return;
   const share = (id) => crownShare(state, world, state.settlements[id]);
   // Each works yields as it stands and is manned (M20).
-  const wf = (id, b) => worksFactor(state.settlements[id], b);
+  // Long hours (M26) drive every works harder.
+  const drive = outputMult(state, world);
+  const wf = (id, b) => worksFactor(state.settlements[id], b) * drive;
   const pool = {};
   for (const g of Object.keys(i.goods)) pool[g] = [];
   const flows = [];
@@ -322,7 +325,7 @@ export function industryLedger(state, world, income, put, season) {
 
   // Silver, tolls, rents, donations and contracts.
   for (const id of withBuilding(state, 'silvermine')) {
-    const v = i.silver.amount * share(id) * wf(id, 'silvermine');
+    const v = i.silver.amount * share(id) * wf(id, 'silvermine') * (1 + bookEffect(state, world, 'mines'));
     income.silver += v;
     put(id, v);
   }

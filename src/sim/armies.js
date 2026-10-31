@@ -22,6 +22,7 @@ import { seasonOf } from './calendar.js';
 import { informed } from './realms.js';
 import { damagePlace, outside } from './works.js';
 import { sendFigure } from './figures.js';
+import { bookEffect } from './book.js';
 import {
   TEMERIA, warsOf, ownerOf, originOf, placeOf, peopleAt, hasWalls, valueOf, hurtPlace, hostile, warBetween, sideIndex,
   sideName, recordCapture, setOwner, enemiesOf,
@@ -50,9 +51,11 @@ export function musterPreview(state, world, opts) {
   // How many answer the call: fewer under a weak crown, volunteers on top
   // for a loved one at war (M24 B).
   const answer = musterAnswer(state, world, warsOf(state, TEMERIA).length > 0);
+  // Conscription laws (M26) bring more men to every muster.
+  const conscript = Math.max(0, 1 + bookEffect(state, world, 'levy'));
   for (const [id, s] of Object.entries(state.settlements)) {
     if (s.occupier || s.holder !== 'crown' || !call) continue;
-    const n = Math.floor(totalPopulation(s) * (r.muster.share[world.byId[id].type] ?? 0) * call * integrationFactor(world, s, 'levyAt') * answer);
+    const n = Math.floor(totalPopulation(s) * (r.muster.share[world.byId[id].type] ?? 0) * call * integrationFactor(world, s, 'levyAt') * answer * conscript);
     if (n > 0) {
       levy[id] = n;
       levyMen += n;
@@ -193,6 +196,10 @@ export function raiseArmy(state, world, opts) {
   });
   // Without a marshal, a captain of the crown leads it (M24 E).
   if (!a.marshal) a.captain = captainFor(state, world);
+  // Militia drills make the levy fight a grade better, and royal knights
+  // make every army bolder (M26).
+  drillLevies(state, world, a);
+  a.morale = Math.min(100, a.morale + bookEffect(state, world, 'armyMorale'));
   // The levies converge on the muster along the roads (M24 E): a band from
   // each of the larger districts, walking for as long as the gathering takes.
   const district = districtOf(world);
@@ -248,6 +255,14 @@ export function raiseArmy(state, world, opts) {
   return a;
 }
 
+// Drilled levies (M26): each levy company counts as a grade more seasoned.
+function drillLevies(state, world, a) {
+  const grade = bookEffect(state, world, 'levyGrade');
+  if (!grade) return;
+  normalise(a);
+  for (const b of a.bands ?? []) if (b.source === 'levy') b.xp = Math.max(b.xp ?? 0, grade);
+}
+
 // ---- Names and captains (M24 E) ----
 
 // The crown's armies are numbered, the First, the Second and on, each
@@ -298,6 +313,7 @@ export function callMuster(state, world, id) {
   a.mercs = [];
   a.units = [];
   a.gatherUntil = state.day + 1;
+  drillLevies(state, world, a);
   say(state, `${a.name} is called: ${round(check.men)} men in ${check.bands.length} compan${check.bands.length === 1 ? 'y' : 'ies'} take up arms.`);
   return a;
 }

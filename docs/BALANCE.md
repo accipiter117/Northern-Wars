@@ -25,6 +25,47 @@ The warlord over six years (`tools/crowns.mjs`, seeds 1 to 3), rounded down. It 
 - **Purses are pocket money at peace.** The steward's companies earn about 20 to 30 a month from camps and lairs; a big beast is worth a witcher (a leshen's trophies are several hundred), small ones are not.
 - **Dials worth knowing.** `raid.lootPerPerson` (0.9), `raid.caravans`, `raid.herds` and `raid.count` (6) in data/war.json set what raiding is worth; `purses` in data/forces.json what clearing a threat pays; `battles.ransom.lordsPer` (700) and `lord` (450) how often lords are taken and what they fetch.
 
+### The Book of Laws (M26 B)
+From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower laws in force, measured without and with each law. Every law moves its headline by about 20% or more, or by its stated flat amount (an act, a fixed number). Figures as printed, unrounded where they are flat.
+
+| Law | Headline figure | Seed 1 | Seed 2 |
+| --- | --- | --- | --- |
+| Assizes | Unrest in towns and cities | 14.37 to 8.27 (-42%) | 14.90 to 8.73 (-41%) |
+| Royal pardons | A town's Unrest after a pardon | 45.45 to 30.45 (-15.0) | 48.12 to 33.12 (-15.0) |
+| Charter of the commons | Unrest from heavy taxes (town) | 3.00 to 1.50 (-50%) | 3.00 to 1.50 (-50%) |
+| Curfews and the watch | Unrest everywhere | 21.85 to 14.47 (-34%) | 21.64 to 14.25 (-34%) |
+| Public executions | A town's Unrest after a hanging | 45.45 to 25.45 (-20.0) | 48.12 to 28.12 (-20.0) |
+| The king's riders | Bandit men in camps and on the roads | 182 to 131 (-28%) | 103 to 81.95 (-21%) |
+| Open markets | Market dues in the towns, a month | 650 to 844 (+30%) | 642 to 834 (+30%) |
+| Merchant charters | What partners pay for cloth | 3.20 to 4.00 (+25%) | 3.20 to 4.00 (+25%) |
+| The royal bank | Interest rate on a loan | 0.01 to 0.01 (-50%) | 0.01 to 0.01 (-50%) |
+| Guild monopolies | Crafts, a month | 544 to 713 (+31%) | 543 to 711 (+31%) |
+| Royal mines | Gold and silver, a month | 140 to 210 (+50%) | 140 to 210 (+50%) |
+| Royal granaries | Grain the stores can hold | 270,483 to 362,600 (+34%) | 270,495 to 362,615 (+34%) |
+| Seasonal conscription | Men at a full muster | 3,550 to 5,328 (+50%) | 3,551 to 5,329 (+50%) |
+| Militia drills | Strength of Vizima's levy | 2,632 to 3,185 (+21%) | 2,632 to 3,185 (+21%) |
+| Every man a soldier | Men at a full muster | 5,328 to 7,109 (+33%) | 5,329 to 7,110 (+33%) |
+| Standing companies | Pay of a company of men-at-arms | 44.00 to 33.00 (-25%) | 44.00 to 33.00 (-25%) |
+| The military academy | Experience from a victory | 0.08 to 0.16 (+100%) | 0.08 to 0.16 (+100%) |
+| Royal knights | Cost of a company of knights | 900 to 450 (-50%) | 900 to 450 (-50%) |
+| Poor relief | Deaths in a hungry month | 963 to 465 (-52%) | 959 to 460 (-52%) |
+| Hospices | Deaths in a plague season | 2,011 to 898 (-55%) | 2,050 to 918 (-55%) |
+| Royal feasts | Love after a feast | 55.73 to 65.73 (+10.0) | 58.73 to 68.73 (+10.0) |
+| Long hours | Crafts and goods, a month | 858 to 1,060 (+24%) | 870 to 1,064 (+22%) |
+| Debtors' labour | Repair crews | 3.00 to 6.00 (+100%) | 3.00 to 6.00 (+100%) |
+| Prison gangs | Days to rebuild a works | 29.00 to 15.00 (-48%) | 29.00 to 15.00 (-48%) |
+| Freedom of worship | Clashes between faiths (Part C) | measured in Part C | measured in Part C |
+| The non-human charter | Crafts where non-humans live, a month | 71.00 to 88.50 (+25%) | 228 to 283 (+24%) |
+| Licensed mages | Beast lairs near the town | 1.00 to 0.00 (-1.0) | 2.00 to 1.00 (-1.0) |
+| Faith of the crown | Devotion growth (Part C) | measured in Part C | measured in Part C |
+| Restrictions on non-humans | Fear gained each month from laws | 0.00 to 1.50 (+1.5) | 0.00 to 1.50 (+1.5) |
+| The inquisition | Scoia'tael near the town | 1.00 to 0.00 (-1.0) | 1.00 to 0.00 (-1.0) |
+
+- **The two faith laws** (Freedom of worship, Faith of the crown) act on Devotion and clashes, which arrive with Part C; their rows are filled then.
+- **The king's riders** move least (a fifth to nearly three tenths fewer bandits): they halve how many camps the realm can hold and slow their growth, but camps already standing must wither or be cleared first.
+- **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
+- **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.
+
 ### A rich crown at peace (M24 C)
 Each crown's average month over the year named, from a ledger trace of the crowns in `tools/crowns.mjs` on seeds 1, 2 and 3 (all at peace), rounded down. The test in test/sim/peace.test.js checks seed 3.
 

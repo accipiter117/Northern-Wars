@@ -9,6 +9,7 @@
 import { noteUsed, underPrice } from './market.js';
 import { addDispatch, clamp } from './realm.js';
 import { dateOf, MONTHS } from './calendar.js';
+import { bookEffect } from './book.js';
 import { TEMERIA, placeOf, ownerOf } from './conflict.js';
 
 const C = (world) => world.works;
@@ -344,7 +345,8 @@ export function stepWorksDay(state, world) {
     for (const [b, r] of Object.entries(s.repair)) {
       if (crews <= 0) break;
       crews -= 1;
-      r.daysLeft -= 1;
+      // Prison gangs (M26) mend twice as fast.
+      r.daysLeft -= 1 + bookEffect(state, world, 'repairSpeed');
       if (r.daysLeft > 0) continue;
       s.cond[b] = Math.max(condOf(s, b), r.to);
       if (r.kind === 'patch') (s.patched ??= {})[b] = true;

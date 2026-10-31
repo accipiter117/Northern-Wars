@@ -401,7 +401,7 @@ async function boot() {
   // Laws and peace are sealed; war is declared with a horn; everything else
   // lands with a wooden thunk, and coin clinks when the treasury moves.
   function orderSound(action, before, after) {
-    const kind = action.type === 'declare' ? 'horn' : ['law', 'peace'].includes(action.type) ? 'seal' : 'confirm';
+    const kind = action.type === 'declare' ? 'horn' : ['law', 'sign', 'repeal', 'peace'].includes(action.type) ? 'seal' : 'confirm';
     audio.play(kind);
     if (Math.abs((after ?? 0) - (before ?? 0)) >= 1) setTimeout(() => audio.play('coin'), 90);
   }

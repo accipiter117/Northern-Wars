@@ -20,6 +20,7 @@ import { upgradeConquest } from './conquest.js';
 import { upgradeWorks } from './works.js';
 import { upgradeLabour } from './labour.js';
 import { upgradeMarket } from './market.js';
+import { upgradeLaws } from './book.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
 
@@ -358,6 +359,13 @@ const MIGRATIONS = {
     delete state.trust;
     delete state.dread;
     state.version = 26;
+    return state;
+  },
+  // v27 (M26 A): the Book of Laws. The old laws map to the nearest laws of
+  // the Book; taxes, the court and bounties stay as settings.
+  26(state, world) {
+    upgradeLaws(state, world);
+    state.version = 27;
     return state;
   },
 };

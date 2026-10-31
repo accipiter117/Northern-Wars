@@ -5,7 +5,7 @@
 // deals are carried out month by month in the ledger.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nodeWorld } from '../helpers.js';
+import { nodeWorld, signLaws } from '../helpers.js';
 import {
   createState, step, applyAction, serialize, deserialize, weighDeal, counterOffer, canSign, itemValue, itemProblem, trustIn,
   moodReasons, moodTarget, treatyBetween, proposeDeal, parties, warReasons, canDeclareWith, ledgerNet,
@@ -82,7 +82,7 @@ test('a counter-offer is one the crown can afford and the ruler accepts', () => 
 
 test('mood is a list of reasons that adds up to where the relation drifts', () => {
   const s = createState(world, 1);
-  s.laws.nonhumans.option = 'charter';
+  signLaws(s, world, 'freedom_of_worship', 'nonhuman_charter');
   const reasons = moodReasons(s, world, 'mahakam');
   assert.ok(reasons.some((r) => /charter/i.test(r.text)));
   assert.equal(Math.round(reasons.reduce((a, r) => a + r.value, 0)), Math.round(moodTarget(s, world, 'mahakam')));

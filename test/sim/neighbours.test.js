@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createState, step, applyAction, relationTarget, foreignTrade, serialize, deserialize, envoyText } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
-import { nodeWorld } from '../helpers.js';
+import { nodeWorld, signLaws } from '../helpers.js';
 
 const world = await nodeWorld();
 const run = (s, days) => step(s, days, world, { ambient: false });
@@ -33,10 +33,10 @@ test('stance cannot be changed again for a while', () => {
   assert.equal(act(run(s, 90), { type: 'stance', realm: 'redania', stance: 'neutral' }).error, undefined);
 });
 
-test('laws carry abroad: expelling non-humans turns Mahakam against the crown', () => {
+test('laws carry abroad: restrictions on non-humans turn Mahakam against the crown', () => {
   const s = createState(world, 1);
   const before = relationTarget(s, world, 'mahakam');
-  s.laws.nonhumans = { option: 'expulsion', previous: 'restricted', since: s.day };
+  signLaws(s, world, 'restrictions');
   assert.equal(relationTarget(s, world, 'mahakam'), before - 50);
 });
 

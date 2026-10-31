@@ -1,10 +1,13 @@
-// Laws and the realm's opinion of them. A decree needs Authority and spends Love and crowns,
+// The crown's settings (taxes by estate, the court, monster bounties) and the
+// realm's opinion of its laws; the Book of Laws itself is in book.js (M26).
+// A decree needs Authority and spends Love and crowns,
 // jolts the groups it touches at once, and then phases in over a month: until
 // it has fully taken hold, the old law's effects fade as the new one's grow.
 import { nudge } from './meters.js';
 import { authority, onProgress } from './meters.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
+import { bookEffects, bookOpinion } from './book.js';
 
 const say = (state, text) => addDispatch(state, text, 'realm');
 
@@ -35,20 +38,31 @@ let cacheKey = '';
 let cacheValue = null;
 
 export function lawEffects(state, world) {
-  const key = `${state.day}|${JSON.stringify(state.laws)}`;
+  const key = `${state.day}|${JSON.stringify(state.laws)}|${JSON.stringify(state.book?.signed ?? {})}`;
   if (key === cacheKey) return cacheValue;
   const out = {};
   for (const k of SUMMED) out[k] = 0;
   for (const k of SCOPED) out[k] = Object.fromEntries(TYPES.map((t) => [t, 0]));
+  // The Book of Laws (M26 A): its summed effects join the settings', and a
+  // charter of the commons softens the unrest the tax settings cause.
+  const book = bookEffects(state, world);
+  const taxCalm = Math.max(0, 1 + (book.taxUnrest ?? 0));
   for (const [id, law] of Object.entries(world.laws.laws)) {
     const l = state.laws[id];
+    if (!l || !law.options[l.option]) continue;
     const s = enactment(state, world, id);
-    add(out, law.options[l.option].effects, s);
-    if (s < 1) add(out, law.options[l.previous].effects, 1 - s);
+    const fx = (o) => (law.category === 'taxes' && taxCalm !== 1 && o.unrest ? { ...o, unrest: scale(o.unrest, taxCalm) } : o);
+    add(out, fx(law.options[l.option].effects), s);
+    if (s < 1 && law.options[l.previous]) add(out, fx(law.options[l.previous].effects), 1 - s);
   }
+  add(out, Object.fromEntries(Object.entries(book).filter(([k]) => SUMMED.includes(k) || SCOPED.includes(k))), 1);
   cacheKey = key;
   cacheValue = out;
   return out;
+}
+
+function scale(v, k) {
+  return typeof v === 'number' ? v * k : Object.fromEntries(Object.entries(v).map(([t, x]) => [t, x * k]));
 }
 
 function add(out, fx, weight) {
@@ -64,8 +78,10 @@ function add(out, fx, weight) {
 export function opinionTargets(state, world) {
   const t = defaultOpinion(world);
   for (const [id, law] of Object.entries(world.laws.laws)) {
-    for (const [g, v] of Object.entries(law.options[state.laws[id].option].opinion)) t[g] += v;
+    const o = law.options[state.laws[id]?.option];
+    if (o) for (const [g, v] of Object.entries(o.opinion)) t[g] += v;
   }
+  for (const [g, v] of Object.entries(bookOpinion(state, world))) if (g in t) t[g] += v;
   // Guildhalls, hospices, cathedrals and banks please their own, a little
   // more for each, up to a point.
   const built = {};
@@ -89,6 +105,9 @@ export function canDecree(state, world, lawId, optionId) {
   const l = state.laws[lawId];
   if (!law || !law.options[optionId]) return { ok: false, reason: 'Unknown law.' };
   if (l.option === optionId) return { ok: false, reason: 'Already the law of the land.' };
+  // Settings (taxes, the court, bounties) rest between changes (M26 A).
+  const rest = (world.laws.settingDays ?? 0) - (state.day - (l.since ?? 0));
+  if (l.since && rest > 0) return { ok: false, reason: `Changed too lately: ${rest} days before it can be changed again.` };
   if (enactment(state, world, lawId) < 1) return { ok: false, reason: 'The last change is still taking hold.' };
   // M24 B: a new law needs the crown's Authority, loved or feared, and the
   // king at court.

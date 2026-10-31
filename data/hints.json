@@ -31,7 +31,7 @@
       "id": "laws",
       "trigger": "noDecreeAfter60",
       "title": "Your strongest lever",
-      "text": "Court, Laws changes order, faith, the guilds and more. Every decree costs some of the folk's Trust and pleases some groups while angering others: tap a law to see who. The realm's mood sits at the top. Taxes are set in the Treasury.",
+      "text": "Court, Laws is the Book of Laws: five chapters, each with two rival paths. Signing a path's first law locks its rival until you repeal it from the top down. Each law has one headline effect, its cost and who will cheer or grumble. The ink dries for a month after each signing, and a law rests three months after it is changed. Taxes and the court are set in the Treasury, bounties in Military.",
       "open": "court:laws",
       "openLabel": "Open the Laws"
     },

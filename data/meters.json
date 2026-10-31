@@ -11,10 +11,17 @@
     "raided": 1.0,
     "raidedUnanswered": 0.6,
     "raidsCap": 3,
-    "brokenPromise": { "love": 4, "unrest": 5 },
+    "brokenPromise": {
+      "love": 4,
+      "unrest": 5
+    },
     "repairs": 0.3,
     "ruined": 0.3,
-    "taxes": { "light": 0.6, "fair": 0, "heavy": -0.8 },
+    "taxes": {
+      "light": 0.6,
+      "fair": 0,
+      "heavy": -0.8
+    },
     "levies": 25,
     "lowBelow": 20,
     "lowDrift": 0.0005,
@@ -49,11 +56,72 @@
     "sabotage": 0.06
   },
   "acts": {
-    "note": "The crown's own acts (M24 B). hang: in a restless town, Fear and the town quiet, a little Love lost, the gibbet standing there for `days`. gibbets: at the crossroads round a town, Fear each month while they stand and the roads near it calmer. feast: feasts and tournaments at court. progress: the king tours his greatest towns for `days` days, away from court (no decrees meanwhile), Love and calm in each town he visits.",
-    "hang": { "fear": 6, "love": -2, "unrest": -8, "cooldown": 30, "days": 60 },
-    "gibbets": { "coin": 150, "fear": 4, "monthly": 1.5, "days": 120, "roads": 0.5 },
-    "feast": { "coin": 600, "love": 6, "nobles": 4, "cooldown": 180, "days": 10 },
-    "progress": { "coin": 800, "love": 1.5, "unrest": -8, "towns": 5, "days": 30, "cooldown": 240 }
+    "note": "The crown's own acts (M24 B). hang: in a restless town, Fear and the town quiet, a little Love lost, the gibbet standing there for `days`. gibbets: at the crossroads round a town, Fear each month while they stand and the roads near it calmer. feast: feasts and tournaments at court. progress: the king tours his greatest towns for `days` days, away from court (no decrees meanwhile), Love and calm in each town he visits. Since M26 some acts are unlocked by the Book of Laws (`needs`, a law's id): hanging by Public executions, the feast by Royal feasts, and the new ones: pardon (a town's unrest falls), granaries (end hunger in a town, from the royal granaries), mage (the court mage ends a monster lair near a town, or plague in it), witchhunt (the inquisition clears the Scoia'tael within `radius` of a town). `cooldown` is days between uses of the act anywhere (hang: in the same town).",
+    "hang": {
+      "fear": 15,
+      "love": -5,
+      "unrest": -20,
+      "cooldown": 30,
+      "days": 60,
+      "needs": "executions"
+    },
+    "gibbets": {
+      "coin": 150,
+      "fear": 4,
+      "monthly": 1.5,
+      "days": 120,
+      "roads": 0.5
+    },
+    "feast": {
+      "coin": 600,
+      "love": 10,
+      "nobles": 4,
+      "cooldown": 90,
+      "days": 10,
+      "needs": "royal_feasts"
+    },
+    "progress": {
+      "coin": 800,
+      "love": 1.5,
+      "unrest": -8,
+      "towns": 5,
+      "days": 30,
+      "cooldown": 240
+    },
+    "pardon": {
+      "unrest": -15,
+      "love": 2,
+      "cooldown": 60,
+      "needs": "pardons"
+    },
+    "granaries": {
+      "coin": 200,
+      "days": 30,
+      "cooldown": 60,
+      "needs": "royal_granaries"
+    },
+    "mage": {
+      "coin": 400,
+      "radius": 120,
+      "cooldown": 120,
+      "needs": "licensed_mages",
+      "opinion": {
+        "eternal_fire": -3
+      }
+    },
+    "witchhunt": {
+      "coin": 150,
+      "radius": 160,
+      "fear": 4,
+      "cooldown": 60,
+      "needs": "inquisition",
+      "opinion": {
+        "elf": -6,
+        "dwarf": -3,
+        "old_ways": -4,
+        "eternal_fire": 3
+      }
+    }
   },
   "unrest": {
     "nobles": 0.35,

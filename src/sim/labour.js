@@ -14,6 +14,7 @@ import { addDispatch, clamp } from './realm.js';
 import { dateOf, MONTHS } from './calendar.js';
 import { totalPopulation } from './state.js';
 import { leviedMap } from './conflict.js';
+import { bookEffect } from './book.js';
 import { condOf } from './works.js';
 
 const L = (world) => world.labour;
@@ -243,7 +244,8 @@ export function stepLabourDay(state, world) {
       }
     }
   }
-  state.labour.crews = Math.max(1, Math.floor(report.repairs.hands / l.crew));
+  // Debtors' labour (M26) makes more crews of the same hands.
+  state.labour.crews = Math.max(1, Math.floor((report.repairs.hands / l.crew) * Math.max(0, 1 + bookEffect(state, world, 'repairHands'))));
   // Under the winter turn (M24 C) the hands the woods, mines and workshops
   // cannot take sit at their own hearths spinning, mending and carting:
   // winter work, a little coin rather than idleness.

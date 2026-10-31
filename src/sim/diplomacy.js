@@ -9,6 +9,7 @@ import { realmFaith } from './culture.js';
 import { informed } from './realms.js';
 import { foreignTrade } from './neighbours.js';
 import { TEMERIA, hostile, placesHeldBy, originOf, ownerOf, truceUntil, sideName } from './conflict.js';
+import { lawStands, lawLabel, crownFaith, signed } from './book.js';
 import { realmPotential, soldiersOf } from './war.js';
 
 export const D = (world) => world.diplomacy;
@@ -322,8 +323,7 @@ export function moodReasons(state, world, rid) {
   add('stance', `Our ${st.name.toLowerCase()} stance`, st.relation);
   const zeal = traitMult(world, rid, 'cares');
   for (const [key, v] of Object.entries(r.cares)) {
-    const [law, option] = key.split(':');
-    if (state.laws[law]?.option === option) add(`law:${law}`, `Our law: ${world.laws.laws[law].options[option].name.toLowerCase()}`, v * zeal);
+    if (lawStands(state, key)) add(`law:${key}`, `Our law: ${lawLabel(world, key).toLowerCase()}`, v * zeal);
   }
   if (rid === 'mahakam') add('gold', 'Our gold mines near their mountains', mahakamGrudge(state, world));
   if (world.war && state.wars) {
@@ -336,11 +336,11 @@ export function moodReasons(state, world, rid) {
   const ag = agendaOf(world, rid);
   if (ag?.kind === 'town' && ag.town && ownerOf(state, world, ag.town) === TEMERIA) add('agenda', `We hold ${world.byId[ag.town].name}, which they want`, m.agendaTownHeld);
   if (ag?.kind === 'faith') {
-    const ours = state.laws.patronage?.option === ag.faith || (realmFaith(state)[ag.faith] ?? 0) > 0.45;
+    const ours = crownFaith(state) === ag.faith || (realmFaith(state)[ag.faith] ?? 0) > 0.45;
     if (ours) add('agenda', `We honour ${D(world).faithNames[ag.faith]}`, m.agendaFaith * zeal);
   }
   if (ag?.kind === 'scoiatael') {
-    if (state.laws.nonhumans?.option === 'expulsion' || (state.sympathy ?? 0) < 15) add('agenda', "We are hard on the Scoia'tael", m.scoiataelLaw);
+    if (signed(state, 'restrictions') || signed(state, 'inquisition') || (state.sympathy ?? 0) < 15) add('agenda', "We are hard on the Scoia'tael", m.scoiataelLaw);
     else if ((state.sympathy ?? 0) > 50) add('agenda', "The Scoia'tael find friends in Temeria", m.scoiataelSympathy);
   }
   // What their posture makes of us (M18).

@@ -90,31 +90,31 @@
       "name": "Pious",
       "about": "Devoted to the Eternal Fire.",
       "cares": {
-        "patronage:eternal_fire": 10,
-        "mages:free": -6
+        "faith:eternal_fire": 10,
+        "book:licensed_mages": -6
       }
     },
     "devout": {
       "name": "Devout",
       "about": "Keeps Melitele's feast days and her almshouses.",
       "cares": {
-        "patronage:melitele": 10,
-        "alms:alms": 5
+        "faith:melitele": 10,
+        "book:poor_relief": 5
       }
     },
     "old_blood": {
       "name": "Old blood",
       "about": "Keeps the old groves on his lands.",
       "cares": {
-        "old_ways:suppressed": -15
+        "book:inquisition": -15
       }
     },
     "warlike": {
       "name": "Warlike",
       "about": "Likes a realm under arms.",
       "cares": {
-        "conscription:standing": 8,
-        "conscription:none": -8
+        "book:seasonal_conscription": 8,
+        "book:standing_companies": -8
       }
     },
     "cautious": {

@@ -8,7 +8,7 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { startServer } from '../../tools/serve.js';
-import { ROOT, nodeWorld } from '../helpers.js';
+import { ROOT, nodeWorld, signLaws } from '../helpers.js';
 import { createState, step, serialize, applyAction } from '../../src/sim/index.js';
 
 const OUT = join(ROOT, 'test-results');
@@ -49,6 +49,8 @@ function realm() {
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
   s.treasury = 9000;
+  // Hangings and feasts are unlocked by the Book of Laws (M26).
+  signLaws(s, world, 'curfews', 'executions', 'poor_relief', 'hospices', 'royal_feasts');
   s = act(s, { type: 'act', kind: 'gibbets', settlement: 'maribor' });
   s = act(s, { type: 'act', kind: 'hang', settlement: 'maribor' });
   s.fear = Math.max(s.fear, 55);
