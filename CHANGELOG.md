@@ -1,5 +1,11 @@
 # Changelog
 
+## M27 C and D Rebellion as a war, and the king's judgement
+- A house that rises now goes to war: its castles and villages fly its banners, its garrisons go over, its dues stop, and its host takes the field and besieges your towns. Disloyal neighbours may join.
+- Crush it with your armies: take the rebel's seat, or break his host and take him in battle. Beaten badly, he may sue for mercy. Leave it too long with no army and he forces terms on you.
+- A captured rebel comes before you on a Judgement card that pauses the game: pardon him, fine him and hold his heir, strip his lands and titles, exile him, or behead him. Each choice shows its effects first.
+- Punishing a traitor costs you nothing with the realm: Fear rises and the other lords fall into line. Beheading a lord who never rose is still tyranny, and the realm will say so.
+
 ## Fix: a way out of an ally's war
 - A war an ally leads now ends as other wars do: when its leaders are spent, they settle, and the crown is bound by their treaty. Before, such a war could never end except by withdrawing.
 - A separate peace: in an ally's war, the War screen offers the crown its own terms with the enemy. Sell back what we took (a payment now and a sum each month for two years), keep what we hold, or hand it back. The ally fights on without us and thinks a little less of us.

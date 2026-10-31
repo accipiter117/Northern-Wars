@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M27 Lords worth having, traitors who pay | A and B: what lords give (guarding their lands, retinues, dues) and want; C and D: rebellion as a war and the Judgement; E: raising new houses | In progress (A and B) |
+| M27 Lords worth having, traitors who pay | A and B: what lords give (guarding their lands, retinues, dues) and want; C and D: rebellion as a war and the Judgement; E: raising new houses | In progress (A to D) |
 | M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | Done |
 
 ## M27 acceptance criteria
@@ -36,6 +36,12 @@ Parts A and B, what lords give and want:
 - Dues are a real line (about a fifth of peace income from five loyal houses), fall with disloyalty and stop in rebellion.
 - One want a house at a time (land, command, war, honours, justice); granting it turns ambition into loyalty, ignoring it into grievance.
 - At most one open demand at a time; Love, Fear and Authority shape the lords; the house card fits one screen.
+
+Parts C and D, rebellion as a war and the judgement:
+- A rising turns the house's holdings (garrisons and banners) and puts its host in the field at its seat; disloyal houses may join with their own hosts.
+- It is fought with the ordinary armies, battles and sieges, and ends when the seat falls, the lord is taken in battle, or he sues after heavy defeats; a weak crown can be forced to terms. The old tally is gone.
+- The Judgement card pauses the game: portrait slot, crimes, and pardon, fine and hostage, strip, exile or execute, each showing its effects.
+- Punishing a rebel carries no tyranny penalty; punishing a loyal lord still does.
 
 ## M26 acceptance criteria
 Parts A and B, the Book of Laws:

@@ -64,10 +64,18 @@ test('the fog is cosmetic: what the crown sees never changes the game', () => {
 });
 
 test('neighbouring realms grow over the years, and mend their works', () => {
+  // Grown well past where it began (since M27 a neglected Temeria, wracked
+  // by risings, may tempt Redania to a war that costs it people late on, so
+  // the measure is its best year, not the last).
   const s0 = createState(world, 4);
-  const s = run(s0, 3650, false);
+  let s = s0;
   const pop = (x, rid) => Object.values(x.realms[rid].settlements).reduce((a, t) => a + t.population, 0);
-  assert.ok(pop(s, 'redania') > pop(s0, 'redania'));
+  let best = 0;
+  for (let y = 0; y < 10; y++) {
+    s = run(s, 365, false);
+    best = Math.max(best, pop(s, 'redania'));
+  }
+  assert.ok(best > pop(s0, 'redania') * 1.05, `${best} from ${pop(s0, 'redania')}`);
   // Since M20 every realm starts with its works, and its ruler keeps them up.
   const conds = Object.values(s.realms.redania.settlements).flatMap((t) => t.buildings.map((b) => t.cond?.[b] ?? 100));
   assert.ok(conds.length >= 20 && conds.reduce((a, b) => a + b, 0) / conds.length >= 55, `Redania's works at ${conds.reduce((a, b) => a + b, 0) / conds.length}`);

@@ -23,6 +23,7 @@ import { stepCompaniesDay, monthlyCompanies } from './forces.js';
 import { stepWorksDay, monthlyWorks, worksUnrest } from './works.js';
 import { stepLabourDay, monthlyLabour } from './labour.js';
 import { monthlyFaiths } from './faiths.js';
+import { stepRebellionDay } from './rebellion.js';
 import { resolveOrders, noteTheirMoves, marchingNow } from './board.js';
 
 const CHRONICLE_LIMIT = 400;
@@ -49,6 +50,8 @@ export function stepRealmDay(state, world, rng) {
   if (state.works) stepWorksDay(state, world);
   if (state.wars) {
     stepArmiesDay(state, world, rng);
+    // A rising's seat retaken or its lord taken in the field (M27 C).
+    if (state.houses) stepRebellionDay(state, world, rng);
     stepWarDecisionsDay(state, world);
     stepConquestDay(state, world);
   }

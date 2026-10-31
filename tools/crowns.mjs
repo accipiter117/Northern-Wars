@@ -63,6 +63,24 @@ export function makeCrowns(world) {
     return s;
   }
 
+  // A rising (M27 C): raise the levies and besiege the rebel's seat; then
+  // judge him, the steward with a fine and a hostage, the tyrant with the axe.
+  function crushRising(s, verdict) {
+    for (const j of [...(s.judgements ?? [])]) s = act(s, { type: 'judgement', id: j.id, choice: verdict });
+    const rebel = Object.keys(s.houses).find((id) => s.houses[id].rebel);
+    if (!rebel) return s;
+    const seat = world.houses.houses[rebel]?.seat;
+    let army = s.armies.find((a) => a.side === 'temeria');
+    if (!army) {
+      const muster = Object.keys(s.settlements).filter((id) => !s.settlements[id].occupier && ['city', 'town'].includes(world.byId[id].type))
+        .sort((a, b) => Math.hypot(world.byId[a].x - world.byId[seat].x, world.byId[a].y - world.byId[seat].y) - Math.hypot(world.byId[b].x - world.byId[seat].x, world.byId[b].y - world.byId[seat].y))[0];
+      s = act(s, { type: 'raise', muster, levy: 'half', nobles: true });
+      army = s.armies.find((a) => a.side === 'temeria');
+    }
+    if (army && (army.gatherUntil ?? 0) <= s.day && !(army.order === 'siege' && army.target === seat)) s = act(s, { type: 'army', army: army.id, order: 'siege', target: seat });
+    return s;
+  }
+
   // A sensible crown at war: one army to hold the capital, peace on the best
   // terms the enemy will take, and no part in other people's wars.
   function warPolicy(s, treat = 'spare', keepArmy = false) {
@@ -83,7 +101,8 @@ export function makeCrowns(world) {
       s = act(s, { type: 'raise', muster: 'vizima', levy: 'third', nobles: true, companies: 0, marshal: 'vestibor', stance: 'cautious' });
     }
     // At peace, a war army goes home: its pay is no longer worth it (M21).
-    if (!wars.length && keepArmy !== true) for (const a of crownArmies(s)) if (!a.keep) s = act(s, { type: 'disband', army: a.id });
+    const rising = Object.values(s.houses).some((h) => h.rebel);
+    if (!wars.length && !rising && keepArmy !== true) for (const a of crownArmies(s)) if (!a.keep) s = act(s, { type: 'disband', army: a.id });
     for (const w of wars) {
       // Holding towns of theirs, keep them; otherwise take their coin.
       const held = (side) => w.taken.filter((t) => ownerOf(s, world, t.id) === side && t.from !== side).reduce((a, t) => a + valueOf(s, world, t.id), 0);
@@ -99,7 +118,7 @@ export function makeCrowns(world) {
         if (t.accept) { s = act(s, { type: 'peace', war: w.id, terms: key }); break; }
       }
     }
-    if (!warsOf(s, 'temeria').length) for (const a of crownArmies(s)) s = act(s, { type: 'disband', army: a.id });
+    if (!warsOf(s, 'temeria').length && !Object.values(s.houses).some((h) => h.rebel)) for (const a of crownArmies(s)) s = act(s, { type: 'disband', army: a.id });
     return s;
   }
 
@@ -199,6 +218,7 @@ export function makeCrowns(world) {
 
   function steward(s, month, spend) {
     s = answer(s, true);
+    s = crushRising(s, 1);
     s = diplomacy(s, month);
     s = warPolicy(s);
     s = campaign(s, month);
@@ -267,6 +287,10 @@ export function makeCrowns(world) {
       if (want?.kind === 'honours' || (want && s.houses[id].loyalty < 35)) s = act(s, { type: 'house', house: id, kind: 'honours' });
       else if (want?.kind === 'justice') s = act(s, { type: 'house', house: id, kind: 'redress' });
       else if (want?.kind === 'land' && world.byId[want.target]?.type !== 'town') s = act(s, { type: 'house', house: id, kind: 'grant', settlement: want.target });
+      // A sullen lord's grievances are heard; an over-mighty one is kept close.
+      const h = s.houses[id];
+      if (h && h.loyalty < 30 && h.grievance > 10) s = act(s, { type: 'house', house: id, kind: 'redress' });
+      if (h && h.loyalty < 30 && h.ambition > 80) s = act(s, { type: 'house', house: id, kind: 'summon' });
     }
     return s;
   }
@@ -429,6 +453,7 @@ export function makeCrowns(world) {
 
   function tyrant(s, month) {
     s = answer(s, false);
+    s = crushRising(s, 4);
     // The tyrant raises the levies every other season, whatever the works lose.
     if (world.labour && month % 6 === 0 && canCall(s, world, 'levy').ok) s = act(s, { type: 'call', call: 'levy' });
     // The tyrant leaves what breaks.
@@ -567,5 +592,5 @@ export function makeCrowns(world) {
     return s;
   }
 
-  return { answer, steward, tyrant, warlord, standing, careless };
+  return { answer, steward, tyrant, warlord, standing, careless, crushRising };
 }

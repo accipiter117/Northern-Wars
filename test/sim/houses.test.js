@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createState, step, applyAction, loyaltyTarget, holdingsOf, crownShare, demandText, serialize, deserialize } from '../../src/sim/index.js';
+import { createState, step, applyAction, loyaltyTarget, holdingsOf, crownShare, demandText, serialize, deserialize, houseDues, lawEffects,
+} from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { nodeWorld, signLaws } from '../helpers.js';
 
@@ -96,19 +97,26 @@ test('demands arrive, are answered, and default to refusal if ignored', () => {
   assert.equal(refused.houses.dravnik.grievance, 30, 'a proud house takes refusal twice as hard');
 });
 
-test('a house pushed past breaking rebels, withholds its taxes, and is broken by a strong crown', () => {
+// Since M27 a rising is a war (rebellion.test.js): a crown that raises no
+// army against it is forced to terms in the end.
+test('a house pushed past breaking rises in arms, withholds its dues, and a crown with no army is forced to terms', () => {
   let s = createState(world, 1);
   s.houses.ostrowicz.grievance = 200;
   s.houses.ostrowicz.loyalty = 0;
+  s.fear = 0;
   let rose = false;
   for (let m = 0; m < 24 && !rose; m++) {
     s = run(s, 30);
-    rose = s.chronicle.some((d) => /Ostrowicz has risen/.test(d.text));
+    rose = !!s.houses.ostrowicz?.rebel;
   }
   assert.ok(rose);
-  for (let m = 0; m < 8; m++) s = run(s, 30);
-  assert.ok(s.chronicle.some((d) => /break House Ostrowicz/.test(d.text)));
-  assert.deepEqual(holdingsOf(s, 'ostrowicz'), ['petrelsteyn']);
+  assert.ok(s.chronicle.some((d) => /Ostrowicz has risen/.test(d.text)));
+  assert.equal(houseDues(s, world, lawEffects(s, world)).ostrowicz, undefined, 'no dues in rebellion');
+  for (let m = 0; m < world.houses.rebellion.forceTermsAfter + 2 && s.houses.ostrowicz.rebel; m++) {
+    s.armies = s.armies.filter((a) => a.side !== 'temeria');
+    s = run(s, 30);
+  }
+  assert.ok(s.chronicle.some((d) => /Too weak to break House Ostrowicz, the crown makes terms/.test(d.text)));
 });
 
 test('a crown with no Authority amid Unrest is deposed, and a regency takes over', () => {

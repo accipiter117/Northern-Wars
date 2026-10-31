@@ -14,6 +14,7 @@ import { remember } from './diplomacy.js';
 import { stationedStrength, freeCompanies, huntOdds } from './forces.js';
 import { destroyThreat, threatName } from './threats.js';
 import { obeys } from './lords.js';
+import { thinkRebel } from './rebellion.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength, placeMuster, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
 import { addDispatch, clamp } from './realm.js';
@@ -718,6 +719,7 @@ function think(state, world, a) {
     else return;
   }
   if (a.order === 'muster') return halt(a);
+  if (a.rebel) return thinkRebel(state, world, a);
   if (a.side === TEMERIA) thinkCrown(state, world, a);
   else thinkForeign(state, world, a);
 }

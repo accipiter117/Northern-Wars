@@ -130,6 +130,20 @@ The houses gave little the player felt (a tax share and part of a levy) while th
 - **The card fits one screen**: banner, lord's name and traits, loyalty and ambition bars, what the house gives in three plain lines, what it wants and how to grant it, any demand, and the crown's hand (honours, summon, redress, a command when asked for, fine, a hostage, grant land, strip a title). Demanding levies is gone: the retinue answers the call to arms instead.
 - Ambition grows by 1 a month (was 1.5): it is now something to feed rather than only a drain.
 
+#### Rebellion as a war, and the king's judgement (M27 C and D)
+A rising used to be an abstract tally over months; now it is fought. Code in src/sim/rebellion.js and src/sim/judgement.js; numbers in data/houses.json (rebellion, judgement, actions.execute).
+- **A house rises** when its loyalty is below 15 (30% a month, less under a feared crown; never while a hostage of it is held or its lord waits on judgement). It fights as a side of its own ("rebel:" and the house): its castles and villages go over to it with half their garrisons in its host, its banners fly over them, its dues stop, and its host (half its lands' people, at least 300, as retinue companies) takes the field at its seat. Disloyal houses (below 30) join at even odds, each with its own host. A rebel is at war with the crown alone.
+- **It is fought with the ordinary armies, battles and sieges.** A rebel host fights crown armies it can beat (1.1 to 1), falls back to its seat from those it cannot, and otherwise besieges the crown's towns within reach of its seat. The crown musters and marches on it as on any enemy; rebel-held places appear among the places to besiege.
+- **It ends** when the rebel's seat falls to the crown, when his host is broken and he is taken (35% each time it is routed, or surely once it is below half its least), or when after two defeats with little left he sues for terms. Each brings him before the king. If after a year the crown has no army in the field at least 1.2 times the rebels', the crown is forced to terms: he keeps his lands, gains a village, a council seat and a year free of dues, and Love and Fear suffer. The old tally (decideAfter, crownWinsAt, concedeAfter) is gone.
+- **The Judgement** pauses the realm on a card in the Court inbox: the lord's portrait slot in his banner's colours, his crimes in one line, and five choices, each with its effects written on it.
+  - Pardon: his house's loyalty 85, favour 20, ambition 10; Love +2; the other houses' ambition +8.
+  - Fine and hostage: 1,000 crowns plus 1.5 a head of his lands' people at once, his heir at court for five years (no rising meanwhile), loyalty starting at 30 and favour lifting it slowly.
+  - Strip lands and titles: the house falls; its lands and seat go to the crown (Part E raises a new house to hold them). Fear +12, the other houses favour +6 and ambition −10.
+  - Exile: as stripping (Fear +10), and after a year he may pay agitators in his old lands from the court of the neighbour that likes Temeria least (8% a month, at most three times: their Unrest +10).
+  - Execute: beheaded at his seat; a scaffold stands there ten days; his heir is mentioned in one line. Fear +25, every other house favour +15 and ambition −25.
+  - Unanswered after 60 days, the council takes the fine and hostage.
+- **Impunity**: because he rose against his king, stripping, exile and execution cost no Love and give the other houses no grievance. Doing it to a lord who never rose keeps its weight: stripping a title costs Unrest and grievances as before, and a new "Execute the lord" action on the house card costs Unrest +40 (half at once), Love −12 and a grievance of 25 in every other house.
+
 #### As built in M5
 - Houses (invented): Dravnik (Mayena; proud, warlike), Wolbrecht (Houtborg; devout, cautious), Ostrowicz (Petrelsteyn; old blood, schemer), Gelbrand (Red Fort; greedy, pious), Brodowin (Dorndal; loyalist). Each holds its seat and two villages.
 - Held lands: the crown takes 50% of their taxes and trade (0% while exempt or in rebellion) and pays none of their soldiers.

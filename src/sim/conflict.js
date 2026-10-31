@@ -34,12 +34,22 @@ export function crownHolds(state, id) {
   return !state.settlements[id]?.occupier;
 }
 
+// A great house in rebellion fights as a side of its own (M27 C).
+export const rebelSide = (hid) => `rebel:${hid}`;
+export const rebelHouse = (side) => (typeof side === 'string' && side.startsWith('rebel:') ? side.slice(6) : null);
+
 export function sideName(world, side) {
-  return side === TEMERIA ? world.kingdom.name : world.geography.neighbours[side]?.name ?? side;
+  if (side === TEMERIA) return world.kingdom.name;
+  const hid = rebelHouse(side);
+  if (hid) return world.houses?.houses[hid]?.name ?? world.raisedHouses?.[hid]?.name ?? hid;
+  return world.geography.neighbours[side]?.name ?? side;
 }
 
 export function sideColours(world, side) {
-  return side === TEMERIA ? ['#23365e', '#efe6cf'] : world.realms?.realms[side]?.colours ?? ['#555', '#eee'];
+  if (side === TEMERIA) return ['#23365e', '#efe6cf'];
+  const hid = rebelHouse(side);
+  if (hid) return world.houses?.houses[hid]?.colours ?? world.raisedHouses?.[hid]?.colours ?? ['#555', '#eee'];
+  return world.realms?.realms[side]?.colours ?? ['#555', '#eee'];
 }
 
 // The record of a place, at home or abroad, for the things war does to it.
@@ -104,7 +114,15 @@ export function warBetween(state, a, b) {
 }
 
 export function hostile(state, a, b) {
-  return a !== b && !!warBetween(state, a, b);
+  if (a === b) return false;
+  // A rebel house is at war with the crown alone, while its rising lasts.
+  const ra = rebelHouse(a);
+  const rb = rebelHouse(b);
+  if (ra || rb) {
+    const other = ra ? b : a;
+    return other === TEMERIA && !!state.houses?.[ra ?? rb]?.rebel;
+  }
+  return !!warBetween(state, a, b);
 }
 
 export function warsOf(state, realm) {
