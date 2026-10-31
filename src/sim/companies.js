@@ -90,7 +90,8 @@ export function retinueCompanies(world, house, men) {
   const types = F(world).retinue?.types ?? ['militia'];
   const name = world.houses?.houses[house]?.name ?? house;
   const per = men / types.length;
-  return types.flatMap((t) => split(per, F(world).levy?.size ?? 200, t, { source: 'retinue', from: house, name: `${name} ${t === 'militia' ? 'spears' : 'men-at-arms'}` }));
+  // A grade between levies and standing companies (M27 A).
+  return types.flatMap((t) => split(per, F(world).levy?.size ?? 200, t, { source: 'retinue', from: house, name: `${name} ${t === 'militia' ? 'spears' : 'men-at-arms'}`, xp: F(world).retinue?.xp ?? 0 }));
 }
 
 // A hired company as companies of its troop type.

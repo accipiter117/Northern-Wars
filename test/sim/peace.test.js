@@ -112,7 +112,7 @@ test('a large army in the field for a season costs most of a year of peace', () 
   assert.ok(season > 10000 && season < 18000, `a season ${Math.round(season)}`);
 });
 
-test('the steward makes about 1,500 a month at peace; the careless crown about breaks even; the idle one slides', () => {
+test('the steward makes about 1,500 a month at peace; the careless crown a little; the idle one slides', () => {
   const crowns = makeCrowns(world);
   const play = (who, months) => {
     let s = createState(world, 3);
@@ -131,7 +131,9 @@ test('the steward makes about 1,500 a month at peace; the careless crown about b
   const careless = play('careless', 36);
   const idle = play('idle', 60);
   assert.ok(year(steward, 3) > 1250, `steward year 3 ${year(steward, 3)}`);
-  assert.ok(Math.abs(year(careless, 3)) < 700, `careless year 3 ${year(careless, 3)}`);
+  // Since M27 the lords' dues are a real line even from a careless crown's
+  // lukewarm houses, so it clears a little more than it once did.
+  assert.ok(Math.abs(year(careless, 3)) < 1000, `careless year 3 ${year(careless, 3)}`);
   assert.ok(year(idle, 5) < 0, `idle year 5 ${year(idle, 5)}`);
   assert.ok(year(steward, 3) > year(careless, 3) + 700);
 });

@@ -48,7 +48,7 @@
       "gatherMin": 3
     },
     "retinue": {
-      "perPerson": 0.1,
+      "perPerson": 0.12,
       "fullAbove": 55,
       "refuseBelow": 30
     },

@@ -10,6 +10,7 @@ import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { lawStands } from './book.js';
 import { totalPopulation } from './state.js';
+import { monthlyGuard, guardUnrest, monthlyWants, grantWant, obeys, commandable } from './lords.js';
 
 const say = (state, text) => addDispatch(state, text, 'nobles');
 
@@ -54,6 +55,8 @@ export function loyaltyTarget(state, world, houseId) {
   t += (state.opinion.nobles - 50) * c.nobleOpinionWeight;
   t += (authority(state, world) - 50) * c.standingWeight;
   t += h.favour - h.grievance;
+  // A loved crown keeps its lords' hearts (M27 B).
+  if (c.moods) t += ((state.love ?? 50) - 50) * c.moods.loveLoyalty;
   if (h.office) t += c.officeLoyalty;
   for (const tr of traitsOf(world, houseId)) {
     t += tr.loyalty ?? 0;
@@ -76,7 +79,7 @@ export function crownShare(state, world, s) {
 export function holderUnrest(state, world, s) {
   if (s.holder === 'crown' || !state.houses?.[s.holder]) return 0;
   const h = state.houses[s.holder];
-  return Math.max(0, 50 - h.loyalty) * cfg(world).unrestPerDisloyalty + (h.rebel ? cfg(world).rebellion.unrest : 0);
+  return Math.max(0, 50 - h.loyalty) * cfg(world).unrestPerDisloyalty + (h.rebel ? cfg(world).rebellion.unrest : 0) + guardUnrest(state, world, s);
 }
 
 export function stepHousesDay(state, world) {
@@ -99,12 +102,16 @@ export function monthlyHouses(state, world, rng) {
   for (const [id, h] of Object.entries(state.houses)) {
     h.favour *= c.favourDecay;
     h.grievance *= c.grievanceDecay;
-    const rate = traitsOf(world, id).reduce((m, t) => m * (t.ambition ?? 1), 1);
+    const bold = c.moods ? 1 + Math.max(0, (state.love ?? 50) - 50) * c.moods.loveAmbition : 1;
+    const rate = traitsOf(world, id).reduce((m, t) => m * (t.ambition ?? 1), 1) * bold;
     h.ambition = clamp(h.ambition + c.ambitionPerMonth * rate, 0, 100);
     sum += h.loyalty;
   }
   // The lords' mood feeds the realm's Unrest (meters.js), not a meter of its own.
   void sum;
+  // What the lords give and want (M27 A and B).
+  monthlyGuard(state, world, rng);
+  monthlyWants(state, world, rng);
   rebellions(state, world, rng);
   monthlyDemand(state, world, rng);
   deposition(state, world);
@@ -126,7 +133,11 @@ function nearbyCrownLand(state, world, houseId) {
 }
 
 function monthlyDemand(state, world, rng) {
-  if (!rng.chance(cfg(world).demandChance)) return;
+  // One open demand from all the houses at a time (M27 B), softer under a
+  // feared crown.
+  if (state.demands.length) return;
+  const calm = cfg(world).moods ? Math.max(0, 1 - (state.fear ?? 0) * cfg(world).moods.fearCalm) : 1;
+  if (!rng.chance(cfg(world).demandChance * calm)) return;
   const offices = Object.values(state.houses).filter((h) => h.office).length;
   const options = [];
   for (const [hid, h] of Object.entries(state.houses)) {
@@ -208,12 +219,18 @@ export function canHouseAction(state, world, houseId, kind, settlementId) {
   if (!h || !a) return { ok: false, reason: 'Unknown.' };
   if (h.rebel && kind !== 'honours') return { ok: false, reason: 'The house is in rebellion.' };
   const last = h.lastAction[kind];
-  if (['honours', 'summon', 'levies', 'fine', 'hostages'].includes(kind) && last !== undefined && state.day - last < c.cooldownDays) {
+  if (['honours', 'summon', 'levies', 'fine', 'hostages', 'redress'].includes(kind) && last !== undefined && state.day - last < c.cooldownDays) {
     return { ok: false, reason: `Too soon (${c.cooldownDays - (state.day - last)} days).` };
   }
   // Acting against a house angers the realm (M22 D); not while it boils.
   if (a.unrest && state.unrest + a.unrest > 90) return { ok: false, reason: 'The realm is in too much of an uproar to risk it.' };
   if (a.coin && state.treasury - a.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
+  if (kind === 'summon' && !obeys(state, world, houseId)) return { ok: false, reason: 'He would not come: the crown\'s Authority is too weak.' };
+  if (kind === 'redress' && h.grievance < 1 && h.want?.kind !== 'justice') return { ok: false, reason: 'He has no grievance to set right.' };
+  if (kind === 'command') {
+    if (h.want?.kind !== 'command') return { ok: false, reason: 'He has not asked for a command.' };
+    if (!commandable(state).length) return { ok: false, reason: 'Raise an army first: he can lead one led by a captain.' };
+  }
   if (kind === 'grant') {
     const s = state.settlements[settlementId];
     if (!s || s.holder !== 'crown') return { ok: false, reason: 'Only crown land can be granted.' };
@@ -239,6 +256,7 @@ export function houseAction(state, world, houseId, kind, settlementId) {
   if (kind === 'honours') {
     h.favour += a.favour;
     say(state, `${def.lord} is honoured at court with a chain of office and a seat at the king's table.`);
+    if (h.want?.kind === 'honours') grantWant(state, world, houseId);
   } else if (kind === 'summon') {
     h.ambition = clamp(h.ambition + a.ambition, 0, 100);
     h.favour += a.favour + (state.laws.court?.option === 'splendid' ? a.splendidFavour : 0);
@@ -274,6 +292,16 @@ export function houseAction(state, world, houseId, kind, settlementId) {
     h.favour += a.favour;
     h.ambition = clamp(h.ambition + a.ambition, 0, 100);
     say(state, `${world.byId[settlementId].name} is granted to ${def.name}.`);
+    if (h.want?.kind === 'land') grantWant(state, world, houseId, `${world.byId[settlementId].name}`);
+  } else if (kind === 'redress') {
+    h.grievance = 0;
+    say(state, `The crown hears ${def.lord}'s complaints and sets them right.`);
+    if (h.want?.kind === 'justice') grantWant(state, world, houseId);
+  } else if (kind === 'command') {
+    const army = commandable(state)[0];
+    army.lordOf = houseId;
+    army.captain = def.lord;
+    grantWant(state, world, houseId, `command of ${army.name}`);
   } else if (kind === 'strip') {
     state.settlements[settlementId].holder = 'crown';
     h.grievance += a.grievance;
@@ -294,7 +322,8 @@ function rebellions(state, world, rng) {
   const r = cfg(world).rebellion;
   const name = (id) => cfg(world).houses[id].name;
   for (const [id, h] of Object.entries(state.houses)) {
-    if (!h.rebel && h.loyalty < r.below && rng.chance(r.chance)) {
+    const feared = cfg(world).moods ? Math.max(0, 1 - (state.fear ?? 0) * cfg(world).moods.fearCalm) : 1;
+    if (!h.rebel && h.loyalty < r.below && rng.chance(r.chance * feared)) {
       h.rebel = { since: state.day, months: 0 };
       say(state, `${name(id)} has risen in rebellion. Its banners fly over its castles and its levies bar the roads.`);
       for (const [oid, o] of Object.entries(state.houses)) {

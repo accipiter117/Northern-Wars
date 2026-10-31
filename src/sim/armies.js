@@ -13,6 +13,7 @@ import { onCapture, integrationFactor, addFear } from './conquest.js';
 import { remember } from './diplomacy.js';
 import { stationedStrength, freeCompanies, huntOdds } from './forces.js';
 import { destroyThreat, threatName } from './threats.js';
+import { obeys } from './lords.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength, placeMuster, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
 import { addDispatch, clamp } from './realm.js';
@@ -107,8 +108,9 @@ export function gatherDays(world, muster, ids) {
 export function houseRetinue(state, world, h) {
   const c = W(world).raise.retinue;
   const house = state.houses?.[h];
-  if (!house || house.rebel || house.loyalty < c.refuseBelow) return { men: 0, from: {}, refuse: true };
-  const factor = house.loyalty >= c.fullAbove ? 1 : 0.5;
+  if (!house || house.rebel || house.loyalty < c.refuseBelow || !obeys(state, world, h)) return { men: 0, from: {}, refuse: true };
+  // All of it from a loyal house, falling to half toward the refusal line (M27 A).
+  const factor = house.loyalty >= c.fullAbove ? 1 : 0.5 + 0.5 * (house.loyalty - c.refuseBelow) / (c.fullAbove - c.refuseBelow);
   const from = {};
   let men = 0;
   for (const [id, s] of Object.entries(state.settlements)) {
@@ -119,7 +121,7 @@ export function houseRetinue(state, world, h) {
       men += n;
     }
   }
-  return { men, from, refuse: false, half: factor < 1 };
+  return { men, from, refuse: false, half: factor < 0.75 };
 }
 
 // A mercenary company to be had now: the Novigrad men not against Redania,

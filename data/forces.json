@@ -186,7 +186,8 @@
     "country": "archers"
   },
   "retinue": {
-    "note": "M22 C: a great house's men come as companies of men-at-arms and militia, half and half.",
+    "note": "M22 C: a great house's men come as companies of men-at-arms and militia, half and half. M27 A: with xp experience, a grade between untrained levies and the crown's standing companies.",
+    "xp": 0.4,
     "types": [
       "menatarms",
       "militia"

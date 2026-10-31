@@ -98,9 +98,15 @@ test('the lords send men by the size of their lands and their loyalty', () => {
   s.houses[h].loyalty = 70;
   const full = houseRetinue(s, world, h);
   assert.ok(full.men > 50 && !full.refuse);
+  // Below full loyalty the retinue slides from all of it toward half at
+  // the refusal line (M27 A): at 40, about seven tenths.
   s.houses[h].loyalty = 40;
-  const half = houseRetinue(s, world, h);
-  assert.ok(Math.abs(half.men - full.men / 2) <= Object.keys(full.from).length, `${half.men} of ${full.men}`);
+  const part = houseRetinue(s, world, h);
+  const c = world.war.raise.retinue;
+  const share = 0.5 + 0.5 * (40 - c.refuseBelow) / (c.fullAbove - c.refuseBelow);
+  assert.ok(Math.abs(part.men - full.men * share) <= Object.keys(full.from).length, `${part.men} of ${full.men}`);
+  s.houses[h].loyalty = 31;
+  assert.ok(houseRetinue(s, world, h).men < part.men);
   s.houses[h].loyalty = 20;
   assert.equal(houseRetinue(s, world, h).refuse, true);
   const p = musterPreview(s, world, { muster: 'vizima', levy: 'none', nobles: true });

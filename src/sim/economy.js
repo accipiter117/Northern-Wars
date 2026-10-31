@@ -13,6 +13,7 @@ import { number } from './text.js';
 import { lawEffects, enactment } from './laws.js';
 import { foreignTrade, stanceCost } from './neighbours.js';
 import { crownShare } from './houses.js';
+import { duesShare } from './lords.js';
 import { garrisonFactor, quarantined } from './military.js';
 import { companyUpkeep } from './forces.js';
 import { TEMERIA, ownerOf, leviedMap, besieged, sideName } from './conflict.js';
@@ -308,7 +309,8 @@ export function houseDues(state, world, law) {
     if (house.rebel || (house.exemptUntil !== null && state.day < house.exemptUntil)) continue;
     const people = Object.values(state.settlements).filter((t) => t.holder === h && !t.occupier).reduce((a, t) => a + totalPopulation(t), 0);
     if (!people) continue;
-    out[h] = (n.base + n.perPerson * people) * (law.nobleTax ?? 1);
+    // In full from a loyal house, less as loyalty falls (M27 A).
+    out[h] = (n.base + n.perPerson * people) * (law.nobleTax ?? 1) * duesShare(state, world, h);
   }
   return out;
 }
