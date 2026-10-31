@@ -479,7 +479,7 @@ function warPanel(app, cur) {
       ${lead ? `<h3>Terms of peace</h3><div class="build-list">
         <button type="button" class="build" data-aud-deal='${escapeHtml(JSON.stringify(keep))}'><span class="build-name">Each keeps what it holds <span class="vchip ${VERDICT_CLASS[w1.verdict]}">${w1.verdict}</span></span><span class="build-cost">${escapeHtml(w1.line)}</span></button>
         <button type="button" class="build" data-aud-deal='${escapeHtml(JSON.stringify(white))}'><span class="build-name">Every town handed back <span class="vchip ${VERDICT_CLASS[w2.verdict]}">${w2.verdict}</span></span><span class="build-cost">${escapeHtml(w2.line)}</span></button>
-      </div><p class="sub">Crowns, tribute and towns can be added at the deal table.</p>` : '<p class="sub">Our ally leads this war; only it can make the peace. The War screen can withdraw us.</p>'}`;
+      </div><p class="sub">Crowns, tribute and towns can be added at the deal table.</p>` : '<p class="sub">Our ally leads this war. The War screen can make a separate peace with them, or withdraw us.</p>'}`;
   }
   const base = canDeclare(state, world, pid);
   if (!base.ok && !/Authority/.test(base.reason)) return `<p class="sub">${escapeHtml(base.reason)}</p>`;
