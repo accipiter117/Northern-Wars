@@ -66,6 +66,20 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 - **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
 - **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.
 
+### Rebellion and judgement (M27 C and D)
+Five years of the model crowns in `tools/crowns.mjs`, seeds 1 to 3 (rounded down). Both now meet a rising the same way: raise the levies at the town nearest the rebel's seat and besiege it, keeping the army until the rising is over. The steward judges with a fine and a hostage, the tyrant with the axe.
+
+| Crown | Risings | Houses left after 5 years | Year 3 | Year 5 |
+| --- | --- | --- | --- | --- |
+| Steward | none | 5 | +1,922 to +2,326 | +1,778 to +1,963 |
+| Tyrant | every house rises in time, several together | 0 to 1 (four or five beheaded) | −17 to +660 | +151 to +201 |
+
+- **The steward rarely faces a rising.** Besides feeding wants, it now redresses the grievances of a lord below loyalty 30 and summons one whose ambition is over 80. Before that, House Gelbrand rose against it on seed 3 in year 2.
+- **The tyrant faces risings and executes.** Its lords sink below 15 within a year or two; a rising is crushed in weeks by an army of 2,000 or more against a host of 300 to 700, and the lord goes to the block. The houses are gone by year 5 until Part E raises new ones; meanwhile their lands pay the crown directly.
+- **Rebel hosts**: half the house's lands' people (at least 300) plus half their garrisons, as retinue companies. The first pass (three in ten, no garrisons, at least 150) melted away from attrition before it could fight.
+- **A neglected realm invites invasion**: an idle crown's lords rise again and again, and in one ten-year test run Redania took Vizima in year 8. The realm test now measures Redania's best year rather than its last.
+- **The careless crown** clears about +750 in year 3; the steward clears about 700 more, as the peace test requires.
+
 ### What lords give and want (M27 A and B)
 Five years of the model crowns in `tools/crowns.mjs` on seed 3, each year's average month (rounded down). The steward now feeds each lord's want where it can be had at peace (honours, justice, a village); the careless crown answers generously but never feeds a want; the idle crown answers nothing.
 

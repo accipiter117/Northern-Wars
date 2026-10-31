@@ -1,5 +1,11 @@
 # Changelog
 
+## M27 C and D Rebellion as a war, and the king's judgement
+- A house that rises now goes to war: its castles and villages fly its banners, its garrisons go over, its dues stop, and its host takes the field and besieges your towns. Disloyal neighbours may join.
+- Crush it with your armies: take the rebel's seat, or break his host and take him in battle. Beaten badly, he may sue for mercy. Leave it too long with no army and he forces terms on you.
+- A captured rebel comes before you on a Judgement card that pauses the game: pardon him, fine him and hold his heir, strip his lands and titles, exile him, or behead him. Each choice shows its effects first.
+- Punishing a traitor costs you nothing with the realm: Fear rises and the other lords fall into line. Beheading a lord who never rose is still tyranny, and the realm will say so.
+
 ## M27 A and B What a lord gives and wants
 - A loyal lord guards his own lands: his men put down bandit camps, beast lairs and raiders there, and his towns are calmer. A disloyal one lets trouble fester.
 - Called to arms, a house sends a strong retinue (better than levies, not quite standing companies), sized by its lands and its loyalty.

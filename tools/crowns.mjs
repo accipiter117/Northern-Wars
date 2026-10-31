@@ -287,6 +287,10 @@ export function makeCrowns(world) {
       if (want?.kind === 'honours' || (want && s.houses[id].loyalty < 35)) s = act(s, { type: 'house', house: id, kind: 'honours' });
       else if (want?.kind === 'justice') s = act(s, { type: 'house', house: id, kind: 'redress' });
       else if (want?.kind === 'land' && world.byId[want.target]?.type !== 'town') s = act(s, { type: 'house', house: id, kind: 'grant', settlement: want.target });
+      // A sullen lord's grievances are heard; an over-mighty one is kept close.
+      const h = s.houses[id];
+      if (h && h.loyalty < 30 && h.grievance > 10) s = act(s, { type: 'house', house: id, kind: 'redress' });
+      if (h && h.loyalty < 30 && h.ambition > 80) s = act(s, { type: 'house', house: id, kind: 'summon' });
     }
     return s;
   }
