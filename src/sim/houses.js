@@ -225,11 +225,11 @@ export function canHouseAction(state, world, houseId, kind, settlementId) {
   // Acting against a house angers the realm (M22 D); not while it boils.
   if (a.unrest && state.unrest + a.unrest > 90) return { ok: false, reason: 'The realm is in too much of an uproar to risk it.' };
   if (a.coin && state.treasury - a.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
-  if (kind === 'summon' && !obeys(state, world, houseId)) return { ok: false, reason: 'He would not come: the crown\'s Authority is too weak.' };
-  if (kind === 'redress' && h.grievance < 1 && h.want?.kind !== 'justice') return { ok: false, reason: 'He has no grievance to set right.' };
+  if (kind === 'summon' && !obeys(state, world, houseId)) return { ok: false, reason: 'The lord would not come: the crown\'s Authority is too weak.' };
+  if (kind === 'redress' && h.grievance < 1 && h.want?.kind !== 'justice') return { ok: false, reason: 'No grievance to set right.' };
   if (kind === 'command') {
-    if (h.want?.kind !== 'command') return { ok: false, reason: 'He has not asked for a command.' };
-    if (!commandable(state).length) return { ok: false, reason: 'Raise an army first: he can lead one led by a captain.' };
+    if (h.want?.kind !== 'command') return { ok: false, reason: 'The lord has not asked for a command.' };
+    if (!commandable(state).length) return { ok: false, reason: 'Raise an army first: the lord can take one led by a captain.' };
   }
   if (kind === 'grant') {
     const s = state.settlements[settlementId];

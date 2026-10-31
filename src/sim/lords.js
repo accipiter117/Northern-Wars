@@ -21,6 +21,12 @@ export function houseDef(state, world, id) {
   return state.houses?.[id]?.def ?? C(world).houses[id] ?? null;
 }
 
+// A lord's pronouns, from the title the data gives him or her.
+export function pronoun(def) {
+  const she = /^(Lady|Dame)\b/.test(def?.lord ?? '');
+  return { he: she ? 'she' : 'he', his: she ? 'her' : 'his', him: she ? 'her' : 'him' };
+}
+
 const landsOf = (state, id) => Object.keys(state.settlements).filter((sid) => state.settlements[sid].holder === id && !state.settlements[sid].occupier);
 
 // ---- Guarding his lands (A.1) ----
@@ -137,14 +143,16 @@ export function wantText(state, world, id) {
   const h = state.houses[id];
   const want = h?.want;
   if (!want) return null;
-  const lord = houseDef(state, world, id).lord;
+  const def = houseDef(state, world, id);
+  const lord = def.lord;
+  const p = pronoun(def);
   const realm = want.realm ? sideName(world, want.realm) : '';
   switch (want.kind) {
-    case 'land': return { title: `Wants ${world.byId[want.target]?.name ?? 'land'}`, text: `${lord} asks to hold ${world.byId[want.target]?.name ?? 'more land'} of the crown.`, how: 'Grant him the land.' };
-    case 'command': return { title: 'Wants a command', text: `${lord} asks to lead one of the crown's armies.`, how: 'Give him a command when an army takes the field.' };
-    case 'war': return { title: `Wants war with ${realm}`, text: `${lord} urges war on ${realm} and would ride at the head of his men.`, how: `It is granted while the crown is at war with ${realm}.` };
+    case 'land': return { title: `Wants ${world.byId[want.target]?.name ?? 'land'}`, text: `${lord} asks to hold ${world.byId[want.target]?.name ?? 'more land'} of the crown.`, how: `Grant ${p.him} the land.` };
+    case 'command': return { title: 'Wants a command', text: `${lord} asks to lead one of the crown's armies.`, how: `Give ${p.him} a command when an army takes the field.` };
+    case 'war': return { title: `Wants war with ${realm}`, text: `${lord} urges war on ${realm} and would ride at the head of ${p.his} house's men.`, how: `It is granted while the crown is at war with ${realm}.` };
     case 'honours': return { title: 'Wants honours', text: `${lord} expects to be honoured at court, with coin and a feast.`, how: 'Bestow honours.' };
-    default: return { title: 'Wants justice', text: `${lord} wants his grievances against the crown set right.`, how: 'Redress his grievance.' };
+    default: return { title: 'Wants justice', text: `${lord} wants ${p.his} grievances against the crown set right.`, how: `Redress ${p.his} grievance.` };
   }
 }
 
@@ -156,11 +164,12 @@ export function grantWant(state, world, id, how = '') {
   const turned = Math.min(h.ambition, w.convert);
   h.ambition = clamp(h.ambition - turned, 0, 100);
   h.favour += turned;
-  const what = wantText(state, world, id)?.title.toLowerCase() ?? 'his want';
+  const def = houseDef(state, world, id);
+  const what = wantText(state, world, id)?.title.replace(/^Wants /, '').replace(/^[A-Z]/, (c) => c.toLowerCase()) ?? 'the want';
   h.want = null;
   h.wantAfter = state.day + w.gap;
   h.wantNagged = false;
-  say(state, `${houseDef(state, world, id).lord} has what he ${what.replace(/^wants /, 'wanted: ')}${how ? ` (${how})` : ''}. His house is the crown's.`);
+  say(state, `${def.lord} is granted ${how || what}. The house is the crown's.`);
   return true;
 }
 
@@ -183,7 +192,7 @@ export function monthlyWants(state, world, rng) {
       continue;
     }
     if (want.kind === 'war' && atWar(state, TEMERIA) && (state.wars ?? []).some((x) => x.sides.flat().includes(want.realm) && x.sides.flat().includes(TEMERIA))) {
-      grantWant(state, world, id, 'the war he wanted');
+      grantWant(state, world, id, `the war on ${sideName(world, want.realm)}`);
       continue;
     }
     if (want.kind === 'command' && crownArmies(state).some((a) => a.lordOf === id)) {
@@ -203,7 +212,8 @@ export function monthlyWants(state, world, rng) {
       h.grievance += w.unmet.grievance;
       if (!h.wantNagged) {
         h.wantNagged = true;
-        say(state, `${houseDef(state, world, id).lord} has waited long for the crown to hear him. His patience is wearing thin.`);
+        const def = houseDef(state, world, id);
+        say(state, `${def.lord} has waited long for the crown to hear ${pronoun(def).him}. ${pronoun(def).his[0].toUpperCase()}${pronoun(def).his.slice(1)} patience is wearing thin.`);
       }
     }
   }

@@ -47,11 +47,11 @@ export function noblesHtml(app) {
 // The crown's hand on a house (M27 B): the levy demand is gone (a house's
 // retinue answers the call to arms instead); redress and a command are new.
 const ACTIONS = [
-  ['honours', 'Bestow honours', (a) => `${a.coin} crowns. Favour, and honours if he wants them.`],
-  ['summon', 'Summon to court', (a) => `Raises Unrest by ${a.unrest}. Cools his ambition.`],
-  ['redress', 'Redress his grievance', (a) => `${a.coin} crowns. Clears his grievance.`],
-  ['command', 'Give him a command', () => 'He leads one of your captain-led armies.'],
-  ['fine', 'Impose a fine', (a) => `Raises Unrest by ${a.unrest}. Coin for the crown, a grievance for him.`],
+  ['honours', 'Bestow honours', (a) => `${a.coin} crowns. Favour at court.`],
+  ['summon', 'Summon to court', (a) => `Raises Unrest by ${a.unrest}. Cools the house's ambition.`],
+  ['redress', 'Redress a grievance', (a) => `${a.coin} crowns. Clears the house's grievance.`],
+  ['command', 'Give a command', () => 'The lord leads one of your captain-led armies.'],
+  ['fine', 'Impose a fine', (a) => `Raises Unrest by ${a.unrest}. Coin for the crown, a grievance for the house.`],
   // M24 B: a child of the house kept at court.
   ['hostages', 'Take a hostage', (a) => `Fear +${a.fear}. A deep grievance.`],
 ];
@@ -89,20 +89,20 @@ export function houseCard(app, id) {
   }
   const demands = pendingDecisions(state, world).filter((x) => x.kind === 'demand' && x.house === id);
   return `
-    <div class="house-head" data-part="house-head">
-      <span class="house-banner" style="background:${field};border-color:${charge}"><i style="background:${charge}"></i></span>
-      <div><p class="house-lord">${escapeHtml(def.lord)}</p><p class="sub">${escapeHtml(traits)}${badges(state, id) ? ` ${badges(state, id)}` : ''}</p></div>
-    </div>
-    <div data-part="moods">
+    <div data-part="head">
+      <div class="house-head">
+        <span class="house-banner" style="background:${field};border-color:${charge}"><i style="background:${charge}"></i></span>
+        <div><p class="house-lord">${escapeHtml(def.lord)}</p><p class="sub">${escapeHtml(traits)}${badges(state, id) ? ` ${badges(state, id)}` : ''}</p></div>
+      </div>
       ${gaugeHtml('Loyalty', h.loyalty, `${describeLevel(h.loyalty, LOYALTY_WORDS)}${trend}`, h.loyalty < 30)}
       ${gaugeHtml('Ambition', h.ambition, describeLevel(h.ambition, AMBITION_WORDS), h.ambition > 70)}
     </div>
-    <div data-part="gives"><h3>What he gives</h3><ul class="gives">
+    <div data-part="gives"><h3>What the house gives</h3><ul class="gives">
       <li data-give="guard">${escapeHtml(gives.guard)}</li><li data-give="retinue">${escapeHtml(gives.retinue)}</li><li data-give="dues">${escapeHtml(gives.dues)}</li></ul></div>
-    <div data-part="wants"><h3>What he wants</h3>${want ? `<p><b>${escapeHtml(want.title)}.</b> ${escapeHtml(want.text)} <span class="sub">${escapeHtml(want.how)}</span></p>` : '<p class="sub">Nothing for now.</p>'}</div>
+    <div data-part="wants"><h3>What the house wants</h3>${want ? `<p><b>${escapeHtml(want.title)}.</b> ${escapeHtml(want.text)} <span class="sub">${escapeHtml(want.how)}</span></p>` : '<p class="sub">Nothing for now.</p>'}</div>
     <div data-part="demand">${demands.map((d) => decisionHtml(d)).join('')}</div>
     <div data-part="actions" data-form="${route}"><h3>The crown's hand</h3><div class="build-list">${actions}
-      <button type="button" class="build${picking === 'grant' ? ' open' : ''}" data-house-pick="grant" data-set="picking:${picking === 'grant' ? '' : 'grant'}"><span class="build-name">Grant land</span><span class="build-cost">${h.want?.kind === 'land' ? `He wants ${escapeHtml(world.byId[h.want.target]?.name ?? 'land')}.` : 'Favour now; half the taxes, forever.'}</span></button>
+      <button type="button" class="build${picking === 'grant' ? ' open' : ''}" data-house-pick="grant" data-set="picking:${picking === 'grant' ? '' : 'grant'}"><span class="build-name">Grant land</span><span class="build-cost">${h.want?.kind === 'land' ? `Wanted: ${escapeHtml(world.byId[h.want.target]?.name ?? 'land')}.` : 'Favour now; half the taxes, forever.'}</span></button>
       <button type="button" class="build danger" data-house-pick="strip" data-set="picking:${picking === 'strip' ? '' : 'strip'}" ${h.rebel ? 'disabled' : ''}><span class="build-name">Strip a title</span><span class="build-cost">Every house will remember.</span></button>
     </div>${pickList}</div>
     <div data-part="lands"><h3>Lands</h3><div class="chips">${lands || '<p class="sub">None.</p>'}</div></div>

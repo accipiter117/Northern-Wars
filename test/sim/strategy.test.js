@@ -195,7 +195,12 @@ test('deterrence: a weakly held Temeria is invaded, a strongly held one only pro
         s.love = 5;
         s.fear = 5;
         for (const x of Object.values(s.settlements)) { x.garrison = Math.min(x.garrison, 30); x.unrest = Math.max(x.unrest, 45); }
-      } else for (const [id, x] of Object.entries(s.settlements)) x.garrison = Math.max(x.garrison, world.settlementData[id].garrison * 3);
+      } else {
+        for (const [id, x] of Object.entries(s.settlements)) x.garrison = Math.max(x.garrison, world.settlementData[id].garrison * 3);
+        // A strong crown keeps its lords: since M27 a sullen house holds
+        // back its retinue, and the realm looks weaker for it.
+        for (const h of Object.values(s.houses)) h.loyalty = Math.max(h.loyalty, 55);
+      }
       s = step(s, 30, world, { ambient: false });
       s.diplomacy.requests = [];
       s.warDecisions = s.warDecisions.filter((d) => d.kind !== 'offer');
