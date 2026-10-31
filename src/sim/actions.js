@@ -25,7 +25,7 @@ import { canOpenRoute, openRoute, closeRoute } from './trade.js';
 import { canTrade, makeDeal, endDeal } from './market.js';
 import { canBorrow, borrow, canPayOff, payOff } from './loans.js';
 import { canRaise, raiseArmy, canOrder, orderArmy, disbandArmy, canMuster, callMuster, detachCompany, canMerge, mergeArmies, canSplit, splitArmy } from './armies.js';
-import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision } from './war.js';
+import { canDeclare, declareWar, canMakePeace, offerPeace, withdraw, resolveWarDecision, canSeparatePeace, separatePeace } from './war.js';
 import { TEMERIA, sideIndex } from './conflict.js';
 import { addDispatch as note } from './realm.js';
 import { canSign, signDeal } from './deals.js';
@@ -248,7 +248,7 @@ export function applyAction(state, world, action) {
     return { state: next };
   }
   if (['deal', 'gift', 'denounce', 'tribute', 'ask', 'ultimatum', 'breakTreaty', 'request'].includes(action.type)) return diplomacyAction(state, world, action);
-  if (['declare', 'raise', 'army', 'disband', 'peace', 'withdraw', 'warDecision', 'battle', 'siege', 'muster', 'detach', 'merge', 'split'].includes(action.type)) return warAction(state, world, action);
+  if (['declare', 'raise', 'army', 'disband', 'peace', 'separatePeace', 'withdraw', 'warDecision', 'battle', 'siege', 'muster', 'detach', 'merge', 'split'].includes(action.type)) return warAction(state, world, action);
   // Labour (M20 C): the split of the kingdom's hands, a shift of a few in
   // a hundred, royal calls, and works pinned to be manned first.
   if (action.type === 'labour' || action.type === 'labourShift') {
@@ -433,6 +433,10 @@ function warAction(state, world, action) {
     const check = canMakePeace(state, world, action.war, action.terms);
     if (!check.ok) return { state, error: check.reason };
     offerPeace(next, world, action.war, action.terms);
+  } else if (action.type === 'separatePeace') {
+    const check = canSeparatePeace(state, world, action.war, action.terms);
+    if (!check.ok) return { state, error: check.reason };
+    separatePeace(next, world, action.war, action.terms);
   } else if (action.type === 'withdraw') {
     const war = state.wars.find((w) => w.id === action.war);
     if (!war || sideIndex(war, TEMERIA) < 0 || war.sides[sideIndex(war, TEMERIA)][0] === TEMERIA) return { state, error: 'We lead this war; make peace instead.' };

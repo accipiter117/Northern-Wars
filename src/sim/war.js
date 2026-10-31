@@ -238,8 +238,12 @@ export function monthlyWar(state, world, rng) {
   rivalries(state, world, rng);
   for (const war of [...state.wars]) {
     raiseForWar(state, world, war);
-    if (war.sides.flat().includes(TEMERIA)) offers(state, world, war);
-    else foreignPeace(state, world, war);
+    if (war.sides.flat().includes(TEMERIA)) {
+      offers(state, world, war);
+      // A war an ally leads still ends as foreign wars do: the leaders
+      // settle, and the crown is bound by their treaty.
+      if (war.sides[sideIndex(war, TEMERIA)][0] !== TEMERIA) foreignPeace(state, world, war);
+    } else foreignPeace(state, world, war);
     allyCalls(state, world, war, rng);
   }
   state.tributes = (state.tributes ?? []).filter((t) => t.until > state.day);
@@ -616,6 +620,86 @@ function foreignPeaceM18(state, world, war, m) {
   if (Math.abs(score) >= p.prizeAt) applyPeace(state, world, war, { towns: 'prize', prize: war.sides[score > 0 ? 0 : 1][0], keep });
   else if (Math.abs(score) >= c.keepAt) applyPeace(state, world, war, { towns: 'keep' });
   else applyPeace(state, world, war, { towns: 'white', keep });
+}
+
+// A separate peace: in a war an ally leads, the crown settles with the
+// enemy alone and leaves its friend to fight on. It can sell back what it
+// took (a payment now and a sum each month), keep it, or hand it back.
+function ourTakings(state, world, war) {
+  const them = war.sides[1 - sideIndex(war, TEMERIA)];
+  return war.taken.filter((t) => t.to === TEMERIA && them.includes(t.from) && ownerOf(state, world, t.id) === TEMERIA);
+}
+
+export function separateTerms(state, world, war) {
+  const p = W(world).peace;
+  const me = sideIndex(war, TEMERIA);
+  const them = 1 - me;
+  const foe = war.sides[them][0];
+  const ours = ourTakings(state, world, war);
+  const value = ours.reduce((a, t) => a + valueOf(state, world, t.id), 0);
+  const pressure = exhaustion(state, world, war, them) + warScore(state, world, war, me);
+  const ready = months(state, war) >= p.minMonths;
+  const price = Math.round(400 + value * 150);
+  const purse = Math.max(0, Math.floor((state.realms[foe]?.treasury ?? 0) / 50) * 50);
+  const lump = Math.min(purse, Math.round(price / 4));
+  const monthly = Math.max(10, Math.round((price - lump) / p.tributeMonths));
+  const list = [
+    { key: 'sell', cost: price / 50 - value * 1.5, lump, monthly, price },
+    { key: 'keep', cost: value * 1.5 },
+    { key: 'white', cost: -value },
+  ];
+  for (const t of list) t.accept = ready && pressure - t.cost >= p.acceptMargin;
+  if (!ours.length) list.splice(0, 2);
+  return { list, ready, foe, towns: ours.map((t) => t.id), value };
+}
+
+export function canSeparatePeace(state, world, warId, key) {
+  const war = state.wars.find((w) => w.id === warId);
+  if (!war || sideIndex(war, TEMERIA) < 0) return { ok: false, reason: 'No such war.' };
+  if (war.sides[sideIndex(war, TEMERIA)][0] === TEMERIA) return { ok: false, reason: 'We lead this war; make peace instead.' };
+  const terms = separateTerms(state, world, war);
+  const t = terms.list.find((x) => x.key === key);
+  if (!t) return { ok: false, reason: 'Unknown terms.' };
+  if (!terms.ready) return { ok: false, reason: `Too soon: no one makes peace in the first ${W(world).peace.minMonths} months.` };
+  if (!t.accept) return { ok: false, reason: 'They would refuse.' };
+  return { ok: true, terms: t };
+}
+
+export function separatePeace(state, world, warId, key) {
+  const war = state.wars.find((w) => w.id === warId);
+  const p = W(world).peace;
+  const me = sideIndex(war, TEMERIA);
+  const foes = [...war.sides[1 - me]];
+  const { list, foe } = separateTerms(state, world, war);
+  const t = list.find((x) => x.key === key);
+  const ours = ourTakings(state, world, war);
+  const names = ours.map((x) => world.byId[x.id].name);
+  if (key !== 'keep') for (const x of ours) setOwner(state, world, x.id, x.from);
+  war.taken = war.taken.filter((x) => x.to !== TEMERIA);
+  war.sides[me] = war.sides[me].filter((r) => r !== TEMERIA);
+  for (const r of foes) {
+    setTruce(state, TEMERIA, r, state.day + p.truceDays);
+    if (state.neighbours[r]) state.neighbours[r].relation = Math.max(state.neighbours[r].relation, p.relationAfter);
+  }
+  const leader = war.sides[me][0];
+  if (leader && state.neighbours[leader]) state.neighbours[leader].relation = clamp(state.neighbours[leader].relation - 10, -100, 100);
+  let text = `A separate peace with ${foes.map((r) => sideName(world, r)).join(' and ')}.`;
+  if (key === 'sell' && t) {
+    if (t.lump > 0) pay(state, foe, TEMERIA, t.lump);
+    state.tributes = state.tributes ?? [];
+    state.tributes.push({ from: foe, to: TEMERIA, monthly: t.monthly, until: state.day + p.tributeMonths * 30 });
+    text += ` ${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} sold back: ${t.lump > 0 ? `${t.lump} crowns now and ` : ''}${t.monthly} crowns a month for ${p.tributeMonths} months.`;
+  } else if (key === 'keep') {
+    if (names.length) text += ` We keep ${names.join(', ')}.`;
+  } else if (names.length) text += ` ${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} handed back.`;
+  if (leader) text += ` ${sideName(world, leader)} fights on without us.`;
+  state.warHistory = state.warHistory ?? [];
+  state.warHistory.push({ sides: [foes, [TEMERIA]], since: war.since, until: state.day, towns: key === 'keep' ? 'keep' : 'white', taken: names.length, aims: null, reason: 'separate peace', changed: [] });
+  if (state.warHistory.length > 20) state.warHistory.shift();
+  if (war.sides.some((s) => !s.length)) state.wars = state.wars.filter((w) => w !== war);
+  settleOwnership(state, world);
+  nudge(state, world, 'love', key === 'white' ? 0 : 5, 'A war ended well');
+  say(state, text);
 }
 
 // The crown leaves a friend's war: it hands back what it took and makes its

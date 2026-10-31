@@ -1,7 +1,7 @@
 // The war panel, army cards and the war's part of the realm and town cards.
 import {
   TEMERIA, formatDate, sideName, ownerOf, placesHeldBy, warsOf, warScore, exhaustion, heldValue, sideIndex, musterPreview,
-  canRaise, canDeclare, peaceTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer, canMerge, canOrder, canSplit,
+  canRaise, canDeclare, peaceTerms, separateTerms, describeArmy, crownArmies, hostile, truceUntil, armyPosition, freeCompanies, houseRetinue, mercenaryOffer, canMerge, canOrder, canSplit,
   raidPreview,
   armyPay,
 } from '../sim/index.js';
@@ -17,6 +17,13 @@ const TERMS = {
   keep: ['Each keeps what it holds', 'The towns taken stay with whoever holds them now.'],
   tribute: ['Peace, and tribute to us', 'We keep what we hold, and they pay us every month for two years.'],
   pay: ['Buy peace', 'Every town goes back, and we pay them to go home.'],
+};
+
+// A separate peace in a war our ally leads.
+const SEPARATE = {
+  sell: ['Sell back what we took', 'Our takings go home, and they pay for them.'],
+  keep: ['Keep what we hold', 'We keep the towns we took and leave the war.'],
+  white: ['Peace as we were', 'We hand back what we took and leave the war.'],
 };
 
 function standing(score) {
@@ -41,7 +48,16 @@ function warRowHtml(world, state, war) {
   const leads = war.sides[me][0] === TEMERIA;
   let peace;
   if (!leads) {
-    peace = `<p class="sub">${escapeHtml(sideName(world, war.sides[me][0]))} leads this war and will make the peace.</p>
+    const st = separateTerms(state, world, war);
+    const separate = st.list.map((term) => {
+      const [name, blurb] = SEPARATE[term.key];
+      const price = term.key === 'sell' ? ` ${term.lump > 0 ? `${number(term.lump)} crowns now and ` : ''}${number(term.monthly)} crowns a month for ${world.war.peace.tributeMonths} months.` : '';
+      const verdict = !st.ready ? `Too soon: no one makes peace in the first ${world.war.peace.minMonths} months.` : term.accept ? 'They would accept.' : 'They would refuse.';
+      return `<button type="button" class="build" data-separate="${war.id}:${term.key}" ${orderAttr({ type: 'separatePeace', war: war.id, terms: term.key }, 'Make a separate peace on these terms? Our friend fights on without us.', { final: true })} ${term.accept ? '' : 'disabled'}>
+        <span class="build-name">${name}</span><span class="build-blurb">${blurb}${price}</span><span class="build-cost">${verdict}</span></button>`;
+    }).join('');
+    peace = `<p class="sub">${escapeHtml(sideName(world, war.sides[me][0]))} leads this war. We can make our own peace with ${escapeHtml(foes)} and leave it to fight on.</p>
+      ${separate}
       <button type="button" class="build" data-withdraw="${war.id}" ${orderAttr({ type: 'withdraw', war: war.id }, 'Leave our friend to fight alone?')}><span class="build-name">Withdraw from the war</span>
       <span class="build-cost">Hand back what we took; our friend will not thank us.</span></button>`;
   } else {

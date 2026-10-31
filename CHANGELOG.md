@@ -1,5 +1,9 @@
 # Changelog
 
+## Fix: a way out of an ally's war
+- A war an ally leads now ends as other wars do: when its leaders are spent, they settle, and the crown is bound by their treaty. Before, such a war could never end except by withdrawing.
+- A separate peace: in an ally's war, the War screen offers the crown its own terms with the enemy. Sell back what we took (a payment now and a sum each month for two years), keep what we hold, or hand it back. The ally fights on without us and thinks a little less of us.
+
 ## M27 A and B What a lord gives and wants
 - A loyal lord guards his own lands: his men put down bandit camps, beast lairs and raiders there, and his towns are calmer. A disloyal one lets trouble fester.
 - Called to arms, a house sends a strong retinue (better than levies, not quite standing companies), sized by its lands and its loyalty.

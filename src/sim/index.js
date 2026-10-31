@@ -23,7 +23,7 @@ export { realmStock, foodNeed, foodYield, goodsYield, foodCapacity, buildingEffe
 export { TEMERIA, ownerOf, originOf, sideName, sideColours, placesHeldBy, warsOf, atWar, hostile, warScore, exhaustion, heldValue, sideIndex, crownHolds, valueOf, truceUntil } from './conflict.js';
 export { musterPreview, canRaise, canOrder, armyPosition, armyStrength, describeArmy, crownArmies, canMuster, canMerge, canSplit, daysToArrive, raidPreview, raidLootAt, armyHuntOdds, leaderOf } from './armies.js';
 export { sendFigure, figurePosition, describeFigure, rideDays, courtOf } from './figures.js';
-export { canDeclare, declareCost, peaceTerms, canMakePeace, warDecisionText, realmPotential } from './war.js';
+export { canDeclare, declareCost, peaceTerms, canMakePeace, warDecisionText, realmPotential, separateTerms, canSeparatePeace } from './war.js';
 export { routeValue, routeLimit, routeCost, routeEndOk, canOpenRoute, routePath, routeKey, routeSafety } from './trade.js';
 export { depositAt, depositsOf, activeMines, goldYield, canProspect } from './gold.js';
 export { slotsOf } from './actions.js';
