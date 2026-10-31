@@ -8,11 +8,47 @@
   "standingWeight": 0.2,
   "officeLoyalty": 10,
   "maxOffices": 2,
-  "ambitionPerMonth": 1.5,
+  "ambitionPerMonth": 1,
   "unrestPerDisloyalty": 0.1,
   "demandChance": 0.25,
   "demandDefaultDays": 20,
   "cooldownDays": 180,
+  "guard": {
+    "note": "M27 A: a house at loyalty above or more keeps its own lands: each month, at chance, its men put down one camp, lair, band or commando there (never the supernatural, which stays witchers' work), and its lands' Unrest is calm lower. Below festerBelow it lets trouble fester: Unrest fester higher.",
+    "above": 50,
+    "chance": 0.5,
+    "calm": 4,
+    "festerBelow": 30,
+    "fester": 4,
+    "kinds": ["bandits", "monsters", "raiders", "scoiatael"]
+  },
+  "wants": {
+    "note": "M27 B: each house has one want at a time, drawn from its traits by weight. Granting it turns up to convert of ambition into favour (loyalty). Unmet after patience months, each month adds unmet.ambition and unmet.grievance; after lapse months he gives up asking. A command is wanted noArmy times as often while the crown has no army in the field. A new want comes gap days after the last is settled. Justice is wanted only by a house with grievance above grievanceAbove.",
+    "convert": 30,
+    "patience": 4,
+    "lapse": 9,
+    "gap": 90,
+    "unmet": { "ambition": 2, "grievance": 1.5 },
+    "notRivals": ["brokilon", "mahakam"],
+    "kinds": {
+      "land": { "weight": 1 },
+      "command": { "weight": 1, "noArmy": 0.25 },
+      "war": { "weight": 0.5 },
+      "honours": { "weight": 1.5 },
+      "justice": { "weight": 1, "grievanceAbove": 15, "coin": 250 }
+    }
+  },
+  "obey": {
+    "note": "M27 B: a lord at loyalty loyalAbove or more always answers a summons or a call to arms; a doubtful one only while the crown's Authority is authorityAbove or more.",
+    "loyalAbove": 50,
+    "authorityAbove": 40
+  },
+  "moods": {
+    "note": "M27 B: Love and Fear shape the lords. Loyalty target moves by (Love - 50) x loveLoyalty; Love above 50 also speeds ambition by loveAmbition per point; Fear softens demands and makes risings rarer, each chance times (1 - Fear x fearCalm).",
+    "loveLoyalty": 0.15,
+    "loveAmbition": 0.01,
+    "fearCalm": 0.006
+  },
   "rebellion": {
     "below": 15,
     "chance": 0.3,
@@ -65,6 +101,13 @@
       "ambition": -10,
       "note": "M24 B: a son or daughter of the house kept at court against its good behaviour. The realm fears a crown that takes hostages from its lords."
     },
+    "redress": {
+      "coin": 250,
+      "note": "M27 B: set a lord's grievance right: his grievance is cleared and a justice want granted."
+    },
+    "command": {
+      "note": "M27 B: hand one of the crown's captain-led armies to the lord; it grants a command want."
+    },
     "strip": {
       "unrest": 20,
       "grievance": 40,
@@ -73,6 +116,7 @@
   },
   "traits": {
     "greedy": {
+      "wants": { "honours": 2, "land": 1.5 },
       "name": "Greedy",
       "about": "Wants coin and exemptions; fines sting twice as much.",
       "demands": {
@@ -82,6 +126,7 @@
       "fineGrievance": 2
     },
     "proud": {
+      "wants": { "honours": 1.5, "justice": 1.5 },
       "name": "Proud",
       "about": "A refused demand is an insult remembered twice over.",
       "refusal": 2
@@ -110,6 +155,7 @@
       }
     },
     "warlike": {
+      "wants": { "war": 3, "command": 2 },
       "name": "Warlike",
       "about": "Likes a realm under arms.",
       "cares": {
@@ -118,11 +164,13 @@
       }
     },
     "cautious": {
+      "wants": { "honours": 1.5, "war": 0.3 },
       "name": "Cautious",
       "about": "Slow to want more.",
       "ambition": 0.5
     },
     "schemer": {
+      "wants": { "land": 2, "justice": 1.5 },
       "name": "Schemer",
       "about": "Always nursing a quarrel with a rival house.",
       "demands": {
@@ -130,6 +178,7 @@
       }
     },
     "loyalist": {
+      "wants": { "command": 2 },
       "name": "Loyalist",
       "about": "His family has served the crown for generations.",
       "loyalty": 10

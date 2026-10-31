@@ -259,9 +259,14 @@ export function makeCrowns(world) {
       if (month % 12 === 0 && s.treasury > 3000 && canAct(s, world, 'feast').ok) s = act(s, { type: 'act', kind: 'feast' });
       if (month % 12 === 6 && s.treasury > 4000 && canAct(s, world, 'progress').ok) s = act(s, { type: 'act', kind: 'progress' });
     }
-    // Keep the lords sweet.
+    // Keep the lords sweet (M27 B): feed each one's want where it can be
+    // had at peace (honours, justice, a village of the crown's), and honour
+    // any who still waver.
     for (const id of Object.keys(s.houses)) {
-      if (s.houses[id].loyalty < 35) s = act(s, { type: 'house', house: id, kind: 'honours' });
+      const want = s.houses[id].want;
+      if (want?.kind === 'honours' || (want && s.houses[id].loyalty < 35)) s = act(s, { type: 'house', house: id, kind: 'honours' });
+      else if (want?.kind === 'justice') s = act(s, { type: 'house', house: id, kind: 'redress' });
+      else if (want?.kind === 'land' && world.byId[want.target]?.type !== 'town') s = act(s, { type: 'house', house: id, kind: 'grant', settlement: want.target });
     }
     return s;
   }

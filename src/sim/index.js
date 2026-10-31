@@ -84,3 +84,6 @@ export {
 export {
   faithLevel, perksOf, faithEffect, faithEffects, faithRest, canFaithAct, churchLand, onPilgrimage, powerReadyAt,
 } from './faiths.js';
+export {
+  houseDef, guards, guardUnrest, duesShare, houseGives, grantableLand, wantText, grantWant, obeys, commandable, landsPeople,
+} from './lords.js';

@@ -1,5 +1,13 @@
 # Changelog
 
+## M27 A and B What a lord gives and wants
+- A loyal lord guards his own lands: his men put down bandit camps, beast lairs and raiders there, and his towns are calmer. A disloyal one lets trouble fester.
+- Called to arms, a house sends a strong retinue (better than levies, not quite standing companies), sized by its lands and its loyalty.
+- The lords' dues are now a real line: five loyal houses pay about a fifth of a peaceful crown's income. Dues fall with disloyalty and stop in rebellion.
+- Each house wants one thing at a time (land, a command, a war, honours or justice), shown on its card. Grant it and its ambition turns to loyalty; ignore it and it turns to grievance.
+- Only one demand from the lords is open at a time. A loved crown's lords are loyal but bolder; a feared crown's are quieter.
+- The house card fits one screen: banner, lord, loyalty and ambition, what the house gives and wants, and the crown's hand.
+
 ## M26 E The faiths and laws on the map
 - Zoom in to see the faiths at work: pyres smouldering after the Fire's purges, groves (and stone circles at level 3) where the Old Ways hold the people, Melitele's banners over her hospices, processions on the roads during a festival, and the king's train on pilgrimage.
 - The Book shows too: the king's riders patrolling out from every town under their law, and gibbets at Vizima's crossroads under public executions.

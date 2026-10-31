@@ -1,6 +1,9 @@
-import { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, formatDate, dateOf } from '../sim/index.js';
+import {
+  loyaltyTarget, housePower, holdingsOf, canHouseAction, formatDate, dateOf, houseDef, houseGives, wantText, houseDues, houseRetinue, lawEffects,
+} from '../sim/index.js';
+import { gaugeHtml } from './faith.js';
 import { number, escapeHtml, describeLevel } from './format.js';
-import { cardHead, section, orderAttr } from './card.js';
+import { section, orderAttr } from './card.js';
 import { pendingDecisions, decisionHtml } from './inbox.js';
 
 const LOYALTY_WORDS = ['Treacherous', 'Disloyal', 'Wavering', 'Loyal', 'Devoted'];
@@ -41,62 +44,69 @@ export function noblesHtml(app) {
   `;
 }
 
+// The crown's hand on a house (M27 B): the levy demand is gone (a house's
+// retinue answers the call to arms instead); redress and a command are new.
 const ACTIONS = [
-  ['honours', 'Bestow honours', (a) => `${a.coin} crowns.`],
-  ['summon', 'Summon to court', (a) => `Raises Unrest by ${a.unrest}. Cools his ambition.`],
-  ['levies', 'Demand levies', () => 'A quarter of his soldiers march to Vizima. He will resent it.'],
-  ['fine', 'Impose a fine', (a) => `Raises Unrest by ${a.unrest}. Coin for the crown, a grievance for him.`],
+  ['honours', 'Bestow honours', (a) => `${a.coin} crowns. Favour at court.`],
+  ['summon', 'Summon to court', (a) => `Raises Unrest by ${a.unrest}. Cools the house's ambition.`],
+  ['redress', 'Redress a grievance', (a) => `${a.coin} crowns. Clears the house's grievance.`],
+  ['command', 'Give a command', () => 'The lord leads one of your captain-led armies.'],
+  ['fine', 'Impose a fine', (a) => `Raises Unrest by ${a.unrest}. Coin for the crown, a grievance for the house.`],
   // M24 B: a child of the house kept at court.
-  ['hostages', 'Take a hostage', (a) => `Fear +${a.fear}. A child of the house at court for its good behaviour; a deep grievance.`],
+  ['hostages', 'Take a hostage', (a) => `Fear +${a.fear}. A deep grievance.`],
 ];
 
 export function houseCard(app, id) {
   const { world, state, memory } = app;
   const route = `house:${id}`;
   const picking = memory.forms[route]?.picking ?? null;
-  const def = world.houses.houses[id];
+  const def = houseDef(state, world, id);
   const h = state.houses[id];
-  const p = housePower(state, world, id);
-  const traits = def.traits.map((t) => `<li><b>${escapeHtml(world.houses.traits[t].name)}.</b> ${escapeHtml(world.houses.traits[t].about)}</li>`).join('');
+  const [field, charge] = def.colours;
+  const traits = def.traits.map((t) => world.houses.traits[t]?.name).filter(Boolean).join(', ');
   const lands = holdingsOf(state, id).map((sid) => `<button type="button" class="chip" data-place="${sid}" data-go="town:${sid}">${escapeHtml(world.byId[sid].name)}${sid === def.seat ? ' (seat)' : ''}</button>`).join(' ');
-  const share = holdingsOf(state, id).length ? crownShare(state, world, state.settlements[holdingsOf(state, id)[0]]) : 0;
   const gap = loyaltyTarget(state, world, id) - h.loyalty;
-  const trend = gap > 2 ? ' <small class="up">\u25B2</small>' : gap < -2 ? ' <small class="down">\u25BC</small>' : '';
+  const trend = gap > 2 ? ' \u25B2' : gap < -2 ? ' \u25BC' : '';
+  // What the house gives (A.4).
+  const dues = houseDues(state, world, lawEffects(state, world))[id] ?? 0;
+  const gives = houseGives(state, world, id, houseRetinue(state, world, id), dues);
+  const want = wantText(state, world, id);
   const actions = ACTIONS.map(([kind, label, cost]) => {
     const check = canHouseAction(state, world, id, kind);
-    const ask = kind === 'fine' || kind === 'levies' || kind === 'hostages' ? `${label}: ${def.name}?` : '';
+    if (kind === 'command' && h.want?.kind !== 'command') return '';
+    if (kind === 'redress' && !check.ok && h.grievance < 1) return '';
+    const ask = kind === 'fine' || kind === 'hostages' ? `${label}: ${def.name}?` : '';
     return `<button type="button" class="build" data-house-action="${kind}" ${orderAttr({ type: 'house', house: id, kind }, ask)} ${check.ok ? '' : 'disabled'}>
       <span class="build-name">${label}</span><span class="build-cost">${check.ok ? cost(world.houses.actions[kind]) : escapeHtml(check.reason)}</span></button>`;
   }).join('');
   let pickList = '';
   if (picking === 'grant') {
     const crown = Object.keys(state.settlements).filter((sid) => canHouseAction(state, world, id, 'grant', sid).ok);
-    pickList = `<h3>Grant which land?</h3><div class="chips">${crown.map((sid) => `<button type="button" class="chip" data-grant="${sid}" ${orderAttr({ type: 'house', house: id, kind: 'grant', settlement: sid }, `Grant ${world.byId[sid].name} to ${def.name}?`)}>${escapeHtml(world.byId[sid].name)}</button>`).join(' ')}</div>`;
+    pickList = `<h3>Grant which land?</h3><div class="chips">${crown.map((sid) => `<button type="button" class="chip${h.want?.target === sid ? ' on' : ''}" data-grant="${sid}" ${orderAttr({ type: 'house', house: id, kind: 'grant', settlement: sid }, `Grant ${world.byId[sid].name} to ${def.name}?`)}>${escapeHtml(world.byId[sid].name)}</button>`).join(' ')}</div>`;
   } else if (picking === 'strip') {
     const theirs = holdingsOf(state, id).filter((sid) => canHouseAction(state, world, id, 'strip', sid).ok);
     pickList = `<h3>Strip which land? (raises Unrest by ${world.houses.actions.strip.unrest})</h3><div class="chips">${theirs.map((sid) => `<button type="button" class="chip" data-strip="${sid}" ${orderAttr({ type: 'house', house: id, kind: 'strip', settlement: sid }, `Strip ${def.name} of ${world.byId[sid].name}? Every house will remember.`)}>${escapeHtml(world.byId[sid].name)}</button>`).join(' ') || '<p class="sub">Nothing but the seat.</p>'}</div>`;
   }
   const demands = pendingDecisions(state, world).filter((x) => x.kind === 'demand' && x.house === id);
   return `
-    ${cardHead({
-      status: `<span>${escapeHtml(def.lord)}. ${badges(state, id)}</span>`,
-      chips: [
-        { icon: 'crown', label: 'Loyalty', value: `${describeLevel(h.loyalty, LOYALTY_WORDS)}${trend}`, tone: h.loyalty < 30 ? 'bad' : '' },
-        { label: 'Ambition', value: describeLevel(h.ambition, AMBITION_WORDS), tone: h.ambition > 70 ? 'bad' : '' },
-        { label: 'Favour', value: number(h.favour) },
-        { label: 'Grievances', value: number(h.grievance), tone: h.grievance > 30 ? 'bad' : '' },
-        { icon: 'sword', label: 'Soldiers', value: number(p.soldiers) },
-        { icon: 'people', label: 'People', value: number(p.people) },
-        { icon: 'coin', label: "Crown's share", value: `${Math.round(share * 100)}%` },
-      ],
-    })}
+    <div data-part="head">
+      <div class="house-head">
+        <span class="house-banner" style="background:${field};border-color:${charge}"><i style="background:${charge}"></i></span>
+        <div><p class="house-lord">${escapeHtml(def.lord)}</p><p class="sub">${escapeHtml(traits)}${badges(state, id) ? ` ${badges(state, id)}` : ''}</p></div>
+      </div>
+      ${gaugeHtml('Loyalty', h.loyalty, `${describeLevel(h.loyalty, LOYALTY_WORDS)}${trend}`, h.loyalty < 30)}
+      ${gaugeHtml('Ambition', h.ambition, describeLevel(h.ambition, AMBITION_WORDS), h.ambition > 70)}
+    </div>
+    <div data-part="gives"><h3>What the house gives</h3><ul class="gives">
+      <li data-give="guard">${escapeHtml(gives.guard)}</li><li data-give="retinue">${escapeHtml(gives.retinue)}</li><li data-give="dues">${escapeHtml(gives.dues)}</li></ul></div>
+    <div data-part="wants"><h3>What the house wants</h3>${want ? `<p><b>${escapeHtml(want.title)}.</b> ${escapeHtml(want.text)} <span class="sub">${escapeHtml(want.how)}</span></p>` : '<p class="sub">Nothing for now.</p>'}</div>
     <div data-part="demand">${demands.map((d) => decisionHtml(d)).join('')}</div>
     <div data-part="actions" data-form="${route}"><h3>The crown's hand</h3><div class="build-list">${actions}
-      <button type="button" class="build${picking === 'grant' ? ' open' : ''}" data-house-pick="grant" data-set="picking:${picking === 'grant' ? '' : 'grant'}"><span class="build-name">Grant land</span><span class="build-cost">Favour now; half the taxes, forever.</span></button>
+      <button type="button" class="build${picking === 'grant' ? ' open' : ''}" data-house-pick="grant" data-set="picking:${picking === 'grant' ? '' : 'grant'}"><span class="build-name">Grant land</span><span class="build-cost">${h.want?.kind === 'land' ? `Wanted: ${escapeHtml(world.byId[h.want.target]?.name ?? 'land')}.` : 'Favour now; half the taxes, forever.'}</span></button>
       <button type="button" class="build danger" data-house-pick="strip" data-set="picking:${picking === 'strip' ? '' : 'strip'}" ${h.rebel ? 'disabled' : ''}><span class="build-name">Strip a title</span><span class="build-cost">Every house will remember.</span></button>
     </div>${pickList}</div>
     <div data-part="lands"><h3>Lands</h3><div class="chips">${lands || '<p class="sub">None.</p>'}</div></div>
-    ${section(memory, route, 'traits', 'Character', `<ul class="cares">${traits}</ul>`)}
+    ${section(memory, route, 'traits', 'Character', `<ul class="cares">${def.traits.map((t) => `<li><b>${escapeHtml(world.houses.traits[t].name)}.</b> ${escapeHtml(world.houses.traits[t].about)}</li>`).join('')}</ul>`)}
   `;
 }
 

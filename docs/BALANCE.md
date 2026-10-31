@@ -66,6 +66,22 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 - **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
 - **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.
 
+### What lords give and want (M27 A and B)
+Five years of the model crowns in `tools/crowns.mjs` on seed 3, each year's average month (rounded down). The steward now feeds each lord's want where it can be had at peace (honours, justice, a village); the careless crown answers generously but never feeds a want; the idle crown answers nothing.
+
+| Crown | Year 1 | Year 3 | Year 5 | Dues a month (year 3) | Loyalty of the five (year 5) | Risings |
+| --- | --- | --- | --- | --- | --- | --- |
+| Steward | +2,115 | +2,083 | +1,742 | 1,071 | 95, 95, 77, 43, 100 | none |
+| Careless | +1,358 | +826 | +256 | 785 | 29, 43, 31, 42, 70 | none |
+| Idle | +1,391 | +106 | −207 | 431 | 34, 35, 35, 35, 49 | none |
+
+- **Dues** from five loyal houses come to about 1,070 to 1,170 a month, a fifth of the steward's income (about 5,500), up from about 300 before M27. The careless crown's sullen lords pay about two thirds of that, the idle crown's about two fifths.
+- **Feeding wants keeps lords loyal**: the steward's houses end the five years at 77 to 100 (one at 43, a Proud house kept wanting war). Without M27's wants, the steward's lords drifted to the 30s and 40s.
+- **A first pass let unmet wants spiral**: every lord went to full ambition and the steward faced risings. The fix: ambition grows 1 a month (was 1.5), unmet wants add 2 ambition and 1.5 grievance a month and lapse after nine months, a command is wanted a quarter as often with no army in the field, and a granted want converts 30 ambition.
+- **The careless crown** clears a little more than before (+826 in year 3; M24 C: about +300), from the dues of its lukewarm lords; the peace test's bound for it is now 1,000.
+- **Retinues**: three in ten of a house's lands' people (was one in ten), experience 0.4. A house's lands hold about 1,000 people, so a loyal house sends about 300 men; the five together about 1,500.
+- **Deterrence**: a neglected realm's sullen lords hold back their retinues, so the realm looks weaker to its neighbours. The deterrence test's strong crown now keeps its lords loyal.
+
 ### The faiths (M26 C)
 Devotion moves 6% of the gap a month toward following × 0.7 plus fervour; fervour fades by 12% a month. Acts add fervour: endow +5 (500 crowns, every 90 days), preachers +4 (200, every 90 days), the festival +5 (300, yearly), a pilgrimage +12 (600, yearly), church land +1.5 a month while it stands. With no care a faith settles near its following: at the start Melitele and the Fire sit in the 20s and 30s, so level 1 or 2.
 

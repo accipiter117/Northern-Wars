@@ -853,3 +853,10 @@ ul.orders li .chip { flex: none; }
 .perks li.has b { background: #d8b45a; color: #241c12; border-color: #d8b45a; }
 .perks li.next { opacity: 0.55; }
 .perks li.later { opacity: 0.3; }
+
+/* The house card (M27 B): banner, lord and traits on one line; what he gives. */
+.house-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.house-banner { flex: none; position: relative; width: 34px; height: 44px; border: 4px solid; border-radius: 3px 3px 16px 16px; }
+.house-banner i { position: absolute; left: 50%; top: 40%; width: 10px; height: 10px; margin: -5px 0 0 -5px; transform: rotate(45deg); }
+.house-lord { margin: 0; font-size: 18px; }
+.gives { margin: 0; padding-left: 18px; line-height: 1.6; }

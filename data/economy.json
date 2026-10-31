@@ -88,8 +88,12 @@
     "note": "Tax a head a month by kind of place, times a fortunes factor (prosperityBase + perProsperity x prosperity), times any tax bonus from market halls, guildhalls and merchants' quarters. Since M21 the crown sets three estates: the towns (head tax in cities and towns, and their market dues), the villages (head tax in villages, castles and temples, and a tithe of the harvest at the grain price) and the lords (each great house pays a due of base plus perPerson for its lands).",
     "tithe": 0.2,
     "nobles": {
-      "base": 40,
-      "perPerson": 0.02
+      "base": 150,
+      "perPerson": 0.08,
+      "fullAbove": 55,
+      "noneBelow": 15,
+      "least": 0.2,
+      "note": "M27 A: each house's due is base plus perPerson for its lands' people, in full at loyalty fullAbove or more, falling in a straight line to least of it toward noneBelow, and nothing in rebellion. The five houses together, loyal, pay about a fifth of a steward's peace income."
     }
   },
   "trade": {

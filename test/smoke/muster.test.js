@@ -73,7 +73,7 @@ test('the labour strip, a preset, a town\'s focus, and an army raised with its p
   await page.click('[data-form="raise"] [data-set="nobles:true"]');
   await page.click('[data-merc="kovir"]');
   const text = await page.textContent('[data-part="raise-preview"]');
-  assert.match(text, /\d[\d,]* men: [\d,]+ levied, \d+ from the lords, 800 hired[\s\S]*hands leave the works[\s\S]*crowns a month[\s\S]*Gathers in \d+ days/);
+  assert.match(text, /\d[\d,]* men: [\d,]+ levied, [\d,]+ from the lords, 800 hired[\s\S]*hands leave the works[\s\S]*crowns a month[\s\S]*Gathers in \d+ days/);
   assert.match(await page.textContent('[data-part="retinues"]'), /Dravnik \d+/);
   // Let the sheet settle after the last tap before scrolling to the preview.
   await page.waitForTimeout(300);
