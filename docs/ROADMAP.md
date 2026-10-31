@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | In progress (A to D done) |
+| M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | Done |
 
 ## M26 acceptance criteria
 Parts A and B, the Book of Laws:
@@ -43,6 +43,10 @@ Parts C and D, the faiths and their powers:
 - Rival faiths clash only where both are above 40; Freedom of worship halves clashes; the inquisition makes the Fire win and the losers angrier. AI realms on the same rules.
 - Cooldown rings on every resting button, a long press for the days left, a gold dot when ready; the faith sheet on one screen; a Court badge when a power comes ready.
 - tools/laws.mjs measures Freedom of worship and Faith of the crown; tests for levels, perks, powers, rests, clashes and the version 28 save.
+
+Part E, the faiths and laws on the map:
+- Close up: pyres after a purge, groves and stone circles of the Old Ways, Melitele's hospice banners, festival processions, the king's pilgrimage, the king's riders on the roads and gibbets under public executions.
+- Which marks stand is a pure function tested in Node; a browser test draws them round Vizima without errors.
 
 ## M24 acceptance criteria
 Part A, a compact top bar:

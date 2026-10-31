@@ -1,5 +1,9 @@
 # Changelog
 
+## M26 E The faiths and laws on the map
+- Zoom in to see the faiths at work: pyres smouldering after the Fire's purges, groves (and stone circles at level 3) where the Old Ways hold the people, Melitele's banners over her hospices, processions on the roads during a festival, and the king's train on pilgrimage.
+- The Book shows too: the king's riders patrolling out from every town under their law, and gibbets at Vizima's crossroads under public executions.
+
 ## M26 C and D The faiths and their powers
 - Each faith (the Eternal Fire, Melitele, the Old Ways) has a Devotion from 0 to 100. Every 20 points brings a perk you will feel: more grain, fewer bandits, calmer villages, bolder armies.
 - At level 3 a faith gives the crown a power: the Fire's Purge, Melitele's Blessing of the harvest, the Old Ways' Belleteyn. Level 5 adds Healers' march and the Druids' circle.

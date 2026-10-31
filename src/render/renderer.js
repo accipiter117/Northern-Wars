@@ -10,6 +10,8 @@ import { createTiles } from './tiles.js';
 import { getSprite } from './sprites.js';
 import './sprites-buildings.js';
 import './sprites-war.js';
+import './sprites-faith.js';
+import { faithMarks } from '../sim/marks.js';
 import { createSettlementArt, seasonLook } from './settlementArt.js';
 import { prepareCountryside } from './countryside.js';
 import { dateOf } from '../sim/calendar.js';
@@ -796,6 +798,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     ctx.globalAlpha = 1 - b;
     drawLifeLayer(state, frac);
     drawCrownMarks(state);
+    drawFaithMarks(state);
     if (b < 0.3) drawPips(state);
     if (selectedId) {
       const st = world.byId[selectedId];
@@ -990,6 +993,47 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       const p = toScreen(cam, st.x, st.y);
       if (p.x < -120 || p.y < -120 || p.x > cam.viewW + 120 || p.y > cam.viewH + 120) continue;
       getSprite('mark', 'bunting').draw(ctx, p.x, p.y - reach(id) * 0.6, reach(id) * 1.6, { colours: sideColours(world, TEMERIA) });
+    }
+  }
+
+  // The faiths and the Book on the map (M26 E), close up only: pyres,
+  // groves, hospice banners, processions, the king's pilgrimage, the
+  // king's riders and the capital's standing gibbets.
+  const FAITH_TINT = { eternal_fire: '#c0582c', melitele: '#d9c27a', old_ways: '#5f7d4c' };
+  function drawFaithMarks(state) {
+    if (zoomRel() < 1.4) return;
+    const size = 12 * Math.max(0.9, Math.min(1.8, Math.sqrt(zoomRel())));
+    const reach = (id) => Math.max(iconSize(world.byId[id].type) / 2 + 10, (footprint[id] ?? 0) * 0.95 + 6);
+    const off = (p, m) => p.x < -m || p.y < -m || p.x > cam.viewW + m || p.y > cam.viewH + m;
+    for (const mk of faithMarks(state, world)) {
+      const st = world.byId[mk.place];
+      const p = toScreen(cam, st.x, st.y);
+      if (mk.toward) {
+        // On the road: out from the place toward the next, t of the way.
+        const q = world.byId[mk.toward];
+        const w = toScreen(cam, st.x + (q.x - st.x) * mk.t, st.y + (q.y - st.y) * mk.t);
+        if (off(w, 40)) continue;
+        const angle = Math.atan2(q.y - st.y, q.x - st.x);
+        const facing = Math.cos(angle) >= 0 ? 1 : -1;
+        if (mk.kind === 'procession') getSprite('mark', 'procession').draw(ctx, w.x, w.y, size * 1.6, { colour: FAITH_TINT[mk.faith], angle });
+        else if (mk.kind === 'pilgrims') {
+          getSprite('unit', 'figure').draw(ctx, w.x, w.y - 4, UNIT_SIZE * 1.05, { kind: 'progress', facing, colours: sideColours(world, TEMERIA) });
+          getSprite('mark', 'procession').draw(ctx, w.x - Math.cos(angle) * size * 0.6, w.y - Math.sin(angle) * size * 0.6, size * 1.2, { colour: FAITH_TINT[mk.faith], angle });
+        } else if (mk.kind === 'riders') getSprite('unit', 'figure').draw(ctx, w.x, w.y - 4, UNIT_SIZE, { kind: 'escort', facing, colours: sideColours(world, TEMERIA) });
+        continue;
+      }
+      if (off(p, 80)) continue;
+      const r = reach(mk.place);
+      if (mk.kind === 'pyre') getSprite('mark', 'pyre').draw(ctx, p.x + r * 0.5, p.y + r * 0.35, size * 1.2);
+      else if (mk.kind === 'grove') getSprite('mark', 'grove').draw(ctx, p.x - r - size * 0.6, p.y + r * 0.4, size * 1.5, { stones: mk.stones });
+      else if (mk.kind === 'hospice') getSprite('mark', 'hospice').draw(ctx, p.x + r * 0.75, p.y - r * 0.55, size);
+      else if (mk.kind === 'gibbets') {
+        for (const e of (world.adjacency[mk.place] ?? []).slice(0, 2)) {
+          const q = world.byId[e.to];
+          const a = Math.atan2(q.y - st.y, q.x - st.x);
+          getSprite('mark', 'gibbet').draw(ctx, p.x + Math.cos(a) * (r + size * 2), p.y + Math.sin(a) * (r + size * 2), size);
+        }
+      }
     }
   }
 

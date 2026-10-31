@@ -93,6 +93,13 @@ Faith used to be a mix of followers and a source of tension. Since M26 each fait
 - **AI realms** keep Devotion by the same drift toward their lean (Redania the Fire, Cintra and Aedirn Melitele, Brokilon and Mahakam the Old Ways).
 - **Cooldown rings (D)**: every act, power and law change that rests wears a ring round its button that fills as it recovers; a long press says how many days are left; a gold dot marks one ready. The Court tab is badged when a power comes ready, until the Faith page is read.
 - **Old saves** (version 28): the faiths start from the realm's following, with no fervour and nothing resting.
+- **On the map (E)**, close up only, from src/sim/marks.js (which marks stand, tested in Node) drawn by src/render/sprites-faith.js:
+  - A pyre in the square for ten days after a purge.
+  - Sacred groves beside places where a third or more follow the Old Ways once it reaches level 1, with standing stones from level 3.
+  - Melitele's pale banner over every hospice, and over towns where two in five follow her once hospices are a perk (level 2) or a law.
+  - A procession on the road out of the capital and the holy place while a kept festival's season lasts.
+  - The king's train on the road to the holy place and home again during a pilgrimage.
+  - The king's riders going out and back along two roads from each town under their law, and gibbets standing at the capital's crossroads under public executions (with the gibbets and bunting from the crown's acts, M24 B).
 
 ### Faith, culture and peoples
 - Faiths: the Eternal Fire (zealous, urban, hostile to non-humans and magic), Melitele (healing, charity, women and the poor), the Old Ways (rural, druidic, Velen).
