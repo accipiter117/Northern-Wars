@@ -135,3 +135,32 @@ registerPlaceholder('mark', 'procession', (ctx, x, y, size, opts = {}) => {
   ctx.lineWidth = 0.6;
   ctx.strokeRect(bx - r * 0.22, by - r * 0.9, r * 0.44, r * 0.38);
 });
+
+// A headsman's scaffold (M27 D): a raised platform, the block and the axe.
+registerPlaceholder('mark', 'block', (ctx, x, y, size) => {
+  const r = size / 2;
+  ctx.fillStyle = '#6b4a2a';
+  ctx.fillRect(x - r * 0.9, y - r * 0.1, r * 1.8, r * 0.35);
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = Math.max(0.8, size * 0.05);
+  ctx.strokeRect(x - r * 0.9, y - r * 0.1, r * 1.8, r * 0.35);
+  for (const dx of [-0.75, 0.75]) {
+    ctx.beginPath();
+    ctx.moveTo(x + dx * r, y + r * 0.25);
+    ctx.lineTo(x + dx * r, y + r * 0.7);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#4a3420';
+  ctx.fillRect(x - r * 0.2, y - r * 0.4, r * 0.4, r * 0.3);
+  ctx.beginPath();
+  ctx.moveTo(x + r * 0.35, y - r * 0.1);
+  ctx.lineTo(x + r * 0.6, y - r * 0.9);
+  ctx.stroke();
+  ctx.fillStyle = '#9a9a9a';
+  ctx.beginPath();
+  ctx.moveTo(x + r * 0.5, y - r * 0.95);
+  ctx.lineTo(x + r * 0.85, y - r * 0.8);
+  ctx.lineTo(x + r * 0.62, y - r * 0.6);
+  ctx.closePath();
+  ctx.fill();
+});

@@ -8,6 +8,7 @@ import { addDispatch, clamp } from './realm.js';
 import { nudge } from './meters.js';
 import { houseDef, pronoun } from './lords.js';
 import { totalPopulation } from './state.js';
+import { openRaising } from './newhouses.js';
 
 const say = (state, text) => addDispatch(state, text, 'nobles');
 const J = (world) => world.houses.judgement;
@@ -56,7 +57,9 @@ export function fallHouse(state, world, hid, how) {
   for (const id of lands) state.settlements[id].holder = 'crown';
   delete state.houses[hid];
   state.demands = state.demands.filter((d) => d.house !== hid && d.rival !== hid);
-  (state.fallenHouses ??= []).push({ house: hid, name: def.name, lord: def.lord, how, day: state.day, lands, seat: def.seat });
+  (state.fallenHouses ??= []).push({ house: hid, name: def.name, lord: def.lord, how, day: state.day, lands, seat: def.seat, ...(def.raised !== undefined ? { def } : {}) });
+  // The lands wait for a new house (M27 E).
+  if (lands.length) openRaising(state, world, lands, def.seat, hid);
   return lands;
 }
 

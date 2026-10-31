@@ -90,3 +90,4 @@ export {
 export { judgementsOf, crimesOf, judgementEffects, fineOf, JUDGEMENTS } from './judgement.js';
 export { rebelArmies } from './rebellion.js';
 export { rebelSide, rebelHouse } from './conflict.js';
+export { candidatesFor, canOfferTown } from './newhouses.js';

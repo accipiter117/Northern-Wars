@@ -1027,6 +1027,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (mk.kind === 'pyre') getSprite('mark', 'pyre').draw(ctx, p.x + r * 0.5, p.y + r * 0.35, size * 1.2);
       else if (mk.kind === 'grove') getSprite('mark', 'grove').draw(ctx, p.x - r - size * 0.6, p.y + r * 0.4, size * 1.5, { stones: mk.stones });
       else if (mk.kind === 'hospice') getSprite('mark', 'hospice').draw(ctx, p.x + r * 0.75, p.y - r * 0.55, size);
+      else if (mk.kind === 'block') getSprite('mark', 'block').draw(ctx, p.x - r * 0.6, p.y + r * 0.4, size * 1.3);
       else if (mk.kind === 'gibbets') {
         for (const e of (world.adjacency[mk.place] ?? []).slice(0, 2)) {
           const q = world.byId[e.to];

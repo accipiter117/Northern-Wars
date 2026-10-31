@@ -39,6 +39,7 @@ import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin
 import { canSignLaw, signLaw, canRepeal, repealLaw } from './book.js';
 import { canFaithAct, doFaithAct, revokeLand } from './faiths.js';
 import { judge } from './judgement.js';
+import { candidatesFor, raiseHouse, openRaising, canOfferTown } from './newhouses.js';
 import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -154,6 +155,23 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     houseAction(next, world, action.house, action.kind, action.settlement);
+    return { state: next };
+  }
+  // Raising a new house to hold lands (M27 E): from the inbox, by the
+  // candidate's place in the list; or a conquered town offered for one.
+  if (action.type === 'raising') {
+    const key = candidatesFor(state, world)[action.choice]?.key;
+    if (!key) return { state, error: 'No such candidate.' };
+    const next = structuredClone(state);
+    const out = raiseHouse(next, world, action.id, key);
+    if (out.error) return { state, error: out.error };
+    return { state: next };
+  }
+  if (action.type === 'offerTown') {
+    const check = canOfferTown(state, world, action.settlement);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    openRaising(next, world, [action.settlement], action.settlement);
     return { state: next };
   }
   // The king's judgement on a rebel lord (M27 D).

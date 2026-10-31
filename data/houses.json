@@ -385,5 +385,73 @@
         "#efe6cf"
       ]
     }
+  },
+  "newHouses": {
+    "note": "M27 E: a fallen house's lands wait for a new house raised from a loyal commander (captains of the crown's armies, captains of standing companies with wins, or a younger son of a house at loyalty sonLoyalty or more), at most most candidates. The new house starts at loyalty and ambition, with gratitude added to its loyalty's target, fading by gratitudeFade a month; it wants nothing for quietDays. Traits are drawn from traits (never a pair in clash); colours from fields and charges, a field not already flown. No field near the crown's own blue.",
+    "most": 3,
+    "sonLoyalty": 60,
+    "loyalty": 85,
+    "ambition": 10,
+    "gratitude": 25,
+    "gratitudeFade": 0.97,
+    "quietDays": 180,
+    "traits": [
+      "loyalist",
+      "cautious",
+      "warlike",
+      "devout",
+      "pious",
+      "proud",
+      "greedy",
+      "old_blood"
+    ],
+    "clash": [
+      [
+        "pious",
+        "old_blood"
+      ],
+      [
+        "devout",
+        "pious"
+      ],
+      [
+        "cautious",
+        "warlike"
+      ]
+    ],
+    "ladies": [
+      "Mora",
+      "Ysolde",
+      "Hedda",
+      "Wenna",
+      "Brisa",
+      "Agnes",
+      "Liesl"
+    ],
+    "sons": [
+      "Anselm",
+      "Bertolt",
+      "Dietmar",
+      "Florian",
+      "Gerwin",
+      "Henrik",
+      "Lothar",
+      "Matthias"
+    ],
+    "fields": [
+      "#6e2a4d",
+      "#4a5a1f",
+      "#8a6a1f",
+      "#5e3a1f",
+      "#1f5e52",
+      "#7a3a3a",
+      "#3d6b3a",
+      "#9a4a2a"
+    ],
+    "charges": [
+      "#efe6cf",
+      "#e2c46a",
+      "#2b2116"
+    ]
   }
 }
