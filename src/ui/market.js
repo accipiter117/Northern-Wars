@@ -8,6 +8,7 @@ import {
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { orderAttr, button } from './card.js';
+import { cooling } from './cooldown.js';
 import { form } from './memory.js';
 
 const crowns = (n) => `${number(Math.round(n))} crowns`;
@@ -119,7 +120,15 @@ function estateRow(world, state, estate, lawId, preview) {
   return `<div class="tax-row" data-estate="${estate}">
     <div class="gr-main"><span class="gr-line">${escapeHtml(law.name)}</span>
       <span class="gr-sub">${escapeHtml(cur.blurb)}${s < 1 ? ` Taking hold, ${Math.round(s * 100)}%.` : ''}${restNote(state, world, lawId)}</span></div>
-    <div class="tax-opts">${opts}</div></div>`;
+    ${restWrap(state, world, lawId, `<div class="tax-opts">${opts}</div>`)}</div>`;
+}
+
+// The options of a setting resting between changes wear its ring (M26 D).
+function restWrap(state, world, lawId, html) {
+  const l = state.laws[lawId];
+  const total = world.laws.settingDays ?? 0;
+  const left = l?.since ? Math.max(0, total - (state.day - l.since)) : 0;
+  return left > 0 ? cooling(html, left, total, false) : html;
 }
 
 // How long before a setting can be changed again (M26: 30 days between).
@@ -145,7 +154,7 @@ export function settingHtml(app, lawId) {
   return `<div class="tax-row" data-part="setting-${lawId}">
     <div class="gr-main"><span class="gr-line">${escapeHtml(law.name)}</span>
       <span class="gr-sub">${escapeHtml(law.options[now].blurb)}${restNote(state, world, lawId)}</span></div>
-    <div class="tax-opts">${opts}</div></div>`;
+    ${restWrap(state, world, lawId, `<div class="tax-opts">${opts}</div>`)}</div>`;
 }
 
 export function taxesHtml(app) {

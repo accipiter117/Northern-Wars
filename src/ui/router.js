@@ -8,7 +8,7 @@ import { pendingDecisions, inboxHtml } from './inbox.js';
 import { stewardHtml } from './steward.js';
 import { lawsHtml } from './laws.js';
 import { noblesHtml, houseCard, swatch, depositionHtml } from './nobles.js';
-import { faithHtml } from './faith.js';
+import { faithHtml, freshPowers } from './faith.js';
 import { ledgerHtml, chronicleHtml } from './menu.js';
 import { industryHtml } from './trade.js';
 import { marketHtml, taxesHtml } from './market.js';
@@ -33,7 +33,7 @@ const TAB_TITLES = { court: 'The Court', treasury: 'Treasury', military: 'Milita
 // Small counts shown on sub-tabs, so what waits is never hidden one level down.
 function subBadges(app, tab) {
   const { state, world } = app;
-  if (tab === 'court') return { inbox: pendingDecisions(state, world, app.acked()).length };
+  if (tab === 'court') return { inbox: pendingDecisions(state, world, app.acked()).length, faith: freshPowers(state, world, app.memory.faithSeen ?? 0) };
   if (tab === 'military') return { threats: app.looseThreats(), war: state.warDecisions?.length ?? 0 };
   if (tab === 'diplomacy') return { envoys: state.envoys.length + (state.diplomacy?.requests.length ?? 0) };
   return {};
@@ -48,7 +48,13 @@ function tabScreen(app, tab) {
   if (tab === 'court') {
     if (sub === 'laws') html = lawsHtml(app);
     else if (sub === 'houses') html = noblesHtml(app);
-    else if (sub === 'faith') html = faithHtml(app);
+    else if (sub === 'faith') {
+      html = faithHtml(app);
+      if (app.memory.faithSeen !== app.state.day) {
+        app.memory.faithSeen = app.state.day;
+        app.badges?.();
+      }
+    }
     else html = stewardHtml(app) + inboxHtml(pendingDecisions(app.state, app.world, app.acked()));
   } else if (tab === 'treasury') {
     if (sub === 'trade' || sub === 'routes') html = marketHtml(app);

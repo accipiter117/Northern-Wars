@@ -7,11 +7,12 @@ import { nudge } from './meters.js';
 import { authority, onProgress } from './meters.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
+import { faithEffects } from './faiths.js';
 import { bookEffects, bookOpinion } from './book.js';
 
 const say = (state, text) => addDispatch(state, text, 'realm');
 
-const SUMMED = ['tax', 'nobleTax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'love', 'fear', 'monthly', 'storage', 'growth', 'nonhumanExodus'];
+const SUMMED = ['harvestFloor', 'tax', 'nobleTax', 'trade', 'garrison', 'garrisonUpkeep', 'foodYield', 'court', 'love', 'fear', 'monthly', 'storage', 'growth', 'nonhumanExodus'];
 const SCOPED = ['unrest', 'prosperity', 'taxBy'];
 const TYPES = ['village', 'town', 'city', 'castle', 'temple'];
 
@@ -38,7 +39,7 @@ let cacheKey = '';
 let cacheValue = null;
 
 export function lawEffects(state, world) {
-  const key = `${state.day}|${JSON.stringify(state.laws)}|${JSON.stringify(state.book?.signed ?? {})}`;
+  const key = `${state.day}|${JSON.stringify(state.laws)}|${JSON.stringify(state.book?.signed ?? {})}|${JSON.stringify(state.faiths?.devotion ?? {})}|${state.faiths?.blessing ?? 0}|${state.faiths?.belleteyn ?? 0}`;
   if (key === cacheKey) return cacheValue;
   const out = {};
   for (const k of SUMMED) out[k] = 0;
@@ -56,6 +57,8 @@ export function lawEffects(state, world) {
     if (s < 1 && law.options[l.previous]) add(out, fx(law.options[l.previous].effects), 1 - s);
   }
   add(out, Object.fromEntries(Object.entries(book).filter(([k]) => SUMMED.includes(k) || SCOPED.includes(k))), 1);
+  // The faiths' perks (M26 C) that act as laws do: Love, Fear, grain, births, calm villages.
+  add(out, Object.fromEntries(Object.entries(faithEffects(state, world)).filter(([k]) => SUMMED.includes(k) || SCOPED.includes(k))), 1);
   cacheKey = key;
   cacheValue = out;
   return out;

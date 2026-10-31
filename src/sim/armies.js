@@ -23,6 +23,7 @@ import { informed } from './realms.js';
 import { damagePlace, outside } from './works.js';
 import { sendFigure } from './figures.js';
 import { bookEffect } from './book.js';
+import { faithEffect } from './faiths.js';
 import {
   TEMERIA, warsOf, ownerOf, originOf, placeOf, peopleAt, hasWalls, valueOf, hurtPlace, hostile, warBetween, sideIndex,
   sideName, recordCapture, setOwner, enemiesOf,
@@ -199,7 +200,7 @@ export function raiseArmy(state, world, opts) {
   // Militia drills make the levy fight a grade better, and royal knights
   // make every army bolder (M26).
   drillLevies(state, world, a);
-  a.morale = Math.min(100, a.morale + bookEffect(state, world, 'armyMorale'));
+  a.morale = Math.min(100, a.morale + bookEffect(state, world, 'armyMorale') + faithEffect(state, world, 'armyMorale'));
   // The levies converge on the muster along the roads (M24 E): a band from
   // each of the larger districts, walking for as long as the gathering takes.
   const district = districtOf(world);

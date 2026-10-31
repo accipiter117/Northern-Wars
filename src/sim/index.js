@@ -11,7 +11,7 @@ export { canBuild, applyAction } from './actions.js';
 export { canDecree, reactions, enactment, lawEffects, opinionTargets } from './laws.js';
 export { relationTarget, foreignTrade, tradeFactor, canSetStance, envoyText } from './neighbours.js';
 export { ledgerNet, taxProsperity, debtLove, stewardReport } from './economy.js';
-export { authority, realmUnrest, unrestPressures, nudge, canAct, ACT_NAMES, taxCollected, musterAnswer, onProgress, threatUnrest, canRiot, sabotage, crownCalm } from './meters.js';
+export { authority, realmUnrest, unrestPressures, nudge, canAct, actRest, ACT_NAMES, taxCollected, musterAnswer, onProgress, threatUnrest, canRiot, sabotage, crownCalm } from './meters.js';
 export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
 export { petitionText } from './petitions.js';
 export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, demandText } from './houses.js';
@@ -81,3 +81,6 @@ export { armyPay } from './economy.js';
 export {
   bookLaws, lawDef, signed, pathDepth, lawEnactment, inkLeft, restLeft, canSignLaw, canRepeal, repealCost, lawOpinion, bookEffect, bookEffects, crownFaith, unlocked, lawUnlocking, lawStands, lawLabel,
 } from './book.js';
+export {
+  faithLevel, perksOf, faithEffect, faithEffects, faithRest, canFaithAct, churchLand, onPilgrimage, powerReadyAt,
+} from './faiths.js';

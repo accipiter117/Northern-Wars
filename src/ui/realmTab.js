@@ -4,6 +4,7 @@
 import {
   totalPopulation, realmStock, foodNeed, foodYield, seasonOf, dateOf, ledgerNet, creditLimit,
   plagueActive, freeCompanies, warsOf, TEMERIA, MONTHS, monthlyOutput, authority, taxCollected, musterAnswer, canAct, ACT_NAMES, threatUnrest, canRiot,
+  actRest,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
@@ -11,6 +12,7 @@ import { chips, segs, section, cardHead, orderAttr } from './card.js';
 import { form } from './memory.js';
 import { INCOME, EXPENSES } from './menu.js';
 import { pendingDecisions } from './inbox.js';
+import { cooling } from './cooldown.js';
 import { labourHtml, labourStripHtml } from './labour.js';
 
 const signed = (n) => (n < 0 ? `−${number(-n)}` : `+${number(n)}`);
@@ -336,8 +338,9 @@ function actButton(app, kind, settlement, sub) {
   const { state, world } = app;
   const check = canAct(state, world, kind, settlement);
   const action = { type: 'act', kind, ...(settlement ? { settlement } : {}) };
-  return `<button type="button" class="build" data-act="${kind}" ${orderAttr(action, `${ACT_NAMES[kind]}${settlement ? ` at ${world.byId[settlement].name}` : ''}?`)} ${check.ok ? '' : 'disabled'}>
-    <span class="build-name">${escapeHtml(ACT_NAMES[kind])}${settlement ? ` at ${escapeHtml(world.byId[settlement].name)}` : ''}</span><span class="build-cost">${escapeHtml(check.ok ? sub : check.reason)}</span></button>`;
+  const rest = actRest(state, world, kind, settlement);
+  return cooling(`<button type="button" class="build" data-act="${kind}" ${orderAttr(action, `${ACT_NAMES[kind]}${settlement ? ` at ${world.byId[settlement].name}` : ''}?`)} ${check.ok ? '' : 'disabled'}>
+    <span class="build-name">${escapeHtml(ACT_NAMES[kind])}${settlement ? ` at ${escapeHtml(world.byId[settlement].name)}` : ''}</span><span class="build-cost">${escapeHtml(check.ok ? sub : check.reason)}</span></button>`, rest.left, rest.total, check.ok);
 }
 // The crown's acts aimed at one town that the Book of Laws has unlocked
 // (M26): a pardon, the rope, the granaries, the court mage, the witch hunt.

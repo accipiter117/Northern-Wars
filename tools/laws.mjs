@@ -112,7 +112,15 @@ const MEASURES = {
   long_hours: ['Crafts and goods, a month', (s) => ledger(s, 120, (l) => sum(l.income.crafts) + sum(l.income.goods))],
   debtors_labour: ['Repair crews', (s) => { stepLabourDay(s, world); return s.labour.crews; }],
   prison_gangs: ['Days to rebuild a works', (s) => repairDays(s)],
-  freedom_of_worship: ['Clashes between faiths (Part C)', () => null],
+  freedom_of_worship: ['Clashes between faiths in two years', (s) => {
+    // Both rivals held above the clash line, so only the law differs.
+    const start = s.faiths.clashes ?? 0;
+    for (let d = 0; d < 720; d += 30) {
+      Object.assign(s.faiths.devotion, { eternal_fire: 60, old_ways: 55, melitele: 50 });
+      s = quiet(run(s, 30));
+    }
+    return s.faiths.clashes - start;
+  }],
   nonhuman_charter: ['Crafts where non-humans live, a month', (s) => {
     const mixed = Object.keys(s.settlements).filter((id) => nonhumanShare(s.settlements[id]) >= 0.1);
     let v = 0;
@@ -121,7 +129,11 @@ const MEASURES = {
     return v / n;
   }],
   licensed_mages: ['Beast lairs near the town', () => flatAct('mage', (s) => nearestToBeast(s), (s, id) => lairsNear(s, id))],
-  faith_of_the_crown: ['Devotion growth (Part C)', () => null],
+  faith_of_the_crown: ['Melitele\'s Devotion gained in a year', (s) => {
+    s.faiths.devotion.melitele = 0;
+    s = quiet(run(s, 360));
+    return s.faiths.devotion.melitele;
+  }],
   restrictions: ['Fear gained each month from laws', (s) => lawEffects(s, world).fear],
   inquisition: ['Scoia\'tael near the town', () => flatAct('witchhunt', (s) => nearestToElves(s), (s, id) => elvesNear(s, id))],
 };
@@ -183,7 +195,7 @@ for (const [id, d] of Object.entries(bookLaws(world))) {
     after = measure(realm(id, true));
   }
   if (before === null || after === null || before === undefined) {
-    rows.push({ id, name: d.law.name, label, text: 'measured in Part C', ok: null });
+    rows.push({ id, name: d.law.name, label, text: 'no measure', ok: null });
     continue;
   }
   const change = before ? (after - before) / Math.abs(before) : after - before;

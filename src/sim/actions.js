@@ -37,6 +37,7 @@ import { treatyBetween, endTreaty } from './diplomacy.js';
 import { canRepairWorks, startRepair, resolveWorksDecision } from './works.js';
 import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin, canPreset, applyPreset, canFocus, setFocus } from './labour.js';
 import { canSignLaw, signLaw, canRepeal, repealLaw } from './book.js';
+import { canFaithAct, doFaithAct, revokeLand } from './faiths.js';
 import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -108,6 +109,19 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     signLaw(next, world, action.law, action.choice ?? null);
+    return { state: next };
+  }
+  // The faiths (M26 C): an act or power for a faith, or church land taken back.
+  if (action.type === 'faith') {
+    const check = canFaithAct(state, world, action.kind, action.faith, action.settlement ?? null, action.works ?? null);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    doFaithAct(next, world, action.kind, action.faith, action.settlement ?? null, action.works ?? null);
+    return { state: next };
+  }
+  if (action.type === 'revokeLand') {
+    const next = structuredClone(state);
+    if (!revokeLand(next, world, action.settlement, action.works)) return { state, error: 'Not the church\'s.' };
     return { state: next };
   }
   if (action.type === 'repeal') {

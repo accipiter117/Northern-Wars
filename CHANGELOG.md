@@ -1,5 +1,13 @@
 # Changelog
 
+## M26 C and D The faiths and their powers
+- Each faith (the Eternal Fire, Melitele, the Old Ways) has a Devotion from 0 to 100. Every 20 points brings a perk you will feel: more grain, fewer bandits, calmer villages, bolder armies.
+- At level 3 a faith gives the crown a power: the Fire's Purge, Melitele's Blessing of the harvest, the Old Ways' Belleteyn. Level 5 adds Healers' march and the Druids' circle.
+- Strengthen a faith by endowing temples, granting it church land, inviting preachers, keeping its festival, or going on a royal pilgrimage (the king is away for a month).
+- The faith of the crown grows twice as fast. Strong rival faiths clash in towns where both have a following; Freedom of worship halves the clashes, and the inquisition makes the Fire win them.
+- Every act, power and law change that rests now wears a ring that fills as it recovers. Hold it to see the days left; a gold dot means ready. The Court tab carries a badge when a power comes ready.
+- The faith sheet (Court, Faith) shows the bars, levels, perks, powers and acts on one screen. Save version 28.
+
 ## M26 A and B The Book of Laws
 - The laws are now a Book of Laws in five chapters: Order, Economy, War, People, and Faith and Peoples. Each chapter has two rival paths of three laws, and signing one path locks the other until you repeal it from the top down.
 - Every law has one headline effect you will feel within a season (Unrest −10, crafts +30%, musters doubled, half the hunger deaths), its cost and who will cheer or grumble, shown before you sign.

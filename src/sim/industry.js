@@ -16,6 +16,7 @@ import { foreignTrade } from './neighbours.js';
 import { intersectSegments } from './geometry.js';
 import { worksFactor } from './works.js';
 import { bookEffect, outputMult } from './book.js';
+import { churchLand } from './faiths.js';
 import { noteMade, noteUsed, noteShort, offer } from './market.js';
 
 const I = (world) => world.industry;
@@ -208,7 +209,7 @@ export function industryLedger(state, world, income, put, season) {
   // Each works yields as it stands and is manned (M20).
   // Long hours (M26) drive every works harder.
   const drive = outputMult(state, world);
-  const wf = (id, b) => worksFactor(state.settlements[id], b) * drive;
+  const wf = (id, b) => (churchLand(state, id, b) ? 0 : worksFactor(state.settlements[id], b) * drive);
   const pool = {};
   for (const g of Object.keys(i.goods)) pool[g] = [];
   const flows = [];

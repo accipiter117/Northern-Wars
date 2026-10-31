@@ -826,3 +826,30 @@ ul.orders li .chip { flex: none; }
 .book-law .bl-close { position: absolute; right: 2px; top: 2px; width: 36px; height: 36px; background: none; border: 0; color: var(--muted); }
 .book-law .bl-close svg { width: 16px; height: 16px; }
 .rest { color: #d8b45a; }
+
+/* Cooldown rings (M26 D): a ring that fills as an act recovers, a gold dot
+   when it is ready. */
+.cool-wrap { position: relative; display: block; border-radius: 12px; }
+.cool-wrap.cooling { padding: 3px; }
+/* The ring is the 3px band round the button only, filling clockwise. */
+.cool-wrap.cooling::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 3px; background: conic-gradient(#d8b45a var(--done), rgba(216, 180, 90, 0.18) 0); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events: none; }
+.cool-wrap.cooling > button { width: 100%; }
+.cool-wrap > button[disabled] { pointer-events: none; }
+.cool-wrap.ready::after { content: ''; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #e2bd5a; box-shadow: 0 0 4px rgba(226, 189, 90, 0.8); pointer-events: none; }
+.cool-wrap.ready:has(> button[disabled])::after { display: none; }
+.build-list .cool-wrap, [data-part="levy-orders"] .cool-wrap { margin-top: 6px; }
+
+/* The faith sheet (M26 D). */
+.faith-bars { display: grid; gap: 6px; margin: 6px 0 10px; }
+.faith-bar { display: grid; grid-template-columns: 7.5em 1fr 3.4em; align-items: center; gap: 8px; min-height: 44px; background: none; border: 1px solid var(--line); border-radius: 10px; padding: 4px 8px; color: inherit; font: inherit; text-align: left; }
+.faith-bar.on { border-color: #d8b45a; background: rgba(216, 180, 90, 0.08); }
+.faith-bar .fb-track { position: relative; height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.faith-bar .fb-track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
+.faith-bar .fb-track b { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(0, 0, 0, 0.5); }
+.faith-bar small { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.perks { list-style: none; margin: 4px 0 8px; padding: 0; }
+.perks li { display: flex; gap: 8px; padding: 4px 0; font-size: 14px; border-bottom: 1px dotted var(--line); }
+.perks li b { flex: none; width: 1.4em; height: 1.4em; border-radius: 50%; border: 1px solid var(--line); text-align: center; font-size: 12px; line-height: 1.3em; }
+.perks li.has b { background: #d8b45a; color: #241c12; border-color: #d8b45a; }
+.perks li.next { opacity: 0.55; }
+.perks li.later { opacity: 0.3; }

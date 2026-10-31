@@ -20,6 +20,7 @@ import { upgradeConquest } from './conquest.js';
 import { upgradeWorks } from './works.js';
 import { upgradeLabour } from './labour.js';
 import { upgradeMarket } from './market.js';
+import { defaultFaiths } from './faiths.js';
 import { upgradeLaws } from './book.js';
 
 export const SAVE_FORMAT = 'northern-wars-save';
@@ -366,6 +367,12 @@ const MIGRATIONS = {
   26(state, world) {
     upgradeLaws(state, world);
     state.version = 27;
+    return state;
+  },
+  // v28 (M26 C): the faiths' Devotion, from how many follow each faith now.
+  27(state, world) {
+    state.faiths = defaultFaiths(state, world);
+    state.version = 28;
     return state;
   },
 };

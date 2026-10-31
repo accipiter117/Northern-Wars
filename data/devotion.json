@@ -1,0 +1,97 @@
+{
+  "note": "M26 C: the faiths as powers in the realm. Each faith's Devotion (0 to 100) drifts each month toward share x shareWeight + fervour, by drift of the gap (twice as fast for the faith of the crown). share is the realm's people following it (0 to 100); fervour (0 to 100) is raised by the crown's acts for it and fades by fervourFade a month. Levels at 20, 40, 60, 80 and 100; perks are cumulative. Each faith's power opens at level 3 (and a second at level 5). Development acts each cost coin and rest between uses. Rival faiths clash in a town when both are above clashAbove realm-wide and each has at least localShare of the town's people (or, for non-humans, nonhumanShare of them), at chance a month; Freedom of worship halves it, and under the inquisition the Fire always wins but the losers are angrier.",
+  "shareWeight": 0.7,
+  "drift": 0.06,
+  "fervourFade": 0.12,
+  "levels": [20, 40, 60, 80, 100],
+  "faiths": {
+    "eternal_fire": {
+      "name": "The Eternal Fire", "short": "the Fire", "festival": { "name": "the Feast of the Flame", "months": [12, 1] },
+      "holy": { "place": "vizima", "name": "the great temple of the Fire in Vizima" },
+      "perks": [
+        { "level": 1, "text": "Roads safer from bandits: a fifth fewer camps.", "effects": { "banditRoads": -0.2 } },
+        { "level": 2, "text": "Zealot companies can be raised in its towns: cheap and fierce, but they stir unrest.", "effects": { "zealots": 1 } },
+        { "level": 3, "text": "Armies blessed: every army marches 10 points bolder.", "effects": { "armyMorale": 10 } },
+        { "level": 4, "text": "Fear of the crown grows each month.", "effects": { "fear": 1 } },
+        { "level": 5, "text": "The Hierarch's favour: half the unrest from persecution.", "effects": { "persecutionUnrest": -0.5 } }
+      ],
+      "suffer": "Non-humans and mages suffer as it rises.",
+      "powers": {
+        "purge": { "level": 3, "name": "Purge", "text": "Burn out the Scoia'tael near a town.", "coin": 200, "cooldown": 90, "radius": 160, "fear": 5, "opinion": { "elf": -8, "dwarf": -4, "halfling": -3 } }
+      }
+    },
+    "melitele": {
+      "name": "Melitele", "short": "Melitele", "festival": { "name": "the harvest thanksgiving", "months": [9, 10] },
+      "holy": { "place": "temple_melitele", "name": "Melitele's temple at Ellander" },
+      "perks": [
+        { "level": 1, "text": "More grain from the fields: a tenth more.", "effects": { "foodYield": 0.1 } },
+        { "level": 2, "text": "Hospices in every temple town: a third fewer die of sickness.", "effects": { "plagueDeaths": -0.3 } },
+        { "level": 3, "text": "Love of the crown grows each month.", "effects": { "love": 0.5 } },
+        { "level": 4, "text": "Plague spreads half as far.", "effects": { "plagueSpread": -0.5 } },
+        { "level": 5, "text": "The Mother's mercy: hunger never kills where most follow her.", "effects": { "mercy": 1 } }
+      ],
+      "powers": {
+        "blessing": { "level": 3, "name": "Blessing of the harvest", "text": "A quarter more grain from every field for a season.", "coin": 300, "cooldown": 365, "days": 90, "foodYield": 0.25 },
+        "healers": { "level": 5, "name": "Healers' march", "text": "End the plague in a town.", "coin": 200, "cooldown": 120 }
+      }
+    },
+    "old_ways": {
+      "name": "The Old Ways", "short": "the Old Ways", "festival": { "name": "Saovine", "months": [10, 11] },
+      "holy": { "place": "burdorff", "name": "the sacred grove by Burdorff" },
+      "perks": [
+        { "level": 1, "text": "More timber and fuel from the woods: a fifth more.", "effects": { "woods": 0.2 } },
+        { "level": 2, "text": "Beasts calmer: a third fewer lairs.", "effects": { "beasts": -0.35 } },
+        { "level": 3, "text": "The dryads and the Scoia'tael less hostile: a third fewer commandos.", "effects": { "scoiatael": -0.35 } },
+        { "level": 4, "text": "The villages calmer: village Unrest falls by 5.", "effects": { "unrest": { "village": -5 } } },
+        { "level": 5, "text": "The druids' circle: no harvest falls below two thirds.", "effects": { "harvestFloor": 0.66 } }
+      ],
+      "powers": {
+        "belleteyn": { "level": 3, "name": "Belleteyn", "text": "A spring festival: Love +5 and more children born for two months.", "coin": 200, "cooldown": 300, "months": [4, 5], "love": 5, "growth": 0.4, "days": 60 },
+        "circle": { "level": 5, "name": "Druids' circle", "text": "Quiet a beast lair near a town.", "coin": 150, "cooldown": 120, "radius": 160 }
+      }
+    }
+  },
+  "acts": {
+    "endow": { "name": "Endow a temple", "coin": 500, "cooldown": 90, "fervour": 5, "share": 3, "text": "A temple endowed in a town: Devotion rises there and across the realm." },
+    "land": { "name": "Grant the church land", "fervour": 1.5, "revoke": { "fervour": -15, "opinion": -10 }, "text": "A works' income goes to the faith while the grant stands, and its Devotion grows steadily." },
+    "preachers": { "name": "Invite preachers", "coin": 200, "cooldown": 90, "days": 90, "fervour": 4, "share": 1, "text": "Preachers in a town for a season: its people turn to the faith." },
+    "festival": { "name": "Hold the festival", "coin": 300, "love": 3, "fervour": 5, "text": "Once a year in its season." },
+    "pilgrimage": { "name": "A royal pilgrimage", "coin": 600, "cooldown": 365, "days": 30, "fervour": 12, "love": 3, "text": "The king travels to the holy site and is away from court for a month." }
+  },
+  "clashes": {
+    "pairs": [
+      { "a": "eternal_fire", "b": "old_ways", "chance": 0.05 },
+      { "a": "eternal_fire", "b": "nonhumans", "chance": 0.04 },
+      { "a": "eternal_fire", "b": "melitele", "chance": 0.015 }
+    ],
+    "clashAbove": 40,
+    "localShare": 15,
+    "nonhumanShare": 0.1,
+    "unrest": [6, 12],
+    "winner": 1.5,
+    "loser": -3,
+    "inquisitionAnger": 6,
+    "kinds": {
+      "old_ways": ["a sacred grove is burned by zealots", "a shrine of the Old Ways is desecrated", "a brawl breaks out at a Saovine bonfire"],
+      "nonhumans": ["a riot sweeps the non-human quarter", "zealots smash dwarven shopfronts", "an elf is beaten in the square"],
+      "melitele": ["Fire preachers and Melitele's sisters come to blows at the market", "a hospice is stoned by zealots"]
+    }
+  },
+  "realms": {
+    "note": "AI realms keep their own Devotion by the same drift, toward their lean: each faith's share of their people (by lean) times shareWeight plus a steady fervour.",
+    "lean": {
+      "redania": { "eternal_fire": 55, "melitele": 30, "old_ways": 15 },
+      "kaedwen": { "eternal_fire": 30, "melitele": 30, "old_ways": 40 },
+      "aedirn": { "eternal_fire": 25, "melitele": 50, "old_ways": 25 },
+      "cidaris": { "eternal_fire": 35, "melitele": 45, "old_ways": 20 },
+      "kerack": { "eternal_fire": 35, "melitele": 45, "old_ways": 20 },
+      "verden": { "eternal_fire": 20, "melitele": 40, "old_ways": 40 },
+      "brugge": { "eternal_fire": 25, "melitele": 45, "old_ways": 30 },
+      "sodden": { "eternal_fire": 30, "melitele": 50, "old_ways": 20 },
+      "cintra": { "eternal_fire": 20, "melitele": 55, "old_ways": 25 },
+      "mahakam": { "eternal_fire": 5, "melitele": 15, "old_ways": 80 },
+      "brokilon": { "eternal_fire": 0, "melitele": 0, "old_ways": 100 }
+    },
+    "fervour": { "redania": { "eternal_fire": 15 }, "brokilon": { "old_ways": 20 } }
+  }
+}

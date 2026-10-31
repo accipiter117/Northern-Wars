@@ -1,14 +1,15 @@
 {
   "purses": {
     "note": "M24 C/D: what clearing a threat pays the crown. Bandits: their hoard (hoardPerMan) and the burghers' bounty (bountyPerMan). Beasts: the villages' reward (reward) and trophies sold (trophyPerStrength of their strength). Scoia'tael: a bounty a head, only while the crown pays bounties. Raiders: the plunder taken back. A witcher's fee is paid when he is hired; the card shows the purse less his fee. A band scattered from its camp pays `bandShare` of its purse.",
-    "bandits": { "hoardPerMan": 5, "bountyPerMan": 2.5 },
-    "monsters": { "reward": 120, "trophyPerStrength": 3 },
-    "scoiatael": { "bountyPerMan": 6 },
+    "bandits": { "zealots": 1.1, "hoardPerMan": 5, "bountyPerMan": 2.5 },
+    "monsters": { "zealots": 0.9, "reward": 120, "trophyPerStrength": 3 },
+    "scoiatael": { "zealots": 1.2, "bountyPerMan": 6 },
     "raiders": { "plunderPerMan": 4 },
     "bandShare": 0.4
   },
   "note": "The crown's standing companies and the threats that roam the realm. Strength is fighting power: men x their worth a man x morale (0.5 + morale/100) x experience (1 + 0.3 x xp) x how well the troop suits the foe and the ground. Upkeep is crowns a man a month. Speeds are map units a day. Since M21 the companies cost 0.55 of their old upkeep, so a well-run realm at peace can keep about 3,000 of them.",
   "companies": {
+    "zealots": { "name": "Zealots", "plural": "zealots", "men": 120, "perMan": 1.1, "upkeep": 0.08, "coin": 60, "speed": 1, "places": ["town", "city"], "faith": { "faith": "eternal_fire", "level": 2, "share": 25 }, "unrest": 4, "blurb": "Fire-sworn fanatics: cheap and fierce, but they stir trouble wherever they are quartered. Only where the Fire burns strong." },
     "militia": {
       "name": "Militia",
       "plural": "militia",
@@ -123,7 +124,7 @@
       "garrison": 1
     },
     "monsters": { "militia": 1.0, "archers": 1.2, "menatarms": 1.1, "crossbows": 1.1, "lightcav": 0.9, "knights": 0.9, "garrison": 1.0 },
-    "supernatural": { "militia": 0.04, "archers": 0.06, "menatarms": 0.3, "crossbows": 0.08, "lightcav": 0.05, "knights": 0.3, "garrison": 0.04 },
+    "supernatural": { "zealots": 0.1, "militia": 0.04, "archers": 0.06, "menatarms": 0.3, "crossbows": 0.08, "lightcav": 0.05, "knights": 0.3, "garrison": 0.04 },
     "scoiatael": {
       "militia": 0.8,
       "archers": 1.15,
@@ -133,7 +134,7 @@
       "knights": 0.7,
       "garrison": 0.9
     },
-    "soldiers": {
+    "soldiers": { "zealots": 0.9,
       "militia": 1.1,
       "archers": 0.95,
       "menatarms": 1.15,
