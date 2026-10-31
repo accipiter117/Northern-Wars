@@ -66,6 +66,21 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 - **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
 - **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.
 
+### The faiths (M26 C)
+Devotion moves 6% of the gap a month toward following × 0.7 plus fervour; fervour fades by 12% a month. Acts add fervour: endow +5 (500 crowns, every 90 days), preachers +4 (200, every 90 days), the festival +5 (300, yearly), a pilgrimage +12 (600, yearly), church land +1.5 a month while it stands. With no care a faith settles near its following: at the start Melitele and the Fire sit in the 20s and 30s, so level 1 or 2.
+
+Five years of the model crowns in `tools/crowns.mjs` (seeds 1 to 3, rounded down):
+
+| Crown | Faith tended | Devotion after 5 years | Clashes | Year 2 | Year 3 | Year 5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Steward | Melitele (faith of the crown), temples and preachers while coin stands above 4,000 | 71 (level 3) | 0 | +1,718 to +1,794 | +1,596 to +1,615 | +1,023 to +1,192 |
+| Tyrant | The Fire (faith of the crown, the inquisition), temples while coin stands above 1,000 | 79 to 81 (level 3 or 4) | 21 to 23 | +1,204 to +1,243 | +960 to +983 | +516 to +574 |
+
+- **The steward** reaches Melitele's level 3 in about three years. Her tenth more grain and her monthly Love more than pay for the faith's 100 a month, so the steward clears a little more than with the Book alone (+1,600 in year 2).
+- **The tyrant** reaches the Fire's level 3 by year 2. Its clashes (about four a year) keep the Old Ways and the non-human towns seething: that is the price of the Fire's bolder armies and growing Fear.
+- **Clash chances** (a town a month, both rivals above 40 and each with 15% of the town): the Fire and the Old Ways 5%, the Fire and the non-humans 4%, the Fire and Melitele 1.5%. A clash adds 6 to 12 Unrest; the winner gains 1.5 Devotion and the loser loses 3.
+- **Dials worth knowing**: `drift`, `shareWeight` and `fervourFade` set how fast faiths move; each act's `fervour` and `cooldown`; `clashes.clashAbove` and each pair's `chance`.
+
 ### A rich crown at peace (M24 C)
 Each crown's average month over the year named, from a ledger trace of the crowns in `tools/crowns.mjs` on seeds 1, 2 and 3 (all at peace), rounded down. The test in test/sim/peace.test.js checks seed 3.
 
