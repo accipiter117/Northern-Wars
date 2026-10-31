@@ -37,11 +37,7 @@
   "limit": {
     "base": 2,
     "perMarket": 0.5,
-    "guilds": {
-      "free": 1,
-      "chartered": 0,
-      "monopoly": -1
-    },
+    "laws": { "book:open_markets": 1, "book:guild_monopolies": -1 },
     "max": 8
   },
   "caravansPerCrown": 0.006,

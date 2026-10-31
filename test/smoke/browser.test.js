@@ -135,17 +135,19 @@ for (const vp of VIEWPORTS) {
     await page.click('#more-button');
     await page.click('[data-more="save"]');
     assert.ok(await page.evaluate(() => localStorage.getItem('northern-wars.save')?.includes('northern-wars-save')));
-    // Decree price controls from the Laws screen.
+    // Sign Assizes into the Book of Laws (M26).
     await page.click('[data-tab="court"]');
     await page.click('[data-sub="laws"]');
-    assert.match(await page.textContent('#sheet-body'), /Peasants[\s\S]*Grain prices/);
+    assert.match(await page.textContent('#sheet-body'), /Peasants[\s\S]*The King's Justice[\s\S]*The Iron Hand/);
     assert.doesNotMatch(await page.textContent('#sheet-body'), /Taxes on the towns/, 'taxes are set in the Treasury');
     const love = await page.evaluate(() => window.northernWars.state.love);
-    await page.click('[data-law="grain_prices"]');
-    await page.click('[data-decree="grain_prices:controlled"]');
-    assert.equal(await page.evaluate(() => window.northernWars.state.laws.grain_prices.option), 'controlled');
-    assert.equal(await page.evaluate(() => window.northernWars.state.love), love - 10);
-    assert.match(await page.textContent('[data-law="grain_prices"]'), /Price controls[\s\S]*Taking hold/);
+    await page.click('[data-book-law="assizes"]');
+    await page.click('[data-sign="assizes"]');
+    await page.click('#dialog-yes');
+    await page.waitForFunction(() => !!window.northernWars.state.book.signed.assizes);
+    assert.ok(await page.evaluate(() => window.northernWars.state.love) > love, 'Love rises at once');
+    assert.match(await page.textContent('[data-book-law="assizes"]'), /Assizes[\s\S]*Taking hold/);
+    assert.match(await page.textContent('[data-book-law="curfews"]'), /Locked while The King's Justice stands/);
     await page.screenshot({ path: join(OUT, `${vp.name}-laws.png`) });
 
     // Neighbouring realms: warm to Redania.

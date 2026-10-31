@@ -7,6 +7,7 @@ import {
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
 import { cardHead, orderAttr, section } from './card.js';
+import { settingHtml } from './market.js';
 
 const MORALE = (m) => (m >= 75 ? 'eager' : m >= 55 ? 'steady' : m >= 35 ? 'shaken' : 'close to breaking');
 const XP = (x) => (x >= 0.6 ? 'veterans' : x >= 0.25 ? 'seasoned' : 'green');
@@ -46,7 +47,7 @@ function companyRow(world, state, c) {
   return `<button type="button" class="row realm-row" data-company="${c.id}" data-go="company:${c.id}">
     <span class="row-main"><span class="row-name">${escapeHtml(c.name)} ${moraleBar(c.morale)}</span>
     <span class="row-sub">${number(c.men)} of ${c.max} ${escapeHtml(t.plural)}, ${MORALE(c.morale)}. ${escapeHtml(describeCompany(state, world, c).replace(`${c.name}, ${Math.round(c.men)} men, `, ''))}.</span></span>
-    <span class="row-end">${icon('coin')}${number(companyUpkeep(world, c))}</span></button>`;
+    <span class="row-end">${icon('coin')}${number(companyUpkeep(world, c, state))}</span></button>`;
 }
 
 function threatRow(world, state, t) {
@@ -67,7 +68,7 @@ export function forcesHtml(app) {
   const { world, state } = app;
   const companies = state.forces.companies;
   const free = companies.filter((c) => !c.army);
-  const upkeep = companies.reduce((a, c) => a + companyUpkeep(world, c), 0);
+  const upkeep = companies.reduce((a, c) => a + companyUpkeep(world, c, state), 0);
   const h = state.ledger.history;
   const income = h.length ? h.reduce((a, m) => a + ledgerNet(m).in, 0) / h.length : 0;
   const armies = crownArmies(state).map((a) => `<button type="button" class="row realm-row" data-army="${a.id}" data-go="army:${a.id}">
@@ -114,6 +115,7 @@ export function threatsHtml(app) {
   const abroad = state.threats.list.filter((t) => t.abroad && (t.sighted || t.campSeen)).length;
   const foes = (state.armies ?? []).filter((a) => a.side !== TEMERIA && hostile(state, TEMERIA, a.side));
   return `
+    <div data-part="bounties">${settingHtml(app, 'bounties')}</div>
     <div data-part="threats">
       ${sighted.length ? sighted.slice(0, 8).map((t) => threatRow(world, state, t)).join('') : '<p class="sub">Nothing in sight.</p>'}
       ${sighted.length > 8 ? section(app.memory, 'tab:military', 'more-threats', `${sighted.length - 8} more`, sighted.slice(8).map((t) => threatRow(world, state, t)).join('')) : ''}
@@ -164,7 +166,7 @@ export function companyCard(app, id) {
         { icon: 'people', label: 'Men', value: `${number(c.men)} of ${c.max}${c.wounded >= 1 ? `, ${number(c.wounded)} hurt` : ''}` },
         { label: 'Morale', value: MORALE(c.morale), tone: c.morale < 35 ? 'bad' : '' },
         { label: 'Experience', value: `${XP(c.xp)}${c.wins ? ` (${c.wins} won)` : ''}` },
-        { icon: 'coin', label: 'Pay', value: `${number(companyUpkeep(world, c))} a month` },
+        { icon: 'coin', label: 'Pay', value: `${number(companyUpkeep(world, c, state))} a month` },
       ],
     })}
     ${orders}

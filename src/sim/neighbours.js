@@ -8,6 +8,7 @@ import { realmProsperity } from './realms.js';
 import { totalPopulation } from './state.js';
 import { TEMERIA, hostile, placesHeldBy, originOf } from './conflict.js';
 import { mahakamGrudge } from './gold.js';
+import { lawStands } from './book.js';
 import { moodTarget, tradeBonus } from './diplomacy.js';
 
 const say = (state, text) => addDispatch(state, text, 'abroad');
@@ -26,8 +27,7 @@ export function relationTarget(state, world, id) {
   if (world.war && hostile(state, TEMERIA, id)) return world.war.atWarRelation;
   let t = r.relation + world.neighbours.stances[state.neighbours[id].stance].relation;
   for (const [key, v] of Object.entries(r.cares)) {
-    const [law, option] = key.split(':');
-    if (state.laws[law]?.option === option) t += v;
+    if (lawStands(state, key)) t += v;
   }
   if (id === 'mahakam') t += mahakamGrudge(state, world);
   if (world.war && state.wars) t += world.war.claimRelation * placesHeldBy(state, world, TEMERIA).filter((pid) => originOf(world, pid) === id).length;

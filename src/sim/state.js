@@ -18,6 +18,7 @@ import { syncWorld } from './lands.js';
 import { defaultConquest } from './conquest.js';
 import { startingWorks, defaultWorks } from './works.js';
 import { defaultLabour, startingFuel } from './labour.js';
+import { defaultBook } from './book.js';
 import { defaultMarket } from './market.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
@@ -28,7 +29,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 26;
+export const STATE_VERSION = 27;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -60,6 +61,7 @@ export function createState(world, seed = 1) {
     settlements,
     ledger: { construction: 0, decrees: 0, history: [], places: {} },
     laws: defaultLaws(world),
+    book: defaultBook(),
     opinion: defaultOpinion(world),
     neighbours: defaultNeighbours(world),
     envoys: [],

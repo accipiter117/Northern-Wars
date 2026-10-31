@@ -14,6 +14,7 @@ import { worksFactor } from './works.js';
 import { MONTHS, dateOf } from './calendar.js';
 import { addDispatch } from './realm.js';
 import { TEMERIA, hostile, placesHeldBy, sideName, atWar } from './conflict.js';
+import { bookEffect } from './book.js';
 import { number } from './text.js';
 
 const M = (world) => world.market;
@@ -206,8 +207,9 @@ export function partnerTrade(state, world, rid) {
   return { wants, offers, capacity: Math.round(people * cfg.deals.perPerson), people };
 }
 
-export function exportPrice(world, good) {
-  return M(world).goods[good].base * M(world).export.want;
+// Merchant charters (M26) raise what partners pay, when the realm is known.
+export function exportPrice(world, good, state = null) {
+  return M(world).goods[good].base * M(world).export.want * (state ? 1 + bookEffect(state, world, 'dealPrice') : 1);
 }
 export function importPrice(world, good) {
   return M(world).goods[good].base * M(world).import.offer;
@@ -239,7 +241,7 @@ export function canTrade(state, world, rid, sell, buy) {
 
 // What a deal would bring in and cost a month, at today's prices.
 export function dealPreview(state, world, rid, sell, buy) {
-  const income = sell ? sell.qty * exportPrice(world, sell.good) : 0;
+  const income = sell ? sell.qty * exportPrice(world, sell.good, state) : 0;
   const cost = buy ? buy.qty * importPrice(world, buy.good) : 0;
   const lines = [];
   if (sell) {
@@ -350,7 +352,7 @@ export function marketLedger(state, world, income, expenses) {
       let q = Math.min(d.sell.qty, m.offer[g]);
       m.offer[g] -= q;
       if (q < d.sell.qty) q += takeFromStores(state, world, g, d.sell.qty - q);
-      const v = q * exportPrice(world, g);
+      const v = q * exportPrice(world, g, state);
       income.exports[name] = (income.exports[name] ?? 0) + v;
       if (state.realms[rid]) state.realms[rid].treasury -= v;
       report[g].exported += Math.round(q);

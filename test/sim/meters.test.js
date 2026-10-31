@@ -11,7 +11,7 @@ import { createState, step, serialize, deserialize, nudge, realmUnrest, unrestPr
 import { monthlyMeters, authority, taxCollected, musterAnswer, canRiot, sabotage, fearCollapse } from '../../src/sim/meters.js';
 import { resolvePetition } from '../../src/sim/petitions.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
-import { ROOT, nodeWorld } from '../helpers.js';
+import { ROOT, nodeWorld, signLaws } from '../helpers.js';
 
 const world = await nodeWorld();
 const fresh = (seed = 1) => {
@@ -54,8 +54,8 @@ test('Love moves with its causes, slowly, and says why', () => {
   const light = month(s, (t) => { t.laws.tax_peasants.option = 'light'; });
   const heavy = month(s, (t) => { t.laws.tax_peasants.option = 'heavy'; });
   assert.ok(light.love > base.love && heavy.love < base.love);
-  const alms = month(s, (t) => { t.laws.alms = { option: 'alms', since: -999 }; });
-  assert.ok(alms.love > base.love, 'alms win love');
+  const alms = month(s, (t) => { signLaws(t, world, 'poor_relief'); });
+  assert.ok(alms.love > base.love, 'poor relief wins love');
   const levied = month(s, (t) => { t.armies.push({ id: 'x', side: 'temeria', folk: true, levyMen: 3000, soldiers: 3000, bands: [] }); });
   assert.ok(levied.love < base.love && why(levied, 'love').includes('Men taken for the levies'));
   // It decays very slowly: a loved crown left alone keeps most of it for a year.
@@ -71,6 +71,8 @@ test('Fear rises quickly with punishment, fades unless renewed, and collapses as
   s.treasury = 5000;
   const town = 'tegmond';
   const unrest = s.settlements[town].unrest;
+  // Hangings need the law of public executions (M26).
+  signLaws(s, world, 'curfews', 'executions');
   s = act(s, { type: 'act', kind: 'hang', settlement: town });
   assert.ok(s.fear >= 16, 'hangings bring fear at once');
   assert.ok(s.settlements[town].unrest < unrest, 'and quiet the town');
@@ -87,7 +89,7 @@ test('Fear rises quickly with punishment, fades unless renewed, and collapses as
   // The king's riders renew it each month.
   t = clone(s);
   t.meters.gibbets = {};
-  t.laws.public_order = { option: 'riders', since: -999 };
+  signLaws(t, world, 'riders');
   for (let i = 0; i < 12; i++) monthlyMeters(t, world, null);
   assert.ok(t.fear > 15, `the riders keep fear up: ${t.fear}`);
   // Collapse: a lost battle on our soil, and the anger breaks out.
@@ -155,6 +157,8 @@ test('a feast and a royal progress win love; the king away cannot decree', () =>
   let s = fresh();
   s.treasury = 6000;
   const love = s.love;
+  // Feasts need the law of royal feasts (M26).
+  signLaws(s, world, 'poor_relief', 'hospices', 'royal_feasts');
   s = act(s, { type: 'act', kind: 'feast' });
   assert.ok(s.love > love);
   assert.match(applyAction(s, world, { type: 'act', kind: 'feast' }).error, /Not again/);

@@ -18,6 +18,7 @@ import { hasTrait, remember, changeTrust, treatyBetween } from './diplomacy.js';
 import { transferTown, peopleOf, livingRealms, syncWorld } from './lands.js';
 import { creditLimit } from './economy.js';
 import { roadPath } from './world.js';
+import { signed } from './book.js';
 import { damageWorks, worksSummary } from './works.js';
 
 const C = (world) => world.conquest;
@@ -420,8 +421,8 @@ export function integrationParts(state, world, id) {
   const law = (k, o) => state.laws[k]?.option === o;
   const non = 1 - (s.population.human / Math.max(1, totalPopulation(s)));
   if (law('tax_towns', 'heavy') || law('tax_peasants', 'heavy')) add('Heavy taxes', -m.heavyTax);
-  if (law('public_order', 'martial')) add('Martial law', -m.harsh);
-  if (law('nonhumans', 'expulsion') && non > 0.1) add('Our law against their nonhumans', -m.harsh);
+  if (signed(state, 'curfews')) add('Curfews and the watch', -m.harsh);
+  if (signed(state, 'restrictions') && non > 0.1) add('Our law against their nonhumans', -m.harsh);
   if (law('nonhumans', 'charter') && non > 0.1) add('Our charter for nonhumans', m.tolerant);
   if (law('old_ways', 'suppressed') && (s.faith.old_ways ?? 0) > 25) add('The old ways suppressed', -m.harsh);
   if (law('patronage', 'tolerance')) add('Tolerance of every faith', m.tolerant);

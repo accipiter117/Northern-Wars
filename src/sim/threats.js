@@ -18,6 +18,7 @@ import { threatStrength, speciesOf, winChance, groundAt, companyStrength, foeKin
 import { companiesAt, stationedStrength } from './forces.js';
 import { damagePlace, outside } from './works.js';
 import { nudge } from './meters.js';
+import { bookEffect } from './book.js';
 import { windfall } from './economy.js';
 
 const F = (world) => world.forces;
@@ -177,13 +178,17 @@ export function monthlyThreatsSpawn(state, world, rng) {
     levels[id] = { bandits: threatLevel(state, world, id, 'bandits', patrolled), monsters: threatLevel(state, world, id, 'monsters', patrolled) };
   }
   // New camps and lairs where the country breeds them.
+  // The king's riders (M26) keep outlaws off the roads: half as many camps,
+  // slower to grow.
+  const riders = Math.max(0, 1 + bookEffect(state, world, 'banditRoads'));
   for (const kind of ['bandits', 'monsters']) {
     const cfg = T(world)[kind];
+    const max = kind === 'bandits' ? Math.max(1, Math.round(cfg.max * riders)) : cfg.max;
     for (const [id, lv] of Object.entries(levels)) {
-      if (state.threats.list.filter((t) => t.kind === kind && !t.abroad).length >= cfg.max) break;
+      if (state.threats.list.filter((t) => t.kind === kind && !t.abroad).length >= max) break;
       const level = lv[kind];
       if (level < cfg.spawnAt) continue;
-      if (!rng.chance(cfg.spawnChance * (level - cfg.spawnAt + 10) / 50)) continue;
+      if (!rng.chance(cfg.spawnChance * (kind === 'bandits' ? riders : 1) * (level - cfg.spawnAt + 10) / 50)) continue;
       const t = spawnCamp(state, world, rng, id, kind, level);
       if (t) t.level = level;
     }
@@ -196,9 +201,9 @@ export function monthlyThreatsSpawn(state, world, rng) {
     t.level = lv;
     const cfg = T(world)[t.kind];
     if (t.kind === 'bandits') {
-      const cap = Math.min(threatCap(state, world, t.kind), (cfg.capBase + cfg.capPerLevel * lv) * scale);
+      const cap = Math.min(threatCap(state, world, t.kind), (cfg.capBase + cfg.capPerLevel * lv) * scale) * riders;
       if (lv < cfg.fadeBelow) t.men -= t.men * cfg.fade;
-      else t.men = Math.min(cap, t.men + t.men * cfg.growth * (lv / 50));
+      else t.men = Math.min(cap, t.men + t.men * cfg.growth * riders * (lv / 50));
       if (t.men < 8 && !t.band) disperse(state, world, t, 'The bandit camp near {place} has broken up: too few left, and too little to rob.');
     } else {
       const sp = speciesOf(world, t);

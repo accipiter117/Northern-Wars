@@ -6,10 +6,10 @@
     "patron": 1.5,
     "rival": 0.85,
     "lawPulls": {
-      "old_ways:suppressed": {
+      "book:inquisition": {
         "old_ways": 0.5
       },
-      "mages:banished": {
+      "book:inquisition": {
         "eternal_fire": 1.1
       }
     }
@@ -21,10 +21,10 @@
     "povertyPerPoint": 0.3,
     "drift": 0.02,
     "laws": {
-      "nonhumans:charter": -10,
-      "nonhumans:expulsion": 25,
-      "patronage:eternal_fire": 8,
-      "public_order:martial": -5
+      "book:nonhuman_charter": -10,
+      "book:restrictions": 25,
+      "faith:eternal_fire": 8,
+      "book:curfews": -5
     },
     "unrest": 0.15,
     "fullShare": 0.12,

@@ -170,7 +170,7 @@ function liveDeals(state, world) {
     if (state.realms?.[rid]?.fallen || hostile(state, TEMERIA, rid)) continue;
     out.push({
       rid,
-      sell: d.sell?.qty > 0 ? { ...d.sell, value: Math.round(d.sell.qty * exportPrice(world, d.sell.good)) } : null,
+      sell: d.sell?.qty > 0 ? { ...d.sell, value: Math.round(d.sell.qty * exportPrice(world, d.sell.good, state)) } : null,
       buy: d.buy?.qty > 0 ? { ...d.buy, value: Math.round(d.buy.qty * importPrice(world, d.buy.good)) } : null,
     });
   }

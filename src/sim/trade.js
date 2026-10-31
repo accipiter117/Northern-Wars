@@ -10,6 +10,7 @@ import { totalPopulation } from './state.js';
 import { creditLimit, buildingEffects } from './economy.js';
 import { threatLevel, patrolledSet } from './military.js';
 import { tradeFactor } from './neighbours.js';
+import { lawStands } from './book.js';
 import { TEMERIA, ownerOf, hostile, sideName, placeOf } from './conflict.js';
 
 const T = (world) => world.trade;
@@ -62,7 +63,7 @@ export function routeLimit(state, world) {
     if (s.buildings.includes('market')) markets++;
     extra += buildingEffects(world, s).routes;
   }
-  const n = t.limit.base + Math.floor(markets * t.limit.perMarket) + extra + (t.limit.guilds[state.laws.guilds?.option] ?? 0);
+  const n = t.limit.base + Math.floor(markets * t.limit.perMarket) + extra + Object.entries(t.limit.laws ?? {}).reduce((v, [k, d]) => v + (lawStands(state, k) ? d : 0), 0);
   return Math.max(1, Math.min(t.limit.max ?? 99, n));
 }
 

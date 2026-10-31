@@ -14,6 +14,7 @@ import { companyStrength, threatStrength, winChance, oddsWord, resolve, groundAt
 import { threatPos, threatName, foeName, destroyThreat, isCamp, nearestPlace } from './threats.js';
 import { armyPosition, armyStrength, routArmy } from './armies.js';
 import { placeMuster } from './companies.js';
+import { bookEffect } from './book.js';
 import { localStrength } from './military.js';
 
 const F = (world) => world.forces;
@@ -43,8 +44,11 @@ export function stationedStrength(state, world, id, threat = null) {
   return companiesAt(state, id).reduce((a, c) => a + companyStrength(world, c, foe, 'open', walls), 0);
 }
 
-export function companyUpkeep(world, c) {
-  return (c.men + (c.wounded ?? 0)) * F(world).companies[c.type].upkeep;
+// A company's pay a month; with the realm given, as the Book of Laws has
+// it (standing companies cost a quarter less, M26).
+export function companyUpkeep(world, c, state = null) {
+  const law = state ? Math.max(0, 1 + bookEffect(state, world, 'companyUpkeep')) : 1;
+  return (c.men + (c.wounded ?? 0)) * F(world).companies[c.type].upkeep * law;
 }
 
 // ---- Recruiting ----
@@ -58,7 +62,8 @@ export function companySlots(state, world, id) {
 export function recruitCost(state, world, id, type) {
   const t = F(world).companies[type];
   const st = state.forces.stores;
-  let coin = t.coin;
+  // Royal knights (M26) at half the price.
+  let coin = t.coin * (type === 'knights' ? Math.max(0, 1 + bookEffect(state, world, 'knightCost')) : 1);
   const short = { arms: Math.max(0, (t.arms ?? 0) - st.arms), horses: Math.max(0, (t.horses ?? 0) - st.horses) };
   // Without arms in store they are bought abroad, dear; light horse can
   // be mounted on bought horses, knights cannot be made without a stud's.
@@ -424,7 +429,7 @@ function fight(state, world, rng, group, foe) {
     c.fought = state.day;
     if (out.aWins) {
       c.morale = clamp(c.morale + f.morale.win, 0, 100);
-      c.xp = Math.min(f.xp.max, (c.xp ?? 0) + f.xp.win);
+      c.xp = Math.min(f.xp.max, (c.xp ?? 0) + f.xp.win * (1 + bookEffect(state, world, 'xpGain')));
       c.wins = (c.wins ?? 0) + 1;
     } else {
       c.morale = clamp(c.morale - f.morale.loss, 0, 100);

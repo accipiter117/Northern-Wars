@@ -78,3 +78,6 @@ export { monthlyOutput } from './market.js';
 export { canPreset, canFocus, labourPreview, districtHead, focusedSplit } from './labour.js';
 export { houseRetinue, mercenaryOffer, gatherDays } from './armies.js';
 export { armyPay } from './economy.js';
+export {
+  bookLaws, lawDef, signed, pathDepth, lawEnactment, inkLeft, restLeft, canSignLaw, canRepeal, repealCost, lawOpinion, bookEffect, bookEffects, crownFaith, unlocked, lawUnlocking, lawStands,
+} from './book.js';

@@ -26,6 +26,16 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
+| M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | In progress (A and B) |
+
+## M26 acceptance criteria
+Parts A and B, the Book of Laws:
+- Five chapters, each with two rival paths of three tiers; a tier needs the one below; signing a path's first law locks the rival until the path is repealed from the top down.
+- Signing shows the headline effect, cost, groups who cheer or grumble and any act unlocked, asks once, takes effect over the enactment days, and moves Love, Fear and Unrest at once with a one-line reaction.
+- The ink dries 30 days after any signing or repeal; a law changed rests 90 days; repealing angers those who liked it, shown before confirming.
+- Taxes, the court and bounties are quick settings in the Treasury and Military with a 30-day rest.
+- tools/laws.mjs runs a reign with and without each law; every law moves its headline by about 20% or its stated flat amount; the table is in BALANCE.md.
+- Save upgrade maps the old laws to the Book with no cooldowns running.
 
 ## M24 acceptance criteria
 Part A, a compact top bar:

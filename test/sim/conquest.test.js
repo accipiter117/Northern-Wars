@@ -10,7 +10,7 @@ import { makeRng } from '../../src/sim/rng.js';
 import { syncWorld, settleOwnership, transferTown } from '../../src/sim/lands.js';
 import { onCapture, monthlyConquest, fearOf, northFear, integrationParts, resolveConquestDecision } from '../../src/sim/conquest.js';
 import { monthlyLedger } from '../../src/sim/economy.js';
-import { nodeWorld } from '../helpers.js';
+import { nodeWorld, signLaws } from '../helpers.js';
 
 const world = await nodeWorld();
 
@@ -145,21 +145,19 @@ test('integration rises under a garrison and good laws, and falls under harsh on
   t.integration = 40;
   t.garrison = 600;
   t.prosperity = 65;
-  s.laws.patronage.option = 'tolerance';
   const rng = makeRng(1);
   for (let m = 0; m < 12; m++) monthlyConquest(s, world, rng);
   assert.ok(t.integration > 46, `rose to ${t.integration}`);
   // Heavy taxes and martial law push it back down.
   s.laws.tax_peasants.option = 'heavy';
-  s.laws.public_order.option = 'martial';
-  s.laws.patronage.option = 'eternal_fire';
+  signLaws(s, world, 'curfews', 'faith_of_the_crown:eternal_fire');
   t.prosperity = 35;
   t.garrison = 0;
   const high = t.integration;
   for (let m = 0; m < 12; m++) monthlyConquest(s, world, rng);
   assert.ok(t.integration < high - 5, `fell to ${t.integration}`);
   const parts = integrationParts(s, world, 'bremervoord').map((p) => p.text);
-  assert.ok(parts.includes('Heavy taxes') && parts.includes('Martial law'));
+  assert.ok(parts.includes('Heavy taxes') && parts.includes('Curfews and the watch'));
   syncWorld(world, createState(world, 1));
 });
 

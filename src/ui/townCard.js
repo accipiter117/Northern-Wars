@@ -14,6 +14,7 @@ import { settlementForcesHtml } from './forces.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
 import { cardHead, segs, section } from './card.js';
+import { townActsHtml } from './realmTab.js';
 import { worksTabHtml, worksPipsHtml, landTags } from './works.js';
 
 const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Castle', temple: 'Temple' };
@@ -63,6 +64,7 @@ function overviewHtml(app, id, lookups) {
     <div data-part="accounts">${accountsHtml(state, id, made)}</div>
     <div data-part="stores">${storesLine(world, state, id)}</div>
     <div data-part="works">${worksPipsHtml(world, state, id)}</div>
+    <div data-part="crown-acts">${townActsHtml(app, id)}</div>
     <div data-part="trade">${world.trade ? settlementTradeHtml(world, state, id) : ''}</div>
     ${section(memory, `town:${id}`, 'details', 'Details', storesHtml(world, state, id))}`;
 }

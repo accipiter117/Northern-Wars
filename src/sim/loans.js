@@ -6,6 +6,7 @@
 import { nudge } from './meters.js';
 import { addDispatch } from './realm.js';
 import { ledgerNet, windfall } from './economy.js';
+import { bookEffect } from './book.js';
 import { number } from './text.js';
 
 const L = (world) => world.economy.loans;
@@ -33,8 +34,10 @@ export function loanCap(state, world) {
 
 export function loanTerms(state, world, sum) {
   const c = L(world);
-  const payment = monthlyPayment(sum, c.rate, c.months);
-  return { sum, months: c.months, payment: Math.round(payment), total: Math.round(payment * c.months), rate: c.rate };
+  // The royal bank (M26) borrows at half the rate.
+  const rate = c.rate * Math.max(0.1, 1 + bookEffect(state, world, 'interest'));
+  const payment = monthlyPayment(sum, rate, c.months);
+  return { sum, months: c.months, payment: Math.round(payment), total: Math.round(payment * c.months), rate };
 }
 
 export function canBorrow(state, world, sum) {
@@ -51,7 +54,7 @@ export function borrow(state, world, sum) {
   const c = L(world);
   const t = loanTerms(state, world, sum);
   state.nextLoanId = (state.nextLoanId ?? 0) + 1;
-  (state.loans ??= []).push({ id: state.nextLoanId, sum, payment: t.payment, left: c.months, rate: c.rate, missed: 0, day: state.day });
+  (state.loans ??= []).push({ id: state.nextLoanId, sum, payment: t.payment, left: c.months, rate: t.rate, missed: 0, day: state.day });
   windfall(state, 'borrowed', sum);
   say(state, `${c.lender[0].toUpperCase()}${c.lender.slice(1)} lends the crown ${number(sum)} crowns: ${c.months} payments of ${number(t.payment)}.`);
 }

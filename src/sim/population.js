@@ -3,6 +3,7 @@
 import { addDispatch } from './realm.js';
 import { number } from './text.js';
 import { prosperityMult } from './economy.js';
+import { bookEffect } from './book.js';
 import { lawEffects } from './laws.js';
 
 const say = (state, text) => addDispatch(state, text, 'realm');
@@ -14,7 +15,8 @@ export function monthlyPopulation(state, world, rng) {
   let exiles = 0;
   for (const [id, s] of Object.entries(state.settlements)) {
     let rate = p.growthPerMonth * prosperityMult(world, s) * (1 - s.hunger) * Math.max(0, 1 + law.growth);
-    rate -= p.hungerDeathsPerMonth * s.hunger;
+    // Poor relief (M26) keeps the hungry alive.
+    rate -= p.hungerDeathsPerMonth * s.hunger * Math.max(0, 1 + bookEffect(state, world, 'hungerDeaths'));
     if (s.unrest > p.emigrationAboveUnrest) rate -= p.emigrationPerMonth;
     for (const people of Object.keys(s.population)) {
       const n = s.population[people];

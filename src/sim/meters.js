@@ -23,6 +23,8 @@ import { clamp, addDispatch } from './realm.js';
 import { seasonOf } from './calendar.js';
 import { totalPopulation } from './state.js';
 import { foodNeed, realmStock, realmEffect } from './economy.js';
+import { signed, lawDef } from './book.js';
+import { destroyThreat, threatName } from './threats.js';
 import { lawEffects } from './laws.js';
 import { TEMERIA, hasWalls } from './conflict.js';
 import { sendFigure } from './figures.js';
@@ -180,17 +182,48 @@ export function stepMetersDay(state, world) {
 
 // ---- The crown's own acts ----
 
-const ACT_NAMES = { hang: 'Hang the ringleaders', gibbets: 'Gibbets at the crossroads', feast: 'A feast and a tournament', progress: 'A royal progress' };
+const ACT_NAMES = {
+  hang: 'Hang the ringleaders', gibbets: 'Gibbets at the crossroads', feast: 'A feast and a tournament', progress: 'A royal progress',
+  pardon: 'A royal pardon', granaries: 'Open the granaries', mage: 'Summon the court mage', witchhunt: 'A witch hunt',
+};
+// Acts aimed at one town of ours.
+const AT_TOWN = ['hang', 'gibbets', 'pardon', 'granaries', 'mage', 'witchhunt'];
+
+// What the court mage would deal with at a town (M26): plague there, or
+// the nearest beast lair within reach.
+function mageTarget(state, world, id) {
+  const s = state.settlements[id];
+  if ((s.plague ?? 0) > state.day) return { plague: true };
+  const at = world.byId[id];
+  const r = C(world).acts.mage.radius;
+  const t = (state.threats?.list ?? []).filter((x) => x.kind === 'monsters' && !x.abroad && Math.hypot(x.x - at.x, x.y - at.y) <= r)
+    .sort((a, b) => Math.hypot(a.x - at.x, a.y - at.y) - Math.hypot(b.x - at.x, b.y - at.y))[0];
+  return t ? { threat: t } : null;
+}
+
+// The Scoia'tael within the inquisition's reach of a town (M26).
+function huntedElves(state, world, id) {
+  const at = world.byId[id];
+  const r = C(world).acts.witchhunt.radius;
+  return (state.threats?.list ?? []).filter((x) => x.kind === 'scoiatael' && !x.abroad && Math.hypot((x.band?.x ?? x.x) - at.x, (x.band?.y ?? x.y) - at.y) <= r);
+}
 export { ACT_NAMES };
 
 export function canAct(state, world, kind, id = null) {
   const a = C(world)?.acts?.[kind];
   if (!a) return { ok: false, reason: 'Unknown act.' };
   const m = meters(state);
+  // Some acts are unlocked by the Book of Laws (M26).
+  if (a.needs && !signed(state, a.needs)) return { ok: false, reason: `Needs the law ${lawDef(world, a.needs)?.law.name ?? a.needs}.`, locked: true };
   if (a.coin && state.treasury < a.coin) return { ok: false, reason: `Needs ${a.coin} crowns.` };
-  if (kind === 'hang' || kind === 'gibbets') {
+  if (AT_TOWN.includes(kind)) {
     const s = state.settlements[id];
     if (!s || s.occupier) return { ok: false, reason: 'Choose a place of ours.' };
+  }
+  if (kind === 'mage' && !mageTarget(state, world, id)) return { ok: false, reason: 'Neither plague nor a beast\'s lair there for the mage.' };
+  if (kind === 'witchhunt' && !huntedElves(state, world, id).length) return { ok: false, reason: 'No Scoia\'tael within reach of it.' };
+  if (kind === 'granaries' && !(state.settlements[id].hunger > 0)) return { ok: false, reason: 'No one goes hungry there.' };
+  if (kind === 'hang' || kind === 'gibbets') {
     // m.hanged holds the day its gibbet comes down, `days` after the hanging.
     if (kind === 'hang' && id in m.hanged && m.hanged[id] - a.days + a.cooldown > state.day) return { ok: false, reason: 'The last hanging there is too fresh.' };
     if (kind === 'gibbets' && (m.gibbets[id] ?? 0) > state.day) return { ok: false, reason: 'The gibbets there still stand.' };
@@ -226,6 +259,40 @@ export function doAct(state, world, kind, id = null) {
     nudge(state, world, 'love', a.love, 'A feast and a tournament');
     if (state.opinion?.nobles !== undefined) state.opinion.nobles = clamp(state.opinion.nobles + a.nobles, 0, 100);
     say(state, 'Vizima feasts: tables in the squares, a tournament in the lists, and the king\'s health drunk in every tavern.');
+  } else if (kind === 'pardon') {
+    m.acted.pardon = state.day;
+    const s = state.settlements[id];
+    s.unrest = clamp(s.unrest + a.unrest, 0, 100);
+    state.unrest = realmUnrest(state, world);
+    nudge(state, world, 'love', a.love, 'Royal pardons');
+    say(state, `The king pardons the petty offenders of ${name}. The gaol empties, and the town toasts his mercy.`);
+  } else if (kind === 'granaries') {
+    m.acted.granaries = state.day;
+    const s = state.settlements[id];
+    s.stock.food += foodNeed(world, s, seasonOf(state.day)) * a.days;
+    s.hunger = 0;
+    say(state, `The royal granaries at ${name} are thrown open. No one there goes hungry this month.`);
+  } else if (kind === 'mage') {
+    m.acted.mage = state.day;
+    const t = mageTarget(state, world, id);
+    for (const [g, v] of Object.entries(a.opinion ?? {})) if (state.opinion?.[g] !== undefined) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
+    if (t.plague) {
+      const s = state.settlements[id];
+      s.plague = 0;
+      s.quarantine = 0;
+      say(state, `The court mage walks the sickhouses of ${name}. By morning the fever has broken.`);
+    } else {
+      const what = threatName(world, t.threat).toLowerCase();
+      destroyThreat(state, world, t.threat);
+      say(state, `The court mage rides out from ${name}; the ${what} trouble the roads no more.`);
+    }
+  } else if (kind === 'witchhunt') {
+    m.acted.witchhunt = state.day;
+    const gone = huntedElves(state, world, id);
+    for (const t of gone) destroyThreat(state, world, t);
+    nudge(state, world, 'fear', a.fear, 'Witch hunts');
+    for (const [g, v] of Object.entries(a.opinion ?? {})) if (state.opinion?.[g] !== undefined) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
+    say(state, `The inquisition scours the forests round ${name}: ${gone.length} Scoia'tael hideout${gone.length === 1 ? '' : 's'} burned, and every elf in the district questioned.`);
   } else if (kind === 'progress') {
     m.acted.progress = state.day;
     // The greatest towns of ours, nearest first from Vizima.

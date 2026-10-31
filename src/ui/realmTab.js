@@ -339,6 +339,23 @@ function actButton(app, kind, settlement, sub) {
   return `<button type="button" class="build" data-act="${kind}" ${orderAttr(action, `${ACT_NAMES[kind]}${settlement ? ` at ${world.byId[settlement].name}` : ''}?`)} ${check.ok ? '' : 'disabled'}>
     <span class="build-name">${escapeHtml(ACT_NAMES[kind])}${settlement ? ` at ${escapeHtml(world.byId[settlement].name)}` : ''}</span><span class="build-cost">${escapeHtml(check.ok ? sub : check.reason)}</span></button>`;
 }
+// The crown's acts aimed at one town that the Book of Laws has unlocked
+// (M26): a pardon, the rope, the granaries, the court mage, the witch hunt.
+export function townActsHtml(app, id) {
+  const { state, world } = app;
+  const a = world.meters?.acts;
+  if (!a) return '';
+  const subs = {
+    pardon: `Unrest ${a.pardon.unrest}, Love +${a.pardon.love}.`,
+    hang: `Unrest ${a.hang.unrest}, Fear +${a.hang.fear}, Love ${a.hang.love}.`,
+    granaries: `${number(a.granaries.coin)} crowns. No one there goes hungry.`,
+    mage: `${number(a.mage.coin)} crowns. Ends plague there, or the nearest beast lair.`,
+    witchhunt: `${number(a.witchhunt.coin)} crowns. Clears the Scoia'tael from the district; Fear +${a.witchhunt.fear}.`,
+  };
+  const rows = Object.keys(subs).filter((k) => a[k] && !canAct(state, world, k, id).locked).map((k) => actButton(app, k, id, subs[k])).join('');
+  return rows ? `<h3>Acts of the crown</h3><div class="build-list">${rows}</div>` : '';
+}
+
 function actsHtml(app, key) {
   const { state, world } = app;
   const a = world.meters?.acts;
@@ -358,7 +375,7 @@ function actsHtml(app, key) {
     return `<div data-part="acts"><h3>To make them fear the crown</h3><div class="build-list">
       ${angry ? actButton(app, 'hang', angry, `Fear +${a.hang.fear}, the town quiet, Love ${a.hang.love}.`) : ''}
       ${roads ? actButton(app, 'gibbets', roads, `${number(a.gibbets.coin)} crowns. Fear +${a.gibbets.fear} and more each month they stand; the roads calmer.`) : ''}
-    </div><p class="sub">The king's riders are a law of public order; hostages are taken from a house's card.</p></div>`;
+    </div><p class="sub">The rope and the king's riders are laws of the Iron Hand in the Book of Laws; hostages are taken from a house's card.</p></div>`;
   }
   return '';
 }

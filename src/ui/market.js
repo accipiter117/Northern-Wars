@@ -23,7 +23,7 @@ function goodRow(world, state, g) {
   const moved = r ? [r.exported ? `${number(r.exported)} sent abroad` : '', r.imported ? `${number(r.imported)} bought in` : '', r.sold ? `${number(r.sold)} sold at home` : ''].filter(Boolean).join(', ') : '';
   return `<div class="good-row" data-good="${g}">
     <div class="gr-main"><span class="gr-line ${tone}">${escapeHtml(balanceLine(world, g, r))}</span>
-      <span class="gr-sub">Price at home ${price(homePrice(state, world, g))} a load; surplus sells at home for ${price(homeSalePrice(state, world, g))}, abroad for ${price(exportPrice(world, g))}.${moved ? ` Last month: ${moved}.` : ''}${held ? ` Held back: ${number(state.market.store?.[g] ?? 0)} in store.` : ''}</span></div>
+      <span class="gr-sub">Price at home ${price(homePrice(state, world, g))} a load; surplus sells at home for ${price(homeSalePrice(state, world, g))}, abroad for ${price(exportPrice(world, g, state))}.${moved ? ` Last month: ${moved}.` : ''}${held ? ` Held back: ${number(state.market.store?.[g] ?? 0)} in store.` : ''}</span></div>
     <button type="button" class="chip${held ? ' on' : ''}" aria-pressed="${held}" data-hold="${g}" ${orderAttr({ type: 'hold', good: g, on: !held })}>${held ? 'Held' : 'Hold back'}</button>
   </div>`;
 }
@@ -118,7 +118,33 @@ function estateRow(world, state, estate, lawId, preview) {
   const cur = law.options[now];
   return `<div class="tax-row" data-estate="${estate}">
     <div class="gr-main"><span class="gr-line">${escapeHtml(law.name)}</span>
-      <span class="gr-sub">${escapeHtml(cur.blurb)}${s < 1 ? ` Taking hold, ${Math.round(s * 100)}%.` : ''}</span></div>
+      <span class="gr-sub">${escapeHtml(cur.blurb)}${s < 1 ? ` Taking hold, ${Math.round(s * 100)}%.` : ''}${restNote(state, world, lawId)}</span></div>
+    <div class="tax-opts">${opts}</div></div>`;
+}
+
+// How long before a setting can be changed again (M26: 30 days between).
+function restNote(state, world, lawId) {
+  const l = state.laws[lawId];
+  const rest = (world.laws.settingDays ?? 0) - (state.day - (l?.since ?? 0));
+  return l?.since && rest > 0 ? ` <span class="rest" data-rest="${lawId}">Can be changed again in ${rest} day${rest === 1 ? '' : 's'}.</span>` : '';
+}
+
+// A quick setting (M26): the court in the Treasury, monster bounties in
+// Military. Each option a button; the one in force pressed.
+export function settingHtml(app, lawId) {
+  const { world, state } = app;
+  const law = world.laws.laws[lawId];
+  if (!law) return '';
+  const now = state.laws[lawId]?.option ?? law.default;
+  const opts = Object.entries(law.options).map(([oid, opt]) => {
+    const cur = oid === now;
+    const check = cur ? { ok: false } : canDecree(state, world, lawId, oid);
+    return `<button type="button" class="tax-opt${cur ? ' on' : ''}" data-setting="${lawId}:${oid}" ${cur ? 'aria-pressed="true"' : orderAttr({ type: 'law', law: lawId, option: oid })} ${cur || check.ok ? '' : 'disabled'} title="${escapeHtml(cur || check.ok ? opt.blurb : check.reason)}">
+      <b>${escapeHtml(opt.name)}</b></button>`;
+  }).join('');
+  return `<div class="tax-row" data-part="setting-${lawId}">
+    <div class="gr-main"><span class="gr-line">${escapeHtml(law.name)}</span>
+      <span class="gr-sub">${escapeHtml(law.options[now].blurb)}${restNote(state, world, lawId)}</span></div>
     <div class="tax-opts">${opts}</div></div>`;
 }
 
@@ -126,7 +152,7 @@ export function taxesHtml(app) {
   const { world, state } = app;
   const preview = estateTaxPreview(state, world);
   const taxes = ESTATES.filter(([, id]) => world.laws.laws[id]).map(([e, id]) => estateRow(world, state, e, id, preview[e])).join('');
-  return `<div data-part="taxes"><p class="sub">Heavier taxes bring more crowns and anger the estate that pays: the burghers and the towns, the villages (who also grow more slowly), or the lords. A change takes a month to take hold.</p>${taxes}</div>
+  return `<div data-part="taxes"><p class="sub">Heavier taxes bring more crowns and anger the estate that pays: the burghers and the towns, the villages (who also grow more slowly), or the lords. A change takes a month to take hold, and each setting rests a month between changes.</p>${taxes}${settingHtml(app, 'court')}</div>
     ${loansHtml(app)}`;
 }
 

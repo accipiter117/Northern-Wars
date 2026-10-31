@@ -6,7 +6,7 @@ import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
   strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks, canCall, winterOutlook, foodYield, foodNeed, foodCapacity,
-  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer, holdingsOf, canHouseAction, canAct,
+  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer, holdingsOf, canHouseAction, canAct, canSignLaw,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -14,6 +14,21 @@ export function makeCrowns(world) {
     const out = applyAction(s, world, a);
     return out.error ? s : out.state;
   };
+
+  // The Book of Laws (M26): sign the next law along the given paths, in
+  // order, whenever the ink is dry and the treasury can bear it. Each entry
+  // is [chapter, path], with the faith of the crown's choice and the highest
+  // tier wanted if given.
+  function signAlong(s, paths, floor = 2000) {
+    for (const [chapter, path, choice, upto = 3] of paths) {
+      const next = world.book?.chapters[chapter]?.paths[path]?.laws.slice(0, upto).find((l) => !s.book?.signed?.[l.id]);
+      if (!next) continue;
+      const c = canSignLaw(s, world, next.id, next.choose === 'faith' ? choice : null);
+      if (c.ok && s.treasury - next.cost > floor) return act(s, { type: 'sign', law: next.id, ...(next.choose === 'faith' ? { choice } : {}) });
+      if (!c.ok && !c.locked) return s;
+    }
+    return s;
+  }
 
   // Answers every waiting decision: the steward takes the first (usually the
   // generous) choice when it can afford it, otherwise the default.
@@ -208,7 +223,8 @@ export function makeCrowns(world) {
     if (month === 2) {
       s = act(s, { type: 'law', law: 'bounties', option: 'witchers' });
     }
-    if (month === 6 && canDecree(s, world, 'nonhumans', 'charter').ok) s = act(s, { type: 'law', law: 'nonhumans', option: 'charter' });
+    // The King's Justice and Charity, with Melitele (M26).
+    s = signAlong(s, [['order', 'justice'], ['people', 'charity'], ['faith', 'one_faith', 'melitele', 1]]);
     // A frugal court (M24 C) while the people love the crown enough to bear
     // it, the customary one again if Love runs low.
     const court = s.laws.court?.option;
@@ -393,9 +409,11 @@ export function makeCrowns(world) {
     s = warPolicy(s, 'harsh');
     // The tyrant goes looking for plunder whenever its coffers allow.
     s = campaign(s, month, -8000);
-    const laws = [['tax_towns', 'heavy'], ['tax_peasants', 'heavy'], ['tax_nobles', 'heavy'], ['public_order', 'riders'], ['patronage', 'eternal_fire'], ['nonhumans', 'expulsion'], ['court', 'frugal']];
+    const laws = [['tax_towns', 'heavy'], ['tax_peasants', 'heavy'], ['tax_nobles', 'heavy'], ['court', 'frugal']];
     const [law, option] = laws[month % laws.length];
-    s = act(s, { type: 'law', law, option });
+    if (s.laws[law]?.option !== option) s = act(s, { type: 'law', law, option });
+    // The Iron Hand and One faith, the Fire's (M26).
+    s = signAlong(s, [['order', 'iron'], ['faith', 'one_faith', 'eternal_fire']], 0);
     for (const id of Object.keys(s.houses)) if (month % 12 === 0) s = act(s, { type: 'house', house: id, kind: 'fine' });
     // It rules by Fear (M24 B): the ringleaders in the angriest town hang,
     // gibbets go up where the roads are worst, and a house sends a hostage.

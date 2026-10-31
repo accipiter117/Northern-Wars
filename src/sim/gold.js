@@ -7,6 +7,7 @@ import { addDispatch } from './realm.js';
 import { distanceToPolygon } from './geometry.js';
 import { crownShare } from './houses.js';
 import { creditLimit } from './economy.js';
+import { bookEffect } from './book.js';
 import { worksFactor } from './works.js';
 
 const G = (world) => world.gold;
@@ -61,8 +62,10 @@ export function goldLedger(state, world, income, put = () => {}) {
   for (const { id, settlement } of activeMines(state, world)) {
     const y = goldYield(state, world, id);
     state.gold.deposits[id].remaining -= y;
-    income.gold += y * crownShare(state, world, state.settlements[settlement]);
-    put(settlement, y * crownShare(state, world, state.settlements[settlement]));
+    // Royal mines (M26): the crown's overseers take more of what is dug.
+    const take = y * crownShare(state, world, state.settlements[settlement]) * (1 + bookEffect(state, world, 'mines'));
+    income.gold += take;
+    put(settlement, take);
     if (state.gold.deposits[id].remaining < 1) {
       state.gold.deposits[id].remaining = 0;
       say(state, `${G(world).deposits[id].name} is worked out. The last cart of ore comes up from ${world.byId[settlement].name}, and the miners drift away.`);

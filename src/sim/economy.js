@@ -23,6 +23,8 @@ import { dealLedger } from './deals.js';
 import { worksFactor, upkeepFactor } from './works.js';
 import { farmFactor, levyFactor } from './labour.js';
 import { loanLedger } from './loans.js';
+import { bookEffect, outputMult } from './book.js';
+import { nonhumanShare } from './culture.js';
 import { marketLedger, noteMade, noteUsed, noteSpill, offer, isHeld, marketGoodOf } from './market.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -60,7 +62,7 @@ export function realmEffect(state, world, key) {
 
 // How far the bankers will let the crown go into debt; a dwarven bank lends more.
 export function creditLimit(state, world) {
-  return world.economy.debt.creditLimit + realmEffect(state, world, 'creditLimit');
+  return world.economy.debt.creditLimit + realmEffect(state, world, 'creditLimit') + bookEffect(state, world, 'creditLimit');
 }
 
 export function prosperityMult(world, s) {
@@ -401,6 +403,10 @@ export function monthlyLedger(state, world, rng = null) {
   // sabotage of a crown feared but not loved (M24 B).
   const collect = taxCollected(state, world);
   const quiet = sabotage(state, world);
+  // The Book of Laws (M26): guild monopolies and long hours drive the
+  // crafts harder; the non-human charter lifts their quarters' crafts.
+  const lawCrafts = (1 + bookEffect(state, world, 'crafts')) * outputMult(state, world);
+  const nonhumanCrafts = bookEffect(state, world, 'nonhumanCrafts');
   for (const [id, s] of Object.entries(state.settlements)) {
     // An occupied town pays its occupier, not the crown.
     if (s.occupier) continue;
@@ -430,9 +436,11 @@ export function monthlyLedger(state, world, rng = null) {
       if (!world.buildings[b].effects.craft) continue;
       // A strike (M22 D: high Unrest) stops half the workshops.
       const strike = (s.strike ?? 0) > state.day ? 1 - (world.meters?.unrest.strike ?? 0) : 1;
-      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike * (1 - quiet);
+      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike * (1 - quiet) * lawCrafts * (nonhumanShare(s) >= 0.1 ? 1 + nonhumanCrafts : 1);
       income.crafts[b] = (income.crafts[b] ?? 0) + c * scale;
       put(id, c * scale);
+      // Each place's crafts on their own, for its card and the law harness.
+      places[id].crafts = (places[id].crafts ?? 0) + c * scale;
     }
     if (fx.customs && world.waterOf?.[id]?.navigable) {
       income.customs += fx.customs * share;
@@ -468,7 +476,7 @@ export function monthlyLedger(state, world, rng = null) {
   // A soft cap (M21): the crafts together never earn more than a share of
   // the taxes and dues, however many works the realm has.
   const craftSum = Object.values(income.crafts).reduce((a, v) => a + v, 0);
-  const craftCap = (e.crafts.capShare ?? Infinity) * (income.taxes + income.trade + income.tithe);
+  const craftCap = (e.crafts.capShare ?? Infinity) * (income.taxes + income.trade + income.tithe) * lawCrafts * (1 + nonhumanCrafts);
   if (craftSum > craftCap && craftSum > 0) for (const b of Object.keys(income.crafts)) income.crafts[b] *= craftCap / craftSum;
   // The great houses' dues, by the lords' setting (M21).
   for (const [h, v] of Object.entries(houseDues(state, world, law))) {
@@ -492,7 +500,7 @@ export function monthlyLedger(state, world, rng = null) {
   dealLedger(state, world, income, expenses, deliveries);
   // The standing companies, paid where they are stationed.
   for (const c of state.forces?.companies ?? []) {
-    const pay = companyUpkeep(world, c);
+    const pay = companyUpkeep(world, c, state);
     expenses.companies += pay;
     cost(c.station, pay);
   }
@@ -500,13 +508,13 @@ export function monthlyLedger(state, world, rng = null) {
   // The five goods: deals with partner realms, then home sales (M21).
   marketLedger(state, world, income, expenses);
   // A dwarven bank lends cheaper.
-  if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth * Math.max(0.5, 1 + Math.min(0, realmEffect(state, world, 'interest')));
+  if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth * Math.max(0.25, 1 + Math.min(0, realmEffect(state, world, 'interest') + bookEffect(state, world, 'interest')));
 
   for (const k of Object.keys(income)) {
     if (typeof income[k] === 'number') income[k] = Math.round(income[k]);
     else for (const j of Object.keys(income[k])) income[k][j] = Math.round(income[k][j]);
   }
-  state.ledger.places = Object.fromEntries(Object.entries(places).map(([id, v]) => [id, { in: Math.round(v.in), out: Math.round(v.out) }]));
+  state.ledger.places = Object.fromEntries(Object.entries(places).map(([id, v]) => [id, { in: Math.round(v.in), out: Math.round(v.out), ...(v.crafts ? { crafts: Math.round(v.crafts) } : {}) }]));
   for (const k of Object.keys(expenses)) {
     if (typeof expenses[k] === 'number') expenses[k] = Math.round(expenses[k]);
     else for (const j of Object.keys(expenses[k])) expenses[k][j] = Math.round(expenses[k][j]);

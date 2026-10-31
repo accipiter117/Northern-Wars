@@ -3,6 +3,7 @@
 // swords or a garrison). Armies are lists of companies, and their strength is
 // the sum of each company's by the one formula in combat.js.
 import { companyStrength } from './combat.js';
+import { bookEffect } from './book.js';
 import { totalPopulation } from './state.js';
 
 const F = (world) => world.forces;
@@ -75,7 +76,7 @@ export function placeMuster(state, world, id, call = 1) {
   const share = world.war?.raise?.muster?.share?.[world.byId[id]?.type] ?? 0;
   const s = state.settlements[id];
   if (!s || s.occupier || !share) return [];
-  return levyCompanies(world, id, Math.floor(totalPopulation(s) * share * call));
+  return levyCompanies(world, id, Math.floor(totalPopulation(s) * share * call * Math.max(0, 1 + bookEffect(state, world, 'levy'))));
 }
 
 // A garrison as companies of garrison soldiers.

@@ -36,6 +36,7 @@ import {
 import { treatyBetween, endTreaty } from './diplomacy.js';
 import { canRepairWorks, startRepair, resolveWorksDecision } from './works.js';
 import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin, canPreset, applyPreset, canFocus, setFocus } from './labour.js';
+import { canSignLaw, signLaw, canRepeal, repealLaw } from './book.js';
 import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -99,6 +100,21 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     decree(next, world, action.law, action.option);
+    return { state: next };
+  }
+  // The Book of Laws (M26 A).
+  if (action.type === 'sign') {
+    const check = canSignLaw(state, world, action.law, action.choice ?? null);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    signLaw(next, world, action.law, action.choice ?? null);
+    return { state: next };
+  }
+  if (action.type === 'repeal') {
+    const check = canRepeal(state, world, action.law);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    repealLaw(next, world, action.law);
     return { state: next };
   }
   if (action.type === 'stance') {
