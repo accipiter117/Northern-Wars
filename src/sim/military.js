@@ -13,6 +13,7 @@ import { lodgeCut } from './industry.js';
 import { patrolNodes } from './forces.js';
 import { monthlyThreatsSpawn } from './threats.js';
 import { crownFaith, bookEffect } from './book.js';
+import { faithEffect } from './faiths.js';
 import { worksFactor } from './works.js';
 
 const say = (state, text) => addDispatch(state, text, 'military');
@@ -87,7 +88,7 @@ function plagueMonth(state, world, rng) {
   const spreadTo = [];
   for (const [id, s] of Object.entries(state.settlements)) {
     if (!plagueActive(state, s)) continue;
-    const care = (s.priestesses || crownFaith(state) === 'melitele' ? p.melitele : 1) * Math.max(0.2, 1 + localFx(world, s, 'plagueDeaths')) * Math.max(0, 1 + bookEffect(state, world, 'plagueDeaths'));
+    const care = (s.priestesses || crownFaith(state) === 'melitele' ? p.melitele : 1) * Math.max(0.2, 1 + localFx(world, s, 'plagueDeaths')) * Math.max(0, 1 + bookEffect(state, world, 'plagueDeaths') + faithEffect(state, world, 'plagueDeaths'));
     let dead = 0;
     for (const k of Object.keys(s.population)) {
       const n = Math.round(s.population[k] * p.deathsPerMonth * care);
@@ -100,7 +101,7 @@ function plagueMonth(state, world, rng) {
       const t = state.settlements[to];
       // Those who came through it lately do not take it again.
       // Baths, sewers and paved streets give the sickness less to feed on.
-      const spread = p.spread * Math.max(0.1, 1 + localFx(world, t, 'plagueSpread'));
+      const spread = p.spread * Math.max(0.1, 1 + localFx(world, t, 'plagueSpread') + faithEffect(state, world, 'plagueSpread'));
       if (!plagueActive(state, t) && (t.plagueImmune ?? 0) <= state.day && rng.chance(spread)) spreadTo.push(to);
     }
   }

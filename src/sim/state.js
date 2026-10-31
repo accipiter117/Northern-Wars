@@ -19,6 +19,7 @@ import { defaultConquest } from './conquest.js';
 import { startingWorks, defaultWorks } from './works.js';
 import { defaultLabour, startingFuel } from './labour.js';
 import { defaultBook } from './book.js';
+import { defaultFaiths } from './faiths.js';
 import { defaultMarket } from './market.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
@@ -29,7 +30,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 27;
+export const STATE_VERSION = 28;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -111,6 +112,7 @@ export function createState(world, seed = 1) {
     updateIntel(state, world, visionOf(state, world));
   }
   state.reign = newReign(state, day);
+  state.faiths = defaultFaiths(state, world);
   for (const id of Object.keys(settlements)) settlements[id].tension = tensionTarget(state, world, id);
   state.unrest = realmUnrest(state, world);
   if (k.opening) addDispatch(state, k.opening);

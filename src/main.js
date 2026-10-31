@@ -10,6 +10,7 @@ import { attachPanelInput } from './ui/clicks.js';
 import { createPick } from './ui/pick.js';
 import { renderRoute } from './ui/router.js';
 import { pendingDecisions, urgentItems } from './ui/inbox.js';
+import { freshPowers } from './ui/faith.js';
 import { loadMemory, saveMemory, TABS } from './ui/memory.js';
 import { icon } from './ui/icons.js';
 import { escapeHtml } from './ui/format.js';
@@ -248,7 +249,7 @@ async function boot() {
 
   function updateBadges() {
     nav.setBadges({
-      court: pendingDecisions(state, world, acked).length,
+      court: pendingDecisions(state, world, acked).length + freshPowers(state, world, memory.faithSeen ?? 0),
       military: looseThreats(),
       diplomacy: state.envoys.length,
     });
@@ -517,6 +518,19 @@ async function boot() {
     if (what === 'chronicle' || what === 'help') nav.push(what);
     else menuAction(what);
   });
+  // A long press on a resting button says how long it still rests (M26 D);
+  // a tap on it is swallowed, since the button inside is disabled anyway.
+  let pressTimer = 0;
+  document.addEventListener('pointerdown', (e) => {
+    const ring = e.target.closest('.cool-wrap.cooling');
+    clearTimeout(pressTimer);
+    if (!ring) return;
+    pressTimer = setTimeout(() => {
+      const n = Number(ring.dataset.left);
+      toast(`Ready in ${n} day${n === 1 ? '' : 's'}.`);
+    }, 450);
+  });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) document.addEventListener(ev, () => clearTimeout(pressTimer));
   document.addEventListener('pointerdown', (e) => {
     if (!moreMenu.hidden && !e.target.closest('#more-menu, #more-button')) toggleMore();
   });

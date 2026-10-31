@@ -15,6 +15,7 @@ import { threatPos, threatName, foeName, destroyThreat, isCamp, nearestPlace } f
 import { armyPosition, armyStrength, routArmy } from './armies.js';
 import { placeMuster } from './companies.js';
 import { bookEffect } from './book.js';
+import { faithLevel } from './faiths.js';
 import { localStrength } from './military.js';
 
 const F = (world) => world.forces;
@@ -79,6 +80,12 @@ export function canRecruit(state, world, id, type) {
   if (s.holder !== 'crown') return { ok: false, reason: 'A lord holds it; the crown recruits on its own lands.', hidden: true };
   if (!t.places.includes(world.byId[id].type)) return { ok: false, reason: `Not raised in a ${world.byId[id].type}.`, hidden: true };
   if (t.barracks && !s.buildings.includes('barracks')) return { ok: false, reason: 'Needs barracks here to train them.' };
+  // Zealots (M26 C) only where the Fire burns strong.
+  if (t.faith) {
+    const fa = world.devotion?.faiths[t.faith.faith];
+    if (faithLevel(state, world, t.faith.faith) < t.faith.level) return { ok: false, reason: `Needs ${fa?.name ?? t.faith.faith} at level ${t.faith.level}.`, hidden: true };
+    if ((s.faith?.[t.faith.faith] ?? 0) < t.faith.share) return { ok: false, reason: `Too few of ${fa?.short ?? t.faith.faith}'s faithful here.` };
+  }
   const here = state.forces.companies.filter((c) => c.station === id).length;
   if (here >= companySlots(state, world, id)) return { ok: false, reason: `Room for ${companySlots(state, world, id)} compan${companySlots(state, world, id) === 1 ? 'y' : 'ies'} here; barracks allow more.` };
   if ((s.population.human ?? 0) < t.men * 4) return { ok: false, reason: 'Too few people here to spare the men.' };
@@ -101,6 +108,8 @@ export function recruit(state, world, id, type) {
   const cost = recruitCost(state, world, id, type);
   state.treasury -= cost.coin;
   state.ledger.decrees = (state.ledger.decrees ?? 0) + cost.coin;
+  // Unruly sorts stir up their town.
+  if (t.unrest) s.unrest = Math.min(100, s.unrest + t.unrest);
   state.forces.stores.arms -= cost.arms;
   state.forces.stores.horses -= cost.horses;
   s.population.human -= t.men;

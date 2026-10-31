@@ -25,6 +25,7 @@ import { farmFactor, levyFactor } from './labour.js';
 import { loanLedger } from './loans.js';
 import { bookEffect, outputMult } from './book.js';
 import { nonhumanShare } from './culture.js';
+import { churchLand, faithEffect } from './faiths.js';
 import { marketLedger, noteMade, noteUsed, noteSpill, offer, isHeld, marketGoodOf } from './market.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -100,7 +101,7 @@ export function foodYield(world, id, s, month, law = null) {
   const terrain = f.terrainYield[world.terrainOf[id]] ?? 1;
   const fx = buildingEffects(world, s);
   // As many hands as the fields need bring the harvest in (M20 C).
-  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield + (law?.foodYield ?? 0)) * (f.monthWeights[month - 1] / mean) * farmFactor(world, s);
+  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield + (law?.foodYield ?? 0)) * (f.monthWeights[month - 1] / mean) * Math.max(law?.harvestFloor ?? 0, farmFactor(world, s));
 }
 
 // Timber, stone or iron per day, for settlements whose trade is one of those.
@@ -158,7 +159,8 @@ export function stepEconomyDay(state, world) {
   for (const [id, s] of Object.entries(state.settlements)) {
     s.stock.food += foodYield(world, id, s, date.month, law);
     if (GOODS.includes(s.production)) {
-      const q = goodsYield(world, id, s);
+      // The Old Ways (M26 C): more timber from the woods.
+      const q = goodsYield(world, id, s) * (s.production === 'timber' ? Math.max(0, 1 + faithEffect(state, world, 'woods')) : 1);
       s.stock[s.production] += q;
       noteMade(state, world, s.production, q);
     }
@@ -434,6 +436,8 @@ export function monthlyLedger(state, world, rng = null) {
     const scale = e.crafts.placeScale[type] * mult * share * conquestYield(world, s);
     for (const b of s.buildings) {
       if (!world.buildings[b].effects.craft) continue;
+      // Church land (M26 C): its takings go to the faith, not the crown.
+      if (churchLand(state, id, b)) continue;
       // A strike (M22 D: high Unrest) stops half the workshops.
       const strike = (s.strike ?? 0) > state.day ? 1 - (world.meters?.unrest.strike ?? 0) : 1;
       const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike * (1 - quiet) * lawCrafts * (nonhumanShare(s) >= 0.1 ? 1 + nonhumanCrafts : 1);

@@ -235,6 +235,17 @@ export function canAct(state, world, kind, id = null) {
   return { ok: true };
 }
 
+// How long an act rests, and how much of that rest is left (M26 D), for
+// the ring round its button.
+export function actRest(state, world, kind, id = null) {
+  const a = C(world)?.acts?.[kind];
+  const m = state.meters;
+  if (!a || !m) return { left: 0, total: 0 };
+  if (kind === 'hang') return { left: id in (m.hanged ?? {}) ? Math.max(0, m.hanged[id] - a.days + a.cooldown - state.day) : 0, total: a.cooldown };
+  if (kind === 'gibbets') return { left: Math.max(0, (m.gibbets?.[id] ?? 0) - state.day), total: a.days };
+  return { left: Math.max(0, (m.acted?.[kind] ?? -Infinity) + (a.cooldown ?? 0) - state.day), total: a.cooldown ?? 0 };
+}
+
 export function doAct(state, world, kind, id = null) {
   const a = C(world).acts[kind];
   const m = meters(state);
@@ -335,8 +346,9 @@ function stepProgress(state, world) {
   }
 }
 
+// The king away from court: on progress, or on pilgrimage (M26 C).
 export function onProgress(state) {
-  return !!state.meters?.progress;
+  return !!state.meters?.progress || (state.faiths?.pilgrimage?.until ?? 0) > state.day;
 }
 
 // ---- The month ----

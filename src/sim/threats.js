@@ -19,6 +19,7 @@ import { companiesAt, stationedStrength } from './forces.js';
 import { damagePlace, outside } from './works.js';
 import { nudge } from './meters.js';
 import { bookEffect } from './book.js';
+import { faithEffect } from './faiths.js';
 import { windfall } from './economy.js';
 
 const F = (world) => world.forces;
@@ -180,7 +181,9 @@ export function monthlyThreatsSpawn(state, world, rng) {
   // New camps and lairs where the country breeds them.
   // The king's riders (M26) keep outlaws off the roads: half as many camps,
   // slower to grow.
-  const riders = Math.max(0, 1 + bookEffect(state, world, 'banditRoads'));
+  const riders = Math.max(0, 1 + bookEffect(state, world, 'banditRoads') + faithEffect(state, world, 'banditRoads'));
+  // The Old Ways (M26 C) calm the beasts.
+  const calmBeasts = Math.max(0, 1 + faithEffect(state, world, 'beasts'));
   for (const kind of ['bandits', 'monsters']) {
     const cfg = T(world)[kind];
     const max = kind === 'bandits' ? Math.max(1, Math.round(cfg.max * riders)) : cfg.max;
@@ -188,7 +191,7 @@ export function monthlyThreatsSpawn(state, world, rng) {
       if (state.threats.list.filter((t) => t.kind === kind && !t.abroad).length >= max) break;
       const level = lv[kind];
       if (level < cfg.spawnAt) continue;
-      if (!rng.chance(cfg.spawnChance * (kind === 'bandits' ? riders : 1) * (level - cfg.spawnAt + 10) / 50)) continue;
+      if (!rng.chance(cfg.spawnChance * (kind === 'bandits' ? riders : calmBeasts) * (level - cfg.spawnAt + 10) / 50)) continue;
       const t = spawnCamp(state, world, rng, id, kind, level);
       if (t) t.level = level;
     }
@@ -342,7 +345,8 @@ function spawnScoiatael(state, world, rng) {
   const cfg = T(world).scoiatael;
   if (state.sympathy <= cfg.above) return;
   if (state.threats.list.filter((t) => t.kind === 'scoiatael').length >= cfg.max) return;
-  if (!rng.chance(cfg.chance * (state.sympathy - cfg.above) / (100 - cfg.above))) return;
+  // The Old Ways (M26 C) make the dryads and their allies less hostile.
+  if (!rng.chance(cfg.chance * Math.max(0, 1 + faithEffect(state, world, 'scoiatael')) * (state.sympathy - cfg.above) / (100 - cfg.above))) return;
   // The woods near Brokilon, or near the elves of the realm.
   const places = world.geography.settlements.filter((st) => world.forestNear[st.id] && !state.settlements[st.id].occupier);
   if (!places.length) return;

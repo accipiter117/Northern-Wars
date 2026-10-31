@@ -7,6 +7,7 @@ import { addDispatch, clamp } from './realm.js';
 import { totalPopulation } from './state.js';
 // A strong crown, loved or feared, keeps a troubled town from rioting (M24 B).
 import { lawStands, crownFaith } from './book.js';
+import { faithEffect } from './faiths.js';
 import { canRiot } from './meters.js';
 
 const say = (state, text) => addDispatch(state, text, 'faith');
@@ -45,7 +46,9 @@ export function tensionTarget(state, world, id) {
   const t = world.culture.tension;
   const s = state.settlements[id];
   let v = t.base + s.faith.eternal_fire * t.perFirePercent + s.hunger * t.hunger + Math.max(0, 50 - s.prosperity) * t.povertyPerPoint;
-  for (const [key, d] of Object.entries(t.laws)) if (lawActive(state, key)) v += d;
+  // The Hierarch's favour (the Fire, level 5) halves the anger persecution stirs.
+  const favour = Math.max(0, 1 + faithEffect(state, world, 'persecutionUnrest'));
+  for (const [key, d] of Object.entries(t.laws)) if (lawActive(state, key)) v += d > 0 ? d * favour : d;
   for (const b of s.buildings) v += world.buildings[b].effects.tension ?? 0;
   return clamp(v, 0, 100);
 }

@@ -4,6 +4,7 @@ import {
 import { escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
 import { chips, orderAttr } from './card.js';
+import { cooling } from './cooldown.js';
 import { form } from './memory.js';
 
 const MOOD_WORDS = ['Hostile', 'Resentful', 'Indifferent', 'Content', 'Devoted'];
@@ -74,8 +75,8 @@ function lawCard(app, f, law, tier) {
       <span class="bl-tier">${tier}</span><b>${escapeHtml(law.name)}</b>${choice ? ` <small>(${escapeHtml(world.groups.groups[choice]?.name ?? choice)})</small>` : ''}
       <p class="bl-head">${escapeHtml(law.headline)}</p>
       ${k < 1 ? `<p class="bl-taking">Taking hold: ${Math.round(k * 100)}%</p>` : ''}
-      <button type="button" class="act danger small" data-repeal="${law.id}" ${repeal.ok ? orderAttr({ type: 'repeal', law: law.id }, `Repeal ${law.name}? ${costLine}`, { final: true }) : 'disabled'}>
-        <span class="act-label">Repeal</span><span class="act-sub">${escapeHtml(repeal.ok ? costLine : repeal.reason)}</span></button>
+      ${cooling(`<button type="button" class="act danger small" data-repeal="${law.id}" ${repeal.ok ? orderAttr({ type: 'repeal', law: law.id }, `Repeal ${law.name}? ${costLine}`, { final: true }) : 'disabled'}>
+        <span class="act-label">Repeal</span><span class="act-sub">${escapeHtml(repeal.ok ? costLine : repeal.reason)}</span></button>`, restLeft(state, world, law.id), world.book.lawCooldown, false)}
     </div>`;
   }
   const check = canSignLaw(state, world, law.id, law.choose === 'faith' ? world.book.faiths[0] : null);
@@ -113,6 +114,10 @@ function lawCard(app, f, law, tier) {
 function signButton(state, world, law, choice, label) {
   const check = canSignLaw(state, world, law.id, choice);
   const action = { type: 'sign', law: law.id, ...(choice ? { choice } : {}) };
-  return `<button type="button" class="act primary" data-sign="${law.id}${choice ? `:${choice}` : ''}" ${check.ok ? orderAttr(action, `Sign ${law.name} into the Book of Laws?`, { final: true }) : 'disabled'}>
-    <span class="act-label">${escapeHtml(label)}</span><span class="act-sub">${escapeHtml(check.ok ? law.headline : check.reason)}</span></button>`;
+  // The ink and the law's own rest, whichever is longer, ring the button.
+  const ink = inkLeft(state);
+  const rest = restLeft(state, world, law.id);
+  const [left, total] = ink >= rest ? [ink, world.book.inkDays] : [rest, world.book.lawCooldown];
+  return cooling(`<button type="button" class="act primary" data-sign="${law.id}${choice ? `:${choice}` : ''}" ${check.ok ? orderAttr(action, `Sign ${law.name} into the Book of Laws?`, { final: true }) : 'disabled'}>
+    <span class="act-label">${escapeHtml(label)}</span><span class="act-sub">${escapeHtml(check.ok ? law.headline : check.reason)}</span></button>`, left, total, check.ok);
 }

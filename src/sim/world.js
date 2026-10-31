@@ -9,7 +9,7 @@ import { buildSpaces } from './works.js';
 const WORKED_RADIUS = 40;
 const TEMERIA_ID = 'temeria';
 
-export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds = null, diplomacy = null, strategy = null, conquest = null, spaces = null, labour = null, market = null, meters = null, book = null }) {
+export function buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds = null, diplomacy = null, strategy = null, conquest = null, spaces = null, labour = null, market = null, meters = null, book = null, devotion = null }) {
   // byId knows every place on the map, at home and abroad; adjacency is
   // Temeria's own road network, which every domestic system walks.
   // fullAdjacency adds the foreign roads, for traffic that crosses borders.
@@ -201,6 +201,7 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
     market,
     meters,
     book,
+    devotion,
     works: spaces?.condition ?? null,
     spaces: spaces ? buildSpaces(spaces, geography.settlements, foreign, borderland) : null,
     landsKey: '',

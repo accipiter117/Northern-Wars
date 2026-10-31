@@ -6,7 +6,7 @@ import {
   applyAction, canBuild, canDecree, threatLevel, warsOf, peaceTerms, crownArmies, canOpenRoute, routeValue, ledgerNet,
   canRecruit, sightedThreats, bestCompanyFor, parties, treatyBetween, weighDeal, counterOffer, ourValue, hostile, describeItem,
   strengthOf, canDeclareWith, ownerOf, atWar, canRequisition, valueOf, canRepairWorks, canCall, winterOutlook, foodYield, foodNeed, foodCapacity,
-  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer, holdingsOf, canHouseAction, canAct, canSignLaw,
+  LABOUR_KINDS, MARKET_GOODS, partnerTrade, canBorrow, mercenaryOffer, holdingsOf, canHouseAction, canAct, canSignLaw, canFaithAct,
 } from '../src/sim/index.js';
 
 export function makeCrowns(world) {
@@ -26,6 +26,27 @@ export function makeCrowns(world) {
       const c = canSignLaw(s, world, next.id, next.choose === 'faith' ? choice : null);
       if (c.ok && s.treasury - next.cost > floor) return act(s, { type: 'sign', law: next.id, ...(next.choose === 'faith' ? { choice } : {}) });
       if (!c.ok && !c.locked) return s;
+    }
+    return s;
+  }
+
+  // Develop a faith (M26 C): endow its temples where it is strongest, send
+  // preachers, keep its festival and make the pilgrimage, and use its powers
+  // when they are ready and there is call for them.
+  function tendFaith(s, f, floor = 3000) {
+    if (!world.devotion) return s;
+    const towns = Object.keys(s.settlements).filter((id) => !s.settlements[id].occupier && ['town', 'city'].includes(world.byId[id].type))
+      .sort((a, b) => (s.settlements[b].faith?.[f] ?? 0) - (s.settlements[a].faith?.[f] ?? 0));
+    const tryAct = (kind, town = null) => {
+      if (s.treasury < floor || !canFaithAct(s, world, kind, f, town).ok) return false;
+      s = act(s, { type: 'faith', kind, faith: f, ...(town ? { settlement: town } : {}) });
+      return true;
+    };
+    tryAct('festival') || tryAct('endow', towns[0]) || tryAct('preachers', towns[1] ?? towns[0]) || tryAct('pilgrimage');
+    // Powers: whatever is ready and has a use.
+    for (const p of Object.keys(world.devotion.faiths[f].powers ?? {})) {
+      if (['blessing', 'belleteyn'].includes(p)) tryAct(p);
+      else for (const id of Object.keys(s.settlements)) if (tryAct(p, id)) break;
     }
     return s;
   }
@@ -225,6 +246,7 @@ export function makeCrowns(world) {
     }
     // The King's Justice and Charity, with Melitele (M26).
     s = signAlong(s, [['order', 'justice'], ['people', 'charity'], ['faith', 'one_faith', 'melitele', 1]]);
+    s = tendFaith(s, 'melitele', 4000);
     // A frugal court (M24 C) while the people love the crown enough to bear
     // it, the customary one again if Love runs low.
     const court = s.laws.court?.option;
@@ -414,6 +436,7 @@ export function makeCrowns(world) {
     if (s.laws[law]?.option !== option) s = act(s, { type: 'law', law, option });
     // The Iron Hand and One faith, the Fire's (M26).
     s = signAlong(s, [['order', 'iron'], ['faith', 'one_faith', 'eternal_fire']], 0);
+    s = tendFaith(s, 'eternal_fire', 1000);
     for (const id of Object.keys(s.houses)) if (month % 12 === 0) s = act(s, { type: 'house', house: id, kind: 'fine' });
     // It rules by Fear (M24 B): the ringleaders in the angriest town hang,
     // gibbets go up where the roads are worst, and a house sends a hostage.

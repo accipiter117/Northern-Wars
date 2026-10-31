@@ -22,6 +22,7 @@ import { stepThreatsDay } from './threats.js';
 import { stepCompaniesDay, monthlyCompanies } from './forces.js';
 import { stepWorksDay, monthlyWorks, worksUnrest } from './works.js';
 import { stepLabourDay, monthlyLabour } from './labour.js';
+import { monthlyFaiths } from './faiths.js';
 import { resolveOrders, noteTheirMoves, marchingNow } from './board.js';
 
 const CHRONICLE_LIMIT = 400;
@@ -106,6 +107,8 @@ export function stepRealmDay(state, world, rng) {
     // Rulers' own requests for audiences replace the old random envoys.
     if (!state.diplomacy) monthlyEnvoy(state, world, rng);
     monthlyCulture(state, world, rng);
+    // The faiths' Devotion, perks and clashes (M26 C).
+    monthlyFaiths(state, world, rng);
     monthlyPetition(state, world, rng);
     // Love, Fear and Unrest take stock of the month (M24 B), before the
     // lords weigh the reign.

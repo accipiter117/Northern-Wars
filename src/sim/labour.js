@@ -15,6 +15,7 @@ import { dateOf, MONTHS } from './calendar.js';
 import { totalPopulation } from './state.js';
 import { leviedMap } from './conflict.js';
 import { bookEffect } from './book.js';
+import { faithEffect } from './faiths.js';
 import { condOf } from './works.js';
 
 const L = (world) => world.labour;
@@ -327,7 +328,8 @@ export function fuelMade(state, world) {
   }
   const woods = state.labour.report?.woods?.hands ?? 0;
   v += Math.max(0, woods - workers) * per.gather;
-  return v;
+  // The Old Ways (M26 C): more from the woods.
+  return v * Math.max(0, 1 + faithEffect(state, world, 'woods'));
 }
 
 // Cold hearths: sickness and deaths in the poorest places, anger everywhere.
