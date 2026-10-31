@@ -54,14 +54,14 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 | Long hours | Crafts and goods, a month | 858 to 1,060 (+24%) | 870 to 1,064 (+22%) |
 | Debtors' labour | Repair crews | 3.00 to 6.00 (+100%) | 3.00 to 6.00 (+100%) |
 | Prison gangs | Days to rebuild a works | 29.00 to 15.00 (-48%) | 29.00 to 15.00 (-48%) |
-| Freedom of worship | Clashes between faiths (Part C) | measured in Part C | measured in Part C |
+| Freedom of worship | Clashes between faiths in two years (rivals held strong) | 51 to 18 (-65%) | 41 to 22 (-46%) |
 | The non-human charter | Crafts where non-humans live, a month | 71.00 to 88.50 (+25%) | 228 to 283 (+24%) |
 | Licensed mages | Beast lairs near the town | 1.00 to 0.00 (-1.0) | 2.00 to 1.00 (-1.0) |
-| Faith of the crown | Devotion growth (Part C) | measured in Part C | measured in Part C |
+| Faith of the crown | Melitele's Devotion gained in a year, from nothing | 17.67 to 27.98 (+58%) | 17.59 to 27.80 (+58%) |
 | Restrictions on non-humans | Fear gained each month from laws | 0.00 to 1.50 (+1.5) | 0.00 to 1.50 (+1.5) |
 | The inquisition | Scoia'tael near the town | 1.00 to 0.00 (-1.0) | 1.00 to 0.00 (-1.0) |
 
-- **The two faith laws** (Freedom of worship, Faith of the crown) act on Devotion and clashes, which arrive with Part C; their rows are filled then.
+- **The two faith laws** were measured once the faiths arrived (M26 C). Freedom of worship is measured with the Fire at 60, the Old Ways at 55 and Melitele at 50 held there each month, so only the law differs. Faith of the crown grows a faith twice as fast, but Devotion closes on its target ever more slowly, so a year from nothing shows +58% rather than double.
 - **The king's riders** move least (a fifth to nearly three tenths fewer bandits): they halve how many camps the realm can hold and slow their growth, but camps already standing must wither or be cleared first.
 - **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
 - **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.

@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | In progress (A and B) |
+| M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | In progress (A to D done) |
 
 ## M26 acceptance criteria
 Parts A and B, the Book of Laws:
@@ -36,6 +36,13 @@ Parts A and B, the Book of Laws:
 - Taxes, the court and bounties are quick settings in the Treasury and Military with a 30-day rest.
 - tools/laws.mjs runs a reign with and without each law; every law moves its headline by about 20% or its stated flat amount; the table is in BALANCE.md.
 - Save upgrade maps the old laws to the Book with no cooldowns running.
+
+Parts C and D, the faiths and their powers:
+- Devotion 0 to 100 per faith with levels at 20, 40, 60, 80 and 100; perks cumulative; a power at level 3 (and level 5) with cooldowns.
+- Acts: endow a temple, church land, preachers, the festival in season, a royal pilgrimage; the faith of the crown grows twice as fast.
+- Rival faiths clash only where both are above 40; Freedom of worship halves clashes; the inquisition makes the Fire win and the losers angrier. AI realms on the same rules.
+- Cooldown rings on every resting button, a long press for the days left, a gold dot when ready; the faith sheet on one screen; a Court badge when a power comes ready.
+- tools/laws.mjs measures Freedom of worship and Faith of the crown; tests for levels, perks, powers, rests, clashes and the version 28 save.
 
 ## M24 acceptance criteria
 Part A, a compact top bar:

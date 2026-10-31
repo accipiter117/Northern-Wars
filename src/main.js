@@ -96,6 +96,8 @@ async function boot() {
     persist: () => saveMemory(memory),
     foreignView,
     looseThreats,
+    // Later, once the screen is drawn, so the Court badge sees the Faith page read.
+    badges: () => setTimeout(updateBadges, 0),
     startPick: (p) => pick.start(p),
     sendNearest,
     regency,

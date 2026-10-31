@@ -830,7 +830,9 @@ ul.orders li .chip { flex: none; }
 /* Cooldown rings (M26 D): a ring that fills as an act recovers, a gold dot
    when it is ready. */
 .cool-wrap { position: relative; display: block; border-radius: 12px; }
-.cool-wrap.cooling { padding: 3px; background: conic-gradient(#d8b45a var(--done), rgba(216, 180, 90, 0.18) 0); }
+.cool-wrap.cooling { padding: 3px; }
+/* The ring is the 3px band round the button only, filling clockwise. */
+.cool-wrap.cooling::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 3px; background: conic-gradient(#d8b45a var(--done), rgba(216, 180, 90, 0.18) 0); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events: none; }
 .cool-wrap.cooling > button { width: 100%; }
 .cool-wrap > button[disabled] { pointer-events: none; }
 .cool-wrap.ready::after { content: ''; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #e2bd5a; box-shadow: 0 0 4px rgba(226, 189, 90, 0.8); pointer-events: none; }

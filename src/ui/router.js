@@ -50,7 +50,10 @@ function tabScreen(app, tab) {
     else if (sub === 'houses') html = noblesHtml(app);
     else if (sub === 'faith') {
       html = faithHtml(app);
-      app.memory.faithSeen = app.state.day;
+      if (app.memory.faithSeen !== app.state.day) {
+        app.memory.faithSeen = app.state.day;
+        app.badges?.();
+      }
     }
     else html = stewardHtml(app) + inboxHtml(pendingDecisions(app.state, app.world, app.acked()));
   } else if (tab === 'treasury') {
