@@ -10,7 +10,7 @@ const LOYALTY_WORDS = ['Treacherous', 'Disloyal', 'Wavering', 'Loyal', 'Devoted'
 const AMBITION_WORDS = ['Content', 'Settled', 'Restless', 'Grasping', 'Hungry for power'];
 
 export function swatch(world, id) {
-  const [field, charge] = world.houses.houses[id].colours;
+  const [field, charge] = world.houses.houses[id]?.colours ?? ['#555', '#eee'];
   return `<i class="house-swatch" style="background:${field};border-color:${charge}"></i>`;
 }
 
@@ -18,6 +18,8 @@ function badges(state, id) {
   const h = state.houses[id];
   const out = [];
   if (h.rebel) out.push('<span class="badge bad">In rebellion</span>');
+  if (h.captive) out.push('<span class="badge bad">Awaits judgement</span>');
+  if ((h.hostageUntil ?? 0) > state.day) out.push('<span class="badge">Heir held at court</span>');
   if (h.office) out.push('<span class="badge">On the council</span>');
   if (h.exemptUntil !== null && state.day < h.exemptUntil) out.push('<span class="badge">Exempt from taxes</span>');
   return out.join(' ');
@@ -29,7 +31,8 @@ export function noblesHtml(app) {
   const crisis = state.crisisMonths > 0
     ? `<p class="warn">The lords speak of a regency. ${state.crisisMonths} of ${d.months} months of crisis.</p>` : '';
   const waiting = new Set(state.demands.map((p) => p.house));
-  const rows = Object.entries(world.houses.houses).map(([id, def]) => {
+  const rows = Object.keys(state.houses).map((id) => {
+    const def = houseDef(state, world, id);
     const p = housePower(state, world, id);
     const h = state.houses[id];
     return `<button type="button" class="row realm-row" data-house="${id}" data-go="house:${id}">
@@ -103,7 +106,8 @@ export function houseCard(app, id) {
     <div data-part="demand">${demands.map((d) => decisionHtml(d)).join('')}</div>
     <div data-part="actions" data-form="${route}"><h3>The crown's hand</h3><div class="build-list">${actions}
       <button type="button" class="build${picking === 'grant' ? ' open' : ''}" data-house-pick="grant" data-set="picking:${picking === 'grant' ? '' : 'grant'}"><span class="build-name">Grant land</span><span class="build-cost">${h.want?.kind === 'land' ? `Wanted: ${escapeHtml(world.byId[h.want.target]?.name ?? 'land')}.` : 'Favour now; half the taxes, forever.'}</span></button>
-      <button type="button" class="build danger" data-house-pick="strip" data-set="picking:${picking === 'strip' ? '' : 'strip'}" ${h.rebel ? 'disabled' : ''}><span class="build-name">Strip a title</span><span class="build-cost">Every house will remember.</span></button>
+      <button type="button" class="build danger" data-house-pick="strip" data-set="picking:${picking === 'strip' ? '' : 'strip'}" ${h.rebel || h.captive ? 'disabled' : ''}><span class="build-name">Strip a title</span><span class="build-cost">Every house will remember.</span></button>
+      ${(() => { const x = world.houses.actions.execute; const check = canHouseAction(state, world, id, 'execute'); return `<button type="button" class="build danger" data-house-action="execute" ${orderAttr({ type: 'house', house: id, kind: 'execute' }, `Behead ${def.lord}, who has never risen against you? The realm will call it murder.`, { final: true })} ${check.ok ? '' : 'disabled'}><span class="build-name">Execute the lord</span><span class="build-cost">${check.ok ? `Tyranny: Unrest +${x.unrest}, Love −${x.love}, every house aggrieved. A rebel is judged instead, with impunity.` : escapeHtml(check.reason)}</span></button>`; })()}
     </div>${pickList}</div>
     <div data-part="lands"><h3>Lands</h3><div class="chips">${lands || '<p class="sub">None.</p>'}</div></div>
     ${section(memory, route, 'traits', 'Character', `<ul class="cares">${def.traits.map((t) => `<li><b>${escapeHtml(world.houses.traits[t].name)}.</b> ${escapeHtml(world.houses.traits[t].about)}</li>`).join('')}</ul>`)}

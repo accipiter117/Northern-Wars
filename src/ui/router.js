@@ -83,7 +83,7 @@ export function renderRoute(app, route) {
   switch (kind) {
     case 'tab': return tabScreen(app, arg);
     case 'town': return world.byId[arg] && state.settlements[arg] ? { title: escapeHtml(world.byId[arg].name), html: townCard(app, arg) } : gone('Gone', 'No such place.');
-    case 'house': return world.houses.houses[arg] ? { title: `${swatch(world, arg)} ${escapeHtml(world.houses.houses[arg].name)}`, html: houseCard(app, arg) } : gone('Gone', 'No such house.');
+    case 'house': return world.houses.houses[arg] && state.houses[arg] ? { title: `${swatch(world, arg)} ${escapeHtml(world.houses.houses[arg].name)}`, html: houseCard(app, arg) } : gone('Gone', 'No such house.');
     case 'board': return state.realms?.[arg] && !state.realms[arg].fallen ? { title: boardTitle(app, arg), html: boardCard(app, arg) } : gone('Gone', 'No such realm.');
     case 'orders': return { title: 'The month\'s orders', html: ordersHtml(app) };
     case 'realm': return world.neighbours.realms[arg] ? { title: escapeHtml(world.geography.neighbours[arg].name), html: realmCard(app, arg) } : gone('Gone', 'No such realm.');

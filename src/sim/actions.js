@@ -38,6 +38,7 @@ import { canRepairWorks, startRepair, resolveWorksDecision } from './works.js';
 import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin, canPreset, applyPreset, canFocus, setFocus } from './labour.js';
 import { canSignLaw, signLaw, canRepeal, repealLaw } from './book.js';
 import { canFaithAct, doFaithAct, revokeLand } from './faiths.js';
+import { judge } from './judgement.js';
 import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -153,6 +154,12 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     houseAction(next, world, action.house, action.kind, action.settlement);
+    return { state: next };
+  }
+  // The king's judgement on a rebel lord (M27 D).
+  if (action.type === 'judgement') {
+    const next = structuredClone(state);
+    if (!judge(next, world, action.id, action.choice)) return { state, error: 'That judgement has been given.' };
     return { state: next };
   }
   if (action.type === 'demand') {

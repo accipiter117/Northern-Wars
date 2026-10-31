@@ -20,7 +20,12 @@
     "calm": 4,
     "festerBelow": 30,
     "fester": 4,
-    "kinds": ["bandits", "monsters", "raiders", "scoiatael"]
+    "kinds": [
+      "bandits",
+      "monsters",
+      "raiders",
+      "scoiatael"
+    ]
   },
   "wants": {
     "note": "M27 B: each house has one want at a time, drawn from its traits by weight. Granting it turns up to convert of ambition into favour (loyalty). Unmet after patience months, each month adds unmet.ambition and unmet.grievance; after lapse months he gives up asking. A command is wanted noArmy times as often while the crown has no army in the field. A new want comes gap days after the last is settled. Justice is wanted only by a house with grievance above grievanceAbove.",
@@ -28,14 +33,33 @@
     "patience": 4,
     "lapse": 9,
     "gap": 90,
-    "unmet": { "ambition": 2, "grievance": 1.5 },
-    "notRivals": ["brokilon", "mahakam"],
+    "unmet": {
+      "ambition": 2,
+      "grievance": 1.5
+    },
+    "notRivals": [
+      "brokilon",
+      "mahakam"
+    ],
     "kinds": {
-      "land": { "weight": 1 },
-      "command": { "weight": 1, "noArmy": 0.25 },
-      "war": { "weight": 0.5 },
-      "honours": { "weight": 1.5 },
-      "justice": { "weight": 1, "grievanceAbove": 15, "coin": 250 }
+      "land": {
+        "weight": 1
+      },
+      "command": {
+        "weight": 1,
+        "noArmy": 0.25
+      },
+      "war": {
+        "weight": 0.5
+      },
+      "honours": {
+        "weight": 1.5
+      },
+      "justice": {
+        "weight": 1,
+        "grievanceAbove": 15,
+        "coin": 250
+      }
     }
   },
   "obey": {
@@ -50,18 +74,71 @@
     "fearCalm": 0.006
   },
   "rebellion": {
+    "note": "M27 C: a house below loyalty below rises at chance a month (times the Fear calm), never while a hostage of it is held or its lord waits on judgement; houses below joinBelow join at joinChance. The rising is a war: the house's lands go over to it and armyPerPerson of their people (at least armyMin) and garrisonShare of their garrisons take the field as a rebel host of retinue companies, which fights crown armies at engageAt or better, falls back to its seat below 0.8, and besieges crown towns within reach of its seat. It ends when its seat falls, when its host is broken and its lord taken (captureChance a rout, or the host below half armyMin), or when, after sueAfterDefeats defeats, its strength is below sueBelow and it sues for terms; each brings the lord to the Judgement, with crushedFear. After forceTermsAfter months, if the crown's armies in the field are below crownWinsAt of the rebels, the crown is forced to terms.",
     "below": 15,
     "chance": 0.3,
     "joinBelow": 30,
     "joinChance": 0.5,
     "unrest": 20,
     "trustPerMonth": 1,
-    "crownCommitted": 0.5,
     "levyPerPeople": 0.2,
-    "decideAfter": 3,
-    "crownWinsAt": 1.5,
-    "concedeAfter": 6,
-    "endsAbove": 35
+    "armyPerPerson": 0.5,
+    "armyMin": 300,
+    "engageAt": 1.1,
+    "reach": 260,
+    "captureChance": 0.35,
+    "sueAfterDefeats": 2,
+    "sueBelow": 300,
+    "forceTermsAfter": 12,
+    "crownWinsAt": 1.2,
+    "crushedFear": 15,
+    "terms": {
+      "exemptDays": 365,
+      "loyalty": 45,
+      "favour": 20,
+      "love": 6
+    },
+    "garrisonShare": 0.5
+  },
+  "judgement": {
+    "note": "M27 D: what each judgement on a rebel lord does. Pardon sets his house's loyalty, favour and ambition, Love +love, every other house's ambition +othersAmbition. Fine and hostage: base + perPerson of his lands' people in crowns, his heir at court for hostageDays (no rising meanwhile), loyalty starting low and favour lifting it slowly. Strip, exile and execute: the house falls (its lands to the crown) with Fear +fear, every other house favour +othersFavour and ambition -othersAmbition, and no Love lost; an execution leaves a scaffold at the seat for scaffoldDays. An exile may, after afterDays, pay agitators in his old lands (chance a month, at most most times): their Unrest +unrest, the court that shelters him relation -relation. Unanswered after days (60), the fine and hostage is taken.",
+    "days": 60,
+    "pardon": {
+      "loyalty": 85,
+      "favour": 20,
+      "ambition": 10,
+      "love": 2,
+      "othersAmbition": 8
+    },
+    "fine": {
+      "base": 1000,
+      "perPerson": 1.5,
+      "loyalty": 30,
+      "favour": 25,
+      "ambition": 0,
+      "hostageDays": 1825
+    },
+    "strip": {
+      "fear": 12,
+      "othersFavour": 6,
+      "othersAmbition": 10
+    },
+    "exile": {
+      "fear": 10,
+      "othersFavour": 5,
+      "othersAmbition": 8,
+      "afterDays": 365,
+      "chance": 0.08,
+      "most": 3,
+      "unrest": 10,
+      "relation": 5
+    },
+    "execute": {
+      "fear": 25,
+      "othersFavour": 15,
+      "othersAmbition": 25,
+      "scaffoldDays": 10
+    }
   },
   "deposition": {
     "authorityBelow": 20,
@@ -112,11 +189,21 @@
       "unrest": 20,
       "grievance": 40,
       "othersGrievance": 8
+    },
+    "execute": {
+      "unrest": 40,
+      "love": 12,
+      "fear": 20,
+      "othersGrievance": 25,
+      "note": "M27 D: beheading a lord who never rose: the realm is outraged (Unrest, Love lost) and every other house nurses a grievance. A rebel's execution, by judgement, carries none of this."
     }
   },
   "traits": {
     "greedy": {
-      "wants": { "honours": 2, "land": 1.5 },
+      "wants": {
+        "honours": 2,
+        "land": 1.5
+      },
       "name": "Greedy",
       "about": "Wants coin and exemptions; fines sting twice as much.",
       "demands": {
@@ -126,7 +213,10 @@
       "fineGrievance": 2
     },
     "proud": {
-      "wants": { "honours": 1.5, "justice": 1.5 },
+      "wants": {
+        "honours": 1.5,
+        "justice": 1.5
+      },
       "name": "Proud",
       "about": "A refused demand is an insult remembered twice over.",
       "refusal": 2
@@ -155,7 +245,10 @@
       }
     },
     "warlike": {
-      "wants": { "war": 3, "command": 2 },
+      "wants": {
+        "war": 3,
+        "command": 2
+      },
       "name": "Warlike",
       "about": "Likes a realm under arms.",
       "cares": {
@@ -164,13 +257,19 @@
       }
     },
     "cautious": {
-      "wants": { "honours": 1.5, "war": 0.3 },
+      "wants": {
+        "honours": 1.5,
+        "war": 0.3
+      },
       "name": "Cautious",
       "about": "Slow to want more.",
       "ambition": 0.5
     },
     "schemer": {
-      "wants": { "land": 2, "justice": 1.5 },
+      "wants": {
+        "land": 2,
+        "justice": 1.5
+      },
       "name": "Schemer",
       "about": "Always nursing a quarrel with a rival house.",
       "demands": {
@@ -178,7 +277,9 @@
       }
     },
     "loyalist": {
-      "wants": { "command": 2 },
+      "wants": {
+        "command": 2
+      },
       "name": "Loyalist",
       "about": "His family has served the crown for generations.",
       "loyalty": 10

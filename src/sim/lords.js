@@ -34,7 +34,7 @@ const landsOf = (state, id) => Object.keys(state.settlements).filter((sid) => st
 // Whether a house keeps its own lands: loyal enough and not risen.
 export function guards(state, world, id) {
   const h = state.houses[id];
-  return !!h && !h.rebel && h.loyalty >= C(world).guard.above;
+  return !!h && !h.rebel && !h.captive && h.loyalty >= C(world).guard.above;
 }
 
 // The month's work of each loyal house's men: at most one camp, lair or
@@ -179,7 +179,7 @@ export function monthlyWants(state, world, rng) {
   const w = C(world).wants;
   if (!w) return;
   for (const [id, h] of Object.entries(state.houses)) {
-    if (h.rebel) continue;
+    if (h.rebel || h.captive) continue;
     if (!h.want) {
       if (state.day >= (h.wantAfter ?? 0)) h.want = pickWant(state, world, id, rng);
       continue;

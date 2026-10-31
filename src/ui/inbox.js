@@ -4,6 +4,7 @@
 // wait (war declared on Temeria, a siege, a rebellion, a deposition) also
 // raise a banner across the top.
 import {
+  houseDef, judgementEffects, crimesOf, JUDGEMENTS,
   TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText, worksDecisionText, envoysWaiting,
 } from '../sim/index.js';
 import { escapeHtml } from './format.js';
@@ -24,6 +25,16 @@ export function pendingDecisions(state, world, acked = Infinity) {
     out.push({
       key: `warDecision:${d.id}`, kind: 'warDecision', id: d.id, urgent: d.kind === 'declared', daysLeft: left(d.day, world.war.peace.offerDefaultDays),
       kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: d.kind === 'call' ? 1 : 0,
+    });
+  }
+  // A rebel lord before the king (M27 D): it pauses the game like any decision.
+  for (const j of state.judgements ?? []) {
+    const def = houseDef(state, world, j.house);
+    const fx = judgementEffects(state, world, j);
+    out.push({
+      key: `judgement:${j.id}`, kind: 'judgement', id: j.id, house: j.house, urgent: true, daysLeft: left(j.day, world.houses.judgement.days),
+      kicker: 'The king\'s judgement', title: `The judgement of ${def.lord}`, text: crimesOf(state, world, j),
+      choices: JUDGEMENTS.map((k) => fx[k]), fallback: 1, colours: def.colours,
     });
   }
   // What to do with a town taken, who is to hold a town gained, a rising (M19).
@@ -99,9 +110,11 @@ export function decisionHtml(d, { compact = false } = {}) {
   }
   const soon = d.daysLeft !== null && d.daysLeft <= 5;
   const left = d.daysLeft === null ? '' : `<span class="left${soon ? ' soon' : ''}">${d.daysLeft} day${d.daysLeft === 1 ? '' : 's'} left</span>`;
-  return `<div class="decision${d.urgent ? ' urgent-dec' : ''}" data-decision="${d.key}">
+  // The Judgement card carries the lord's portrait slot, in his banner's colours.
+  const portrait = d.kind === 'judgement' ? `<span class="judge-portrait" data-portrait="${d.house}" style="background:${d.colours[0]};border-color:${d.colours[1]}"></span>` : '';
+  return `<div class="decision${d.urgent ? ' urgent-dec' : ''}${d.kind === 'judgement' ? ' judgement' : ''}" data-decision="${d.key}">
     <div class="decision-top"><span class="envoy-from">${escapeHtml(d.kicker)}</span>${left}</div>
-    <h4>${escapeHtml(d.title)}</h4>
+    ${portrait}<h4>${escapeHtml(d.title)}</h4>
     ${compact ? '' : `<p>${escapeHtml(text)}</p>`}
     <div class="choices">${choices}</div>
   </div>`;

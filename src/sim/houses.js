@@ -4,12 +4,14 @@
 // about, favours granted and grievances nursed. Disloyal houses make their
 // lands restless; a house pushed too far rebels. A crown that loses both its
 // Authority and its order for half a year is deposed.
-import { nudge, authority, fearCollapse } from './meters.js';
+import { nudge, authority } from './meters.js';
 import { sendFigure } from './figures.js';
 import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { lawStands } from './book.js';
 import { totalPopulation } from './state.js';
+import { rise, monthlyRebellion } from './rebellion.js';
+import { fallHouse, monthlyExiles, judge } from './judgement.js';
 import { monthlyGuard, guardUnrest, monthlyWants, grantWant, obeys, commandable } from './lords.js';
 
 const say = (state, text) => addDispatch(state, text, 'nobles');
@@ -94,6 +96,10 @@ export function stepHousesDay(state, world) {
       resolveDemand(state, world, d.id, Math.max(0, choices.findIndex((c) => c.default)), true);
     }
   }
+  // A judgement left unspoken: the council fines the house and takes a hostage.
+  for (const j of [...(state.judgements ?? [])]) {
+    if (state.day - j.day >= cfg(world).judgement.days) judge(state, world, j.id, 1);
+  }
 }
 
 export function monthlyHouses(state, world, rng) {
@@ -113,6 +119,7 @@ export function monthlyHouses(state, world, rng) {
   monthlyGuard(state, world, rng);
   monthlyWants(state, world, rng);
   rebellions(state, world, rng);
+  monthlyExiles(state, world, rng);
   monthlyDemand(state, world, rng);
   deposition(state, world);
 }
@@ -141,7 +148,7 @@ function monthlyDemand(state, world, rng) {
   const offices = Object.values(state.houses).filter((h) => h.office).length;
   const options = [];
   for (const [hid, h] of Object.entries(state.houses)) {
-    if (h.rebel || state.demands.some((d) => d.house === hid)) continue;
+    if (h.rebel || h.captive || state.demands.some((d) => d.house === hid)) continue;
     for (const [did, d] of Object.entries(world.demands.demands)) {
       let w = d.weight * (0.5 + h.ambition / 50);
       for (const t of traitsOf(world, hid)) w *= t.demands?.[did] ?? 1;
@@ -217,6 +224,7 @@ export function canHouseAction(state, world, houseId, kind, settlementId) {
   const h = state.houses[houseId];
   const a = c.actions[kind];
   if (!h || !a) return { ok: false, reason: 'Unknown.' };
+  if (h.captive) return { ok: false, reason: 'The lord waits on the king\'s judgement.' };
   if (h.rebel && kind !== 'honours') return { ok: false, reason: 'The house is in rebellion.' };
   const last = h.lastAction[kind];
   if (['honours', 'summon', 'levies', 'fine', 'hostages', 'redress'].includes(kind) && last !== undefined && state.day - last < c.cooldownDays) {
@@ -302,6 +310,14 @@ export function houseAction(state, world, houseId, kind, settlementId) {
     army.lordOf = houseId;
     army.captain = def.lord;
     grantWant(state, world, houseId, `command of ${army.name}`);
+  } else if (kind === 'execute') {
+    // A lord who never rose, beheaded: tyranny, and every house knows it (M27 D).
+    nudge(state, world, 'love', -a.love, 'A loyal lord beheaded');
+    nudge(state, world, 'fear', a.fear, 'A loyal lord beheaded');
+    for (const [id, other] of Object.entries(state.houses)) if (id !== houseId) other.grievance += a.othersGrievance;
+    fallHouse(state, world, houseId, 'execute');
+    state.scaffold = { place: def.seat, until: state.day + world.houses.judgement.execute.scaffoldDays };
+    say(state, `${def.lord} is seized and beheaded at ${world.byId[def.seat].name}, though ${def.name} never rose against the crown. The realm is aghast, and every great house fears it is next.`);
   } else if (kind === 'strip') {
     state.settlements[settlementId].holder = 'crown';
     h.grievance += a.grievance;
@@ -312,64 +328,22 @@ export function houseAction(state, world, houseId, kind, settlementId) {
 
 // ---- Rebellion ----
 
-function crownStrength(state, world) {
-  let soldiers = 0;
-  for (const s of Object.values(state.settlements)) if (s.holder === 'crown') soldiers += s.garrison;
-  return soldiers * world.houses.rebellion.crownCommitted * (state.unpaid ? 0.5 : 1);
-}
 
+// A house pushed past bearing rises (M27 C: as a war, rebellion.js); the
+// most disloyal of its neighbours may join it. Never while a hostage of the
+// house is held at court, nor while its lord waits on judgement.
 function rebellions(state, world, rng) {
   const r = cfg(world).rebellion;
-  const name = (id) => cfg(world).houses[id].name;
+  const feared = cfg(world).moods ? Math.max(0, 1 - (state.fear ?? 0) * cfg(world).moods.fearCalm) : 1;
+  const calm = (h) => h.rebel || h.captive || (h.hostageUntil ?? 0) > state.day;
   for (const [id, h] of Object.entries(state.houses)) {
-    const feared = cfg(world).moods ? Math.max(0, 1 - (state.fear ?? 0) * cfg(world).moods.fearCalm) : 1;
-    if (!h.rebel && h.loyalty < r.below && rng.chance(r.chance * feared)) {
-      h.rebel = { since: state.day, months: 0 };
-      say(state, `${name(id)} has risen in rebellion. Its banners fly over its castles and its levies bar the roads.`);
-      for (const [oid, o] of Object.entries(state.houses)) {
-        if (oid !== id && !o.rebel && o.loyalty < r.joinBelow && rng.chance(r.joinChance)) {
-          o.rebel = { since: state.day, months: 0 };
-          say(state, `${name(oid)} joins the rising.`);
-        }
-      }
+    if (calm(h) || h.loyalty >= r.below || !rng.chance(r.chance * feared)) continue;
+    rise(state, world, id);
+    for (const [oid, o] of Object.entries(state.houses)) {
+      if (oid !== id && !calm(o) && o.loyalty < r.joinBelow && rng.chance(r.joinChance)) rise(state, world, oid, id);
     }
   }
-  const rebels = Object.keys(state.houses).filter((id) => state.houses[id].rebel);
-  if (!rebels.length) return;
-  for (const id of rebels) {
-    const h = state.houses[id];
-    h.rebel.months += 1;
-    nudge(state, world, 'love', -r.trustPerMonth, 'A great house in rebellion');
-    if (h.loyalty > r.endsAbove) {
-      h.rebel = null;
-      say(state, `${name(id)} lays down its arms and sends hostages to Vizima. The rising is over.`);
-    }
-  }
-  const still = rebels.filter((id) => state.houses[id].rebel);
-  if (!still.length) return;
-  const months = Math.max(...still.map((id) => state.houses[id].rebel.months));
-  if (months < r.decideAfter) return;
-  const theirs = still.reduce((a, id) => a + housePower(state, world, id).strength, 0);
-  if (crownStrength(state, world) >= theirs * r.crownWinsAt) {
-    for (const id of still) {
-      const h = state.houses[id];
-      for (const sid of holdingsOf(state, id)) if (sid !== cfg(world).houses[id].seat) state.settlements[sid].holder = 'crown';
-      Object.assign(h, { rebel: null, loyalty: 35, favour: 0, grievance: 0, ambition: 0, office: false });
-      say(state, `The crown's soldiers break ${name(id)}. Its lands are forfeit, all but its seat, and its lord bends the knee.`);
-    }
-    nudge(state, world, 'love', 4, 'A rising crushed');
-    nudge(state, world, 'fear', 12, 'A rising crushed');
-  } else if (months >= r.concedeAfter) {
-    for (const id of still) {
-      const h = state.houses[id];
-      const land = nearbyCrownLand(state, world, id)[0];
-      if (land) state.settlements[land].holder = id;
-      Object.assign(h, { rebel: null, favour: h.favour + 30, grievance: 0 });
-      say(state, `Too weak to win, the crown makes terms with ${name(id)}${land ? ` and cedes ${world.byId[land].name}` : ''}.`);
-    }
-    nudge(state, world, 'love', -8, 'Terms made with rebels');
-    fearCollapse(state, world, world.meters?.fear.revoltWon ?? 0, 'A rising that won its terms');
-  }
+  monthlyRebellion(state, world, rng);
 }
 
 // ---- Deposition and regency ----
