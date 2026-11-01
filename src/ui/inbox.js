@@ -4,7 +4,7 @@
 // wait (war declared on Temeria, a siege, a rebellion, a deposition) also
 // raise a banner across the top.
 import {
-  houseDef, judgementEffects, crimesOf, JUDGEMENTS, candidatesFor, vassalJudgementEffects, VASSAL_JUDGEMENTS,
+  houseDef, judgementEffects, crimesOf, JUDGEMENTS, candidatesFor, vassalJudgementEffects, VASSAL_JUDGEMENTS, rulerSubject,
   dilemmaText,
   TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText, worksDecisionText, envoysWaiting,
 } from '../sim/index.js';
@@ -54,8 +54,8 @@ export function pendingDecisions(state, world, acked = Infinity) {
     const fx = vassalJudgementEffects(state, world, j);
     out.push({
       key: `vassalJudgement:${j.id}`, kind: 'vassalJudgement', id: j.id, house: j.realm, urgent: true, daysLeft: left(j.day, world.diplomacy.vassals.judgement.days),
-      kicker: 'The judgement of a vassal king', title: `The judgement of ${rulerShort(world, j.realm)} of ${sideName(world, j.realm)}`,
-      text: `${rulerShort(world, j.realm)} rose against Temeria, his suzerain, and lost his capital and his war.`,
+      kicker: 'The judgement of a vassal king', title: `The judgement of ${rulerSubject(world, j.realm)}${/^the ruler/.test(rulerSubject(world, j.realm)) ? '' : ` of ${sideName(world, j.realm)}`}`,
+      text: `${rulerSubject(world, j.realm, true)} rose against Temeria, the suzerain, and lost the capital and the war.`,
       choices: VASSAL_JUDGEMENTS.map((k) => fx[k]), fallback: 0, colours: world.realms.realms[j.realm]?.colours ?? ['#555', '#eee'],
     });
   }
@@ -63,7 +63,7 @@ export function pendingDecisions(state, world, acked = Infinity) {
     const c = world.diplomacy.vassals.court;
     out.push({
       key: `courting:${w.id}`, kind: 'courting', id: w.id, realm: w.realm, daysLeft: left(w.day, c.warnDays),
-      kicker: `Word from ${sideName(world, w.realm)}`, title: `${rulerShort(world, w.realm)} has received ${sideName(world, w.by)}'s envoys`,
+      kicker: `Word from ${sideName(world, w.realm)}`, title: `${rulerSubject(world, w.realm, true)}${/^The ruler/.test(rulerSubject(world, w.realm, true)) ? '' : ` of ${sideName(world, w.realm)}`} has received ${sideName(world, w.by)}'s envoys`,
       text: `Our vassal ${sideName(world, w.realm)} is being courted by ${sideName(world, w.by)}. If his loyalty stays low, he will go over to them.`,
       choices: [`Outbid them: ${c.matchCoin} crowns and promises (loyalty +${c.matchLoyalty})`, `Warn him and take his heir to Vizima (loyalty +${c.warnLoyalty}, no rising for two years)`, 'Let him choose'], fallback: 2,
     });

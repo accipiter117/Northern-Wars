@@ -41,6 +41,11 @@ Part B, suzerainty:
 - Four routes to vassalage for the crown and the AI: protection when threatened (asked or offered), pressure with Fear and a gift (odds shown), and peace terms after a war.
 - Mahakam accepts only protection; a vassal belongs to one suzerain.
 
+Part C, vassal kings as lords abroad:
+- Vassals pay tribute and send retinues by loyalty, guard their lands, and have one want at a time and a card with the crown's actions.
+- Ignored protection costs loyalty sharply and other vassals notice; a disloyal vassal can be courted away after a warning.
+- A rebel vassal's war for independence ends in a Judgement: depose, annex (towns converted, title passed), pardon or execute.
+
 ## M27 acceptance criteria
 Parts A and B, what lords give and want:
 - Loyal houses clear threats in their lands and lower Unrest there; disloyal ones let them fester.

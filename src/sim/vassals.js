@@ -19,6 +19,14 @@ import { addFear } from './conquest.js';
 
 const V = (world) => world.diplomacy?.vassals;
 const say = (state, text) => addDispatch(state, text, 'abroad');
+// The ruler as the subject of a sentence: "the ruler of Sodden" where the
+// name is a council ("The Sodden lords"), else the king's own name.
+export function who(world, rid, start = false) {
+  const r = rulerShort(world, rid);
+  if (!/^The /.test(r)) return r;
+  return `${start ? 'The' : 'the'} ruler of ${sideName(world, rid)}`;
+}
+
 const living = (state, rid) => !!state.realms?.[rid] && !state.realms[rid].fallen;
 
 export function ourVassals(state) {
@@ -96,7 +104,7 @@ export function vassalWantText(state, world, rid) {
   const v = vassalOf(state, world, rid);
   const want = v?.want;
   if (!want) return null;
-  const king = rulerShort(world, rid);
+  const king = who(world, rid, true);
   switch (want.kind) {
     case 'land': return { title: `Wants ${world.byId[want.town]?.name ?? 'a town'} back`, text: `${king} asks for ${world.byId[want.town]?.name ?? 'a town'}, taken from his kingdom, to be returned.`, how: 'Grant him the town.' };
     case 'command': return { title: 'Wants a command', text: `${king} asks to lead his men beside the crown's in its next war.`, how: 'Call his men to one of your armies.' };
@@ -114,7 +122,7 @@ function grant(state, world, rid, why) {
   v.loyalty = clamp(v.loyalty + turned, 0, 100);
   v.want = null;
   v.wantAfter = state.day + c.gap;
-  say(state, `${rulerShort(world, rid)} of ${sideName(world, rid)} is granted ${why}. His kingdom's loyalty to Temeria grows.`);
+  say(state, `${who(world, rid, true)}${/^The ruler/.test(who(world, rid, true)) ? '' : ` of ${sideName(world, rid)}`} is granted ${why}. His kingdom's loyalty to Temeria grows.`);
 }
 
 // ---- The crown's hand ----
@@ -140,7 +148,7 @@ export function vassalAction(state, world, rid, kind) {
   const a = V(world).actions[kind];
   (v.acted ??= {})[kind] = state.day;
   if (a.coin) state.treasury -= a.coin;
-  const king = rulerShort(world, rid);
+  const king = who(world, rid, true);
   const mahakam = !!world.realms?.realms[rid]?.protectorateOnly;
   if (kind === 'honours') {
     v.loyalty = clamp(v.loyalty + a.loyalty, 0, 100);
@@ -219,7 +227,7 @@ export function monthlyVassals(state, world, rng) {
         for (const other of Object.keys(state.realms)) {
           if (other !== rid && suzerainOf(state, other) === lord && state.realms[other].vassal) state.realms[other].vassal.loyalty = clamp(state.realms[other].vassal.loyalty + c.protection.othersNotice, 0, 100);
         }
-        if (lord === TEMERIA) addDispatch(state, `${sideName(world, rid)} was attacked by ${sideName(world, foe)}, and Temeria did not come. ${rulerShort(world, rid)} will not forget it; nor will our other vassals.`, 'abroad');
+        if (lord === TEMERIA) addDispatch(state, `${sideName(world, rid)} was attacked by ${sideName(world, foe)}, and Temeria did not come. ${who(world, rid, true)} will not forget it; nor will our other vassals.`, 'abroad');
       }
     }
     // His want, once settled, and a war want granted by war itself.
@@ -252,7 +260,7 @@ export function monthlyVassals(state, world, rng) {
     if (lord === TEMERIA && v.loyalty < c.revolt.below && v.ambition > c.revolt.ambitionAbove && (v.hostageUntil ?? 0) <= state.day && !atWar(state, TEMERIA) && rng.chance(c.revolt.chance)) {
       v.rebel = { since: state.day };
       startWar(state, world, rng, rid, TEMERIA, 'independence');
-      addDispatch(state, `${rulerShort(world, rid)} of ${sideName(world, rid)} throws off Temeria's yoke and declares his kingdom free. It is war.`, 'abroad');
+      addDispatch(state, `${who(world, rid, true)}${/^The ruler/.test(who(world, rid, true)) ? '' : ` of ${sideName(world, rid)}`} throws off Temeria's yoke and declares his kingdom free. It is war.`, 'abroad');
     }
   }
   state.vassalNews.warnings = state.vassalNews.warnings.filter((w) => state.day - w.day < c.court.warnDays && suzerainOf(state, w.realm) === TEMERIA);
@@ -277,7 +285,7 @@ export function stepVassalsDay(state, world) {
       v.captive = true;
       const war = warBetween(state, rid, TEMERIA);
       if (war) applyPeace(state, world, war, { towns: 'keep' });
-      addDispatch(state, `${sideName(world, rid)}'s capital falls and ${rulerShort(world, rid)} is taken. He waits on Temeria's judgement.`, 'abroad');
+      addDispatch(state, `${sideName(world, rid)}'s capital falls and ${who(world, rid)} is taken. He waits on Temeria's judgement.`, 'abroad');
     }
   }
 }
@@ -309,7 +317,7 @@ export function judgeVassal(state, world, id, choice) {
   const name = sideName(world, rid);
   if (kind === 'depose') {
     Object.assign(v, { loyalty: c.depose.loyalty, ambition: c.depose.ambition, want: null, tributeMult: 1, courted: null });
-    addDispatch(state, `${rulerShort(world, rid)} is deposed. A pliant heir takes the throne of ${name}, and swears himself Temeria's man.`, 'abroad');
+    addDispatch(state, `${who(world, rid, true)} is deposed. A pliant heir takes the throne of ${name}, and swears himself Temeria's man.`, 'abroad');
   } else if (kind === 'annex') {
     const title = world.diplomacy.tiers?.titles?.[rid];
     for (const id2 of world.foreignByRealm[rid] ?? []) if (ownerOf(state, world, id2) === rid) setOwner(state, world, id2, TEMERIA);
@@ -324,7 +332,7 @@ export function judgeVassal(state, world, id, choice) {
   } else if (kind === 'pardon') {
     Object.assign(v, { loyalty: c.pardon.loyalty, ambition: Math.max(0, (v.ambition ?? 0) - 30), want: null });
     for (const o of others) o.ambition = clamp(o.ambition + c.pardon.othersAmbition, 0, 100);
-    addDispatch(state, `Temeria pardons ${rulerShort(world, rid)} of ${name}. He kneels, grateful, and keeps his throne.`, 'abroad');
+    addDispatch(state, `Temeria pardons ${who(world, rid)}${/^the ruler/.test(who(world, rid)) ? '' : ` of ${name}`}. He kneels, grateful, and keeps his throne.`, 'abroad');
   } else {
     nudge(state, world, 'fear', c.execute.fear, 'A rebel vassal king beheaded');
     for (const o of others) {
@@ -335,7 +343,7 @@ export function judgeVassal(state, world, id, choice) {
     // The great powers grow wary: fear of Temeria rises across the North.
     addFear(state, world, TEMERIA, world.realms.realms[rid].capital, c.execute.fearAbroad);
     Object.assign(v, { loyalty: c.execute.heirLoyalty, ambition: 5, want: null, tributeMult: 1, courted: null });
-    addDispatch(state, `${rulerShort(world, rid)} of ${name} is beheaded at Vizima for his treason. Every court in the North takes note, and none kindly.`, 'abroad');
+    addDispatch(state, `${who(world, rid, true)}${/^The ruler/.test(who(world, rid, true)) ? '' : ` of ${name}`} is beheaded at Vizima for his treason. Every court in the North takes note, and none kindly.`, 'abroad');
   }
   return true;
 }
@@ -357,7 +365,7 @@ export function answerCourting(state, world, id, choice) {
     v.loyalty = clamp(v.loyalty + c.warnLoyalty, 0, 100);
     v.hostageUntil = Math.max(v.hostageUntil ?? 0, state.day + c.warnHostageDays);
     nudge(state, world, 'fear', 2, 'A vassal warned');
-    addDispatch(state, `Temeria warns ${rulerShort(world, w.realm)} what becomes of kings who change masters, and takes his heir to Vizima.`, 'abroad');
+    addDispatch(state, `Temeria warns ${who(world, w.realm)} what becomes of kings who change masters, and takes his heir to Vizima.`, 'abroad');
   }
   return true;
 }

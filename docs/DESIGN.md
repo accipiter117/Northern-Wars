@@ -119,6 +119,17 @@ The protectorate treaty and the vassal peace term widen into one relationship, s
 - **Mahakam** accepts protection only: no pressure, no peace terms.
 - **The AI's great powers** take threatened petty kings under protection and press weaker neighbours within reach (900 map units) at 1% a month a pair, each holding at most three vassals; so spheres form (Redania in the west, Aedirn over Sodden; Kaedwen, far from every petty kingdom, waits for the Hengfors League in M30).
 
+#### Vassal kings as lords abroad (M29 C)
+On the great houses' model (M27). Code in src/sim/vassals.js; numbers in data/diplomacy.json (`vassals`); the card in src/ui/nobles.js.
+- **Loyalty and ambition**: a vassal's loyalty drifts toward 45 plus four tenths of his relations with the suzerain (affinity for an AI one), less for heavy tribute; ambition grows a point a month.
+- **What he gives**: tribute, a quarter of his income times his tribute setting (all of it from loyalty 50, none below 20; Mahakam pays none); his kingdom's companies when the crown calls its lords to arms (a third of his potential army, all from loyalty 55, half below, none under 30; they march as companies inside the crown's army); and he guards his own lands (a camp or lair broken now and then from loyalty 50).
+- **What the suzerain owes: protection.** Attacked and left alone for two months, he loses 25 loyalty, and every other vassal of that suzerain 6; answered, he gains 10.
+- **One want at a time**: a town of his back, a place beside the crown's army, help against a foe he is fighting, honours, or lighter tribute. Granted, his ambition turns into loyalty (up to 25); left nine months, he gives up asking and his ambition grows.
+- **The card** (Diplomacy, our vassals): banner, king, loyalty and ambition, what the kingdom gives and wants, and the crown's hand: honours (400 crowns), summon to court, demand more tribute (half again, loyalty −12), ease it, take a hostage (no rising for three years), grant a town of his we hold. Mahakam resents meddling: a summons or a hostage costs it 12 loyalty.
+- **Rivals court a disloyal vassal**: below loyalty 35 another great power may court him; the crown is warned in the inbox first and can outbid (800 crowns, loyalty +20) or warn him and take his heir; still disloyal after three months, he goes over.
+- **Independence**: below loyalty 20 with ambition over 60 and no heir held, he may rise, a war fought with the normal armies and sieges. His capital taken, he comes to a Judgement card with four choices, each with its effects: depose him for a pliant heir (still a vassal, loyalty 85); annex the kingdom (its towns become Temeria's, to be won over by M19 integration, and its title passes to the crown for ever); pardon him (loyalty 75; the other vassals' ambition +8); or execute him (Fear +25 at home and the other vassals fall into line, but every crown's trust in Temeria falls by 20 and fear of Temeria rises across the North). Unanswered for 60 days, the council deposes him.
+- **On the map** a vassal's towns are washed lightly in its suzerain's colour; they keep their own borders and names.
+
 ### Faith, culture and peoples
 - Faiths: the Eternal Fire (zealous, urban, hostile to non-humans and magic), Melitele (healing, charity, women and the poor), the Old Ways (rural, druidic, Velen).
 - Each settlement has a faith mix that shifts over time with patronage, laws, preachers and events.
