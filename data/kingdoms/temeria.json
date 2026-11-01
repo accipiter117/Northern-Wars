@@ -2,6 +2,7 @@
   "id": "temeria",
   "name": "Temeria",
   "title": "the Crown of Temeria",
+  "king": "Foltest",
   "capital": "vizima",
   "geography": "data/geography.json",
   "settlements": "data/settlements.json",

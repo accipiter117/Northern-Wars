@@ -54,6 +54,9 @@ function realm() {
   s.faiths.acted['blessing:melitele'] = s.day - 30;
   s.faiths.blessing = s.day + 60;
   s.treasury = 20000;
+  // No other matter waiting, so the Court's badge is the faith's alone
+  // (since M28 and M29 dilemmas and petty kings' requests also wait there).
+  if (s.dilemmas) s.dilemmas.open = [];
   return s;
 }
 

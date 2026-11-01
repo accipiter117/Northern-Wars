@@ -101,6 +101,16 @@ Faith used to be a mix of followers and a source of tension. Since M26 each fait
   - The king's train on the road to the holy place and home again during a pilgrimage.
   - The king's riders going out and back along two roads from each town under their law, and gibbets standing at the capital's crossroads under public executions (with the gibbets and bunting from the crown's acts, M24 B).
 
+### Crowns and vassals (M29)
+Not Crusader Kings: no families, inheritance law or claims. The North's rulers are no longer all alike.
+
+#### Tiers and one relations screen (M29 A)
+- **Tiers** (data/realms.json `tier`): great powers (Temeria, Redania, Kaedwen, Aedirn), a middle crown (Cintra), petty kingdoms (Sodden, Brugge, Verden, Cidaris, Kerack, and Mahakam, which can only ever be a protectorate), and Brokilon outside the tiers. Code in src/sim/tiers.js.
+- **Petty kings keep their distance.** A petty ruler asks Temeria for an audience only when relations are 50 or more, or with an offer worth 1,500 crowns or more to the crown. Otherwise, now and then, he sends a short request as an M28 dilemma ("The King of Kerack asks for ships against pirates"): two or three answers, each with its cost and its effect on that court's relations and trust (data/dilemmas.json `realmRequests`).
+- **Middle and petty crowns rarely take on a great power alone**: the weight of a war on a great power at peace is cut to 0.3 for a middle crown and 0.15 for a petty one (strategy.js opportunity).
+- **One relations screen** (Diplomacy, Rulers), sorted by weight: the great powers in full, then our own vassals, the middle crowns, other powers' spheres folded under each suzerain (one line a vassal, one tap to open), and the independent petty kingdoms in a short list at the end.
+- **Titles**: each vassal gives its suzerain a title (Prince of Sodden, Protector of Brugge, Protector of Mahakam, Overlord of Verden, Lord of the Cidarian Coast, Protector of Kerack). Foltest starts with none; his style heads the Court screen and grows with each ("Foltest, King of Temeria, Prince of Sodden, Protector of Brugge"). Until suzerainty arrives (Part B), a protectorate treaty makes its protector the suzerain.
+
 ### Faith, culture and peoples
 - Faiths: the Eternal Fire (zealous, urban, hostile to non-humans and magic), Melitele (healing, charity, women and the poor), the Old Ways (rural, druidic, Velen).
 - Each settlement has a faith mix that shifts over time with patronage, laws, preachers and events.

@@ -11,6 +11,8 @@ import { signed } from './book.js';
 import { dateOf } from './calendar.js';
 import { atWar, TEMERIA } from './conflict.js';
 import { houseDef } from './lords.js';
+import { changeTrust, rulerShort } from './diplomacy.js';
+import { sideName } from './conflict.js';
 
 const D = (world) => world.dilemmas;
 const say = (state, text) => addDispatch(state, text, 'faith');
@@ -151,7 +153,7 @@ const FAITH_NAMES = { eternal_fire: 'the Fire', melitele: 'Melitele', old_ways: 
 const sign = (v) => (v > 0 ? `+${v}` : `${v}`);
 
 // One short line of what a choice does, shown before the crown chooses.
-export function effectLine(fx = {}, { lord = null } = {}) {
+export function effectLine(fx = {}, { lord = null, realm = null } = {}) {
   const out = [];
   if (fx.coin) out.push(fx.coin > 0 ? `+${fx.coin} crowns` : `${fx.coin} crowns`);
   if (fx.love) out.push(`Love ${sign(fx.love)}`);
@@ -163,13 +165,17 @@ export function effectLine(fx = {}, { lord = null } = {}) {
   for (const [f, v] of Object.entries(fx.devotion ?? {})) if (v) out.push(`${FAITH_NAMES[f] ?? f} ${sign(v)}`);
   for (const [g, v] of Object.entries(fx.opinion ?? {})) if (v) out.push(`${GROUP_NAMES[g] ?? g} ${v > 0 ? 'pleased' : 'angered'}`);
   if (fx.sympathy) out.push(`Scoia'tael sympathy ${sign(fx.sympathy)}`);
+  if (fx.relation) out.push(`${realm ?? 'their'} relations ${sign(fx.relation)}`);
+  if (fx.trust) out.push(`${realm ?? 'their'} trust ${sign(fx.trust)}`);
   return out.join(', ') || 'Nothing more';
 }
 
 function fill(text, world, state, o) {
   const place = o.place ? world.byId[o.place]?.name ?? o.place : 'the realm';
   const lord = o.house ? houseDef(state, world, o.house)?.lord ?? 'the lord' : 'the lord';
-  return text.replaceAll('{place}', place).replaceAll('{lord}', lord);
+  const realm = o.realm ? sideName(world, o.realm) : '';
+  const ruler = o.realm ? rulerShort(world, o.realm) : '';
+  return text.replaceAll('{place}', place).replaceAll('{lord}', lord).replaceAll('{realm}', realm).replaceAll('{ruler}', ruler);
 }
 
 export function dilemmaText(state, world, o) {
@@ -186,6 +192,19 @@ export function dilemmaText(state, world, o) {
       { label: 'Crush the agitators', hint: `Fear +${k.crush.fear}, Love ${k.crush.love}, ${GROUP_NAMES[x.group]} silenced for a year` },
     ];
     return { kicker: `A demand from ${GROUP_NAMES[x.group] ?? x.group}`, title: x.title, text: x.text, choices, place: null, fallback: 1 };
+  }
+  if (o.realmRequest) {
+    // A petty king's short request (M29 A), not worth an audience.
+    const r = cfg.realmRequests[o.realmRequest];
+    return {
+      kicker: `A request from ${sideName(world, o.realm)}`,
+      title: fill(r.title, world, state, o),
+      text: fill(r.text, world, state, o),
+      choices: r.choices.map((c) => ({ label: fill(c.label, world, state, o), hint: effectLine(c.fx, { realm: sideName(world, o.realm) }) })),
+      place: null,
+      fallback: r.default ?? 0,
+      realm: o.realm,
+    };
   }
   const x = cfg.dilemmas[o.dilemma];
   const lord = o.house ? houseDef(state, world, o.house)?.lord : null;
@@ -224,6 +243,10 @@ function apply(state, world, fx, o, why) {
   if (state.faiths?.devotion) for (const [f, v] of Object.entries(fx.devotion ?? {})) if (state.faiths.devotion[f] !== undefined) state.faiths.devotion[f] = clamp(state.faiths.devotion[f] + v, 0, 100);
   if (fx.sympathy && state.sympathy !== undefined) state.sympathy = clamp(state.sympathy + fx.sympathy, 0, 100);
   if (fx.loyalty && o.house && state.houses?.[o.house]) state.houses[o.house].loyalty = clamp(state.houses[o.house].loyalty + fx.loyalty, 0, 100);
+  if (o.realm && state.neighbours?.[o.realm]) {
+    if (fx.relation) state.neighbours[o.realm].relation = clamp(state.neighbours[o.realm].relation + fx.relation, -100, 100);
+    if (fx.trust) changeTrust(state, world, o.realm, TEMERIA, fx.trust);
+  }
 }
 
 export function resolveDilemma(state, world, id, choice, ignored = false) {
@@ -232,12 +255,17 @@ export function resolveDilemma(state, world, id, choice, ignored = false) {
   if (!o) return false;
   const cfg = D(world);
   if (o.demand) return resolveDemandForChange(state, world, o, choice, ignored);
-  const x = cfg.dilemmas[o.dilemma];
+  const x = o.realmRequest ? cfg.realmRequests[o.realmRequest] : cfg.dilemmas[o.dilemma];
   const c = x.choices[choice];
   if (!c) return false;
   if (!ignored && (c.fx?.coin ?? 0) < 0 && state.treasury + c.fx.coin < -(world.economy.debt?.creditLimit ?? 0)) return false;
   d.open = d.open.filter((q) => q !== o);
   apply(state, world, c.fx ?? {}, o, x.title.replace(/\{[a-z]+\}/g, '').trim());
+  if (o.realmRequest) {
+    const t = dilemmaText(state, world, o);
+    say(state, ignored ? `${t.title}: Vizima sent no answer, so it was taken as "${t.choices[choice].label.toLowerCase()}".` : `${t.title}: the crown chose to ${fill(c.label, world, state, o).replace(/\.$/, '').toLowerCase()}.`);
+    return true;
+  }
   if (c.next && cfg.dilemmas[c.next.id]) d.later.push({ dilemma: c.next.id, day: state.day + c.next.days, place: o.place, house: o.house });
   const t = dilemmaText(state, world, o);
   say(state, ignored ? `${t.title}: Vizima sent no answer, so it was taken as "${c.label.toLowerCase()}".` : `${t.title}: the crown chose to ${fill(c.label, world, state, o).replace(/\.$/, '').toLowerCase()}.`);
@@ -308,8 +336,25 @@ export function stepDilemmasDay(state, world) {
   if (!cfg || !state.dilemmas) return;
   for (const o of [...state.dilemmas.open]) {
     if (state.day - o.day < cfg.defaultDays) continue;
-    const fb = o.demand ? 1 : (cfg.dilemmas[o.dilemma]?.default ?? 0);
+    const fb = o.demand ? 1 : o.realmRequest ? (cfg.realmRequests?.[o.realmRequest]?.default ?? 0) : (cfg.dilemmas[o.dilemma]?.default ?? 0);
     if (!resolveDilemma(state, world, o.id, fb, true)) state.dilemmas.open = state.dilemmas.open.filter((x) => x !== o);
   }
   if (state.dilemmas.promises.length) settlePromises(state, world);
+}
+
+// A petty king's request reaches the crown as a short dilemma (M29 A): one
+// fitting his realm, not asked of us in the last two years.
+export function openRealmRequest(state, world, rng, pid) {
+  const cfg = D(world);
+  if (!cfg?.realmRequests) return null;
+  const d = dilemmasOf(state);
+  if (d.open.some((o) => o.realm === pid)) return null;
+  const fits = Object.entries(cfg.realmRequests).filter(([id, r]) => (!r.realms || r.realms.includes(pid))
+    && (d.seen[`realm:${pid}:${id}`] === undefined || state.day - d.seen[`realm:${pid}:${id}`] >= cfg.repeatDays));
+  if (!fits.length) return null;
+  const [id] = fits[Math.floor(rng.next() * fits.length)];
+  const o = { id: d.nextId++, realmRequest: id, realm: pid, day: state.day };
+  d.open.push(o);
+  d.seen[`realm:${pid}:${id}`] = state.day;
+  return o;
 }

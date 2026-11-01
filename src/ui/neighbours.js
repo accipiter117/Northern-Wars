@@ -9,7 +9,7 @@ import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { portraitImg } from './audience.js';
 import { occupiedHtml, fearHtml, fearWord, worthHtml } from './conquest.js';
-import { parties, rulerShort, moodWord, treatyDef, intentions } from '../sim/index.js';
+import { parties, rulerShort, moodWord, treatyDef, intentions, tierOf, suzerainOf } from '../sim/index.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 
@@ -94,19 +94,40 @@ export function pactsHtml(app) {
   </div>`;
 }
 
+// One relations screen (M29 A), sorted by weight: the great powers in full,
+// then our own vassals, the middle crowns, the other powers' spheres folded
+// under each suzerain, and the independent petty kingdoms last.
 export function neighboursHtml(app) {
   const { world, state } = app;
   const waiting = new Set([...state.envoys.map((e) => e.realm), ...(state.diplomacy?.requests ?? []).map((q) => q.realm)]);
-  const rows = Object.keys(world.neighbours.realms).map((id) => {
+  const row = (id, short = false) => {
     const n = state.neighbours[id];
     const fallen = state.realms?.[id]?.fallen;
     const fear = world.conquest && !fallen && (state.conquest?.fear?.[id]?.temeria ?? 0) >= 5 ? ` ${fearWord(state, id)} of us.` : '';
-    return `<button type="button" class="row realm-row" data-realm="${id}" data-go="realm:${id}">
+    const sub = fallen ? `Fell to ${escapeHtml(sideName(world, fallen.by))} in ${formatDate(fallen.day)}.`
+      : short ? `${escapeHtml(world.neighbours.realms[id].ruler)}.`
+        : `${escapeHtml(world.neighbours.realms[id].ruler)}. ${world.neighbours.stances[n.stance].name} stance. ${tradeLine(world, state, id)}.${fear}`;
+    return `<button type="button" class="row realm-row${short ? ' short' : ''}" data-realm="${id}" data-tier="${tierOf(world, id)}" data-go="realm:${id}">
       ${icon('dove')}<span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[id].name)}${waiting.has(id) ? ' <span class="badge bad">Asks an audience</span>' : ''}${hostile(state, TEMERIA, id) ? ' <span class="badge bad">At war</span>' : ''}${fallen ? ' <span class="badge">Fallen</span>' : ''}</span>
-      <span class="row-sub">${fallen ? `Fell to ${escapeHtml(sideName(world, fallen.by))} in ${formatDate(fallen.day)}.` : `${escapeHtml(world.neighbours.realms[id].ruler)}. ${world.neighbours.stances[n.stance].name} stance. ${tradeLine(world, state, id)}.${fear}`}</span></span>
+      <span class="row-sub">${sub}</span></span>
       <span class="row-end">${fallen ? '' : `${describeLevel((n.relation + 100) / 2, WORDS)}${trendArrow(state, world, id)}`}</span></button>`;
-  }).join('');
-  return `${rulersRowHtml(app)}<div data-part="realms"><div class="rows">${rows}</div></div>${fearHtml(world, state)}`;
+  };
+  const all = Object.keys(world.neighbours.realms);
+  const by = (tier) => all.filter((id) => tierOf(world, id) === tier);
+  const ours = all.filter((id) => suzerainOf(state, id) === TEMERIA);
+  const great = by('great');
+  const middle = by('middle').filter((id) => !ours.includes(id) && !suzerainOf(state, id));
+  const spheres = great.map((g) => [g, all.filter((id) => suzerainOf(state, id) === g)]).filter(([, l]) => l.length);
+  const free = [...by('petty'), ...by('none')].filter((id) => !suzerainOf(state, id) && !ours.includes(id));
+  const group = (part, title, ids, short = false) => (ids.length ? `<div data-part="${part}"><h3>${title}</h3><div class="rows">${ids.map((id) => row(id, short)).join('')}</div></div>` : '');
+  const folds = spheres.map(([g, l]) => `<details class="sphere" data-part="sphere-${g}"><summary>${escapeHtml(sideName(world, g))}'s sphere <small>(${l.length})</small></summary><div class="rows">${l.map((id) => row(id, true)).join('')}</div></details>`).join('');
+  return `${rulersRowHtml(app)}<div data-part="realms">
+    ${group('great', 'The great powers', great)}
+    ${group('vassals', 'Our vassals', ours)}
+    ${group('middle', 'The middle crowns', middle)}
+    ${folds ? `<div data-part="spheres"><h3>Other powers' spheres</h3>${folds}</div>` : ''}
+    ${group('petty', 'The petty kingdoms', free, true)}
+  </div>${fearHtml(world, state)}`;
 }
 
 // What the crown can see of each realm, and its embassies and spies.

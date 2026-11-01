@@ -6,6 +6,224 @@
  "repeatDays": 730,
  "recentLawDays": 180,
  "recentWeight": 3,
+ "realmRequestsNote": "M29 A: short requests a petty king sends the crown instead of seeking an audience (see diplomacy.json tiers). {ruler} and {realm} name the sender; realms limits a request to those realms. Effects as dilemmas, plus relation and trust (the sender's in the crown).",
+ "realmRequests": {
+  "ships": {
+   "realms": [
+    "kerack",
+    "cidaris",
+    "verden"
+   ],
+   "title": "{ruler} asks for ships against pirates",
+   "text": "Pirates out of the Skellige isles have burned two fishing villages on {realm}'s coast. {ruler} asks Vizima for hired ships and the coin to crew them.",
+   "choices": [
+    {
+     "label": "Pay for the ships",
+     "fx": {
+      "coin": -400,
+      "relation": 10,
+      "trust": 5
+     }
+    },
+    {
+     "label": "Send kind words and nothing else",
+     "fx": {
+      "relation": -3
+     }
+    },
+    {
+     "label": "Refuse: Temeria is no one's purse",
+     "fx": {
+      "relation": -8
+     }
+    }
+   ],
+   "default": 1
+  },
+  "grain": {
+   "title": "{ruler} asks for grain",
+   "text": "The harvest has failed in {realm}. {ruler} asks for wagons of grain from Temeria's granaries, to be repaid when the next harvest comes in.",
+   "choices": [
+    {
+     "label": "Send the grain",
+     "fx": {
+      "coin": -300,
+      "relation": 12,
+      "trust": 6,
+      "love": 1
+     }
+    },
+    {
+     "label": "Sell it at the going price",
+     "fx": {
+      "coin": 150,
+      "relation": 2
+     }
+    },
+    {
+     "label": "Refuse",
+     "fx": {
+      "relation": -6
+     }
+    }
+   ],
+   "default": 2
+  },
+  "bandits": {
+   "title": "{ruler} complains of bandits from our side",
+   "text": "Bandits cross from Temeria into {realm}, raid, and slip back over the border. {ruler} asks the crown to hang a few and pay for the damage.",
+   "choices": [
+    {
+     "label": "Pay for the damage",
+     "fx": {
+      "coin": -250,
+      "relation": 8,
+      "trust": 4
+     }
+    },
+    {
+     "label": "Promise to hunt them, and do nothing",
+     "fx": {
+      "relation": 2,
+      "trust": -4
+     }
+    },
+    {
+     "label": "Tell him to guard his own border",
+     "fx": {
+      "relation": -6,
+      "fear": 1
+     }
+    }
+   ],
+   "default": 1
+  },
+  "exiles": {
+   "title": "{ruler} asks us to hand over exiles",
+   "text": "Some of {ruler}'s lords fled a quarrel at court and now sit in Temerian inns, drinking and plotting. {ruler} asks that they be sent home in chains.",
+   "choices": [
+    {
+     "label": "Hand them over",
+     "fx": {
+      "relation": 10,
+      "love": -2,
+      "opinion": {
+       "nobles": -4
+      }
+     }
+    },
+    {
+     "label": "Give them a month to leave Temeria",
+     "fx": {
+      "relation": 2
+     }
+    },
+    {
+     "label": "Shelter them",
+     "fx": {
+      "relation": -10,
+      "trust": -3
+     }
+    }
+   ],
+   "default": 1
+  },
+  "toll": {
+   "title": "{ruler} asks for lower tolls",
+   "text": "{ruler} says Temeria's tolls strangle {realm}'s merchants, and asks that they be eased for a year.",
+   "choices": [
+    {
+     "label": "Ease them for a year",
+     "fx": {
+      "coin": -300,
+      "relation": 9,
+      "trust": 3,
+      "opinion": {
+       "burghers": -3
+      }
+     }
+    },
+    {
+     "label": "Ease them a little",
+     "fx": {
+      "coin": -100,
+      "relation": 3
+     }
+    },
+    {
+     "label": "Refuse",
+     "fx": {
+      "relation": -5
+     }
+    }
+   ],
+   "default": 2
+  },
+  "arbiter": {
+   "title": "{ruler} asks the crown to judge a border quarrel",
+   "text": "{ruler} and a neighbour quarrel over a mill and a ford. {ruler} asks Vizima to judge between them, and hopes for a kindly judgement.",
+   "choices": [
+    {
+     "label": "Judge in {ruler}'s favour",
+     "fx": {
+      "relation": 12,
+      "trust": 3
+     }
+    },
+    {
+     "label": "Judge fairly",
+     "fx": {
+      "relation": 3,
+      "trust": 5
+     }
+    },
+    {
+     "label": "Decline to meddle",
+     "fx": {
+      "relation": -2
+     }
+    }
+   ],
+   "default": 2
+  },
+  "dwarven_ore": {
+   "realms": [
+    "mahakam"
+   ],
+   "title": "The elders of Mahakam ask for a road mended",
+   "text": "The road from Carreras to Mahakam's gates is falling apart, and dwarven carts break their axles on it. {ruler} asks the crown to mend it.",
+   "choices": [
+    {
+     "label": "Mend the road",
+     "fx": {
+      "coin": -350,
+      "relation": 10,
+      "trust": 5,
+      "opinion": {
+       "dwarf": 5
+      }
+     }
+    },
+    {
+     "label": "Let the dwarves mend it, and pay half",
+     "fx": {
+      "coin": -150,
+      "relation": 4
+     }
+    },
+    {
+     "label": "Refuse",
+     "fx": {
+      "relation": -6,
+      "opinion": {
+       "dwarf": -3
+      }
+     }
+    }
+   ],
+   "default": 2
+  }
+ },
  "demands": {
   "chance": 0.45,
   "gapDays": 70,

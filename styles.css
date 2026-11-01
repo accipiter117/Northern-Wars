@@ -869,3 +869,8 @@ ul.orders li .chip { flex: none; }
 /* M28: what a choice does, and a promise on a law. */
 .choice-fx { color: var(--muted); font-size: 12px; font-weight: normal; }
 .bl-ribbon { display: inline-block; margin: 4px 0 0; padding: 2px 8px; border-radius: 3px; background: var(--blood); color: var(--text); font-size: 12px; }
+
+/* M29 A: the crown's style on the Court, and the relations screen's groups. */
+.crown-style { margin: 0 0 8px; font-style: italic; color: #d2ab5f; }
+.sphere summary { cursor: pointer; padding: 10px 0; min-height: 44px; font-weight: 600; }
+.realm-row.short .row-sub { font-size: 13px; }
