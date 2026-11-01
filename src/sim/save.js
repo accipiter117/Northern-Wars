@@ -1,3 +1,4 @@
+import { upgradeVassals } from './blocs.js';
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats, threatCap } from './threats.js';
@@ -373,6 +374,14 @@ const MIGRATIONS = {
   27(state, world) {
     state.faiths = defaultFaiths(state, world);
     state.version = 28;
+    return state;
+  },
+  // v29 (M29): crowns and vassals. Tiers live in the world's data; every
+  // protectorate treaty becomes suzerainty, its vassal's loyalty from the
+  // old relation.
+  28(state, world) {
+    upgradeVassals(state, world);
+    state.version = 29;
     return state;
   },
 };

@@ -10,7 +10,7 @@ import { addDispatch, clamp } from './realm.js';
 import { nudge } from './meters.js';
 import { TEMERIA, sideName, hostile, atWar, warBetween, ownerOf, setOwner, enemiesOf } from './conflict.js';
 import { suzerainOf, tierOf } from './tiers.js';
-import { makeVassal, greatPowers } from './suzerainty.js';
+import { makeVassal, greatPowers, roomFor, distance } from './suzerainty.js';
 import { realmPotential, startWar, applyPeace } from './war.js';
 import { changeTrust, rulerShort } from './diplomacy.js';
 import { affinity } from './audiences.js';
@@ -195,9 +195,11 @@ export function monthlyVassals(state, world, rng) {
     if (v.rebel) continue;
     // Loyalty drifts toward its target; ambition grows.
     const target = clamp(c.loyalty.base + (lord === TEMERIA ? (state.neighbours[rid]?.relation ?? 0) : affinity(state, world, rid, lord)) * c.loyalty.relationWeight
-      - ((v.tributeMult ?? 1) - 1) * c.loyalty.tributeWeight, 0, 100);
+      - ((v.tributeMult ?? 1) - 1) * c.loyalty.tributeWeight - v.ambition * c.loyalty.ambitionWeight, 0, 100);
     v.loyalty = clamp(v.loyalty + (target - v.loyalty) * c.loyalty.drift, 0, 100);
     v.ambition = clamp(v.ambition + c.ambitionPerMonth, 0, 100);
+    // An AI suzerain now and then honours its vassal, cooling his ambition.
+    if (lord !== TEMERIA && rng.chance(c.aiHonours.chance)) v.ambition = clamp(v.ambition - c.aiHonours.ambition, 0, 100);
     // Tribute to his suzerain.
     const t = tributeOf(state, world, rid);
     if (t > 0) {
@@ -242,7 +244,9 @@ export function monthlyVassals(state, world, rng) {
     }
     // Courted away by a rival great power.
     if (v.loyalty < c.court.below) {
-      const rival = greatPowers(state, world).filter((p) => p !== lord && !hostile(state, p, rid) && p !== TEMERIA)
+      // A rival within reach, with room for another vassal.
+      const rival = greatPowers(state, world).filter((p) => p !== lord && !hostile(state, p, rid) && p !== TEMERIA
+        && roomFor(state, world, p) && distance(world, rid, p) <= world.diplomacy.suzerainty.ai.reach)
         .sort((a, b) => affinity(state, world, rid, b) - affinity(state, world, rid, a))[0];
       if (rival && rng.chance(c.court.chance)) {
         if (!v.courted) {

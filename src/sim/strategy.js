@@ -6,6 +6,7 @@
 // how it probes a neighbour too strong to attack. Works for any party with a
 // realm in data/realms.json and a ruler in data/diplomacy.json.
 import { appetiteAgainst } from './tiers.js';
+import { blocBound, mayStartWar } from './blocs.js';
 import { authority } from './meters.js';
 import { addDispatch, clamp } from './realm.js';
 import { informed } from './realms.js';
@@ -80,8 +81,14 @@ function guardOf(state, world, rid, pid) {
   return pid === TEMERIA ? deterrence(state, world, rid) : strengthOf(state, world, pid);
 }
 
-function bound(state, a, b) {
+function pactWith(state, a, b) {
   return treatiesOf(state, a).find((t) => partnerOf(t, a) === b && PEACE_PACTS.includes(t.kind)) ?? null;
+}
+
+// A pact binds bloc to bloc (M29 D): a treaty with a suzerain covers its
+// vassals.
+function bound(state, a, b) {
+  return pactWith(state, a, b) ?? (blocBound(state, a, b, (x, y) => pactWith(state, x, y)) ? { kind: 'bloc' } : null);
 }
 
 function rivals(world, a, b) {
@@ -444,13 +451,15 @@ export function monthlyStrategy(state, world, rng) {
     // An aim lapses once taken, given up, or the war over.
     if (realm.aim && !atWar(state, rid) && !(state.musters ?? []).some((m) => m.realm === rid)) realm.aim = null;
     const kind = realm.posture.kind;
-    if (kind === 'expand') planWar(state, world, rng, rid, a);
-    else if (kind === 'scheme') probe(state, world, rng, rid, a);
+    // A vassal makes no war of its own (M29 D): its suzerain speaks for it.
+    const free = mayStartWar(state, rid);
+    if (kind === 'expand' && free) planWar(state, world, rng, rid, a);
+    else if (kind === 'scheme' && free) probe(state, world, rng, rid, a);
     // Wherever a ruler sees an opening against the crown but is held back,
     // by its strength or by a pact, it probes instead of invading.
     const vt = a.vsTemeria;
     const heldBack = vt && (vt.ratio < 1.3 || bound(state, rid, TEMERIA));
-    if (vt && heldBack && vt.value >= ST(world).probes.at && !hasTrait(world, rid, 'honourable') && !(kind === 'scheme' && a.opportunity.against === TEMERIA)) {
+    if (free && vt && heldBack && vt.value >= ST(world).probes.at && !hasTrait(world, rid, 'honourable') && !(kind === 'scheme' && a.opportunity.against === TEMERIA)) {
       probe(state, world, rng, rid, { opportunity: { against: TEMERIA } });
     }
   }

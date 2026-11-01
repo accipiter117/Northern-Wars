@@ -66,6 +66,22 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 - **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
 - **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.
 
+### Crowns and vassals (M29)
+Twenty years untended (the crown takes no vassals), seeds 1 to 4, from `step` alone:
+
+| Seed | Redania | Aedirn | Kaedwen | Shifts of allegiance |
+| --- | --- | --- | --- | --- |
+| 1 | Cidaris, Kerack, Verden | Brugge, Sodden | none | 1 |
+| 2 | Kerack, Verden, Brugge | Sodden | none | 2 |
+| 3 | Cidaris, Kerack, Verden | Sodden | none | 0 |
+| 4 | Cidaris, Verden | Brugge, Sodden | none | 1 |
+
+- **No power holds every petty kingdom**: an AI great power holds at most three vassals, and seeks them only within 900 map units of its capital.
+- **Kaedwen holds none**: every petty kingdom is 1,200 map units or more from Ard Carraigh. M30's Hengfors League will sit within its reach.
+- **The first passes**: Redania took every petty kingdom within two years (rivalry alone counted as a threat, and its strength made it everyone's choice); then, with protection only under real threat and a reach of 450 (shorter than any capital-to-capital distance), nothing formed; then, with the reach at 900, spheres formed but never shifted, because an AI-held vassal never grew disloyal. Ambition now pulls a vassal's loyalty down (three tenths of it), and an AI suzerain honours its vassals now and then (4% a month, ambition −35), so a vassal drifts in and out of reach of a rival's courting.
+- **Tribute** is a quarter of a vassal's income: Brugge, Kerack and Cidaris pay about 100 crowns a month to a loyal suzerain, Sodden and Verden about 25; Mahakam none.
+- **Retinues**: a third of a vassal's potential army; Brugge sends about 110 men.
+
 ### New houses (M27 E)
 The tyrant in `tools/crowns.mjs` now raises the first candidate for every fallen house's lands. Over five years on seeds 1 to 3 it beheads seven or eight lords: the five founders and two or three of the houses it raised. A new house starts at loyalty 85 with 25 of gratitude, but under a crown with no Love its loyalty sinks within two or three years and it rises in turn. The tyrant clears +1,610 to +1,950 a month in year 3 (−17 to +660 before Part E) and −442 to +339 in year 5; its risings fall at different times on each run, so these swing widely. The steward never loses a house, so it never raises one.
 
