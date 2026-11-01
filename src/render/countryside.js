@@ -61,7 +61,8 @@ export function prepareCountryside(world, prep) {
     ...prep.terrain.filter((t) => t.label).map((t) => ({ x: t.label.x, y: t.label.y, w: 70, h: 14 })),
     ...prep.lands.filter((l) => l.label).map((l) => ({ x: l.label.x, y: l.label.y, w: 90, h: 18 })),
   ];
-  const landShapes = [g.temeria, ...Object.values(g.neighbours).flatMap((n) => n.shapes), ...Object.values(g.lands ?? {}).flatMap((n) => n.shapes)];
+  // The Empire's heartland at the edge is left dark and bare (M30 A).
+  const landShapes = [g.temeria, ...Object.values(g.neighbours).flatMap((n) => n.shapes), ...Object.values(g.lands ?? {}).filter((n) => !n.heartland).flatMap((n) => n.shapes)];
   const onLand = (x, y) => landShapes.some((sh) => pointInPolygon(x, y, sh));
   const roads = [...prep.roads, ...prep.distantRoads];
   const riverSegs = prep.rivers.flatMap((r) => r.pts.slice(1).map((q, i) => ({ a: r.pts[i], b: q })));

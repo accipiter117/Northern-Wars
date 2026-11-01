@@ -1,4 +1,5 @@
 import { upgradeVassals } from './blocs.js';
+import { fitIntel } from './vision.js';
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats, threatCap } from './threats.js';
@@ -382,6 +383,14 @@ const MIGRATIONS = {
   28(state, world) {
     upgradeVassals(state, world);
     state.version = 29;
+    return state;
+  },
+  // M30 A: the map runs further south (Ebbing, the Empire's provinces whole
+  // and the heartland's edge). The lands are the world's, not the save's;
+  // only the fog grows, its new rows unexplored.
+  29(state, world) {
+    if (state.ambient?.intel?.explored && world.grid) fitIntel(state.ambient.intel, world);
+    state.version = 30;
     return state;
   },
 };

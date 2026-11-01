@@ -1,5 +1,10 @@
 # Changelog
 
+## M30 A The map south
+- The map now runs well south of the Yaruga: Nazair, Mag Turga, Metinna and Toussaint are drawn whole, and Ebbing appears on the coast below Cintra.
+- Along the southern edge lies the Empire's heartland, dark and unexplored, where the great roads run off the map "To the City of the Golden Towers".
+- Old saves load with the new ground still under fog.
+
 ## M29 D Blocs
 - A great power and its vassals stand together: go to war with a suzerain and its loyal vassals march too (and yours march with you; a vassal who stays home is remembered for it).
 - A treaty with a great power covers its vassals, and a vassal makes no war of its own.

@@ -8,13 +8,13 @@ import { readFile } from 'node:fs/promises';
 import { nodeWorld } from '../helpers.js';
 import { createState, step, serialize, deserialize, ownerOf } from '../../src/sim/index.js';
 import { pointInPolygon } from '../../src/sim/geometry.js';
-import { buildNorth, MODELLED } from '../../tools/north.mjs';
+import { buildNorth, MODELLED, readAtlas } from '../../tools/north.mjs';
 import { STATE_VERSION } from '../../src/sim/state.js';
 import { canOrderCompany, bestCompanyFor } from '../../src/sim/forces.js';
 
 const world = await nodeWorld();
 const g = world.geography;
-const north = JSON.parse(await readFile(new URL('../../data/north-geography.json', import.meta.url), 'utf8'));
+const north = await readAtlas();
 const shapesOf = (id) => g.neighbours[id]?.shapes ?? g.lands[id]?.shapes;
 const land = [g.temeria, ...Object.values(g.neighbours).flatMap((n) => n.shapes), ...Object.values(g.lands).flatMap((n) => n.shapes)];
 const onLand = (x, y) => land.some((sh) => pointInPolygon(x, y, sh));
@@ -24,7 +24,7 @@ test('the geography is built from the atlas and the build is current', async () 
   assert.deepEqual(JSON.parse(JSON.stringify(geography)), JSON.parse(JSON.stringify(g)), 'data/geography.json is out of date: run node tools/north.mjs');
   assert.equal(Object.keys(g.neighbours).length + Object.keys(g.lands).length, Object.keys(north.realms).length);
   assert.deepEqual(Object.keys(g.neighbours).sort(), [...MODELLED].sort());
-  for (const id of ['kovir', 'poviss', 'hengfors', 'lyria_rivia', 'dol_blathanna', 'angren', 'nazair', 'mag_turga', 'toussaint', 'tir_tochair', 'metinna', 'korath', 'skellige']) assert.ok(g.lands[id], id);
+  for (const id of ['kovir', 'poviss', 'hengfors', 'lyria_rivia', 'dol_blathanna', 'angren', 'nazair', 'mag_turga', 'toussaint', 'tir_tochair', 'metinna', 'korath', 'skellige', 'ebbing', 'heartland']) assert.ok(g.lands[id], id);
   // Every traced town is on the map, in a realm or a land beyond.
   assert.equal(world.foreign.length + world.distantTowns.length, north.towns.length);
   for (const t of north.towns) assert.ok([...world.foreign, ...world.distantTowns].some((s) => s.name === t.name), t.name);
@@ -62,10 +62,12 @@ test('every town is reachable by road, and roads go round the mountains', () => 
   const q2 = ['vizima'];
   while (q2.length) for (const n of links[q2.shift()] ?? []) if (!all.has(n)) { all.add(n); q2.push(n); }
   for (const s of world.distantTowns) assert.ok(all.has(s.id), `${s.id} has no road`);
+  // The roads south run on to the map's edge, bound for the Empire (M30 A).
+  for (const e of g.roadEnds) assert.ok(all.has(e.id), `${e.id} has no road`);
   // No road runs more than a short pass through mountains, unless the atlas
   // puts one of its towns up in the range itself (Loc Muinne, Pomerol).
   const peaks = g.terrain.mountains.filter((z) => z.realm).map((z) => z.shape);
-  const byId = { ...world.byId, ...Object.fromEntries(world.distantTowns.map((t) => [t.id, t])) };
+  const byId = { ...world.byId, ...Object.fromEntries([...world.distantTowns, ...g.roadEnds].map((t) => [t.id, t])) };
   const high = (t) => peaks.some((sh) => pointInPolygon(t.x, t.y, sh));
   for (const [a, b] of [...g.foreignRoads, ...g.distantRoads]) {
     const A = byId[a];

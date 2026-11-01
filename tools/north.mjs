@@ -1,5 +1,6 @@
 // Rebuilds the North beyond Temeria in data/geography.json from the traced
-// atlas in data/north-geography.json: the realms' outlines, the lands beyond
+// atlas in data/north-geography.json (and the map south of the Yaruga in
+// data/south-geography.json, M30 A): the realms' outlines, the lands beyond
 // (not yet realms), forests, mountains, hills and marsh, the rivers and
 // lakes, every foreign town, and a road network laid to suit them. Temeria's
 // own outline, towns, roads and terrain are left exactly as they are.
@@ -40,7 +41,7 @@ const OLD = [
 // realm's chief town and keeps the old id, so saves and data still find it.
 const SEATS = { verden: ['verden_town', 'Hamm'], sodden: ['sodden_keep', 'Kagen'] };
 // Towns whose atlas names would clash with a realm's id.
-const CLASH = new Set([...MODELLED, 'hengfors', 'kovir', 'poviss', 'lyria_rivia', 'toussaint', 'angren', 'nazair', 'mag_turga', 'dol_blathanna', 'skellige', 'korath', 'metinna', 'tir_tochair']);
+const CLASH = new Set([...MODELLED, 'ebbing', 'heartland', 'hengfors', 'kovir', 'poviss', 'lyria_rivia', 'toussaint', 'angren', 'nazair', 'mag_turga', 'dol_blathanna', 'skellige', 'korath', 'metinna', 'tir_tochair']);
 // Old foreign terrain the atlas replaces (and Brokilon, redrawn to its new outline).
 const DROP = new Set(['Kestrel Mountains', 'Mahakam', 'Redanian woods', 'Cintran fens', 'Sodden hills']);
 
@@ -163,10 +164,34 @@ function ontoLand(x, y, shapes, inset) {
   return { x: Math.round(best.x), y: Math.round(best.y) };
 }
 
+// ---- The atlas ----
+
+// The M15 atlas with the map south of the Yaruga (M30 A) laid over it:
+// outlines and terrain zones of the same name are replaced, the rest added.
+export async function readAtlas() {
+  const north = await read('data/north-geography.json');
+  const south = await read('data/south-geography.json');
+  const terrain = {};
+  for (const kind of new Set([...Object.keys(north.terrain), ...Object.keys(south.terrain ?? {})])) {
+    const mine = south.terrain?.[kind] ?? [];
+    terrain[kind] = [...(north.terrain[kind] ?? []).map((z) => mine.find((m) => m.name === z.name) ?? z), ...mine.filter((m) => !(north.terrain[kind] ?? []).some((z) => z.name === m.name))];
+  }
+  return {
+    ...north,
+    realms: { ...north.realms, ...south.realms },
+    terrain,
+    rivers: { ...north.rivers, ...south.rivers },
+    towns: [...north.towns, ...(south.towns ?? [])],
+    roadEnds: south.roadEnds ?? [],
+    roadEndLabel: south.roadEndLabel,
+    bounds: south.bounds,
+  };
+}
+
 // ---- The build ----
 
 export async function buildNorth() {
-  const north = await read('data/north-geography.json');
+  const north = await readAtlas();
   const geo = await read('data/geography.json');
   const temerian = geo.settlements.map((s) => s.id);
   const ids = townIds(north, temerian);
@@ -175,7 +200,7 @@ export async function buildNorth() {
   const neighbours = {};
   for (const rid of MODELLED) neighbours[rid] = { name: geo.neighbours[rid]?.name ?? north.realms[rid].name, shapes: north.realms[rid].shapes };
   const lands = {};
-  for (const [rid, r] of Object.entries(north.realms)) if (!modelled.has(rid)) lands[rid] = { name: r.name, shapes: r.shapes };
+  for (const [rid, r] of Object.entries(north.realms)) if (!modelled.has(rid)) lands[rid] = { name: r.name, shapes: r.shapes, ...(r.heartland ? { heartland: true } : {}) };
 
   // Terrain: Temeria's own zones as they were; the atlas everywhere else.
   // Zones beyond Temeria always carry a realm, so Temeria's rules never
@@ -259,6 +284,17 @@ export async function buildNorth() {
       (modelled.has(r1) && modelled.has(r2) ? roads : distantRoads).push([best.a.id, best.b.id]);
     }
   }
+  // The roads south leave the map for the Empire's heartland (M30 A): each
+  // road end joins the nearest town by the best road.
+  const roadEnds = (north.roadEnds ?? []).map((e) => ({ id: `road_end_${e.id}`, x: e.x, y: e.y }));
+  for (const e of roadEnds) {
+    let best = null;
+    for (const t of towns) {
+      const c = roadCost(t, e, ctx);
+      if (!best || c < best.c) best = { id: t.id, c };
+    }
+    distantRoads.push([best.id, e.id]);
+  }
   const temerianById = Object.fromEntries(geo.settlements.map((s) => [s.id, s]));
   const borderLinks = new Set();
   for (const [a, b] of geo.foreignRoads) {
@@ -290,6 +326,9 @@ export async function buildNorth() {
     foreignRoads: roads,
     distantTowns: distant,
     distantRoads,
+    roadEnds,
+    roadEndLabel: north.roadEndLabel,
+    bounds: north.bounds ?? geo.bounds,
   };
   out.note = `${geo.note.replace(/ The North beyond.*$/, '')} The North beyond Temeria is built from data/north-geography.json by tools/north.mjs.`;
   const map = { note: 'Old foreign town ids (before M15) and the towns that now stand for them, for the save upgrade. Written by tools/north.mjs.', renamed, seats: Object.fromEntries(Object.values(SEATS)) };

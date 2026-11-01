@@ -30,7 +30,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 29;
+export const STATE_VERSION = 30;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
