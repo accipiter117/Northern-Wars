@@ -1,5 +1,5 @@
 import {
-  opinionTargets, authority, onProgress, bookLaws, signed, lawEnactment, inkLeft, restLeft, canSignLaw, canRepeal, repealCost, lawOpinion,
+  opinionTargets, authority, onProgress, bookLaws, signed, lawEnactment, inkLeft, restLeft, canSignLaw, canRepeal, repealCost, lawOpinion, promiseOn,
 } from '../sim/index.js';
 import { escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
@@ -60,6 +60,15 @@ function pathHtml(app, f, pid, path) {
 
 const names = (world, gs) => gs.map((g) => world.groups.groups[g]?.name ?? g).join(', ');
 
+// A promise the crown made on this law (M28): a ribbon with its deadline.
+const GROUP_WORDS = { nobles: 'the lords', burghers: 'the burghers', peasants: 'the peasants', eternal_fire: 'the Eternal Fire', melitele: "Melitele's faithful", old_ways: 'the Old Ways', dwarf: 'the dwarves', elf: 'the elves', halfling: 'the halflings' };
+function ribbon(state, law) {
+  const p = promiseOn(state, law.id);
+  if (!p) return '';
+  const days = Math.max(0, p.until - state.day);
+  return `<p class="bl-ribbon">Promised to ${escapeHtml(GROUP_WORDS[p.group] ?? p.group)}: ${p.act === 'sign' ? 'to be signed' : 'to be struck out'} within ${days} day${days === 1 ? '' : 's'}.</p>`;
+}
+
 function lawCard(app, f, law, tier) {
   const { world, state } = app;
   const isSigned = signed(state, law.id);
@@ -74,6 +83,7 @@ function lawCard(app, f, law, tier) {
       <span class="seal" aria-label="Signed">${icon('crown')}</span>
       <span class="bl-tier">${tier}</span><b>${escapeHtml(law.name)}</b>${choice ? ` <small>(${escapeHtml(world.groups.groups[choice]?.name ?? choice)})</small>` : ''}
       <p class="bl-head">${escapeHtml(law.headline)}</p>
+      ${ribbon(state, law)}
       ${k < 1 ? `<p class="bl-taking">Taking hold: ${Math.round(k * 100)}%</p>` : ''}
       ${cooling(`<button type="button" class="act danger small" data-repeal="${law.id}" ${repeal.ok ? orderAttr({ type: 'repeal', law: law.id }, `Repeal ${law.name}? ${costLine}`, { final: true }) : 'disabled'}>
         <span class="act-label">Repeal</span><span class="act-sub">${escapeHtml(repeal.ok ? costLine : repeal.reason)}</span></button>`, restLeft(state, world, law.id), world.book.lawCooldown, false)}
@@ -88,7 +98,7 @@ function lawCard(app, f, law, tier) {
   }
   const head = `<button type="button" class="book-law open-able${open ? ' open' : ''}" data-book-law="${law.id}" data-set="open:${open ? 'null' : law.id}">
     <span class="bl-tier">${tier}</span><b>${escapeHtml(law.name)}</b>
-    <span class="bl-head">${escapeHtml(law.headline)}</span></button>`;
+    <span class="bl-head">${escapeHtml(law.headline)}</span>${promiseOn(state, law.id) ? '<span class="bl-ribbon">Promised</span>' : ''}</button>`;
   if (!open) return head;
   const opinion = lawOpinion(world, law.id, law.choose === 'faith' ? null : null);
   const cheer = Object.entries(opinion).filter(([, v]) => v > 0).map(([g]) => g);
@@ -102,6 +112,7 @@ function lawCard(app, f, law, tier) {
     <button type="button" class="bl-close" data-set="open:null" aria-label="Close">${icon('up')}</button>
     <span class="bl-tier">${tier}</span><b>${escapeHtml(law.name)}</b>
     <p class="bl-head">${escapeHtml(law.headline)}</p>
+    ${ribbon(state, law)}
     <p class="sub">${escapeHtml(law.blurb)}</p>
     <p class="build-cost">${escapeHtml(cost)}.${meters ? ` At once: ${escapeHtml(meters)}.` : ''}</p>
     ${cheer.length ? `<p class="mood-good">Cheered by ${escapeHtml(names(world, cheer))}.</p>` : ''}

@@ -372,6 +372,12 @@ function deposition(state, world) {
   state.love = d.regencyLove;
   state.crisisMonths = 0;
   for (const h of Object.values(state.houses)) h.grievance /= 2;
+  // The old crown's open questions and promises die with its reign (M28).
+  if (state.dilemmas) {
+    state.dilemmas.open = [];
+    state.dilemmas.promises = [];
+    state.dilemmas.later = [];
+  }
   state.reign = { number: state.reign.number + 1, since: state.day, popStart: pop, decrees: 0, built: 0, riots: 0, pogroms: 0 };
   say(state, 'The great houses have deposed the crown. A regency council rules in Vizima in the name of the heir.');
 }

@@ -5,6 +5,7 @@ import {
   totalPopulation, realmStock, foodNeed, foodYield, seasonOf, dateOf, ledgerNet, creditLimit,
   plagueActive, freeCompanies, warsOf, TEMERIA, MONTHS, monthlyOutput, authority, taxCollected, musterAnswer, canAct, ACT_NAMES, threatUnrest, canRiot,
   actRest,
+  repairOrder,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
@@ -234,7 +235,24 @@ function treasuryCard(app) {
   return `${head}
     <div data-part="in"><h3>What came in most</h3>${linesHtml(inc, '+')}</div>
     <div data-part="out"><h3>What went out most</h3>${linesHtml(exp, '−')}</div>
-    <div data-part="works"><p class="sub">Also paid when ordered last month: ${number(last.expenses.construction)} on repairs, ${number(last.expenses.decrees ?? 0)} on decrees.</p></div>`;
+    <div data-part="works"><p class="sub">Also paid when ordered last month: ${number(last.expenses.construction)} on repairs, ${number(last.expenses.decrees ?? 0)} on decrees.</p></div>
+    ${repairOrderHtml(state)}`;
+}
+
+// The standing order for repairs (M28 A).
+const ORDER_LABELS = [
+  ['cheap', 'Mend the cheap, ask about the dear'],
+  ['rebuild', 'Rebuild everything'],
+  ['patch', 'Patch everything'],
+  ['ask', 'Ask me each time'],
+];
+
+export function repairOrderHtml(state) {
+  const o = repairOrder(state);
+  const waiting = state.works?.pending?.length ?? 0;
+  return `<div data-part="repair-order"><h3>Repairs</h3>
+    <p class="sub">${o.mode === 'cheap' ? `Works costing up to ${number(o.limit)} crowns are mended without asking, food and fuel first; the dear ones come to court once a month, together.` : o.mode === 'ask' ? 'Every broken works is brought to court on its own.' : 'Works are mended without asking, as far as the treasury goes, food and fuel first.'}${waiting ? ` ${waiting} wait for coin or for next month's round.` : ''}</p>
+    <div class="chips">${ORDER_LABELS.map(([m, label]) => `<button type="button" class="chip${o.mode === m ? ' on' : ''}" aria-pressed="${o.mode === m}" ${orderAttr({ type: 'repairOrder', mode: m })}>${escapeHtml(label)}</button>`).join(' ')}</div></div>`;
 }
 
 // Fuel (M24 A): what the woods cut against what the hearths burn.

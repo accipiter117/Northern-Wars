@@ -199,6 +199,7 @@ async function boot() {
     ...state.demands.map((d) => `demand:${d.id}`),
     ...state.envoys.map((d) => `envoy:${d.id}`),
     ...state.petitions.map((d) => `petition:${d.id}`),
+    ...(state.dilemmas?.open ?? []).map((d) => `dilemma:${d.id}`),
     ...(state.orders?.envoys ?? []).map((e) => `envoyAway:${e.realm}`),
   ];
   let decisionsSeen = new Set(decisionKeys());

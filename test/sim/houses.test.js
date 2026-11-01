@@ -125,7 +125,9 @@ test('a crown with no Authority amid Unrest is deposed, and a regency takes over
     s.love = 0;
     s.fear = 0;
     for (const st of Object.values(s.settlements)) st.unrest = 80;
-    s = run(s, 30);
+    // Day by day, so the regency is checked as it takes over, not after
+    // whatever the next month's turn brings.
+    for (let d = 0; d < 30 && !s.depositions.length; d++) s = run(s, 1);
     if (s.depositions.length) break;
   }
   assert.equal(s.depositions.length, 1);

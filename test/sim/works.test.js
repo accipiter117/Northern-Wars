@@ -153,7 +153,9 @@ test('each repair costs and returns what it says', () => {
   s = run(s, p.days + 1);
   assert.ok(Math.abs(s.settlements.vizima.cond.market - p.to) <= 1.5, `${s.settlements.vizima.cond.market} vs ${p.to}`);
   assert.ok(s.settlements.vizima.patched.market);
-  // Leave it: nothing spent, unrest up, and remembered.
+  // Leave it: nothing spent, unrest up, and remembered. (Asked one by one,
+  // as before M28's standing order.)
+  s = act(s, { type: 'repairOrder', mode: 'ask' });
   damageWorks(s, world, 'ellander', 'brewery', 50, 'Gutted by fire');
   const ask = s.works.decisions.find((x) => x.town === 'ellander' && x.works === 'brewery');
   assert.ok(ask, 'the damage raised a repair question');

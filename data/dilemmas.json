@@ -1,0 +1,2318 @@
+{
+ "note": "M28: dilemmas that follow from the crown's laws, faiths, lords and seasons, and the realm's demands for change. A dilemma fires when its `when` holds (laws signed, paths, faith levels, meters, season, war) and a fitting `place` is found; laws signed in the last half year weigh triple. Effects (fx): coin, love, fear, unrest (realm), townUnrest and prosperity (the place), opinion by group, devotion by faith, faith (shift in the place, points), loyalty (the lord named), sympathy (Scoia'tael). `next` raises a follow-up after some days. A demand asks for a law to be signed (or repealed) by a deadline: promise, refuse, or crush the agitators.",
+ "chance": 0.8,
+ "gapDays": 20,
+ "defaultDays": 30,
+ "repeatDays": 730,
+ "recentLawDays": 180,
+ "recentWeight": 3,
+ "demands": {
+  "chance": 0.45,
+  "gapDays": 70,
+  "deadline": 75,
+  "keep": {
+   "love": 8,
+   "unrest": -8,
+   "opinion": 15
+  },
+  "broken": {
+   "love": -10,
+   "unrest": 10,
+   "opinion": -20
+  },
+  "refuse": {
+   "unrest": 4,
+   "opinion": -10
+  },
+  "crush": {
+   "fear": 8,
+   "love": -5,
+   "opinion": -15
+  },
+  "silenceDays": 365,
+  "list": {
+   "peasants_relief": {
+    "group": "peasants",
+    "law": "poor_relief",
+    "when": {
+     "notLaws": [
+      "poor_relief"
+     ],
+     "anyOf": [
+      {
+       "love": [
+        0,
+        35
+       ]
+      },
+      {
+       "unrest": [
+        45,
+        100
+       ]
+      }
+     ],
+     "notPath": "people.toil"
+    },
+    "title": "The villages demand poor relief",
+    "text": "Hungry men have walked from the villages to the gates of Vizima. They ask the crown for bread in the lean months, and they say they will not go home without a promise."
+   },
+   "peasants_granaries": {
+    "group": "peasants",
+    "law": "royal_granaries",
+    "when": {
+     "notLaws": [
+      "royal_granaries"
+     ],
+     "season": [
+      "autumn",
+      "winter"
+     ],
+     "unrest": [
+      35,
+      100
+     ],
+     "notPath": "economy.free_trade"
+    },
+    "title": "The villages demand royal granaries",
+    "text": "Last winter the grain ran out in March. The village elders ask the crown to keep its own stores against the hungry months."
+   },
+   "burghers_markets": {
+    "group": "burghers",
+    "law": "open_markets",
+    "when": {
+     "notLaws": [
+      "open_markets"
+     ],
+     "notPath": "economy.monopolies"
+    },
+    "title": "The burghers demand open markets",
+    "text": "The merchants of the towns complain of tolls at every bridge and ford. They want the roads open to trade, and they have stopped paying their dues on time to make the point."
+   },
+   "burghers_charter": {
+    "group": "burghers",
+    "law": "commons_charter",
+    "when": {
+     "laws": [
+      "pardons"
+     ],
+     "notLaws": [
+      "commons_charter"
+     ],
+     "unrest": [
+      40,
+      100
+     ]
+    },
+    "title": "The towns demand a charter",
+    "text": "The guildmasters have drawn up a charter of the commons: the right of the towns to be heard before a tax is raised. They want the crown's seal on it."
+   },
+   "lords_riders": {
+    "group": "nobles",
+    "law": "riders",
+    "when": {
+     "laws": [
+      "executions"
+     ],
+     "notLaws": [
+      "riders"
+     ]
+    },
+    "title": "The lords demand the king's riders",
+    "text": "The great houses say the roads are not safe for their stewards or their rents. They want riders of the crown on every highway, and they want them before the next rising."
+   },
+   "lords_knights": {
+    "group": "nobles",
+    "law": "royal_knights",
+    "when": {
+     "laws": [
+      "military_academy"
+     ],
+     "notLaws": [
+      "royal_knights"
+     ]
+    },
+    "title": "The lords demand royal knights",
+    "text": "The younger sons of the great houses have trained at the academy and want spurs to show for it. Their fathers ask the crown to raise them as knights of the realm."
+   },
+   "fire_restrictions": {
+    "group": "eternal_fire",
+    "law": "restrictions",
+    "when": {
+     "faith": {
+      "eternal_fire": 3
+     },
+     "notLaws": [
+      "restrictions"
+     ],
+     "notPath": "faith.tolerance"
+    },
+    "title": "The Eternal Fire demands restrictions",
+    "text": "The priests of the Fire preach that the non-humans in the towns are a rot in the realm. They demand that the crown bar them from the guilds, the councils and the walls after dark."
+   },
+   "fire_inquisition": {
+    "group": "eternal_fire",
+    "law": "inquisition",
+    "when": {
+     "faith": {
+      "eternal_fire": 4
+     },
+     "laws": [
+      "restrictions"
+     ],
+     "notLaws": [
+      "inquisition"
+     ]
+    },
+    "title": "The Eternal Fire demands an inquisition",
+    "text": "The Hierarch's men say restrictions are not enough. They want a holy office with the right to try witches, mages and heretics, and they want it sealed by the crown."
+   },
+   "melitele_hospices": {
+    "group": "melitele",
+    "law": "hospices",
+    "when": {
+     "faith": {
+      "melitele": 2
+     },
+     "notLaws": [
+      "hospices"
+     ],
+     "notPath": "people.toil"
+    },
+    "title": "Melitele's priestesses ask for hospices",
+    "text": "The priestesses of the Mother tend the sick on straw in the temple yards. They ask the crown to found hospices in every temple town, and the folk ask with them."
+   },
+   "nonhumans_charter": {
+    "group": "dwarf",
+    "law": "nonhuman_charter",
+    "when": {
+     "notLaws": [
+      "nonhuman_charter"
+     ],
+     "notPath": "faith.one_faith",
+     "laws": [
+      "freedom_of_worship"
+     ]
+    },
+    "title": "The non-humans demand a charter",
+    "text": "Dwarven smiths and elven craftsmen pay the crown's taxes and are barred from its guilds. Their elders ask for a charter that names them subjects of the crown, with the rights of any other."
+   },
+   "soldiers_standing": {
+    "group": "nobles",
+    "law": "standing_companies",
+    "when": {
+     "war": true,
+     "notLaws": [
+      "standing_companies"
+     ],
+     "notPath": "war.levies"
+    },
+    "title": "The captains demand standing companies",
+    "text": "The captains say the levies break at the first charge and go home at harvest. They want paid companies who stay under arms in peace as in war."
+   },
+   "peasants_repeal_long_hours": {
+    "group": "peasants",
+    "law": "long_hours",
+    "act": "repeal",
+    "when": {
+     "laws": [
+      "long_hours"
+     ],
+     "unrest": [
+      40,
+      100
+     ]
+    },
+    "title": "The labourers demand an end to long hours",
+    "text": "The mills and the mines work from dark to dark under the long hours law. The labourers have stopped work at three works and say they will not start again until the law is struck from the Book."
+   },
+   "burghers_repeal_monopolies": {
+    "group": "burghers",
+    "law": "guild_monopolies",
+    "act": "repeal",
+    "when": {
+     "laws": [
+      "guild_monopolies"
+     ],
+     "love": [
+      0,
+      45
+     ]
+    },
+    "title": "The small traders demand an end to the monopolies",
+    "text": "Every craftsman outside the guilds is ruined or hanged. The small traders of the towns, more of them than the guildsmen, want the monopolies broken."
+   },
+   "peasants_repeal_executions": {
+    "group": "peasants",
+    "law": "executions",
+    "act": "repeal",
+    "when": {
+     "laws": [
+      "executions"
+     ],
+     "fear": [
+      55,
+      100
+     ],
+     "love": [
+      0,
+      40
+     ]
+    },
+    "title": "The folk demand an end to public hangings",
+    "text": "There have been too many bodies on the gibbets. Mothers, priests and even some of the watch ask the crown to end the public hangings."
+   }
+  }
+ },
+ "dilemmas": {
+  "bread_thief": {
+   "title": "A boy to hang for bread",
+   "text": "A boy of twelve is to hang at {place} for stealing a loaf. His mother waits at the gate with the whole street behind her. The baker says the law is the law.",
+   "when": {
+    "laws": [
+     "executions"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hang him. The law is the law",
+     "fx": {
+      "fear": 5,
+      "love": -4,
+      "townUnrest": 4
+     }
+    },
+    {
+     "label": "Commute it to the stocks",
+     "fx": {
+      "love": 1,
+      "fear": -1
+     }
+    },
+    {
+     "label": "Pardon him and fine the baker for his prices",
+     "fx": {
+      "love": 4,
+      "opinion": {
+       "burghers": -6
+      }
+     },
+     "next": {
+      "id": "bread_thief_after",
+      "days": 90
+     }
+    }
+   ],
+   "default": 0
+  },
+  "bread_thief_after": {
+   "title": "The boy the crown pardoned",
+   "text": "The boy pardoned at {place} has been seen carrying messages for the Scoia'tael in the woods. The watch says he knows their paths. He says the crown saved his life and he will tell the crown what he knows.",
+   "followup": true,
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Use him. He leads us to their camp",
+     "fx": {
+      "sympathy": -8,
+      "fear": 2
+     }
+    },
+    {
+     "label": "Let him be. He is a boy",
+     "fx": {
+      "love": 2,
+      "sympathy": 2
+     }
+    }
+   ],
+   "default": 1
+  },
+  "gibbet_crowd": {
+   "title": "The crowd at the gallows",
+   "text": "A rebel the folk call a hero is to hang at {place}. The square is packed, and the watch fears the crowd will cut him down.",
+   "when": {
+    "laws": [
+     "executions"
+    ],
+    "fear": [
+     0,
+     60
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hang him with soldiers on every roof",
+     "fx": {
+      "fear": 7,
+      "love": -3,
+      "townUnrest": 6
+     }
+    },
+    {
+     "label": "Hang him at dawn, before the crowd gathers",
+     "fx": {
+      "fear": 3,
+      "townUnrest": 2
+     }
+    },
+    {
+     "label": "Send him to the mines instead",
+     "fx": {
+      "love": 2,
+      "fear": -2
+     }
+    }
+   ],
+   "default": 1
+  },
+  "curfew_wedding": {
+   "title": "A wedding after curfew",
+   "text": "The watch at {place} broke up a wedding feast an hour past curfew. The bride's father struck a watchman. Half the street was at the wedding.",
+   "when": {
+    "laws": [
+     "curfews"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "The father is flogged. A curfew is a curfew",
+     "fx": {
+      "fear": 4,
+      "townUnrest": 5
+     }
+    },
+    {
+     "label": "Fine him a crown and let it go",
+     "fx": {
+      "coin": 20,
+      "fear": 1
+     }
+    },
+    {
+     "label": "Discipline the watchmen instead",
+     "fx": {
+      "love": 3,
+      "fear": -2
+     }
+    }
+   ],
+   "default": 1
+  },
+  "riders_excess": {
+   "title": "The king's riders burned a farm",
+   "text": "Riders of the crown burned a farmstead near {place}, saying the family fed bandits. The neighbours swear the family fed no one but their own.",
+   "when": {
+    "laws": [
+     "riders"
+    ]
+   },
+   "place": {
+    "types": [
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Back the riders without question",
+     "fx": {
+      "fear": 5,
+      "love": -4,
+      "townUnrest": 6
+     }
+    },
+    {
+     "label": "Pay the family for the farm",
+     "fx": {
+      "coin": -150,
+      "love": 3
+     }
+    },
+    {
+     "label": "Hang the rider who gave the order",
+     "fx": {
+      "love": 5,
+      "fear": -3,
+      "opinion": {
+       "nobles": -4
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "assize_steward": {
+   "title": "The judge acquits a lord's steward",
+   "text": "The travelling judge at {place} has acquitted {lord}'s steward of beating a tenant to death. Every man in the village saw it done.",
+   "when": {
+    "laws": [
+     "assizes"
+    ]
+   },
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ]
+   },
+   "lord": true,
+   "choices": [
+    {
+     "label": "The verdict stands",
+     "fx": {
+      "loyalty": 6,
+      "love": -4,
+      "townUnrest": 5
+     }
+    },
+    {
+     "label": "Retry him before the crown's own court",
+     "fx": {
+      "loyalty": -10,
+      "love": 5
+     }
+    },
+    {
+     "label": "Let it stand, but pay the widow from the treasury",
+     "fx": {
+      "coin": -100,
+      "love": 2,
+      "loyalty": 2
+     }
+    }
+   ],
+   "default": 0
+  },
+  "assize_witch": {
+   "title": "A herbwife before the judge",
+   "text": "The assize at {place} hears a case against a herbwife. The village says her potions killed a child; the child's mother says they saved two others.",
+   "when": {
+    "laws": [
+     "assizes"
+    ]
+   },
+   "place": {
+    "types": [
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hand her to the Fire's priests",
+     "fx": {
+      "devotion": {
+       "eternal_fire": 4
+      },
+      "opinion": {
+       "old_ways": -8
+      },
+      "fear": 2
+     }
+    },
+    {
+     "label": "Acquit her for want of proof",
+     "fx": {
+      "love": 2,
+      "opinion": {
+       "eternal_fire": -6,
+       "old_ways": 4
+      }
+     }
+    },
+    {
+     "label": "Exile her from the parish",
+     "fx": {
+      "townUnrest": -2
+     }
+    }
+   ],
+   "default": 2
+  },
+  "pardon_brigand": {
+   "title": "A brigand begs pardon",
+   "text": "A brigand captain who preyed on the roads near {place} offers to surrender with his men if the crown pardons them. They would serve in the levy.",
+   "when": {
+    "laws": [
+     "pardons"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Pardon them and put them in the ranks",
+     "fx": {
+      "love": 1,
+      "opinion": {
+       "peasants": -4
+      }
+     }
+    },
+    {
+     "label": "Promise pardon, then hang them",
+     "fx": {
+      "fear": 6,
+      "love": -3
+     }
+    },
+    {
+     "label": "Refuse. Hunt them down",
+     "fx": {
+      "coin": -100
+     }
+    }
+   ],
+   "default": 2
+  },
+  "charter_tax": {
+   "title": "The charter tested",
+   "text": "Under the charter of the commons the towns must be heard before a tax is raised. The treasury needs coin now; the guildmasters of {place} want to talk for a month first.",
+   "when": {
+    "laws": [
+     "commons_charter"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Wait and hear them out",
+     "fx": {
+      "love": 3,
+      "opinion": {
+       "burghers": 6
+      }
+     }
+    },
+    {
+     "label": "Raise the levy now and break the charter's spirit",
+     "fx": {
+      "coin": 400,
+      "opinion": {
+       "burghers": -12
+      },
+      "unrest": 3
+     }
+    }
+   ],
+   "default": 0
+  },
+  "beggars_flood": {
+   "title": "Beggars from abroad",
+   "text": "Word of the crown's bread has spread across the border. Beggars from Redania and Aedirn crowd the gates of {place} and the bread runs short for the town's own poor.",
+   "when": {
+    "laws": [
+     "poor_relief"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Feed them all",
+     "fx": {
+      "coin": -250,
+      "love": 4
+     }
+    },
+    {
+     "label": "Turn back the foreigners",
+     "fx": {
+      "fear": 3,
+      "devotion": {
+       "eternal_fire": 3
+      },
+      "love": -1
+     }
+    },
+    {
+     "label": "Put them to work on the roads for their bread",
+     "fx": {
+      "coin": -80,
+      "townUnrest": 3,
+      "prosperity": 2
+     }
+    }
+   ],
+   "default": 1
+  },
+  "hospice_plague": {
+   "title": "Fever in the hospice",
+   "text": "A fever has broken out in the hospice at {place}. The priestesses will not turn the sick away, and the townsfolk want the doors nailed shut with the sick inside.",
+   "when": {
+    "laws": [
+     "hospices"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Keep the doors open and send physicians",
+     "fx": {
+      "coin": -200,
+      "love": 4,
+      "devotion": {
+       "melitele": 4
+      }
+     }
+    },
+    {
+     "label": "Close the hospice until the fever passes",
+     "fx": {
+      "townUnrest": -3,
+      "opinion": {
+       "melitele": -8
+      }
+     }
+    },
+    {
+     "label": "Nail the doors shut",
+     "fx": {
+      "fear": 6,
+      "love": -6,
+      "opinion": {
+       "melitele": -15
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "feast_cost": {
+   "title": "The cost of the feast",
+   "text": "The royal feast at {place} was a triumph. The steward now brings the bill: twice what was promised, and the wine merchants will not wait.",
+   "when": {
+    "laws": [
+     "royal_feasts"
+    ]
+   },
+   "place": {
+    "types": [
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Pay it in full",
+     "fx": {
+      "coin": -350,
+      "opinion": {
+       "burghers": 5
+      }
+     }
+    },
+    {
+     "label": "Pay half and let them sue",
+     "fx": {
+      "coin": -175,
+      "opinion": {
+       "burghers": -8
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "millwheel_arm": {
+   "title": "A millwheel takes an arm",
+   "text": "Under the long hours law the mill at {place} grinds from dark to dark. A worker fell asleep at the wheel and lost his arm. The hands ask for one day of rest in seven.",
+   "when": {
+    "laws": [
+     "long_hours"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Grant them their day",
+     "fx": {
+      "love": 4,
+      "prosperity": -3
+     }
+    },
+    {
+     "label": "Refuse. The work must go on",
+     "fx": {
+      "townUnrest": 7,
+      "fear": 2
+     }
+    },
+    {
+     "label": "Pay the man a pension, nothing more",
+     "fx": {
+      "coin": -60,
+      "love": 1
+     }
+    }
+   ],
+   "default": 1
+  },
+  "debtors_escape": {
+   "title": "Debtors run from the work gangs",
+   "text": "Twenty debtors labouring on the walls at {place} have broken their chains and fled to the woods. Their creditors want them hunted down.",
+   "when": {
+    "laws": [
+     "debtors_labour"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hunt them down and add years to their debt",
+     "fx": {
+      "fear": 4,
+      "coin": -60,
+      "opinion": {
+       "burghers": 4
+      }
+     }
+    },
+    {
+     "label": "Let them go and forgive the debts",
+     "fx": {
+      "love": 3,
+      "opinion": {
+       "burghers": -10
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "prison_gang_riot": {
+   "title": "The prison gang riots",
+   "text": "Convicts mending the road near {place} have killed a guard. The rest refuse to work until they are fed properly.",
+   "when": {
+    "laws": [
+     "prison_gangs"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hang one in ten",
+     "fx": {
+      "fear": 8,
+      "love": -3
+     }
+    },
+    {
+     "label": "Feed them and double the guard",
+     "fx": {
+      "coin": -150
+     }
+    },
+    {
+     "label": "Hang the killer, feed the rest",
+     "fx": {
+      "fear": 3,
+      "coin": -80
+     }
+    }
+   ],
+   "default": 2
+  },
+  "vivaldi_mint": {
+   "title": "The Vivaldi bank offers a loan",
+   "text": "Agents of the Vivaldi bank offer the crown a large loan at little interest. In return they want the running of the mint at {place} for five years.",
+   "when": {
+    "laws": [
+     "open_markets"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Accept. Coin now is coin now",
+     "fx": {
+      "coin": 1200,
+      "opinion": {
+       "burghers": 6,
+       "nobles": -5
+      },
+      "prosperity": -4
+     }
+    },
+    {
+     "label": "Refuse. The mint is the crown's",
+     "fx": {
+      "opinion": {
+       "nobles": 3
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "merchant_smuggling": {
+   "title": "Chartered merchants caught smuggling",
+   "text": "A merchant house chartered by the crown has been smuggling fisstech through {place} under its seal. The other charter holders want it kept quiet.",
+   "when": {
+    "laws": [
+     "merchant_charters"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Revoke their charter publicly",
+     "fx": {
+      "love": 3,
+      "opinion": {
+       "burghers": -8
+      }
+     }
+    },
+    {
+     "label": "Fine them heavily and keep it quiet",
+     "fx": {
+      "coin": 500,
+      "opinion": {
+       "burghers": 3
+      }
+     }
+    },
+    {
+     "label": "Take a share and look away",
+     "fx": {
+      "coin": 300,
+      "love": -3,
+      "townUnrest": 3
+     }
+    }
+   ],
+   "default": 1
+  },
+  "guild_forge": {
+   "title": "The guild burns a forge",
+   "text": "Guildsmen at {place} have burned the forge of a smith who sold below the guild's price. He stands outside the castle with his burned hands wrapped in rags.",
+   "when": {
+    "laws": [
+     "guild_monopolies"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Uphold the guild. He broke its rules",
+     "fx": {
+      "love": -3,
+      "opinion": {
+       "burghers": 6
+      }
+     }
+    },
+    {
+     "label": "Hang the men who lit the fire",
+     "fx": {
+      "fear": 5,
+      "opinion": {
+       "burghers": -10
+      }
+     }
+    },
+    {
+     "label": "Rebuild his forge at the crown's cost",
+     "fx": {
+      "coin": -150,
+      "love": 4,
+      "opinion": {
+       "burghers": -4
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "royal_mine_collapse": {
+   "title": "Men trapped in the crown's mine",
+   "text": "A gallery has fallen in the royal mine near {place}. Eleven men are trapped, alive, behind the rock. Digging them out will stop the mine for a month.",
+   "when": {
+    "laws": [
+     "royal_mines"
+    ]
+   },
+   "place": {
+    "types": [
+     "village",
+     "town",
+     "castle"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Dig them out, whatever it costs",
+     "fx": {
+      "coin": -300,
+      "love": 5
+     }
+    },
+    {
+     "label": "Seal the gallery and dig elsewhere",
+     "fx": {
+      "fear": 3,
+      "love": -6,
+      "townUnrest": 6
+     }
+    }
+   ],
+   "default": 0
+  },
+  "granary_hoard": {
+   "title": "The granary keeper's hoard",
+   "text": "The keeper of the royal granary at {place} has been selling the crown's grain at night to merchants across the border.",
+   "when": {
+    "laws": [
+     "royal_granaries"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hang him over the granary door",
+     "fx": {
+      "fear": 5
+     }
+    },
+    {
+     "label": "Take back what he made and dismiss him",
+     "fx": {
+      "coin": 250
+     }
+    }
+   ],
+   "default": 0
+  },
+  "harvest_gate": {
+   "title": "Women bar the gate to the recruiters",
+   "text": "The recruiters came to {place} for the seasonal levy in the middle of the harvest. The women have barred the gate and say the men can go when the grain is in.",
+   "when": {
+    "laws": [
+     "seasonal_conscription"
+    ],
+    "season": [
+     "summer",
+     "autumn"
+    ]
+   },
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Take the men anyway",
+     "fx": {
+      "fear": 4,
+      "townUnrest": 8,
+      "prosperity": -4
+     }
+    },
+    {
+     "label": "Wait until the harvest is in",
+     "fx": {
+      "love": 2
+     }
+    },
+    {
+     "label": "Take every second man",
+     "fx": {
+      "townUnrest": 3,
+      "prosperity": -2
+     }
+    }
+   ],
+   "default": 1
+  },
+  "militia_brawl": {
+   "title": "Militia brawl at the drill",
+   "text": "Two villages drilling together at {place} came to blows over an old boundary stone. A man is dead and both villages want the other punished.",
+   "when": {
+    "laws": [
+     "militia_drills"
+    ]
+   },
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hang the killer and end it",
+     "fx": {
+      "fear": 3
+     }
+    },
+    {
+     "label": "Make both villages pay blood money",
+     "fx": {
+      "coin": 60,
+      "townUnrest": 3
+     }
+    },
+    {
+     "label": "Move the boundary stone to settle it for good",
+     "fx": {
+      "love": 2,
+      "opinion": {
+       "nobles": -3
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "every_man_cripple": {
+   "title": "The lame and the old called up",
+   "text": "Under the law that makes every man a soldier, the recruiters at {place} have taken a lame cobbler and a man of sixty. The town laughs at the crown's army.",
+   "when": {
+    "laws": [
+     "every_man"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Every man means every man",
+     "fx": {
+      "fear": 2,
+      "love": -3
+     }
+    },
+    {
+     "label": "Send them home and flog the recruiter",
+     "fx": {
+      "love": 3
+     }
+    }
+   ],
+   "default": 1
+  },
+  "veterans_land": {
+   "title": "Veterans want their land",
+   "text": "Old soldiers of the standing companies gather at {place}. They were promised land when they mustered out, and they have not had it.",
+   "when": {
+    "laws": [
+     "standing_companies"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Grant them crown land",
+     "fx": {
+      "love": 4,
+      "opinion": {
+       "nobles": -6
+      },
+      "prosperity": 2
+     }
+    },
+    {
+     "label": "Pay them off",
+     "fx": {
+      "coin": -400,
+      "love": 2
+     }
+    },
+    {
+     "label": "Refuse them",
+     "fx": {
+      "love": -3,
+      "fear": 1
+     },
+     "next": {
+      "id": "veterans_bandits",
+      "days": 60
+     }
+    }
+   ],
+   "default": 1
+  },
+  "veterans_bandits": {
+   "title": "The veterans have taken to the road",
+   "text": "The veterans the crown turned away have become a band on the roads near {place}. They know every trick the crown's soldiers know.",
+   "followup": true,
+   "place": {
+    "types": [
+     "town",
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Send the companies after them",
+     "fx": {
+      "coin": -200,
+      "fear": 3
+     }
+    },
+    {
+     "label": "Offer them their land after all",
+     "fx": {
+      "love": 2,
+      "opinion": {
+       "nobles": -6
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "academy_duel": {
+   "title": "A duel at the academy",
+   "text": "Two cadets of the military academy fought a duel over a woman at {place}. One is dead. He was {lord}'s nephew.",
+   "when": {
+    "laws": [
+     "military_academy"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "lord": true,
+   "choices": [
+    {
+     "label": "Hang the survivor",
+     "fx": {
+      "loyalty": 6,
+      "fear": 2
+     }
+    },
+    {
+     "label": "Expel him from the academy",
+     "fx": {
+      "loyalty": -6
+     }
+    },
+    {
+     "label": "Call it honour and let it lie",
+     "fx": {
+      "loyalty": -10,
+      "opinion": {
+       "nobles": 3
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "knights_tourney": {
+   "title": "Knights brawl at the tournament",
+   "text": "The royal knights turned the tournament at {place} into a brawl with the townsmen. Three burghers lie dead in the lists.",
+   "when": {
+    "laws": [
+     "royal_knights"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Strip the ringleaders of their spurs",
+     "fx": {
+      "love": 3,
+      "opinion": {
+       "nobles": -6
+      }
+     }
+    },
+    {
+     "label": "Pay the widows and say nothing",
+     "fx": {
+      "coin": -200
+     }
+    },
+    {
+     "label": "Blame the townsmen",
+     "fx": {
+      "fear": 3,
+      "townUnrest": 7,
+      "opinion": {
+       "nobles": 4
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "dwarf_guild_seat": {
+   "title": "Dwarves ask for a guild seat",
+   "text": "Under the charter, the dwarven smiths of {place} ask for a seat on the smiths' guild. The guildsmen threaten to close their stalls if one is granted.",
+   "when": {
+    "laws": [
+     "nonhuman_charter"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ],
+    "minPeople": {
+     "dwarf": 20
+    }
+   },
+   "choices": [
+    {
+     "label": "Grant them the seat",
+     "fx": {
+      "opinion": {
+       "dwarf": 10,
+       "burghers": -6
+      },
+      "prosperity": 3
+     }
+    },
+    {
+     "label": "Refuse. The charter grants no seat",
+     "fx": {
+      "opinion": {
+       "dwarf": -10,
+       "burghers": 4
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "elf_grove_return": {
+   "title": "Elves ask to return to a grove",
+   "text": "Elves of {place} ask to tend an old grove their grandfathers were driven from. A human farmer has ploughed half of it.",
+   "when": {
+    "laws": [
+     "freedom_of_worship"
+    ]
+   },
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ],
+    "minPeople": {
+     "elf": 5
+    }
+   },
+   "choices": [
+    {
+     "label": "Return the grove and pay the farmer",
+     "fx": {
+      "coin": -120,
+      "sympathy": -6,
+      "opinion": {
+       "elf": 10
+      }
+     }
+    },
+    {
+     "label": "The farmer keeps his land",
+     "fx": {
+      "sympathy": 5,
+      "opinion": {
+       "elf": -8
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "licensed_mage_fire": {
+   "title": "A licensed mage burns a barn",
+   "text": "A mage licensed by the crown at {place} lost control of a spell and burned a barn with a family's winter stores in it. The Fire's priests are already preaching.",
+   "when": {
+    "laws": [
+     "licensed_mages"
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Make the mage pay twice over",
+     "fx": {
+      "love": 2,
+      "opinion": {
+       "eternal_fire": -2
+      }
+     }
+    },
+    {
+     "label": "Revoke the licence and banish the mage",
+     "fx": {
+      "devotion": {
+       "eternal_fire": 3
+      }
+     }
+    },
+    {
+     "label": "Protect the mage and pay the family",
+     "fx": {
+      "coin": -150,
+      "opinion": {
+       "eternal_fire": -8
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "inquisition_lady": {
+   "title": "The Fire accuses a lady",
+   "text": "The inquisition accuses {lord}'s wife of witchcraft. Her servants say she reads the stars; her accusers say she curdles milk. {lord} begs the crown to stop it.",
+   "when": {
+    "laws": [
+     "inquisition"
+    ]
+   },
+   "lord": true,
+   "choices": [
+    {
+     "label": "Let the trial proceed",
+     "fx": {
+      "devotion": {
+       "eternal_fire": 6
+      },
+      "loyalty": -25,
+      "fear": 4
+     }
+    },
+    {
+     "label": "Forbid it",
+     "fx": {
+      "loyalty": 10,
+      "opinion": {
+       "eternal_fire": -12
+      }
+     }
+    },
+    {
+     "label": "Quietly send her abroad",
+     "fx": {
+      "loyalty": 3,
+      "opinion": {
+       "eternal_fire": -3
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "restrictions_quarter": {
+   "title": "Non-humans driven from a quarter",
+   "text": "Under the restrictions, a mob has driven the non-humans of {place} out of their quarter and moved into their houses.",
+   "when": {
+    "laws": [
+     "restrictions"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ],
+    "minNonhuman": 0.04
+   },
+   "choices": [
+    {
+     "label": "Let the mob keep what it took",
+     "fx": {
+      "devotion": {
+       "eternal_fire": 4
+      },
+      "sympathy": 8,
+      "opinion": {
+       "elf": -12,
+       "dwarf": -12
+      }
+     }
+    },
+    {
+     "label": "Restore the houses to their owners",
+     "fx": {
+      "opinion": {
+       "eternal_fire": -8,
+       "elf": 6,
+       "dwarf": 6
+      },
+      "townUnrest": 4
+     }
+    }
+   ],
+   "default": 0
+  },
+  "faith_crown_rival": {
+   "title": "The crown's faith and the others",
+   "text": "Since the crown named its faith, the priests of the others at {place} say their temples are being taxed and their festivals refused. They ask for the same treatment as before.",
+   "when": {
+    "laws": [
+     "faith_of_the_crown"
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Grant it. The crown's faith needs no favours",
+     "fx": {
+      "love": 2
+     }
+    },
+    {
+     "label": "Refuse. The crown has chosen",
+     "fx": {
+      "townUnrest": 4,
+      "fear": 2
+     }
+    }
+   ],
+   "default": 1
+  },
+  "fire_bonfire": {
+   "title": "The Fire burns books",
+   "text": "The Eternal Fire has lit a bonfire of books in the square at {place}, and among them are the town's own ledgers and charters.",
+   "when": {
+    "faith": {
+     "eternal_fire": 2
+    }
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ],
+    "minFaith": {
+     "eternal_fire": 25
+    }
+   },
+   "choices": [
+    {
+     "label": "Let the fire burn",
+     "fx": {
+      "devotion": {
+       "eternal_fire": 4
+      },
+      "prosperity": -3,
+      "opinion": {
+       "burghers": -6
+      }
+     }
+    },
+    {
+     "label": "Arrest the priest who lit it",
+     "fx": {
+      "opinion": {
+       "eternal_fire": -10,
+       "burghers": 5
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "melitele_scoiatael": {
+   "title": "Priestesses shelter a wounded elf",
+   "text": "The priestesses of Melitele at {place} are nursing a wounded Scoia'tael. They say the Mother turns no one away. The watch wants him hanged.",
+   "when": {
+    "faith": {
+     "melitele": 2
+    }
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hang him when he can stand",
+     "fx": {
+      "fear": 3,
+      "opinion": {
+       "melitele": -8
+      },
+      "sympathy": 3
+     }
+    },
+    {
+     "label": "Let the Mother keep him",
+     "fx": {
+      "devotion": {
+       "melitele": 3
+      },
+      "sympathy": -3,
+      "opinion": {
+       "eternal_fire": -5
+      }
+     }
+    },
+    {
+     "label": "Question him, then let him go",
+     "fx": {
+      "sympathy": -5
+     }
+    }
+   ],
+   "default": 0
+  },
+  "druid_curse": {
+   "title": "A druid curses the woodcutters",
+   "text": "A druid has cursed {lord}'s men for felling a sacred grove near {place}. Two of them have since taken fever, and now no one will cut wood there.",
+   "when": {
+    "faith": {
+     "old_ways": 2
+    }
+   },
+   "place": {
+    "types": [
+     "village"
+    ]
+   },
+   "lord": true,
+   "choices": [
+    {
+     "label": "Spare the grove",
+     "fx": {
+      "devotion": {
+       "old_ways": 4
+      },
+      "loyalty": -5
+     }
+    },
+    {
+     "label": "Burn the grove and arrest the druid",
+     "fx": {
+      "fear": 3,
+      "opinion": {
+       "old_ways": -12
+      },
+      "devotion": {
+       "eternal_fire": 3
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "lords_mill_quarrel": {
+   "title": "Two lords and one mill",
+   "text": "{lord} and a neighbouring house both claim the mill on their border near {place}. Both have sent armed men to sit in it.",
+   "lord": true,
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Give it to {lord}",
+     "fx": {
+      "loyalty": 8,
+      "opinion": {
+       "nobles": -3
+      }
+     }
+    },
+    {
+     "label": "Split the takings",
+     "fx": {
+      "loyalty": -2
+     }
+    },
+    {
+     "label": "Take the mill for the crown",
+     "fx": {
+      "coin": 200,
+      "loyalty": -8,
+      "opinion": {
+       "nobles": -5
+      }
+     }
+    }
+   ],
+   "default": 1,
+   "repeatable": true
+  },
+  "lord_heir_debts": {
+   "title": "A lord's heir in debt",
+   "text": "{lord}'s heir has run up debts at the dice tables of Vizima that the house cannot pay. The creditors ask the crown to seize his horses.",
+   "lord": true,
+   "when": {
+    "love": [
+     0,
+     100
+    ]
+   },
+   "choices": [
+    {
+     "label": "Pay the debts quietly",
+     "fx": {
+      "coin": -300,
+      "loyalty": 10
+     }
+    },
+    {
+     "label": "Let the creditors have their due",
+     "fx": {
+      "loyalty": -6,
+      "opinion": {
+       "burghers": 4
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "winter_wolves": {
+   "title": "Wolves at the walls",
+   "text": "The winter is hard. Wolves have come down to {place} and taken children from the edge of the village. The folk want a hunt.",
+   "when": {
+    "season": [
+     "winter"
+    ]
+   },
+   "place": {
+    "types": [
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Pay a bounty for every pelt",
+     "fx": {
+      "coin": -80,
+      "love": 3
+     }
+    },
+    {
+     "label": "Send soldiers to hunt",
+     "fx": {
+      "fear": 1,
+      "love": 2
+     }
+    },
+    {
+     "label": "They must fend for themselves",
+     "fx": {
+      "love": -3,
+      "townUnrest": 4
+     }
+    }
+   ],
+   "default": 2,
+   "repeatable": true
+  },
+  "spring_flood_debt": {
+   "title": "Flooded fields and the rent",
+   "text": "The spring floods have drowned the fields around {place}. The tenants cannot pay this year's rent, and the steward wants to evict them.",
+   "when": {
+    "season": [
+     "spring"
+    ]
+   },
+   "place": {
+    "types": [
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Forgive the year's rent",
+     "fx": {
+      "coin": -100,
+      "love": 4
+     }
+    },
+    {
+     "label": "Evict them",
+     "fx": {
+      "fear": 2,
+      "townUnrest": 6,
+      "prosperity": -3
+     }
+    }
+   ],
+   "default": 1,
+   "repeatable": true
+  },
+  "harvest_festival": {
+   "title": "A harvest festival",
+   "text": "The harvest is in at {place}, the best in years. The town asks the crown to send something for the festival.",
+   "when": {
+    "season": [
+     "autumn"
+    ],
+    "love": [
+     30,
+     100
+    ]
+   },
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Send wine and a royal herald",
+     "fx": {
+      "coin": -100,
+      "love": 4
+     }
+    },
+    {
+     "label": "Send congratulations and a tax collector",
+     "fx": {
+      "coin": 150,
+      "love": -2
+     }
+    }
+   ],
+   "default": 1,
+   "repeatable": true
+  },
+  "summer_drought": {
+   "title": "The wells run dry",
+   "text": "A hot, dry summer. The wells of {place} are failing and the folk say the miller upstream has dammed the stream for his pond.",
+   "when": {
+    "season": [
+     "summer"
+    ]
+   },
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Break the miller's dam",
+     "fx": {
+      "love": 3,
+      "prosperity": -1
+     }
+    },
+    {
+     "label": "Make the miller sell water at a fair price",
+     "fx": {
+      "townUnrest": 2
+     }
+    }
+   ],
+   "default": 1,
+   "repeatable": true
+  },
+  "war_traitor_gate": {
+   "title": "An offer to open a gate",
+   "text": "A burgher of an enemy town has sent word through a merchant at {place}: for a purse of gold he will open a postern gate on a night of the crown's choosing.",
+   "when": {
+    "war": true
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Pay him",
+     "fx": {
+      "coin": -400,
+      "fear": 2
+     }
+    },
+    {
+     "label": "It is a trap. Refuse",
+     "fx": {}
+    }
+   ],
+   "default": 1
+  },
+  "war_widows": {
+   "title": "The war widows",
+   "text": "The widows of {place} have walked to Vizima with their children. Their men died in the crown's war and the harvest will not come in without them.",
+   "when": {
+    "war": true
+   },
+   "place": {
+    "types": [
+     "town",
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Grant each a widow's purse",
+     "fx": {
+      "coin": -250,
+      "love": 5
+     }
+    },
+    {
+     "label": "Send them home with bread",
+     "fx": {
+      "coin": -50,
+      "love": 1
+     }
+    },
+    {
+     "label": "Turn them away",
+     "fx": {
+      "love": -5,
+      "townUnrest": 5
+     }
+    }
+   ],
+   "default": 1
+  },
+  "war_deserter_son": {
+   "title": "A deserter in the family",
+   "text": "{lord}'s youngest son deserted the army before the last battle. The soldiers want him hanged like any other deserter.",
+   "when": {
+    "war": true
+   },
+   "lord": true,
+   "choices": [
+    {
+     "label": "Hang him like any other",
+     "fx": {
+      "fear": 5,
+      "loyalty": -15,
+      "love": 2
+     }
+    },
+    {
+     "label": "Send him to a monastery",
+     "fx": {
+      "loyalty": 4,
+      "opinion": {
+       "nobles": 2
+      },
+      "love": -3
+     }
+    }
+   ],
+   "default": 1
+  },
+  "unrest_agitator": {
+   "title": "An agitator in the square",
+   "text": "A preacher of no faith in particular is telling the crowds at {place} that the crown has forgotten them. Every day the crowd is larger.",
+   "when": {
+    "unrest": [
+     45,
+     100
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Arrest him",
+     "fx": {
+      "fear": 3,
+      "townUnrest": 2
+     }
+    },
+    {
+     "label": "Invite him to court to speak",
+     "fx": {
+      "love": 3,
+      "townUnrest": -4
+     }
+    },
+    {
+     "label": "Let him talk. Talk is cheap",
+     "fx": {
+      "townUnrest": 4
+     }
+    }
+   ],
+   "default": 2,
+   "repeatable": true
+  },
+  "fear_informers": {
+   "title": "Informers everywhere",
+   "text": "Neighbours in {place} are denouncing each other to the watch to settle old scores. The gaols are full of men accused of nothing anyone can name.",
+   "when": {
+    "fear": [
+     60,
+     100
+    ]
+   },
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Empty the gaols",
+     "fx": {
+      "love": 4,
+      "fear": -4
+     }
+    },
+    {
+     "label": "Reward the informers. It keeps them loyal",
+     "fx": {
+      "fear": 5,
+      "love": -4,
+      "coin": -60
+     }
+    }
+   ],
+   "default": 1
+  },
+  "love_petition_saint": {
+   "title": "A king's portrait in the chapel",
+   "text": "The folk of {place} have painted the king's likeness among the saints in their chapel. The priests are uneasy.",
+   "when": {
+    "love": [
+     70,
+     100
+    ]
+   },
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Let it stay",
+     "fx": {
+      "love": 2,
+      "opinion": {
+       "eternal_fire": -4,
+       "melitele": -4
+      }
+     }
+    },
+    {
+     "label": "Ask them, gently, to paint it over",
+     "fx": {
+      "opinion": {
+       "eternal_fire": 3,
+       "melitele": 3
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "bridge_toll": {
+   "title": "A toll on the king's road",
+   "text": "The burghers of {place} have put a toll on their bridge. Carters say it is robbery; the town says the bridge will fall without it.",
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Let the toll stand",
+     "fx": {
+      "opinion": {
+       "burghers": 5,
+       "peasants": -4
+      },
+      "prosperity": 2
+     }
+    },
+    {
+     "label": "Abolish it and pay for the bridge",
+     "fx": {
+      "coin": -150,
+      "love": 2
+     }
+    },
+    {
+     "label": "Take the toll for the crown",
+     "fx": {
+      "coin": 120,
+      "opinion": {
+       "burghers": -8
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "plague_rumour": {
+   "title": "Talk of plague",
+   "text": "A sailor died of a fever at {place}, and the talk in the taverns is of plague. The town wants the gates closed; the merchants want them open.",
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Close the gates for a month",
+     "fx": {
+      "prosperity": -4,
+      "love": 2
+     }
+    },
+    {
+     "label": "Keep them open. It was one sailor",
+     "fx": {
+      "opinion": {
+       "burghers": 4
+      },
+      "townUnrest": 3
+     }
+    },
+    {
+     "label": "Burn the sailor's lodging and keep the gates open",
+     "fx": {
+      "fear": 2,
+      "coin": -40
+     }
+    }
+   ],
+   "default": 1
+  },
+  "refugees_border": {
+   "title": "Refugees at the border",
+   "text": "Families from across the border, burned out by war or famine, have gathered outside {place}. They ask to settle on the empty land by the river.",
+   "place": {
+    "types": [
+     "village",
+     "town"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Let them settle",
+     "fx": {
+      "prosperity": 3,
+      "townUnrest": 4,
+      "love": 1
+     }
+    },
+    {
+     "label": "Turn them back",
+     "fx": {
+      "fear": 2,
+      "love": -1
+     }
+    },
+    {
+     "label": "Let the young men stay for the levy, send the rest on",
+     "fx": {
+      "fear": 1,
+      "townUnrest": 2
+     }
+    }
+   ],
+   "default": 1
+  },
+  "pretender_letter": {
+   "title": "A letter from a pretender",
+   "text": "A man in Redania claims to be a bastard of the old king and writes to {lord} asking for support. {lord} has brought the letter to the crown, sealed.",
+   "lord": true,
+   "choices": [
+    {
+     "label": "Reward {lord}'s honesty",
+     "fx": {
+      "coin": -150,
+      "loyalty": 10
+     }
+    },
+    {
+     "label": "Thank him, and watch him",
+     "fx": {
+      "loyalty": -2,
+      "fear": 1
+     }
+    }
+   ],
+   "default": 1
+  },
+  "tithe_quarrel": {
+   "title": "The priests want their tithe",
+   "text": "The temple at {place} says the crown's tax collectors take the grain before the priests can take their tithe. The priests have stopped saying prayers for the king.",
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "choices": [
+    {
+     "label": "The temple takes its tithe first",
+     "fx": {
+      "coin": -120,
+      "opinion": {
+       "melitele": 5,
+       "eternal_fire": 5
+      }
+     }
+    },
+    {
+     "label": "The crown comes first",
+     "fx": {
+      "opinion": {
+       "melitele": -6,
+       "eternal_fire": -6
+      },
+      "coin": 60
+     }
+    }
+   ],
+   "default": 1
+  },
+  "witcher_fee": {
+   "title": "A witcher wants paying",
+   "text": "A witcher killed the beast that haunted the road near {place}. The villagers clubbed together half his fee and say the crown should pay the rest.",
+   "place": {
+    "types": [
+     "village"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Pay him the rest",
+     "fx": {
+      "coin": -100,
+      "love": 2
+     }
+    },
+    {
+     "label": "Refuse. It is the village's beast",
+     "fx": {
+      "love": -2
+     }
+    },
+    {
+     "label": "Have him run out of the parish",
+     "fx": {
+      "fear": 1,
+      "opinion": {
+       "eternal_fire": 3
+      },
+      "love": -1
+     }
+    }
+   ],
+   "default": 1
+  }
+ }
+}

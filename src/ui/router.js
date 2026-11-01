@@ -3,7 +3,7 @@
 import { escapeHtml } from './format.js';
 import { battleCard, battleTitle } from './battle.js';
 import { segs } from './card.js';
-import { realmTab, meterCard } from './realmTab.js';
+import { realmTab, meterCard, repairOrderHtml } from './realmTab.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { stewardHtml } from './steward.js';
 import { lawsHtml } from './laws.js';
@@ -60,7 +60,7 @@ function tabScreen(app, tab) {
     if (sub === 'trade' || sub === 'routes') html = marketHtml(app);
     else if (sub === 'taxes') html = taxesHtml(app);
     else if (sub === 'industry') html = industryHtml(app);
-    else html = stewardHtml(app) + ledgerHtml(app);
+    else html = stewardHtml(app) + ledgerHtml(app) + repairOrderHtml(app.state);
   } else if (tab === 'military') {
     if (sub === 'threats') html = threatsHtml(app);
     else if (sub === 'garrisons') html = garrisonsHtml(app);

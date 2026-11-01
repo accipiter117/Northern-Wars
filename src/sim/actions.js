@@ -14,6 +14,7 @@ import { addDispatch } from './realm.js';
 import { canDecree, decree } from './laws.js';
 import { canSetStance, setStance, resolveEnvoy } from './neighbours.js';
 import { resolvePetition } from './petitions.js';
+import { resolveDilemma, settlePromises } from './dilemmas.js';
 import { canHouseAction, houseAction, resolveDemand } from './houses.js';
 import { canSetGarrison, resolveEvent } from './military.js';
 import { canRecruit, recruit, canOrderCompany, orderCompany, disbandCompany } from './forces.js';
@@ -34,7 +35,7 @@ import {
   canDeclareWith, declareWithReason, warReasons, resolveRequest,
 } from './audiences.js';
 import { treatyBetween, endTreaty } from './diplomacy.js';
-import { canRepairWorks, startRepair, resolveWorksDecision } from './works.js';
+import { canRepairWorks, startRepair, resolveWorksDecision, setRepairOrder } from './works.js';
 import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin, canPreset, applyPreset, canFocus, setFocus } from './labour.js';
 import { canSignLaw, signLaw, canRepeal, repealLaw } from './book.js';
 import { canFaithAct, doFaithAct, revokeLand } from './faiths.js';
@@ -111,6 +112,7 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     signLaw(next, world, action.law, action.choice ?? null);
+    if (world.dilemmas) settlePromises(next, world);
     return { state: next };
   }
   // The faiths (M26 C): an act or power for a faith, or church land taken back.
@@ -131,6 +133,7 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     repealLaw(next, world, action.law);
+    if (world.dilemmas) settlePromises(next, world);
     return { state: next };
   }
   if (action.type === 'stance') {
@@ -148,6 +151,11 @@ export function applyAction(state, world, action) {
   if (action.type === 'petition') {
     const next = structuredClone(state);
     if (!resolvePetition(next, world, action.id, action.choice)) return { state, error: 'That petition has been settled.' };
+    return { state: next };
+  }
+  if (action.type === 'dilemma') {
+    const next = structuredClone(state);
+    if (!resolveDilemma(next, world, action.id, action.choice)) return { state, error: 'That has been settled, or the treasury cannot bear it.' };
     return { state: next };
   }
   if (action.type === 'house') {
@@ -331,6 +339,12 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     togglePin(next, world, action.settlement, action.building);
+    return { state: next };
+  }
+  // The crown's standing order for repairs (M28 A).
+  if (action.type === 'repairOrder') {
+    const next = structuredClone(state);
+    if (!setRepairOrder(next, action.mode, action.limit ?? null)) return { state, error: 'Unknown order.' };
     return { state: next };
   }
   if (world.spaces && (action.type === 'repair' || action.type === 'worksDecision')) {

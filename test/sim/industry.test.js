@@ -188,6 +188,8 @@ test('every line of the ledger adds up, and every place keeps its account', () =
 
 test('the idle crown declines: its works wear out and its income falls (M20)', () => {
   let s = quiet(createState(world, 1));
+  // An idle crown gives no standing order either: nothing is mended (M28).
+  s.works.order = { mode: 'ask', limit: 0 };
   const yearIn = [];
   for (let m = 0; m < 120; m++) {
     s = quiet(run(s, 30));

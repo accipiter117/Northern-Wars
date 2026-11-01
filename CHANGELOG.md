@@ -1,5 +1,11 @@
 # Changelog
 
+## M28 Dilemmas, not paperwork
+- Repairs leave the inbox. A standing order on the Treasury tab: mend the cheap and ask about the dear (the default, up to 400 crowns), rebuild everything, patch everything, or ask each time. Cheap repairs start by themselves, food and fuel first, with one line a month. The dear ones come to court together, once a month, on one card.
+- 54 dilemmas that follow from the crown's own choices: at least two for every path of the Book of Laws, and more for the faiths, the lords, war, the seasons and everyday matters. Each choice shows what it does before the crown chooses; some lead to a second dilemma weeks later. None returns within two years, save the seasonal ones.
+- Demands for change: the peasants, burghers, lords, the Eternal Fire, Melitele's faithful and the non-humans ask for a law to be signed or struck out. Promise, refuse or crush the agitators. A promise carries a ribbon in the Book of Laws; kept, it is remembered kindly, broken, bitterly.
+- A deposed crown's open questions and promises die with its reign.
+
 ## M27 E New houses
 - When a lord is stripped, exiled or beheaded, his lands wait for a new house. Choose a loyal commander (a captain of one of your armies, a captain of a company that has won its fights, or a loyal younger son) and raise them as lord.
 - The new house is grateful for years, wants little at first and flies a banner of its own over its towns. Until you choose, the crown holds the lands.

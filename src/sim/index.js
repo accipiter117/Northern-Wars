@@ -14,6 +14,7 @@ export { ledgerNet, taxProsperity, debtLove, stewardReport } from './economy.js'
 export { authority, realmUnrest, unrestPressures, nudge, canAct, actRest, ACT_NAMES, taxCollected, musterAnswer, onProgress, threatUnrest, canRiot, sabotage, crownCalm } from './meters.js';
 export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
 export { petitionText } from './petitions.js';
+export { dilemmaText, promiseOn, dilemmasOf, effectLine } from './dilemmas.js';
 export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, demandText } from './houses.js';
 export { informed, realmProsperity, canOpenEmbassy, canSendSpy } from './realms.js';
 export { visionOf, canSee, hasBit } from './vision.js';
@@ -59,7 +60,7 @@ export { stormOdds, wallsOf, canSiegeOrder } from './siege.js';
 export { attritionOf } from './armies.js';
 export { territoryAt, territoryOwners } from './territory.js';
 export {
-  spacesOf, condOf, staffOf, worksFactor, repairOptions, canRepairWorks, worksDecisionText, worksSummary, spaceKindOf,
+  spacesOf, condOf, staffOf, worksFactor, repairOptions, canRepairWorks, worksDecisionText, worksSummary, spaceKindOf, repairOrder, REPAIR_MODES,
 } from './works.js';
 export {
   KINDS as LABOUR_KINDS, splitNow, districtOf, handsOf, kindOfWorks, needOf, canSetSplit, shiftSplit, canCall, canPin, winterOutlook, pressureLine, halfStaffed, presetNow, seasonalPrompt, fuelNeed, farmFactor,

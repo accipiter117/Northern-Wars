@@ -191,7 +191,77 @@ export const outside = (b) => OUTSIDE.has(b);
 
 function works(state) {
   state.works ??= { decisions: [], nextId: 1 };
+  state.works.order ??= { ...DEFAULT_ORDER };
+  state.works.pending ??= [];
   return state.works;
+}
+
+// The crown's standing order for repairs (M28 A): mend the cheap ones
+// without asking and gather the dear ones into one card a month, or mend
+// everything, patch everything, or ask each time as before.
+export const REPAIR_MODES = ['cheap', 'rebuild', 'patch', 'ask'];
+const DEFAULT_ORDER = { mode: 'cheap', limit: 400 };
+
+export function repairOrder(state) {
+  return state.works?.order ?? DEFAULT_ORDER;
+}
+
+export function setRepairOrder(state, mode, limit = null) {
+  const w = works(state);
+  if (!REPAIR_MODES.includes(mode)) return false;
+  w.order = { mode, limit: limit ?? w.order.limit ?? DEFAULT_ORDER.limit };
+  // Asking again: what waited goes back to the inbox one by one.
+  if (mode === 'ask') {
+    for (const p of w.pending) if (!w.decisions.some((d) => d.town === p.town && d.works === p.works)) w.decisions.push({ id: w.nextId++, kind: 'repair', town: p.town, works: p.works, day: state.day });
+    w.pending = [];
+  }
+  return true;
+}
+
+// What matters most is mended first: food, then fuel, then walls.
+const URGENT = { fields: 0, fishery: 0, mill: 0, granary: 0, pasture: 1, lumber: 1, charcoal: 1, peat: 1, walls: 2 };
+
+// Once a month: start what the order allows, and gather the rest.
+function runRepairOrder(state, world) {
+  const w = works(state);
+  const { mode, limit } = w.order;
+  if (mode === 'ask') return;
+  // Old one-by-one questions join the order.
+  for (const d of w.decisions.filter((x) => x.kind === 'repair')) if (!w.pending.some((p) => p.town === d.town && p.works === d.works)) w.pending.push({ town: d.town, works: d.works });
+  w.decisions = w.decisions.filter((x) => x.kind !== 'repair');
+  const live = (p) => {
+    const t = state.settlements[p.town];
+    return t && !t.occupier && t.buildings.includes(p.works) && !t.repair?.[p.works] && condOf(t, p.works) < C(world).decideBelow;
+  };
+  w.pending = w.pending.filter(live).sort((a, b) => (URGENT[a.works] ?? 3) - (URGENT[b.works] ?? 3) || condOf(state.settlements[a.town], a.works) - condOf(state.settlements[b.town], b.works));
+  let mended = 0;
+  let spent = 0;
+  const dear = [];
+  for (const p of [...w.pending]) {
+    const kind = mode === 'patch' ? 'patch' : 'rebuild';
+    const o = repairOptions(state, world, p.town, p.works)[kind];
+    if (mode === 'cheap' && o.coin > limit) {
+      dear.push(p);
+      continue;
+    }
+    // Never into debt without the crown's word.
+    if (state.treasury - o.coin < 0) break;
+    const c = canRepairWorks(state, world, p.town, p.works, kind);
+    if (!c.ok) continue;
+    startRepair(state, world, p.town, p.works, kind, { quiet: true });
+    mended += 1;
+    spent += o.coin;
+    w.pending = w.pending.filter((q) => q !== p);
+  }
+  if (mended) say(state, `Repairs this month: ${mended} works sent masons or carpenters, ${spent} crowns, under the crown's standing order.`);
+  // The dear ones wait for one card a month.
+  if (dear.length) {
+    const open = w.decisions.find((d) => d.kind === 'batch');
+    if (open) {
+      for (const p of dear) if (!open.items.some((q) => q.town === p.town && q.works === p.works)) open.items.push({ town: p.town, works: p.works });
+    } else w.decisions.push({ id: w.nextId++, kind: 'batch', items: dear.map((p) => ({ town: p.town, works: p.works })), day: state.day });
+    w.pending = w.pending.filter((p) => !dear.includes(p));
+  }
 }
 
 function askAbout(state, world, id, b) {
@@ -202,6 +272,12 @@ function askAbout(state, world, id, b) {
   if (s.left?.[b] !== undefined && condOf(s, b) > s.left[b] - (C(world).askAgain ?? 25)) return;
   const w = works(state);
   if (w.decisions.some((d) => d.town === id && d.works === b)) return;
+  if (w.decisions.some((d) => d.kind === 'batch' && d.items.some((q) => q.town === id && q.works === b))) return;
+  // Under a standing order it waits for the month's round, not the inbox.
+  if (w.order.mode !== 'ask') {
+    if (!w.pending.some((p) => p.town === id && p.works === b)) w.pending.push({ town: id, works: b });
+    return;
+  }
   w.decisions.push({ id: w.nextId++, kind: 'repair', town: id, works: b, day: state.day });
 }
 
@@ -255,7 +331,7 @@ export function canRepairWorks(state, world, id, b, kind) {
   return { ok: true, ...o, borrow: state.treasury - o.coin < 0 };
 }
 
-export function startRepair(state, world, id, b, kind) {
+export function startRepair(state, world, id, b, kind, { quiet = false } = {}) {
   const s = state.settlements[id];
   const o = repairOptions(state, world, id, b)[kind];
   state.treasury -= o.coin;
@@ -275,9 +351,10 @@ export function startRepair(state, world, id, b, kind) {
       left -= take;
     }
   }
-  (s.repair ??= {})[b] = { kind, days: o.days, daysLeft: o.days, to: o.to, hands: o.hands, since: state.day };
+  (s.repair ??= {})[b] = { kind, days: o.days, daysLeft: o.days, to: o.to, hands: o.hands, since: state.day, ...(quiet ? { quiet: true } : {}) };
   if (s.left) delete s.left[b];
   resolveAbout(state, id, b);
+  if (quiet) return;
   const name = world.buildings[b].name.toLowerCase();
   say(state, kind === 'rebuild'
     ? `Masons go to rebuild the ${name} at ${world.byId[id].name}: ${o.coin} crowns, about ${o.days} days.`
@@ -298,11 +375,15 @@ export function leaveWorks(state, world, id, b) {
 function resolveAbout(state, id, b) {
   const w = works(state);
   w.decisions = w.decisions.filter((d) => !(d.town === id && d.works === b));
+  w.pending = w.pending.filter((p) => !(p.town === id && p.works === b));
+  for (const d of w.decisions) if (d.kind === 'batch') d.items = d.items.filter((q) => !(q.town === id && q.works === b));
+  w.decisions = w.decisions.filter((d) => d.kind !== 'batch' || d.items.length);
 }
 
 export function resolveWorksDecision(state, world, id, choice) {
   const d = works(state).decisions.find((x) => x.id === id);
   if (!d) return { error: 'That matter is settled.' };
+  if (d.kind === 'batch') return resolveBatch(state, world, d, choice);
   const kind = ['rebuild', 'patch', 'leave'][choice];
   if (!kind) return { error: 'Unknown choice.' };
   if (kind === 'leave') {
@@ -315,7 +396,57 @@ export function resolveWorksDecision(state, world, id, choice) {
   return {};
 }
 
+// The month's dear repairs, answered together.
+function batchCost(state, world, d, kind) {
+  return d.items.reduce((a, q) => a + (state.settlements[q.town] ? repairOptions(state, world, q.town, q.works)[kind].coin : 0), 0);
+}
+
+function resolveBatch(state, world, d, choice) {
+  const kind = ['rebuild', 'patch', 'leave'][choice];
+  if (!kind) return { error: 'Unknown choice.' };
+  const items = [...d.items];
+  if (kind === 'leave') {
+    for (const q of items) if (state.settlements[q.town]) leaveWorks(state, world, q.town, q.works);
+    works(state).decisions = works(state).decisions.filter((x) => x !== d);
+    return {};
+  }
+  let done = 0;
+  for (const q of items) {
+    if (!state.settlements[q.town]) continue;
+    const c = canRepairWorks(state, world, q.town, q.works, kind);
+    if (!c.ok || state.treasury - c.coin < 0) continue;
+    startRepair(state, world, q.town, q.works, kind, { quiet: true });
+    done += 1;
+  }
+  if (!done) return { error: 'The treasury cannot bear any of them now.' };
+  const w = works(state);
+  const left = w.decisions.find((x) => x === d);
+  // What the treasury could not bear waits for next month's round.
+  if (left) {
+    for (const q of left.items) if (!w.pending.some((p) => p.town === q.town && p.works === q.works)) w.pending.push({ town: q.town, works: q.works });
+    w.decisions = w.decisions.filter((x) => x !== d);
+  }
+  say(state, `${done} of the dear repairs begun: ${kind === 'rebuild' ? 'masons' : 'carpenters'} are on their way.`);
+  return {};
+}
+
 export function worksDecisionText(state, world, d) {
+  if (d.kind === 'batch') {
+    const lines = d.items.filter((q) => state.settlements[q.town]).map((q) => {
+      const o = repairOptions(state, world, q.town, q.works);
+      return `${world.buildings[q.works]?.name ?? q.works} at ${world.byId[q.town].name} (${round(o.cond)} in a hundred): ${o.rebuild.coin} crowns`;
+    });
+    return {
+      kicker: 'The dear repairs',
+      title: `${lines.length} costly repair${lines.length === 1 ? '' : 's'} wait on the crown`,
+      text: `${lines.join('; ')}. The cheaper ones are mended under the standing order without asking.`,
+      choices: [
+        `Rebuild them all: about ${batchCost(state, world, d, 'rebuild')} crowns (as many as the treasury bears)`,
+        `Patch them all: about ${batchCost(state, world, d, 'patch')} crowns`,
+        'Leave them all: costs nothing, the towns go without',
+      ],
+    };
+  }
   const s = state.settlements[d.town];
   const name = world.buildings[d.works]?.name ?? d.works;
   const o = repairOptions(state, world, d.town, d.works);
@@ -357,13 +488,20 @@ export function stepWorksDay(state, world) {
       delete s.repair[b];
       if (r.to >= 100 && s.cond) delete s.cond[b];
       if (state.reign) state.reign.built += 1;
-      say(state, `The ${world.buildings[b].name.toLowerCase()} at ${world.byId[id].name} is ${r.kind === 'rebuild' ? 'whole again' : 'patched up and working'}.`);
+      if (!r.quiet) say(state, `The ${world.buildings[b].name.toLowerCase()} at ${world.byId[id].name} is ${r.kind === 'rebuild' ? 'whole again' : 'patched up and working'}.`);
     }
   }
-  // Repair questions the crown never answered: the works is left.
+  // Repair questions the crown never answered: the works is left. The
+  // month's dear repairs, unanswered, are mended as far as the coin goes.
   const w = works(state);
   for (const d of [...w.decisions]) {
-    if (state.day - d.day >= cfg.decisionDays) leaveWorks(state, world, d.town, d.works);
+    if (state.day - d.day < cfg.decisionDays) continue;
+    if (d.kind === 'batch') {
+      if (resolveBatch(state, world, d, 0).error) {
+        for (const q of d.items) if (!w.pending.some((p) => p.town === q.town && p.works === q.works)) w.pending.push({ town: q.town, works: q.works });
+        w.decisions = w.decisions.filter((x) => x !== d);
+      }
+    } else leaveWorks(state, world, d.town, d.works);
   }
 }
 
@@ -434,6 +572,7 @@ export function monthlyWorks(state, world, rng) {
     }
   }
   abroadRepairs(state, world);
+  runRepairOrder(state, world);
 }
 
 // Foreign rulers mend what they can afford, the worst first.
@@ -482,7 +621,7 @@ export function worksSummary(s) {
 }
 
 export function defaultWorks() {
-  return { decisions: [], nextId: 1 };
+  return { decisions: [], nextId: 1, order: { ...DEFAULT_ORDER }, pending: [] };
 }
 
 // ---- Old saves ----

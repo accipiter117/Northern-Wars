@@ -19,6 +19,7 @@
   "conquest": "data/conquest.json", "spaces": "data/spaces.json", "labour": "data/labour.json", "market": "data/market.json", "meters": "data/meters.json",
   "book": "data/book.json",
   "devotion": "data/devotion.json",
+  "dilemmas": "data/dilemmas.json",
   "northIds": "data/north-ids.json",
   "start": {
     "year": 1262,

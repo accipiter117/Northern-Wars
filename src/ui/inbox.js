@@ -5,6 +5,7 @@
 // raise a banner across the top.
 import {
   houseDef, judgementEffects, crimesOf, JUDGEMENTS, candidatesFor,
+  dilemmaText,
   TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText, worksDecisionText, envoysWaiting,
 } from '../sim/index.js';
 import { escapeHtml } from './format.js';
@@ -62,7 +63,15 @@ export function pendingDecisions(state, world, acked = Infinity) {
     const t = worksDecisionText(state, world, d);
     out.push({
       key: `worksDecision:${d.id}`, kind: 'worksDecision', id: d.id, daysLeft: left(d.day, world.works?.decisionDays ?? 30),
-      kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: 2, town: d.town,
+      kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: d.kind === 'batch' ? 0 : 2, town: d.town,
+    });
+  }
+  // Dilemmas that follow from the crown's laws, and demands for change (M28).
+  for (const o of state.dilemmas?.open ?? []) {
+    const t = dilemmaText(state, world, o);
+    out.push({
+      key: `dilemma:${o.id}`, kind: 'dilemma', id: o.id, daysLeft: left(o.day, world.dilemmas?.defaultDays ?? 30),
+      kicker: t.kicker, title: t.title, text: t.text, choices: t.choices, fallback: t.fallback, town: t.place,
     });
   }
   for (const p of state.events ?? []) {
@@ -113,7 +122,12 @@ export function decisionHtml(d, { compact = false } = {}) {
       <button type="button" class="danger" data-new-reign><b>Start a new reign</b><br><small>A fresh Temeria.</small></button>
       <button type="button" data-go="deposition">The reign in full</button>`;
   } else {
-    choices = d.choices.map((label, i) => `<button type="button" data-choice="${i}" ${orderAttr({ type: d.kind, id: d.id, choice: i })}>${escapeHtml(label)}${i === d.fallback ? ' <small>(taken if unanswered)</small>' : ''}</button>`).join('');
+    // A choice may carry a line of what it does (M28), shown before choosing.
+    choices = d.choices.map((c, i) => {
+      const label = typeof c === 'string' ? c : c.label;
+      const hint = typeof c === 'string' ? '' : c.hint;
+      return `<button type="button" data-choice="${i}" ${orderAttr({ type: d.kind, id: d.id, choice: i })}>${escapeHtml(label)}${i === d.fallback ? ' <small>(taken if unanswered)</small>' : ''}${hint ? `<br><small class="choice-fx">${escapeHtml(hint)}</small>` : ''}</button>`;
+    }).join('');
     // A ruler's proposal can be bargained over at the deal table.
     if (d.kind === 'envoyAway') choices = `<button type="button" data-audience="${d.realm}"><b>Hold the audience</b></button>${choices}`;
     if (d.kind === 'request') choices += `<button type="button" data-audience="${d.realm}"${d.deal ? ` data-audience-deal='${escapeHtml(JSON.stringify(d.deal))}'` : ''}>${d.deal ? 'Hear them out' : 'Grant an audience'}</button>`;
