@@ -213,13 +213,15 @@ export function chronicleHtml(state, filter = 'all') {
     `<button type="button" class="chip${k === filter ? ' on' : ''}" data-chronicle="${k}" aria-pressed="${k === filter}">${label}</button>`).join(' ');
   let year = null;
   const items = [];
-  // With fifteen realms' news (M30 B), "All" shows the newest fourteen; a
-  // kind above shows the rest of its own.
+  // With fifteen realms' news (M30 B), "All" shows the newest fourteen and
+  // the reign's opening; a kind above shows the rest of its own.
   let shown = 0;
   let more = 0;
+  const first = state.chronicle[0];
   for (const d of state.chronicle.slice().reverse()) {
     if (filter !== 'all' && (d.kind ?? 'realm') !== filter) continue;
-    if (filter === 'all' && shown >= CHRONICLE_ALL) { more++; continue; }
+    // The reign's opening words always stay, at the foot.
+    if (filter === 'all' && shown >= CHRONICLE_ALL && d !== first) { more++; continue; }
     shown++;
     const y = dateOf(d.day).year;
     if (y !== year) {
