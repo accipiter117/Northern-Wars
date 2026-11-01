@@ -366,6 +366,7 @@
     },
     "kovir": {
       "tier": "middle",
+      "neutral": true,
       "capital": "lan_exeter",
       "colours": [
         "#3a5a7a",

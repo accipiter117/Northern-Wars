@@ -46,7 +46,7 @@ export function raidTargets(state, world, rid) {
   for (const realm of c.targets) {
     if (realm === bound || realm === rid) continue;
     if (realm !== TEMERIA && (!state.realms[realm] || state.realms[realm].fallen)) continue;
-    if (treatyBetween(state, rid, realm, 'alliance') || treatyBetween(state, rid, realm, 'defensive')) continue;
+    if (treatyBetween(state, rid, realm, 'alliance')) continue;
     if (realm === TEMERIA && (z.paid > state.day || (state.neighbours[rid]?.relation ?? 0) >= c.spareAbove)) continue;
     // A vassal of the crown is spared while the crown has paid.
     if (realm !== TEMERIA && suzerainOf(state, realm) === TEMERIA && (z.paid > state.day || (state.neighbours[rid]?.relation ?? 0) >= c.spareAbove)) continue;

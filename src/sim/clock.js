@@ -176,7 +176,8 @@ function pressure(state, world, rng, rid) {
 function league(state, world, rng, rid) {
   const c = K(world).league;
   const k = clockOf(state);
-  const north = livingRealms(state).filter((r) => r !== rid && !state.realms[r].lawless && suzerainOf(state, r) !== rid && world.diplomacy?.rulers[r]);
+  // Neutral crowns (Kovir) and Brokilon keep out of it.
+  const north = livingRealms(state).filter((r) => r !== rid && r !== 'brokilon' && !state.realms[r].lawless && !world.realms.realms[r]?.neutral && suzerainOf(state, r) !== rid && world.diplomacy?.rulers[r]);
   const fear = (r) => state.conquest?.fear?.[r]?.[rid] ?? 0;
   const avg = north.reduce((a, r) => a + fear(r), 0) / Math.max(1, north.length);
   if (!k.league && avg >= c.at) {
