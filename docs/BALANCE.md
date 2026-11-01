@@ -80,6 +80,24 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
   - Angren never stays taken: Sodden and Lyria take its towns now and then (5% a month times their aggression), and outlaws throw thin garrisons out (up to 6% a month, none at 250 men). At year ten it holds two or three of its four towns. The first pass treated Angren as an ordinary realm: Lyria declared war on it and took every town within six months, and its "ruler" went into exile.
   - Meve starts no war in these runs: her neighbours are great powers (Aedirn), Mahakam and Angren (no war needed there), and a middle crown seldom takes on a great power alone (M29). Part F tunes her to fight.
 
+- **Part F (thirty years untended)**, seeds 1 to 3, from `node tools/widernorth.mjs 30 1,2,3`:
+
+| Seed | War on the clock | Empire's towns (from 11) | Cintra's capital | Wars the Empire started | Kovir's wars | Skellige's raids | Angren changed hands | Spheres shifted |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | month 14 | 18, 20, 20, 28, 28, 22 | imperial at year 5, Cintran from year 10 | 15 | none | 129 (2 to 7 a year) | 66 times | 13 |
+| 2 | month 34 | 14, 18, 20, 18, 22, 22 | imperial at year 20, else Cintran | 10 | none | 129 (2 to 7 a year) | 44 times | 15 |
+| 3 | month 35 | 14, 18, 20, 20, 20, 20 | Cintran at every count | 8 | none | 135 (2 to 7 a year) | 51 times | 7 |
+
+  (Empire's towns at years 5, 10, 15, 20, 25 and 30.)
+  - **The Empire** goes to war as soon as its gate opens and keeps returning (8 to 15 wars in thirty years). It takes Cintra's southern towns (Attre, Hochebuz, Ortagor and the like) and nearly doubles its holdings, and on two seeds of three it takes Cintra itself, but the capital's stone walls and its allies win it back within five years. The brief's aim, the Empire holding Cintra and pressing the crossings, is only partly met: Sodden and Brugge stay northern (or become the Empire's vassals by the clock's courting). Two first passes were worse: the clock's musters dispersed whenever the Emperor's monthly posture was not "expand" (the Empire sat at War for years without marching), and its army bled away as its treasury ran dry (now a heartland subsidy of 900 a month at War, and a cap of 14,000).
+  - **Kovir** grows from about 23,000 to 23,000 to 35,000 crowns and fights no war on any seed (neutral: no alliances or defensive pacts, no league). Before Part F it was drawn into two wars by the league against the Empire.
+  - **Meve** fights in 4 to 9 wars, nearly all answering the league or allies; she starts one or two of her own on one seed.
+  - **Angren** never settles: its towns change hands 44 to 66 times, and two to four of its four are free at each count.
+  - **Skellige** raids every year on every seed.
+  - **Spheres** shift 7 to 15 times; no northern power holds more than four vassals (Redania, counting Mahakam's protectorate), and the Empire holds two or three (Toussaint and northern petty kings it courted).
+  - **The league** against the Empire forms on every seed. At first (average fear 20, members at 25, answering one call in three) it took in almost the whole North at once, Kovir and Brokilon included, and the Empire's first war met everyone.
+  - **Performance**: a month of the North takes about 5 to 7 ms a day in Node with eighteen realms (the test allows 60). Rulers now think on 18 different days of the month instead of all on the first.
+
 ### Crowns and vassals (M29)
 Twenty years untended (the crown takes no vassals), seeds 1 to 4, from `step` alone:
 
