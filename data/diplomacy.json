@@ -2,7 +2,7 @@
   "note": "Audiences with rulers (M17). Rulers belong to a party (a realm id today; lands beyond and powers without land can be added here later with no code changes). Traits and agendas shape how each ruler values every item and treaty. Values are in crowns: what an item is worth to the ruler weighing it. Trust runs 0 to 100 and is a lasting memory, separate from mood.",
   "tiers": {
     "note": "M29 A: the titles a suzerain wins with each vassal, shown in its ruler's style; how petty rulers keep their distance (they ask a great power for an audience only at relation audienceAbove or more, or with an offer worth bigOffer crowns or more to the crown; otherwise, at requestChance a month, they send a short request as a dilemma); and middle and petty crowns' appetite for a war on a great power alone (its weight times middleVsGreat or pettyVsGreat).",
-    "titles": { "sodden": "Prince of Sodden", "brugge": "Protector of Brugge", "mahakam": "Protector of Mahakam", "verden": "Overlord of Verden", "cidaris": "Lord of the Cidarian Coast", "kerack": "Protector of Kerack", "cintra": "Protector of Cintra" },
+    "titles": { "sodden": "Prince of Sodden", "brugge": "Protector of Brugge", "mahakam": "Protector of Mahakam", "verden": "Overlord of Verden", "cidaris": "Lord of the Cidarian Coast", "kerack": "Protector of Kerack", "cintra": "Protector of Cintra", "hengfors": "Protector of the Hengfors League" },
     "audienceAbove": 50,
     "bigOffer": 1500,
     "requestChance": 0.35,
@@ -199,6 +199,44 @@
         "town": "dillingen"
       },
       "emblem": "lion"
+    },
+    "kovir": {
+      "id": "esterad",
+      "name": "Esterad Thyssen",
+      "title": "King",
+      "traits": [
+        "greedy",
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "trade"
+      },
+      "emblem": "ship"
+    },
+    "hengfors": {
+      "id": "niedamir",
+      "name": "Niedamir",
+      "title": "King",
+      "traits": [
+        "cautious"
+      ],
+      "agenda": {
+        "kind": "borders"
+      },
+      "emblem": "wolf"
+    },
+    "lyria_rivia": {
+      "id": "meve",
+      "name": "Meve",
+      "title": "Queen",
+      "traits": [
+        "ambitious",
+        "honourable"
+      ],
+      "agenda": {
+        "kind": "borders"
+      },
+      "emblem": "eagle"
     }
   },
   "traits": {
@@ -362,7 +400,8 @@
         "kerack",
         "cidaris",
         "verden",
-        "brugge"
+        "brugge",
+        "hengfors"
       ],
       "power": 2,
       "tribute": 40

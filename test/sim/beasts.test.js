@@ -21,11 +21,17 @@ const beast = (terrain, species, count) => ({ kind: 'monsters', terrain, species
 test('a company sent after a lair off the road reaches it and finishes the hunt', () => {
   // Seed 1's wolves lie some way off the road past Anchor: before the fix
   // the company walked back and forth between the town and the lair for ever.
-  let s = run(createState(world, 1), 200);
+  // An ordinary lair (the supernatural is witchers' work, below). Which
+  // lairs stand by day 200 shifts with the North's dice, so the first seed
+  // that has one sighted is used.
+  const ordinary = (st) => st.threats.list.filter((x) => x.kind === 'monsters' && !x.abroad && x.sighted && !speciesOf(world, x).supernatural).sort((a, b) => a.count - b.count)[0];
+  let s = null;
+  for (let seed = 1; seed <= 6 && !(s && ordinary(s)); seed++) s = run(createState(world, seed), 200);
+  const t = ordinary(s);
+  assert.ok(t, 'a lair to hunt');
   s.treasury = 20000;
   s = act(s, { type: 'recruit', settlement: 'vizima', kind: 'menatarms' });
   const c = s.forces.companies.at(-1);
-  const t = s.threats.list.filter((x) => x.kind === 'monsters' && !x.abroad && x.sighted).sort((a, b) => a.count - b.count)[0];
   s = act(s, { type: 'company', id: c.id, order: { kind: 'hunt', threat: t.id } });
   for (let d = 0; d < 70 && s.threats.list.some((x) => x.id === t.id); d += 3) s = run(s, 3);
   assert.ok(!s.threats.list.some((x) => x.id === t.id), 'the lair is cleared');

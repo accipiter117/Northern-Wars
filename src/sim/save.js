@@ -6,7 +6,7 @@ import { defaultThreats, threatCap } from './threats.js';
 import { defaultMeters, realmUnrest } from './meters.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
-import { STATE_VERSION, newSettlement, defaultWar } from './state.js';
+import { STATE_VERSION, newSettlement, defaultWar, createState } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
 import { defaultDiplomacy, makeTreaty } from './diplomacy.js';
@@ -393,7 +393,39 @@ const MIGRATIONS = {
     state.version = 30;
     return state;
   },
+  // M30 B: four realms wake (Kovir and Poviss, the Hengfors League, Lyria
+  // and Rivia, and lawless Angren). Each joins as it would stand at the
+  // start of a reign: its towns, garrisons and treasury, the crown's
+  // relation with it, its faith, and the North's trust in it.
+  30(state, world) {
+    addMissingRealms(state, world);
+    state.version = 31;
+    return state;
+  },
 };
+
+// Realms the world has and the save does not: taken from a fresh reign.
+export function addMissingRealms(state, world) {
+  const missing = Object.keys(world.foreignByRealm ?? {}).filter((rid) => !state.realms?.[rid]);
+  if (!missing.length) return [];
+  const fresh = createState(world, state.seed ?? 1);
+  for (const rid of missing) {
+    state.realms[rid] = fresh.realms[rid];
+    if (fresh.neighbours[rid]) state.neighbours[rid] = fresh.neighbours[rid];
+    if (state.faiths?.realms && fresh.faiths?.realms?.[rid]) state.faiths.realms[rid] = fresh.faiths.realms[rid];
+    for (const [key, table] of [['conquest', 'fear'], ['diplomacy', 'trust']]) {
+      const mine = state[key]?.[table];
+      const theirs = fresh[key]?.[table];
+      if (!mine || !theirs) continue;
+      if (theirs[rid]) mine[rid] = theirs[rid];
+      for (const [other, row] of Object.entries(theirs)) {
+        if (other !== rid && row && typeof row === 'object' && rid in row) (mine[other] ??= {})[rid] = row[rid];
+      }
+    }
+  }
+  syncWorld(world, state);
+  return missing;
+}
 
 // Swap every reference to a vanished foreign town for its replacement: as a
 // value anywhere in the state, and as a key (what the crown last saw of it).

@@ -213,7 +213,7 @@ export function canGiveOrder(state, world, o) {
     if (problem) return { ok: false, reason: problem };
     return { ok: true };
   }
-  if (o.kind === 'envoy') return { ok: true };
+  if (o.kind === 'envoy') return state.realms[o.realm].lawless ? { ok: false, reason: `${sideName(world, o.realm)} has no court to send an envoy to.` } : { ok: true };
   return { ok: false, reason: 'Unknown order.' };
 }
 

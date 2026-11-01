@@ -137,7 +137,21 @@
     "cintra": [
       "horses",
       "salt"
-    ]
+    ],
+    "kovir": [
+      "arms",
+      "cloth",
+      "spirit",
+      "salt"
+    ],
+    "hengfors": [
+      "horses"
+    ],
+    "lyria_rivia": [
+      "arms",
+      "horses"
+    ],
+    "angren": []
   },
   "silver": {
     "amount": 40

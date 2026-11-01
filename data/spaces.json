@@ -1057,6 +1057,138 @@
         "name": "the open fields"
       }
     ],
+    "hengfors_city": [
+      {
+        "kind": "river",
+        "name": "the Braa"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "malleore": [
+      {
+        "kind": "forest",
+        "name": "Malleore woods"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "creyden": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "crinfrid": [
+      {
+        "kind": "river",
+        "name": "the Braa"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "barefield": [
+      {
+        "kind": "mountain",
+        "name": "Kestrel Mountains"
+      },
+      {
+        "kind": "river",
+        "name": "the Braa"
+      }
+    ],
+    "tancarville": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "lan_exeter": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "pont_vanis": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "talgar": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "tridam": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
     "ard_carraigh": [
       {
         "kind": "river",
@@ -1301,6 +1433,78 @@
       {
         "kind": "mountain",
         "name": "Dol Blathanna heights"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "rivia": [
+      {
+        "kind": "river",
+        "name": "the Yaruga"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "lyria": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "ratsburg": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "spalla": [
+      {
+        "kind": "river",
+        "name": "the Yaruga"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "scala": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "dillmoor": [
+      {
+        "kind": "river",
+        "name": "the Yaruga"
       },
       {
         "kind": "plain",
@@ -1645,6 +1849,20 @@
         "name": "the curtain walls"
       }
     ],
+    "glevitzingen": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
     "duen_canell": [
       {
         "kind": "forest",
@@ -1657,6 +1875,36 @@
       {
         "kind": "defences",
         "name": "the walls"
+      }
+    ],
+    "carrow": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "burnt_holt": [
+      {
+        "kind": "mountain",
+        "name": "Mount Gorgon"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "mirefall": [
+      {
+        "kind": "mountain",
+        "name": "Tir Tochair"
+      },
+      {
+        "kind": "river",
+        "name": "the Solveigh"
       }
     ]
   },

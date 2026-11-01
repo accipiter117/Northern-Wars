@@ -8,6 +8,7 @@ import { addDispatch, clamp } from './realm.js';
 import { ownerOf, leviedMap, besieged } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
 import { monthlyStrategy, armyUpkeep } from './strategy.js';
+import { monthlyFrontier } from './frontier.js';
 import { integrationFactor } from './conquest.js';
 import { startingWorks, worksFactor, upkeepFactor } from './works.js';
 import { giveWorks } from './state.js';
@@ -25,6 +26,8 @@ export function defaultRealms(world) {
       if (world.spaces) giveWorks(settlements[id], startingWorks(world, id, rid));
     }
     out[rid] = { treasury: 1000, settlements };
+    // A lawless frontier (M30 B) is fair game to all: see frontier.js.
+    if (R(world).realms[rid]?.lawless) out[rid].lawless = true;
   }
   return out;
 }
@@ -162,6 +165,8 @@ export function monthlyRealms(state, world, rng) {
   }
   // Rulers take stock and choose their course before they build or arm.
   if (st) monthlyStrategy(state, world, rng);
+  // The lawless frontier (M30 B): the strong take its towns; outlaws rise.
+  monthlyFrontier(state, world, rng);
   for (const [rid, realm] of Object.entries(state.realms)) {
     if (realm.fallen) continue;
     // Since M20 no one builds: rulers mend what their land gave them (works.js).

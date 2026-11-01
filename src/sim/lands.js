@@ -299,7 +299,8 @@ function faithGap(a, b) {
 function fallenRealms(state, world, moved) {
   for (const rid of Object.keys(state.realms)) {
     const realm = state.realms[rid];
-    if (realm.fallen || (world.foreignByRealm[rid] ?? []).length) continue;
+    // A lawless frontier has no ruler to fall: emptied, it waits (M30 B).
+    if (realm.fallen || realm.lawless || (world.foreignByRealm[rid] ?? []).length) continue;
     const last = moved.filter((m) => m.from === rid).at(-1);
     fallRealm(state, world, rid, last?.to ?? TEMERIA);
   }
@@ -336,7 +337,7 @@ export function fallRealm(state, world, rid, by) {
 export function hostOf(state, world, rid, by) {
   let best = null;
   for (const [pid, realm] of Object.entries(state.realms)) {
-    if (pid === rid || pid === by || realm.fallen || pid === 'brokilon') continue;
+    if (pid === rid || pid === by || realm.fallen || realm.lawless || pid === 'brokilon') continue;
     const view = by === TEMERIA ? state.neighbours[pid]?.relation ?? 0 : affinity(state, world, pid, by);
     if (!best || view < best.v) best = { pid, v: view };
   }

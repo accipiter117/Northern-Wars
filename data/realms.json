@@ -87,9 +87,71 @@
       "population": 300,
       "garrison": 0,
       "prosperity": 50
+    },
+    "lan_exeter": {
+      "population": 16000,
+      "garrison": 700,
+      "prosperity": 80
+    },
+    "pont_vanis": {
+      "population": 12000,
+      "garrison": 500,
+      "prosperity": 76
+    },
+    "tridam": {
+      "population": 3000,
+      "garrison": 150,
+      "prosperity": 62
+    },
+    "hengfors_city": {
+      "population": 5000,
+      "garrison": 300,
+      "prosperity": 44
+    },
+    "lyria": {
+      "population": 9000,
+      "garrison": 600,
+      "prosperity": 54
+    },
+    "rivia": {
+      "population": 7000,
+      "garrison": 450,
+      "prosperity": 52
+    },
+    "glevitzingen": {
+      "population": 900,
+      "garrison": 40,
+      "prosperity": 28
+    },
+    "carrow": {
+      "population": 120,
+      "garrison": 60,
+      "prosperity": 22
+    },
+    "burnt_holt": {
+      "population": 180,
+      "garrison": 5,
+      "prosperity": 20
+    },
+    "mirefall": {
+      "population": 160,
+      "garrison": 5,
+      "prosperity": 20
     }
   },
-  "tierNote": "M29: each realm's tier. Great powers (Temeria, Redania, Kaedwen, Aedirn) court and protect; middle crowns (Cintra) act as rulers do but rarely start trouble with a great power alone; petty kingdoms keep their distance from great kings and seek protection; Mahakam is petty but can only ever be a protectorate; Brokilon sits outside the tiers (none).",
+  "frontier": {
+    "note": "M30 B: the lawless frontier (Angren). Each month a neighbouring realm with a ruler takes a free town within reach (map units from one of its own towns) with chance takeChance times its war aggression, if its soldiers number strengthPer times the town's garrison, and holds it with at least holdWith men. Outlaws rise in a frontier town held by anyone else with chance revolt a month, falling to nothing as its garrison nears safeGarrison; the town returns to the frontier with outlaws men. The frontier's wilds are wildLevel points wilder than their ground alone (no law at all) and breed camps and lairs wildness times as often as settled country.",
+    "reach": 220,
+    "takeChance": 0.05,
+    "strengthPer": 4,
+    "holdWith": 60,
+    "revolt": 0.06,
+    "safeGarrison": 250,
+    "outlaws": 25,
+    "wildness": 3,
+    "wildLevel": 15
+  },
+  "tierNote": "M29: each realm's tier. Great powers (Temeria, Redania, Kaedwen, Aedirn) court and protect; middle crowns (Cintra) act as rulers do but rarely start trouble with a great power alone; petty kingdoms keep their distance from great kings and seek protection; Mahakam is petty but can only ever be a protectorate; Brokilon sits outside the tiers (none). M30 B: Kovir and Poviss and Lyria and Rivia are middle crowns, the Hengfors League a petty kingdom, and Angren lawless (tier none, no ruler: its towns go to whoever takes them).",
   "realms": {
     "redania": {
       "tier": "great",
@@ -246,6 +308,58 @@
         "workshop",
         "granary"
       ]
+    },
+    "kovir": {
+      "tier": "middle",
+      "capital": "lan_exeter",
+      "colours": [
+        "#3a5a7a",
+        "#e8d48a"
+      ],
+      "builds": [
+        "market",
+        "workshop",
+        "walls",
+        "granary",
+        "mill"
+      ]
+    },
+    "hengfors": {
+      "tier": "petty",
+      "capital": "hengfors_city",
+      "colours": [
+        "#5a6a7a",
+        "#efe6cf"
+      ],
+      "builds": [
+        "walls",
+        "granary",
+        "fields"
+      ]
+    },
+    "lyria_rivia": {
+      "tier": "middle",
+      "capital": "lyria",
+      "colours": [
+        "#7a2a2a",
+        "#d9c27a"
+      ],
+      "builds": [
+        "walls",
+        "fields",
+        "workshop",
+        "market"
+      ]
+    },
+    "angren": {
+      "tier": "none",
+      "lawless": true,
+      "capital": "glevitzingen",
+      "colours": [
+        "#4a4030",
+        "#9a8a6a"
+      ],
+      "builds": []
     }
   },
   "economy": {

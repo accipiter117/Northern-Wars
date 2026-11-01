@@ -115,7 +115,9 @@ export function assess(state, world, rid) {
   const c = ST(world);
   const realm = state.realms[rid];
   const me = strengthOf(state, world, rid);
-  const near = neighboursOf(world, rid).filter((p) => p === TEMERIA || (state.realms?.[p] && !state.realms[p].fallen));
+  // The lawless frontier is no one to fear or to fight a war with (M30 B):
+  // its towns are taken by columns, not campaigns (frontier.js).
+  const near = neighboursOf(world, rid).filter((p) => p === TEMERIA || (state.realms?.[p] && !state.realms[p].fallen && !state.realms[p].lawless));
   const name = (p) => sideName(world, p);
 
   // Threat.

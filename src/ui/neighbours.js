@@ -1,4 +1,4 @@
-import { relationTarget, foreignTrade, canSetStance, formatDate, canOpenEmbassy, canSendSpy, hostile, TEMERIA, lawLabel,
+import { relationTarget, foreignTrade, canSetStance, formatDate, canOpenEmbassy, canSendSpy, hostile, TEMERIA, lawLabel, ownerOf, originOf,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { realmWarHtml, siegeNote } from './war.js';
@@ -119,7 +119,8 @@ export function neighboursHtml(app) {
   const great = by('great');
   const middle = by('middle').filter((id) => !ours.includes(id) && !suzerainOf(state, id));
   const spheres = great.map((g) => [g, all.filter((id) => suzerainOf(state, id) === g)]).filter(([, l]) => l.length);
-  const free = [...by('petty'), ...by('none')].filter((id) => !suzerainOf(state, id) && !ours.includes(id));
+  const lawless = all.filter((id) => state.realms?.[id]?.lawless);
+  const free = [...by('petty'), ...by('none')].filter((id) => !suzerainOf(state, id) && !ours.includes(id) && !lawless.includes(id));
   const group = (part, title, ids, short = false) => (ids.length ? `<div data-part="${part}"><h3>${title}</h3><div class="rows">${ids.map((id) => row(id, short)).join('')}</div></div>` : '');
   const folds = spheres.map(([g, l]) => `<details class="sphere" data-part="sphere-${g}"><summary>${escapeHtml(sideName(world, g))}'s sphere <small>(${l.length})</small></summary><div class="rows">${l.map((id) => row(id, true)).join('')}</div></details>`).join('');
   return `${rulersRowHtml(app)}<div data-part="realms">
@@ -128,7 +129,16 @@ export function neighboursHtml(app) {
     ${group('middle', 'The middle crowns', middle)}
     ${folds ? `<div data-part="spheres"><h3>Other powers' spheres</h3>${folds}</div>` : ''}
     ${group('petty', 'The petty kingdoms', free, true)}
+    ${lawless.length ? `<div data-part="lawless"><h3>Lawless lands</h3><div class="rows">${lawless.map((id) => frontierRow(world, state, id)).join('')}</div></div>` : ''}
   </div>${fearHtml(world, state)}`;
+}
+
+function frontierRow(world, state, id) {
+  const towns = (world.base?.foreign ?? world.foreign).filter((t) => originOf(world, t.id) === id);
+  const free = towns.filter((t) => ownerOf(state, world, t.id) === id).length;
+  return `<button type="button" class="row realm-row short" data-realm="${id}" data-tier="none" data-go="realm:${id}">
+      ${icon('dove')}<span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[id].name)}</span>
+      <span class="row-sub">No ruler. ${free} of ${towns.length} towns free; the rest held by whoever took them.</span></span></button>`;
 }
 
 // What the crown can see of each realm, and its embassies and spies.
@@ -179,6 +189,7 @@ export function realmCard(app, id) {
   const audience = world.diplomacy?.rulers[id]
     ? `<button type="button" class="act primary" data-audience="${id}"><span class="act-label">${icon('crown')} An audience with ${escapeHtml(rulerShort(world, id))}</span><span class="act-sub">Trade, diplomacy, alliances and war</span></button>` : '';
   const fallen = state.realms?.[id]?.fallen;
+  if (state.realms?.[id]?.lawless) return frontierCard(app, id);
   if (fallen) {
     const c = (state.claimants ?? []).find((x) => x.realm === id);
     return `<div data-part="head"><p class="warn">${escapeHtml(world.geography.neighbours[id].name)} is no more: its last town fell to ${escapeHtml(sideName(world, fallen.by))} in ${formatDate(fallen.day)}.</p>
@@ -205,6 +216,22 @@ export function realmCard(app, id) {
     ${world.realms ? `<div data-part="intel">${intelligenceHtml(world, state, id)}</div>` : ''}
     ${section(memory, route, 'cares', 'What they care about', cares ? `<ul class="cares">${cares}</ul>` : '')}
   `;
+}
+
+// A lawless frontier (M30 B): no ruler, no court, no stance or trade; its
+// towns and who holds them, and how they are won and lost.
+function frontierCard(app, id) {
+  const { world, state } = app;
+  const r = world.neighbours.realms[id];
+  const towns = (world.base?.foreign ?? world.foreign).filter((t) => originOf(world, t.id) === id);
+  const rows = towns.map((t) => {
+    const owner = ownerOf(state, world, t.id);
+    const who = owner === id ? 'free, held by no one' : `held by ${escapeHtml(sideName(world, owner))}`;
+    return `<li data-town="${t.id}">${escapeHtml(t.name)}: ${who}</li>`;
+  }).join('');
+  return `<div data-part="head"><p class="sub">${escapeHtml(r.temper)}</p>
+    <p>No ruler, no court, no treaty to sign. Any army may march on its free towns without declaring a war, and a town taken there needs a strong garrison: thinly held, outlaws rise and throw the garrison out. Its bogs and burnt farms breed bandits and beasts.</p></div>
+    <div data-part="frontier"><h3>Its towns</h3><ul class="plain">${rows}</ul></div>`;
 }
 
 // Suzerain and vassal (M29 B): whose vassal this realm is, and the crown's

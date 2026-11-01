@@ -37,6 +37,8 @@ export function relationTarget(state, world, id) {
 export function stepNeighboursDay(state, world) {
   const drift = world.neighbours.drift;
   for (const [id, n] of Object.entries(state.neighbours)) {
+    // A lawless frontier has no court to like or dislike us (M30 B).
+    if (state.realms?.[id]?.lawless) continue;
     n.relation += (relationTarget(state, world, id) - n.relation) * drift;
   }
   // Envoys left waiting too long take the cautious answer for you.

@@ -181,6 +181,70 @@
         "old_ways": 0.2
       },
       "distance": 0.35
+    },
+    "kovir": {
+      "name": "Koviri",
+      "adjective": "Koviri",
+      "mix": {
+        "human": 0.9,
+        "dwarf": 0.06,
+        "elf": 0.01,
+        "halfling": 0.03
+      },
+      "faith": {
+        "eternal_fire": 0.3,
+        "melitele": 0.55,
+        "old_ways": 0.15
+      },
+      "distance": 0.5
+    },
+    "hengfors": {
+      "name": "Hengforsians",
+      "adjective": "Hengforsian",
+      "mix": {
+        "human": 0.95,
+        "dwarf": 0.03,
+        "elf": 0.01,
+        "halfling": 0.01
+      },
+      "faith": {
+        "eternal_fire": 0.15,
+        "melitele": 0.45,
+        "old_ways": 0.4
+      },
+      "distance": 0.5
+    },
+    "lyria_rivia": {
+      "name": "Lyrians",
+      "adjective": "Lyrian",
+      "mix": {
+        "human": 0.9,
+        "dwarf": 0.05,
+        "elf": 0.02,
+        "halfling": 0.03
+      },
+      "faith": {
+        "eternal_fire": 0.1,
+        "melitele": 0.65,
+        "old_ways": 0.25
+      },
+      "distance": 0.4
+    },
+    "angren": {
+      "name": "Angrenese",
+      "adjective": "Angrenese",
+      "mix": {
+        "human": 0.85,
+        "dwarf": 0.03,
+        "elf": 0.1,
+        "halfling": 0.02
+      },
+      "faith": {
+        "eternal_fire": 0.05,
+        "melitele": 0.45,
+        "old_ways": 0.5
+      },
+      "distance": 0.35
     }
   },
   "occupation": {

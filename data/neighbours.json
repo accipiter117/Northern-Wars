@@ -190,6 +190,62 @@
         "book:seasonal_conscription": 5,
         "book:standing_companies": -5
       }
+    },
+    "kovir": {
+      "ruler": "King Esterad Thyssen",
+      "temper": "The richest crown in the North, and the most careful with it. Sells to all and fights for none.",
+      "relation": 10,
+      "trade": 24,
+      "gateway": "acorn_bay",
+      "entry": [
+        140,
+        330
+      ],
+      "cares": {
+        "book:open_markets": 15,
+        "tax_burghers:heavy": -5
+      }
+    },
+    "hengfors": {
+      "ruler": "King Niedamir",
+      "temper": "Young, cold and careful. Rules a small league of hard northern towns.",
+      "relation": 0,
+      "trade": 8,
+      "gateway": "white_bridge",
+      "entry": [
+        771,
+        60
+      ],
+      "cares": {
+        "book:seasonal_conscription": 5
+      }
+    },
+    "lyria_rivia": {
+      "ruler": "Queen Meve",
+      "temper": "Proud, quick to anger and quicker to march. No friend to the south.",
+      "relation": 25,
+      "trade": 12,
+      "gateway": "red_fort",
+      "entry": [
+        900,
+        850
+      ],
+      "cares": {
+        "book:standing_companies": 10,
+        "book:open_markets": -5
+      }
+    },
+    "angren": {
+      "ruler": "No one",
+      "temper": "A lawless frontier of bogs and burnt farms. Its towns answer to whoever holds them.",
+      "relation": 0,
+      "trade": 0,
+      "gateway": "dregsdon",
+      "entry": [
+        890,
+        770
+      ],
+      "cares": {}
     }
   }
 }

@@ -7,6 +7,7 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { startServer } from '../../tools/serve.js';
+import { speciesOf } from '../../src/sim/combat.js';
 import { ROOT, nodeWorld } from '../helpers.js';
 import { createState, step, serialize, applyAction, threatPos } from '../../src/sim/index.js';
 
@@ -23,13 +24,17 @@ test.after(async () => {
 });
 
 test('sending a company after wolves glides the camera to them and lowers the panel', async () => {
-  let s = step(createState(world, 1), 200, world, { ambient: false });
+  // Wolves, or another ordinary lair: which stand by day 200 shifts with
+  // the North's dice, so the first seed with one sighted is used.
+  const ordinary = (st) => st.threats.list.filter((x) => x.kind === 'monsters' && !x.abroad && x.sighted && x.species === 'wolves')[0]
+    ?? st.threats.list.find((x) => x.kind === 'monsters' && !x.abroad && x.sighted && !speciesOf(world, x).supernatural);
+  let s = null;
+  for (let seed = 1; seed <= 6 && !(s && ordinary(s)); seed++) s = step(createState(world, seed), 200, world, { ambient: false });
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
   s.treasury = 20000;
   s = applyAction(s, world, { type: 'recruit', settlement: 'vizima', kind: 'militia' }).state;
-  const t = s.threats.list.filter((x) => x.kind === 'monsters' && !x.abroad && x.sighted && x.species === 'wolves')[0]
-    ?? s.threats.list.find((x) => x.kind === 'monsters' && !x.abroad && x.sighted);
+  const t = ordinary(s);
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   const page = await context.newPage();
   const errors = [];

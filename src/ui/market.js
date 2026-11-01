@@ -54,7 +54,7 @@ export function marketHtml(app) {
   const { world, state } = app;
   if (!world.market) return '<p class="sub">No market in this world.</p>';
   const deals = Object.entries(state.market?.deals ?? {});
-  const partners = Object.keys(world.geography.neighbours ?? {}).filter((rid) => state.realms?.[rid] && !state.realms[rid].fallen && rid !== 'brokilon');
+  const partners = Object.keys(world.geography.neighbours ?? {}).filter((rid) => state.realms?.[rid] && !state.realms[rid].fallen && !state.realms[rid].lawless && rid !== 'brokilon');
   return `<div data-part="goods"><p class="sub">What the realm has to spare or lacks each month. Surplus sells at home for less; deals sell it abroad for more.</p>
       ${MARKET_GOODS.map((g) => goodRow(world, state, g)).join('')}</div>
     <div data-part="deals"><h3>Deals</h3>${deals.length ? deals.map(([rid, d]) => dealRow(world, state, rid, d)).join('') : '<p class="sub">No deals yet. Choose a partner below, or tap a realm on the board.</p>'}</div>

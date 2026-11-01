@@ -241,6 +241,8 @@ export function abroadLevel(state, world, id, kind) {
   for (const [terrain, add] of Object.entries(t.wild)) if (world.wildOf[id]?.[terrain]) v += add;
   if (kind === 'bandits') v += Math.max(0, 50 - s.prosperity) * t.perPovertyPoint;
   v -= Math.min(15, s.garrison / T(world).abroad.garrisonPerPoint);
+  // No law at all on the frontier (M30 B).
+  if (state.realms[world.realmOf[id]]?.lawless) v += world.realms?.frontier?.wildLevel ?? 0;
   return clamp(v, 0, 100);
 }
 
@@ -284,7 +286,9 @@ function monthlyAbroad(state, world, rng) {
       if (!state.realms[rid]?.settlements[id] || ownerOf(state, world, id) !== rid) continue;
       const level = abroadLevel(state, world, id, kind);
       if (level < c.spawnAt) continue;
-      if (!rng.chance(c.spawnChance * cfg.chance * (level - c.spawnAt + 10) / 50)) continue;
+      // A lawless frontier breeds more than settled country (M30 B).
+      const wild = world.realms?.realms[rid]?.lawless ? world.realms.frontier?.wildness ?? 1 : 1;
+      if (!rng.chance(c.spawnChance * cfg.chance * wild * (level - c.spawnAt + 10) / 50)) continue;
       const t = spawnCamp(state, world, rng, id, kind, level);
       if (t) t.abroad = rid;
     }
