@@ -90,7 +90,7 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 
   (Empire's towns at years 5, 10, 15, 20, 25 and 30.)
   - **The Empire** goes to war as soon as its gate opens and keeps returning (8 to 15 wars in thirty years). It takes Cintra's southern towns (Attre, Hochebuz, Ortagor and the like) and nearly doubles its holdings, and on two seeds of three it takes Cintra itself, but the capital's stone walls and its allies win it back within five years. The brief's aim, the Empire holding Cintra and pressing the crossings, is only partly met: Sodden and Brugge stay northern (or become the Empire's vassals by the clock's courting). Two first passes were worse: the clock's musters dispersed whenever the Emperor's monthly posture was not "expand" (the Empire sat at War for years without marching), and its army bled away as its treasury ran dry (now a heartland subsidy of 900 a month at War, and a cap of 14,000).
-  - **Kovir** grows from about 23,000 to 23,000 to 35,000 crowns and fights no war on any seed (neutral: no alliances or defensive pacts, no league). Before Part F it was drawn into two wars by the league against the Empire.
+  - **Kovir** ends with 23,000 to 35,000 crowns and fights no war on any seed (neutral: no alliances or defensive pacts, no league). Before Part F it was drawn into two wars by the league against the Empire.
   - **Meve** fights in 4 to 9 wars, nearly all answering the league or allies; she starts one or two of her own on one seed.
   - **Angren** never settles: its towns change hands 44 to 66 times, and two to four of its four are free at each count.
   - **Skellige** raids every year on every seed.
