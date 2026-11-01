@@ -1,5 +1,12 @@
 # Changelog
 
+## M29 B Becoming an overlord
+- A petty king at war or under threat may ask for Temeria's protection: take him under your wing and he becomes your vassal, and you win his title.
+- From a petty kingdom's card you can offer protection, or press it to bend the knee with Fear and a gift, the odds shown before you try.
+- After beating a petty kingdom in war, "Become our vassal" is a peace option.
+- Mahakam accepts protection only, never pressure or terms.
+- The other great powers do the same, so spheres form across the North: Redania in the west, Aedirn over Sodden.
+
 ## M29 A Tiers of crowns, and one relations screen
 - The North's rulers now come in tiers: great powers (Temeria, Redania, Kaedwen, Aedirn), a middle crown (Cintra) and petty kingdoms (Sodden, Brugge, Verden, Cidaris, Kerack, Mahakam).
 - Petty kings keep their distance: unless relations are warm or they bring a very good offer, they send short requests to your inbox (ships against pirates, grain in a lean year, bandits from over the border) instead of seeking an audience.

@@ -194,6 +194,7 @@ async function boot() {
     ...(state.conquest?.decisions ?? []).map((d) => `conquestDecision:${d.id}`),
     ...(state.judgements ?? []).map((d) => `judgement:${d.id}`),
     ...(state.raisings ?? []).map((d) => `raising:${d.id}`),
+    ...(state.suzerainty?.asks ?? []).map((d) => `protection:${d.id}`),
     ...(state.works?.decisions ?? []).map((d) => `worksDecision:${d.id}`),
     ...state.events.map((d) => `event:${d.id}`),
     ...state.demands.map((d) => `demand:${d.id}`),

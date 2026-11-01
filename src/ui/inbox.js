@@ -38,6 +38,16 @@ export function pendingDecisions(state, world, acked = Infinity) {
       choices: JUDGEMENTS.map((k) => fx[k]), fallback: 1, colours: def.colours,
     });
   }
+  // A petty king asks for the crown's protection (M29 B).
+  for (const a of state.suzerainty?.asks ?? []) {
+    const title = world.diplomacy.tiers?.titles?.[a.realm];
+    out.push({
+      key: `protection:${a.id}`, kind: 'protection', id: a.id, realm: a.realm, daysLeft: left(a.day, world.diplomacy.suzerainty.protection.askDays),
+      kicker: `A plea from ${sideName(world, a.realm)}`, title: `${rulerShort(world, a.realm)} asks for Temeria's protection`,
+      text: `${sideName(world, a.realm)} is threatened and asks to become Temeria's vassal: it will pay tribute and send men when called, and Temeria must defend it.${title ? ` The king would be ${title}.` : ''}`,
+      choices: ['Take them under our protection', 'Refuse'], fallback: 1,
+    });
+  }
   // Lands waiting for a new house (M27 E): stays open until one is raised.
   for (const r of state.raisings ?? []) {
     const cands = candidatesFor(state, world);

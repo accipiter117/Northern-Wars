@@ -9,7 +9,7 @@ import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { portraitImg } from './audience.js';
 import { occupiedHtml, fearHtml, fearWord, worthHtml } from './conquest.js';
-import { parties, rulerShort, moodWord, treatyDef, intentions, tierOf, suzerainOf } from '../sim/index.js';
+import { parties, rulerShort, moodWord, treatyDef, intentions, tierOf, suzerainOf, canOfferProtection, canPressure, protectorateOnly } from '../sim/index.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 
@@ -196,6 +196,7 @@ export function realmCard(app, id) {
       ],
     })}
     <div data-part="envoys">${envoys.length ? inboxHtml(envoys).replace(/data-part="[^"]*"/g, '') : ''}</div>
+    ${suzerainHtml(app, id)}
     <div data-part="stance"><h3>Our stance</h3><div class="build-list">${stances}</div></div>
     ${world.market && !hostile(state, TEMERIA, id) ? section(memory, route, 'trade', 'Trade', dealFormHtml(app, id, 'now'), { open: !!state.market?.deals?.[id] }) : ''}
     ${intentionsHtml(world, state, id)}
@@ -203,6 +204,31 @@ export function realmCard(app, id) {
     ${world.realms ? `<div data-part="intel">${intelligenceHtml(world, state, id)}</div>` : ''}
     ${section(memory, route, 'cares', 'What they care about', cares ? `<ul class="cares">${cares}</ul>` : '')}
   `;
+}
+
+// Suzerain and vassal (M29 B): whose vassal this realm is, and the crown's
+// ways to make it ours, each with its odds shown first.
+function suzerainHtml(app, id) {
+  const { world, state } = app;
+  if (!world.diplomacy?.suzerainty || tierOf(world, id) !== 'petty') return '';
+  const lord = suzerainOf(state, id);
+  const pct = (v) => `${Math.round(v * 100)}%`;
+  const status = lord === TEMERIA ? `Our vassal${state.realms[id]?.vassal ? ` since ${formatDate(state.realms[id].vassal.since)}` : ''}.`
+    : lord ? `A vassal of ${escapeHtml(sideName(world, lord))}.` : 'Independent.';
+  if (lord === TEMERIA) return `<div data-part="suzerain"><h3>Suzerainty</h3><p class="sub">${status}</p></div>`;
+  const offer = canOfferProtection(state, world, id);
+  const buttons = [`<button type="button" class="build" data-offer-protection ${orderAttr({ type: 'offerProtection', realm: id }, `Offer ${escapeHtml(sideName(world, id))} the crown's protection?`)} ${offer.ok ? '' : 'disabled'}>
+    <span class="build-name">Offer protection</span><span class="build-blurb">An envoy offers to take them under Temeria's wing. Welcome when they are in danger.</span>
+    <span class="build-cost">${offer.ok ? `Odds ${pct(offer.odds)}` : escapeHtml(offer.reason)}</span></button>`];
+  if (!protectorateOnly(world, id)) {
+    for (const gift of world.diplomacy.suzerainty.pressure.gifts) {
+      const c = canPressure(state, world, id, gift);
+      buttons.push(`<button type="button" class="build" data-pressure="${gift}" ${orderAttr({ type: 'pressure', realm: id, gift }, `Press ${escapeHtml(sideName(world, id))} to become our vassal${gift ? ` with a gift of ${gift} crowns` : ''}?`)} ${c.ok ? '' : 'disabled'}>
+        <span class="build-name">Press them to bend the knee${gift ? `, with a gift of ${number(gift)} crowns` : ''}</span><span class="build-blurb">Fear of Temeria does most of the work. A reluctant vassal; refused, they resent it.</span>
+        <span class="build-cost">${c.ok ? `Odds ${pct(c.odds)}` : escapeHtml(c.reason)}</span></button>`);
+    }
+  } else buttons.push('<p class="sub">Mahakam takes protection, never a master: no pressure, no peace terms.</p>');
+  return `<div data-part="suzerain"><h3>Suzerainty</h3><p class="sub">${status}</p><div class="build-list">${buttons.join('')}</div></div>`;
 }
 
 const PROSPERITY_WORDS = ['Destitute', 'Poor', 'Getting by', 'Comfortable', 'Thriving'];

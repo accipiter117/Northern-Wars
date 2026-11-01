@@ -4,6 +4,7 @@
 // accord: ask for audiences with real proposals, tax our caravans when they
 // sour on us, and make and break pacts among themselves by the same rules.
 import { asksAudience } from './tiers.js';
+import { monthlySuzerainty } from './suzerainty.js';
 import { openRealmRequest } from './dilemmas.js';
 import { nudge, authority } from './meters.js';
 import { sendFigure, courtOf } from './figures.js';
@@ -658,6 +659,8 @@ export function monthlyDiplomacy(state, world, rng) {
   for (const [pid, s] of Object.entries(state.diplomacy.sight)) if (s.theirs <= state.day && s.ours <= state.day) delete state.diplomacy.sight[pid];
   monthlyTolls(state, world, rng);
   aiPacts(state, world, rng);
+  // Petty kings seek protectors; great powers press them (M29 B).
+  monthlySuzerainty(state, world, rng);
   monthlyRequests(state, world, rng);
 }
 

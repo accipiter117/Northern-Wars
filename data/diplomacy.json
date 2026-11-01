@@ -9,6 +9,15 @@
     "middleVsGreat": 0.3,
     "pettyVsGreat": 0.15
   },
+  "suzerainty": {
+    "note": "M29 B: how petty kings become vassals. Protection: a petty king truly threatened (at war, or an army mustering against it) at danger dangerAbove or more asks, at chance a month, the great power he likes best (relation plus strengthWeight x log10 of its power, less distanceWeight a map unit and perVassal for each vassal it holds); the crown hears it in the inbox for askDays (refused: relation refuseRelation, no new ask for askAgainDays), an AI power takes him at once. The crown's own offer of protection succeeds at base + dangerWeight x danger + relationWeight x relation (at most most), and may not be repeated for cooldown days. Pressure: base + fearWeight x the realm's fear of Temeria (M19) + giftWeight per giftPer crowns of gift + relationWeight x relation + ratioWeight x log2 of the crown's power over theirs (at most ratioMost), at most most; refused, relation refuseRelation; cooldown days between tries. AI great powers press a petty neighbour within reach whose power is ratio times less and whose affinity is affinity or more, at chance a month. An AI power holds at most most vassals. A new vassal's loyalty by route; its ambition starts at ambition. Mahakam takes protection only.",
+    "ambition": 20,
+    "protection": { "dangerAbove": 0.6, "chance": 0.3, "loyalty": 60, "askDays": 45, "refuseRelation": -8, "askAgainDays": 365, "strengthWeight": 10, "distanceWeight": 0.03, "perVassal": 15 },
+    "offer": { "base": 0.1, "dangerWeight": 0.35, "relationWeight": 0.006, "most": 0.9, "loyalty": 55, "cooldown": 180 },
+    "pressure": { "base": -0.35, "fearWeight": 0.012, "giftPer": 500, "giftWeight": 0.08, "relationWeight": 0.004, "ratioWeight": 0.08, "ratioMost": 0.3, "most": 0.9, "loyalty": 25, "refuseRelation": -12, "cooldown": 365, "gifts": [0, 500, 1500] },
+    "peace": { "loyalty": 35 },
+    "ai": { "reach": 900, "ratio": 3, "affinity": 0, "chance": 0.01, "most": 3 }
+  },
   "rulers": {
     "redania": {
       "id": "vizimir",

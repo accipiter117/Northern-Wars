@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | In progress (A) |
+| M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | In progress (A and B) |
 | M27 Lords worth having, traitors who pay | A and B: what lords give (guarding their lands, retinues, dues) and want; C and D: rebellion as a war and the Judgement; E: raising new houses | Done |
 | M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | Done |
 
@@ -36,6 +36,10 @@ Part A, tiers and the relations screen:
 - Petty rulers ask a great power for an audience only above relation 50 or with a very good offer; otherwise they send short requests as dilemmas.
 - Middle crowns rarely start trouble with a great power alone.
 - The Diplomacy tab is one relations screen sorted by weight, spheres folded under their suzerain; Foltest's style on the Court grows with each title won.
+
+Part B, suzerainty:
+- Four routes to vassalage for the crown and the AI: protection when threatened (asked or offered), pressure with Fear and a gift (odds shown), and peace terms after a war.
+- Mahakam accepts only protection; a vassal belongs to one suzerain.
 
 ## M27 acceptance criteria
 Parts A and B, what lords give and want:
