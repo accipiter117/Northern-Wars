@@ -61,7 +61,12 @@ export function stepEmpireDay(state, world) {
   realm.army = (realm.army ?? 0) + men;
   e.arrived += men;
   e.last = { day: state.day, men, at: arrivalTown(state, world, rid) };
-  if (informed(state, world, rid) && e.last.at) addDispatch(state, `Fresh imperial regiments, ${men} strong, march up from the south into ${world.byId[e.last.at].name}. ${sideName(world, rid)} never runs short of men.`, 'abroad');
+  // Word of them reaches Vizima at war, and through an embassy or spy, no
+  // more than once a season.
+  if (e.last.at && (atWar(state, rid) || informed(state, world, rid)) && state.day - (e.told ?? -1e9) >= 90) {
+    e.told = state.day;
+    addDispatch(state, `Fresh imperial regiments march up from the south into ${world.byId[e.last.at].name}. ${sideName(world, rid)} never runs short of men.`, 'abroad');
+  }
 }
 
 // Vassals a realm starts with (realms.json startsVassalOf): Toussaint to the

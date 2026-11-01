@@ -22,6 +22,7 @@ import { defaultBook } from './book.js';
 import { defaultFaiths } from './faiths.js';
 import { defaultMarket } from './market.js';
 import { startingVassals } from './empire.js';
+import { newClock } from './clock.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -31,7 +32,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 32;
+export const STATE_VERSION = 33;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -109,6 +110,8 @@ export function createState(world, seed = 1) {
   // The North's standing pacts, as they stand when the reign begins (M18).
   // Vassals a realm starts with (Toussaint to the Empire, M30 C).
   startingVassals(state, world);
+  // The Nilfgaard clock starts watching (M30 D).
+  if (world.war?.clock) state.nilfgaard = newClock(world, state.seed, day);
   seedPacts(state, world);
   if (world.grid) {
     state.ambient.intel = newIntel(world);

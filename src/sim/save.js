@@ -1,5 +1,6 @@
 import { upgradeVassals } from './blocs.js';
 import { fitIntel } from './vision.js';
+import { newClock } from './clock.js';
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats, threatCap } from './threats.js';
@@ -407,6 +408,12 @@ const MIGRATIONS = {
   31(state, world) {
     addMissingRealms(state, world);
     state.version = 32;
+    return state;
+  },
+  // M30 D: the Nilfgaard clock starts watching from the save's own date.
+  32(state, world) {
+    if (world.war?.clock && !state.nilfgaard) state.nilfgaard = newClock(world, state.seed ?? 1, state.day);
+    state.version = 33;
     return state;
   },
 };

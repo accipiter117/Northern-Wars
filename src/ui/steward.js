@@ -59,6 +59,7 @@ export function stewardHtml(app) {
     <div class="decision-top"><span class="envoy-from">The Steward's report</span><span class="left">${MONTHS[r.month - 1].name} ${r.year}</span></div>
     <div class="st-figs"><div><small>In</small><b>${number(r.in)}</b></div><div><small>Out</small><b>${number(r.out)}</b></div><div class="${r.net < 0 ? 'down' : 'up'}"><small>Net</small><b>${signed(r.net)}</b></div></div>
     ${warn}
+    ${r.south ? `<p class="st-south" data-part="south"><b>From the south.</b> ${escapeHtml(r.south)}</p>` : ''}
     ${r.war.length ? `<h4>What fighting brought in</h4><dl class="ledger" data-part="war-takings">${r.war.map((w) => `<div data-take="${w.key}"><dt>${escapeHtml(IN_LABEL[w.key] ?? w.key)}</dt><dd>+${number(w.v)}</dd></div>`).join('')}</dl>` : ''}
     <h4>What cost most</h4>
     ${costs}

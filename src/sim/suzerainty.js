@@ -11,6 +11,7 @@ import { tierOf, suzerainOf } from './tiers.js';
 import { dangerTo, powerOf, endTreaty } from './diplomacy.js';
 import { fearOf as dreadOf } from './conquest.js';
 import { affinity } from './audiences.js';
+import { clockThreat } from './clock.js';
 
 const S = (world) => world.diplomacy?.suzerainty;
 const say = (state, text) => addDispatch(state, text, 'abroad');
@@ -74,6 +75,8 @@ function protectorFor(state, world, rid) {
   let best = null;
   for (const p of greatPowers(state, world)) {
     if (hostile(state, p, rid) || !roomFor(state, world, p)) continue;
+    // No one seeks shelter from the Empire under the Empire (M30 D).
+    if (p === state.nilfgaard?.realm && clockThreat(state, world, rid)) continue;
     const rel = p === TEMERIA ? state.neighbours[rid]?.relation ?? 0 : affinity(state, world, rid, p);
     const strength = Math.log10(Math.max(10, powerOf(state, world, p)));
     // A power that already holds many vassals looks like a master, not a friend.
@@ -186,7 +189,8 @@ export function monthlySuzerainty(state, world, rng) {
     if (!living(state, rid) || tierOf(world, rid) !== 'petty') continue;
     if (suzerainOf(state, rid)) continue;
     // Protection, when in danger.
-    if (threatened(state, world, rid) && dangerTo(state, world, rid) >= c.protection.dangerAbove && rng.chance(c.protection.chance)) {
+    // The Empire's shadow counts as danger from the clock's Pressure on (M30 D).
+    if (((threatened(state, world, rid) && dangerTo(state, world, rid) >= c.protection.dangerAbove) || clockThreat(state, world, rid)) && rng.chance(c.protection.chance)) {
       const p = protectorFor(state, world, rid);
       if (p === TEMERIA) {
         if (!z.asks.some((a) => a.realm === rid) && (z.cooldowns[`ask:${rid}`] ?? 0) <= state.day) {

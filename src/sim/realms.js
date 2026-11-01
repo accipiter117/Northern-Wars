@@ -9,6 +9,7 @@ import { ownerOf, leviedMap, besieged } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
 import { monthlyStrategy, armyUpkeep } from './strategy.js';
 import { monthlyFrontier } from './frontier.js';
+import { monthlyClock } from './clock.js';
 import { integrationFactor } from './conquest.js';
 import { startingWorks, worksFactor, upkeepFactor } from './works.js';
 import { giveWorks } from './state.js';
@@ -167,6 +168,8 @@ export function monthlyRealms(state, world, rng) {
   if (st) monthlyStrategy(state, world, rng);
   // The lawless frontier (M30 B): the strong take its towns; outlaws rise.
   monthlyFrontier(state, world, rng);
+  // The Nilfgaard clock (M30 D): watching, pressure, war.
+  monthlyClock(state, world, rng);
   for (const [rid, realm] of Object.entries(state.realms)) {
     if (realm.fallen) continue;
     // Since M20 no one builds: rulers mend what their land gave them (works.js).
