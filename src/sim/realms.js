@@ -10,6 +10,7 @@ import { sharesSight } from './diplomacy.js';
 import { monthlyStrategy, armyUpkeep } from './strategy.js';
 import { monthlyFrontier } from './frontier.js';
 import { monthlyClock } from './clock.js';
+import { monthlySeas } from './seas.js';
 import { integrationFactor } from './conquest.js';
 import { startingWorks, worksFactor, upkeepFactor } from './works.js';
 import { giveWorks } from './state.js';
@@ -29,6 +30,8 @@ export function defaultRealms(world) {
     out[rid] = { treasury: 1000, settlements };
     // A lawless frontier (M30 B) is fair game to all: see frontier.js.
     if (R(world).realms[rid]?.lawless) out[rid].lawless = true;
+    // A sea power (M30 E) makes no war for land of its own: see seas.js.
+    if (R(world).realms[rid]?.seaPower) out[rid].seaPower = true;
   }
   return out;
 }
@@ -170,6 +173,8 @@ export function monthlyRealms(state, world, rng) {
   monthlyFrontier(state, world, rng);
   // The Nilfgaard clock (M30 D): watching, pressure, war.
   monthlyClock(state, world, rng);
+  // Skellige's longships in season (M30 E).
+  monthlySeas(state, world, rng);
   for (const [rid, realm] of Object.entries(state.realms)) {
     if (realm.fallen) continue;
     // Since M20 no one builds: rulers mend what their land gave them (works.js).

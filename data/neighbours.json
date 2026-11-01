@@ -275,6 +275,20 @@
       "cares": {
         "book:open_markets": 10
       }
+    },
+    "skellige": {
+      "ruler": "King Bran an Craite",
+      "temper": "Jarls and longships. Loyal to Cintra, a nuisance to every other coast, and always open to an offer.",
+      "relation": 0,
+      "trade": 6,
+      "gateway": "gors_velen",
+      "entry": [
+        120,
+        486
+      ],
+      "cares": {
+        "book:open_markets": 5
+      }
     }
   }
 }

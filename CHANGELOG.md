@@ -1,5 +1,10 @@
 # Changelog
 
+## M30 E Skellige
+- Skellige joins the North: King Bran an Craite's islands, bound to Cintra by marriage.
+- From spring to autumn its longships raid the coasts of Cidaris, Kerack, Verden and the Empire. You can watch them sail.
+- Hire them against a rival's coast, or pay them to leave your vassals alone.
+
 ## M30 D The Nilfgaard clock
 - The Empire watches first: envoys, merchants and spies, and the odd hard choice when one of them comes to Vizima.
 - Then it presses: raids across the Yaruga, refugees on the roads, threats to Cintra, and petty kings bought with imperial gold.

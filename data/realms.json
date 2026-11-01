@@ -182,6 +182,16 @@
       "population": 300,
       "garrison": 250,
       "prosperity": 60
+    },
+    "kaer_trolde": {
+      "population": 1200,
+      "garrison": 500,
+      "prosperity": 52
+    },
+    "arinbjorn": {
+      "population": 2500,
+      "garrison": 200,
+      "prosperity": 50
     }
   },
   "frontier": {
@@ -196,7 +206,7 @@
     "wildness": 3,
     "wildLevel": 15
   },
-  "tierNote": "M29: each realm's tier. Great powers (Temeria, Redania, Kaedwen, Aedirn) court and protect; middle crowns (Cintra) act as rulers do but rarely start trouble with a great power alone; petty kingdoms keep their distance from great kings and seek protection; Mahakam is petty but can only ever be a protectorate; Brokilon sits outside the tiers (none). M30 B: Kovir and Poviss and Lyria and Rivia are middle crowns, the Hengfors League a petty kingdom, and Angren lawless (tier none, no ruler: its towns go to whoever takes them). M30 C: the Nilfgaardian Empire is a great power over four provinces; Toussaint a petty duchy that starts as the Empire's vassal (startsVassalOf).",
+  "tierNote": "M29: each realm's tier. Great powers (Temeria, Redania, Kaedwen, Aedirn) court and protect; middle crowns (Cintra) act as rulers do but rarely start trouble with a great power alone; petty kingdoms keep their distance from great kings and seek protection; Mahakam is petty but can only ever be a protectorate; Brokilon sits outside the tiers (none). M30 B: Kovir and Poviss and Lyria and Rivia are middle crowns, the Hengfors League a petty kingdom, and Angren lawless (tier none, no ruler: its towns go to whoever takes them). M30 C: the Nilfgaardian Empire is a great power over four provinces; Toussaint a petty duchy that starts as the Empire's vassal (startsVassalOf). M30 E: Skellige a middle crown at sea, bound to Cintra (boundTo).",
   "realms": {
     "redania": {
       "tier": "great",
@@ -441,6 +451,21 @@
         "walls"
       ],
       "startsVassalOf": "nilfgaard"
+    },
+    "skellige": {
+      "tier": "middle",
+      "capital": "kaer_trolde",
+      "colours": [
+        "#2a3a5a",
+        "#c9d6e2"
+      ],
+      "builds": [
+        "walls",
+        "market"
+      ],
+      "seaPower": true,
+      "boundTo": "cintra",
+      "note": "Skellige (M30 E): a sea power of islands. Bound to Cintra by Calanthe's marriage to Eist Tuirseach (an alliance renewed for as long as both stand). It makes no war for land of its own and holds no mainland town unless a treaty grants one; its longships raid the coasts in season (war.json seas)."
     }
   },
   "economy": {

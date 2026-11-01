@@ -19,7 +19,7 @@ const read = async (f) => JSON.parse(await readFile(join(ROOT, f), 'utf8'));
 
 // The realms the game simulates. Every other land in the atlas is drawn and
 // named, ready to become a realm later.
-export const MODELLED = ['redania', 'kaedwen', 'aedirn', 'mahakam', 'cidaris', 'kerack', 'brokilon', 'verden', 'brugge', 'sodden', 'cintra', 'kovir', 'hengfors', 'lyria_rivia', 'angren', 'nilfgaard', 'toussaint'];
+export const MODELLED = ['redania', 'kaedwen', 'aedirn', 'mahakam', 'cidaris', 'kerack', 'brokilon', 'verden', 'brugge', 'sodden', 'cintra', 'kovir', 'hengfors', 'lyria_rivia', 'angren', 'nilfgaard', 'toussaint', 'skellige'];
 
 // The foreign towns before M15, kept here so the build always maps from the
 // same starting point, however many times it runs.
@@ -41,7 +41,7 @@ const OLD = [
 // realm's chief town and keeps the old id, so saves and data still find it.
 const SEATS = { verden: ['verden_town', 'Hamm'], sodden: ['sodden_keep', 'Kagen'] };
 // Towns whose atlas names would clash with a realm's id.
-const CLASH = new Set([...MODELLED, 'ebbing', 'heartland', 'nilfgaard', 'hengfors', 'kovir', 'poviss', 'lyria_rivia', 'toussaint', 'angren', 'nazair', 'mag_turga', 'dol_blathanna', 'skellige', 'korath', 'metinna', 'tir_tochair']);
+const CLASH = new Set([...MODELLED, 'ebbing', 'heartland', 'hengfors', 'kovir', 'poviss', 'lyria_rivia', 'toussaint', 'angren', 'nazair', 'mag_turga', 'dol_blathanna', 'skellige', 'korath', 'metinna', 'tir_tochair']);
 // Old foreign terrain the atlas replaces (and Brokilon, redrawn to its new outline).
 const DROP = new Set(['Kestrel Mountains', 'Mahakam', 'Redanian woods', 'Cintran fens', 'Sodden hills']);
 
@@ -282,7 +282,11 @@ export async function buildNorth() {
   const roads = [];
   const distantRoads = [];
   for (const [realm, list] of Object.entries(byRealm)) {
-    for (const e of layRoads(list, ctx)) (modelled.has(realm) ? roads : distantRoads).push([e.a.id, e.b.id]);
+    for (const e of layRoads(list, ctx)) {
+      // A sea power's islands are joined by ships, not roads (M30 E).
+      if (north.realms[realm]?.seaPower && 1 - fractionIn(e.a, e.b, ctx.land) > 0.2) continue;
+      (modelled.has(realm) ? roads : distantRoads).push([e.a.id, e.b.id]);
+    }
   }
   // Neighbouring lands: realms whose outlines touch are joined by their best road.
   const shapesOf = (rid) => neighbours[rid]?.shapes ?? lands[rid]?.shapes ?? [];

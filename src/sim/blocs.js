@@ -44,7 +44,8 @@ export function blocBound(state, a, b, pactBetween) {
 
 // A vassal starts no war of its own.
 // Nor does the Empire before its clock reaches War (M30 D): it watches and presses.
-export const mayStartWar = (state, rid) => !suzerainOf(state, rid) && !(state.nilfgaard?.realm === rid && state.nilfgaard.stage !== 'war');
+// A sea power raids instead (M30 E).
+export const mayStartWar = (state, rid) => !suzerainOf(state, rid) && !state.realms?.[rid]?.seaPower && !(state.nilfgaard?.realm === rid && state.nilfgaard.stage !== 'war');
 
 // The save from before M29: every protectorate treaty becomes suzerainty.
 export function upgradeVassals(state, world) {

@@ -1,5 +1,5 @@
 {
-  "note": "M30: the North widened. Merged over data/north-geography.json (the M15 atlas, kept unchanged) by tools/north.mjs: realm outlines here replace the atlas's, terrain zones of the same name replace the atlas's, and the rest is added. Part A: the map south of the Yaruga (the Empire's provinces traced whole, Ebbing added, the heartland as a dark band at the edge). Original abstraction; approximate. Part B: Kovir takes in Poviss as one realm (absorbs), and Angren gains three frontier towns. Part C: the Nilfgaardian Empire takes in its four northern provinces (Nazair, Metinna, Mag Turga and Ebbing) as one realm, keeping their names as provinces.",
+  "note": "M30: the North widened. Merged over data/north-geography.json (the M15 atlas, kept unchanged) by tools/north.mjs: realm outlines here replace the atlas's, terrain zones of the same name replace the atlas's, and the rest is added. Part A: the map south of the Yaruga (the Empire's provinces traced whole, Ebbing added, the heartland as a dark band at the edge). Original abstraction; approximate. Part B: Kovir takes in Poviss as one realm (absorbs), and Angren gains three frontier towns. Part C: the Nilfgaardian Empire takes in its four northern provinces (Nazair, Metinna, Mag Turga and Ebbing) as one realm, keeping their names as provinces. Part E: Skellige becomes a realm of islands with six towns; its islands are not joined by road (seaPower).",
   "bounds": [
     -600,
     -650,
@@ -439,6 +439,9 @@
         "ebbing"
       ],
       "provinces": true
+    },
+    "skellige": {
+      "seaPower": true
     }
   },
   "terrain": {
@@ -847,6 +850,48 @@
       "x": 1455,
       "y": 1000,
       "realm": "angren"
+    },
+    {
+      "name": "Kaer Trolde",
+      "type": "castle",
+      "x": -480,
+      "y": 830,
+      "realm": "skellige"
+    },
+    {
+      "name": "Arinbjorn",
+      "type": "town",
+      "x": -540,
+      "y": 705,
+      "realm": "skellige"
+    },
+    {
+      "name": "Holmstein's Port",
+      "type": "village",
+      "x": -425,
+      "y": 660,
+      "realm": "skellige"
+    },
+    {
+      "name": "Kaer Muire",
+      "type": "castle",
+      "x": -384,
+      "y": 902,
+      "realm": "skellige"
+    },
+    {
+      "name": "Svorlag",
+      "type": "village",
+      "x": -540,
+      "y": 968,
+      "realm": "skellige"
+    },
+    {
+      "name": "Larvik",
+      "type": "village",
+      "x": -345,
+      "y": 790,
+      "realm": "skellige"
     }
   ],
   "roadEnds": [

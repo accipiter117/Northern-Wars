@@ -273,6 +273,14 @@ Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
 - A "From the south" line in the Steward's report says where the clock stands.
 - Save version 33: an older save's clock starts watching from the save's own date.
 
+### Skellige at sea (M30 E)
+- Skellige (King Bran an Craite, a middle crown) is a realm of six island towns (Kaer Trolde its seat), not joined by road (a sea power's islands are linked by ships; tools/north.mjs lays no road over water for it). It makes no war for land of its own (`mayStartWar`) and holds no mainland town; it does join its allies' wars.
+- Bound to Cintra by Calanthe's marriage to Eist Tuirseach (realms.json boundTo): a full alliance renewed for as long as both stand, so it answers Cintra first.
+- Raids in season (war.json seas; src/sim/seas.js): from April to October, each month a 45% chance that longships sail ten days down simple sea lanes (a chain of waypoints off the coast) to a coastal town of Cidaris, Kerack, Verden or the Empire (never Cintra, nor an ally), burn its waterfront (prosperity and people lost, unrest), and sail home with the loot (120 crowns plus 0.03 a head). The longships are drawn on the water, three to a raid, out and home.
+- The crown can hire the longships against a coastal realm (2,500 crowns for six months: they raid that coast twice as often) or pay them off (1,200 crowns for a year: the crown's coastal vassals are spared). Temeria has no sea coast of its own. Both are on the isles' card.
+- No full naval war yet: the longships are raids, not fleets.
+- Save version 34: an older save gains Skellige, bound to Cintra.
+
 ### Terrain art
 - Forests as massed trees with darker edges, ranges as shaded peaks sized by the range (snow on the great ones), hills as mounds, marsh as reeds and pools, rivers that taper from source to mouth with their names set along the curve, lakes with a shoreline and a highlight. Scatter is seeded, so the same tree stands in the same place every time. Terrain stays visible under the fog of war.
 - Level of detail by zoom: far out only the ranges, great forests and main rivers are named; marks thin out. The painted map is cut into 256-pixel tiles at six resolutions, painted a few per frame with a coarser tile standing in until the fine one is ready, and kept in a cache that grows to twice what one view needs. Panning across the whole North on a slowed CPU takes about a millisecond a frame.

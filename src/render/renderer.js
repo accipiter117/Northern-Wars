@@ -32,6 +32,7 @@ import { figurePosition } from '../sim/figures.js';
 import { lineOf } from '../sim/battle.js';
 import { roadPath } from '../sim/world.js';
 import { TEMERIA, ownerOf, originOf, sideColours, hostile } from '../sim/conflict.js';
+import { longshipAt } from '../sim/seas.js';
 
 const ICON_SIZE = { city: 24, town: 17, castle: 15, temple: 15, village: 10 };
 const LABEL_FONT = {
@@ -617,6 +618,50 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
   }
 
+  // Skellige's longships at sea (M30 E): a dark hull, a striped sail and a
+  // short wake, three to a raid, out and home along the sea lanes.
+  function drawLongships(state, frac) {
+    const raids = state.seas?.raids ?? [];
+    if (!raids.length) return;
+    const size = Math.max(7, Math.min(16, 10 * zoomRel()));
+    for (const r of raids) {
+      for (let k = 0; k < 3; k++) {
+        const at = longshipAt(world, r, state.day + frac - k * 0.35);
+        const p = toScreen(cam, at.x + (k - 1) * 6, at.y + (k % 2) * 5);
+        if (p.x < -30 || p.y < -30 || p.x > cam.viewW + 30 || p.y > cam.viewH + 30) continue;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        const flip = Math.cos(at.heading) < 0 ? -1 : 1;
+        ctx.scale(flip, 1);
+        ctx.strokeStyle = 'rgba(225, 235, 230, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.9, size * 0.15);
+        ctx.lineTo(-size * 1.8, size * 0.3);
+        ctx.stroke();
+        ctx.fillStyle = '#2b2116';
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.8, 0);
+        ctx.quadraticCurveTo(0, size * 0.45, size * 0.8, -size * 0.1);
+        ctx.lineTo(size * 0.6, size * 0.15);
+        ctx.quadraticCurveTo(0, size * 0.35, -size * 0.6, size * 0.15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#c9d6e2';
+        ctx.fillRect(-size * 0.25, -size * 0.75, size * 0.5, size * 0.6);
+        ctx.fillStyle = '#7a2a2a';
+        ctx.fillRect(-size * 0.25, -size * 0.55, size * 0.5, size * 0.12);
+        ctx.fillRect(-size * 0.25, -size * 0.32, size * 0.5, size * 0.12);
+        ctx.strokeStyle = '#2b2116';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -size * 0.85);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
   function drawRegionLabels(c) {
     const z = zoomRel();
     c.textAlign = 'center';
@@ -871,6 +916,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       ring(ctx, p.x, p.y, Math.max(iconSize(st.type) / 2, footprint[selectedId] ?? 0) + 6);
     }
 
+    drawLongships(state, frac);
     const forceView = { ctx, cam, world, zoom: zoomRel(), selection, frac };
     drawForces(forceView, state, 'ground');
     for (const u of state.ambient.units) {

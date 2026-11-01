@@ -264,6 +264,19 @@
         "kind": "trade"
       },
       "emblem": "star"
+    },
+    "skellige": {
+      "id": "bran",
+      "name": "Bran an Craite",
+      "title": "King",
+      "traits": [
+        "ambitious",
+        "greedy"
+      ],
+      "agenda": {
+        "kind": "trade"
+      },
+      "emblem": "ship"
     }
   },
   "traits": {
