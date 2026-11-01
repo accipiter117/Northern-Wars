@@ -42,6 +42,7 @@ import { canFaithAct, doFaithAct, revokeLand } from './faiths.js';
 import { judge } from './judgement.js';
 import { canVassalAction, vassalAction, judgeVassal, answerCourting } from './vassals.js';
 import { answerProtection, canOfferProtection, offerProtection, canPressure, pressure } from './suzerainty.js';
+import { canHireLongships, hireLongships, canPayOffLongships, payOffLongships } from './seas.js';
 import { candidatesFor, raiseHouse, openRaising, canOfferTown } from './newhouses.js';
 import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
 
@@ -199,6 +200,15 @@ export function applyAction(state, world, action) {
     if (action.type === 'pressure') pressure(next, world, rng, action.realm, action.gift ?? 0);
     else offerProtection(next, world, rng, action.realm);
     next.rng.game = rng.seed;
+    return { state: next };
+  }
+  // Skellige's longships (M30 E): hired against a coast, or paid to keep away.
+  if (action.type === 'hireLongships' || action.type === 'payOffLongships') {
+    const check = action.type === 'hireLongships' ? canHireLongships(state, world, action.against) : canPayOffLongships(state, world);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    if (action.type === 'hireLongships') hireLongships(next, world, action.against);
+    else payOffLongships(next, world);
     return { state: next };
   }
   // Vassal kings (M29 C): the crown's hand, a judgement, a courting answered.

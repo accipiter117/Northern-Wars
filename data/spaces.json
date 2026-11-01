@@ -1877,6 +1877,244 @@
         "name": "the walls"
       }
     ],
+    "rhys_rhun": [
+      {
+        "kind": "mountain",
+        "name": "Nazair hills"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "assengard": [
+      {
+        "kind": "mountain",
+        "name": "Amell Range"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "tergano": [
+      {
+        "kind": "mountain",
+        "name": "Amell Range"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "beauclair": [
+      {
+        "kind": "mountain",
+        "name": "Tir Tochair"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "castel_ravello": [
+      {
+        "kind": "river",
+        "name": "the Sansretour"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "pomerol": [
+      {
+        "kind": "mountain",
+        "name": "Tir Tochair"
+      }
+    ],
+    "vedette": [
+      {
+        "kind": "mountain",
+        "name": "Tir Tochair"
+      },
+      {
+        "kind": "river",
+        "name": "the Blessure"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "belhaven": [
+      {
+        "kind": "mountain",
+        "name": "The Slopes"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "ebbing_city": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "tarnmouth": [
+      {
+        "kind": "river",
+        "name": "the Tarn"
+      },
+      {
+        "kind": "marsh",
+        "name": "Ebbing fens"
+      },
+      {
+        "kind": "forest",
+        "name": "Fenwood"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "fennick": [
+      {
+        "kind": "mountain",
+        "name": "Nazair hills"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "saltreeve": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "nazair_city": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "wyndhal": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "dun_turga": [
+      {
+        "kind": "river",
+        "name": "the Turga"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "corvaine": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "metinna_city": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the city square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "vellmont": [
+      {
+        "kind": "forest",
+        "name": "Sarthe woods"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "cappel": [
+      {
+        "kind": "hills",
+        "name": "Metinna downs"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
     "carrow": [
       {
         "kind": "plain",
@@ -1905,6 +2143,78 @@
       {
         "kind": "river",
         "name": "the Solveigh"
+      }
+    ],
+    "kaer_trolde": [
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "arinbjorn": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "square",
+        "name": "the town square"
+      },
+      {
+        "kind": "defences",
+        "name": "the walls"
+      }
+    ],
+    "holmstein_s_port": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "kaer_muire": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      },
+      {
+        "kind": "defences",
+        "name": "the curtain walls"
+      }
+    ],
+    "svorlag": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
+      }
+    ],
+    "larvik": [
+      {
+        "kind": "coast",
+        "name": "the coast"
+      },
+      {
+        "kind": "plain",
+        "name": "the open fields"
       }
     ]
   },

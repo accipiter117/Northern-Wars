@@ -56,6 +56,21 @@
     "watching": { "chance": 0.4 },
     "league": { "at": 20, "member": 25, "join": 0.35 }
   },
+  "seas": {
+    "note": "M30 E: Skellige at sea. In season (months), each month the isles send a raid with chance chance (doubled against a realm the crown has hired them against): longships sail sail days down the lanes (waypoints off the coast) to a coastal town of a target realm (never Cintra while bound to it, nor an ally), raid it (prosperity off, people lost, loot = loot.base + loot.perPerson a head, carried home to the isles' treasury) and sail home. Temeria's own coast is a target only while the isles' relation with the crown is below spareAbove, and never while the crown has paid them off. The crown can hire the longships against a coastal realm (hire.coin, for hire.months) or pay them off (payoff.coin, payoff.months).",
+    "realm": "skellige",
+    "months": [4, 5, 6, 7, 8, 9, 10],
+    "chance": 0.45,
+    "targets": ["cidaris", "kerack", "verden", "cintra", "nilfgaard", "temeria"],
+    "sail": 10,
+    "home": [-430, 820],
+    "lanes": [[-330, 470], [-260, 640], [-230, 800], [-260, 960], [-170, 1100], [40, 1180], [-30, 1380], [-40, 1600], [-30, 1780]],
+    "raid": { "prosperity": 5, "people": 0.01, "unrest": 5 },
+    "loot": { "base": 120, "perPerson": 0.03 },
+    "spareAbove": -10,
+    "hire": { "coin": 2500, "months": 6, "minRelation": -20 },
+    "payoff": { "coin": 1200, "months": 12 }
+  },
   "raise": {
     "levy": {
       "third": 0.33,
@@ -314,7 +329,8 @@
       "lyria_rivia": 0.6,
       "angren": 0,
       "nilfgaard": 0.7,
-      "toussaint": 0.1
+      "toussaint": 0.1,
+      "skellige": 0.05
     },
     "greed": {
       "redania": 0.45,
@@ -544,6 +560,12 @@
         "heavy": 0.3,
         "levy": 0.3,
         "cav": 0.3
+      },
+      "skellige": {
+        "missile": 0.15,
+        "heavy": 0.45,
+        "levy": 0.4,
+        "cav": 0
       }
     },
     "companyKind": {

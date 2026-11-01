@@ -277,6 +277,22 @@
         "old_ways": 0.25
       },
       "distance": 0.6
+    },
+    "skellige": {
+      "name": "Islanders",
+      "adjective": "Skelligan",
+      "mix": {
+        "human": 0.97,
+        "dwarf": 0.01,
+        "elf": 0.01,
+        "halfling": 0.01
+      },
+      "faith": {
+        "eternal_fire": 0.0,
+        "melitele": 0.2,
+        "old_ways": 0.8
+      },
+      "distance": 0.7
     }
   },
   "occupation": {

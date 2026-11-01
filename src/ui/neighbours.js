@@ -11,6 +11,7 @@ import { portraitImg } from './audience.js';
 import { occupiedHtml, fearHtml, fearWord, worthHtml } from './conquest.js';
 import { parties, rulerShort, moodWord, treatyDef, intentions, tierOf, suzerainOf, canOfferProtection, canPressure, protectorateOnly } from '../sim/index.js';
 import { governors } from '../sim/empire.js';
+import { canHireLongships, canPayOffLongships } from '../sim/seas.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 
@@ -210,6 +211,7 @@ export function realmCard(app, id) {
     })}
     <div data-part="envoys">${envoys.length ? inboxHtml(envoys).replace(/data-part="[^"]*"/g, '') : ''}</div>
     ${provincesHtml(world, id)}
+    ${longshipsHtml(app, id)}
     ${suzerainHtml(app, id)}
     <div data-part="stance"><h3>Our stance</h3><div class="build-list">${stances}</div></div>
     ${world.market && !hostile(state, TEMERIA, id) ? section(memory, route, 'trade', 'Trade', dealFormHtml(app, id, 'now'), { open: !!state.market?.deals?.[id] }) : ''}
@@ -218,6 +220,32 @@ export function realmCard(app, id) {
     ${world.realms ? `<div data-part="intel">${intelligenceHtml(world, state, id)}</div>` : ''}
     ${section(memory, route, 'cares', 'What they care about', cares ? `<ul class="cares">${cares}</ul>` : '')}
   `;
+}
+
+// Skellige's longships (M30 E): hire them against a coast, or pay them off.
+function longshipsHtml(app, id) {
+  const { world, state } = app;
+  const c = world.war?.seas;
+  if (!c || c.realm !== id || !state.realms?.[id] || state.realms[id].fallen) return '';
+  const z = state.seas ?? {};
+  const coasts = c.targets.filter((r) => r !== TEMERIA && r !== world.realms.realms[id].boundTo && state.realms[r] && !state.realms[r].fallen);
+  const hire = coasts.map((r) => {
+    const check = canHireLongships(state, world, r);
+    return `<button type="button" class="build" data-hire="${r}" ${orderAttr({ type: 'hireLongships', against: r }, `Hire Skellige's longships against ${escapeHtml(sideName(world, r))} for ${c.hire.coin} crowns?`)} ${check.ok ? '' : 'disabled'}>
+      <span class="build-name">Against ${escapeHtml(sideName(world, r))}</span><span class="build-cost">${check.ok ? `${number(c.hire.coin)} crowns, ${c.hire.months} months` : escapeHtml(check.reason)}</span></button>`;
+  }).join('');
+  const pay = canPayOffLongships(state, world);
+  const status = [
+    z.hired?.until > state.day ? `In our pay against ${escapeHtml(sideName(world, z.hired.against))} until ${formatDate(z.hired.until)}.` : '',
+    z.paid > state.day ? `Paid to spare Temeria and its vassals until ${formatDate(z.paid)}.` : '',
+    (z.raids ?? []).length ? `Longships at sea: ${z.raids.map((r) => escapeHtml(world.byId[r.to].name)).join(', ')}.` : '',
+  ].filter(Boolean).join(' ');
+  return `<div data-part="longships"><h3>The longships</h3>
+    <p class="sub">Bound to Cintra by marriage, Skellige raids every other coast from spring to autumn. ${status}</p>
+    <div class="build-list">${hire}
+      <button type="button" class="build" data-payoff ${orderAttr({ type: 'payOffLongships' }, `Pay Skellige ${c.payoff.coin} crowns to leave Temeria and its vassals in peace?`)} ${pay.ok ? '' : 'disabled'}>
+        <span class="build-name">Pay them to keep away</span><span class="build-cost">${pay.ok ? `${number(c.payoff.coin)} crowns, ${c.payoff.months} months` : escapeHtml(pay.reason)}</span></button>
+    </div></div>`;
 }
 
 // An empire's provinces and their governors (M30 C).

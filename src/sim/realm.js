@@ -27,6 +27,7 @@ import { monthlyFaiths } from './faiths.js';
 import { stepRebellionDay } from './rebellion.js';
 import { stepVassalsDay } from './vassals.js';
 import { stepEmpireDay } from './empire.js';
+import { stepSeasDay } from './seas.js';
 import { resolveOrders, noteTheirMoves, marchingNow } from './board.js';
 
 const CHRONICLE_LIMIT = 400;
@@ -59,6 +60,7 @@ export function stepRealmDay(state, world, rng) {
     // A rebel vassal king's capital taken (M29 C).
     stepVassalsDay(state, world);
     stepEmpireDay(state, world);
+    stepSeasDay(state, world);
     stepWarDecisionsDay(state, world);
     stepConquestDay(state, world);
   }

@@ -1,6 +1,7 @@
 import { upgradeVassals } from './blocs.js';
 import { fitIntel } from './vision.js';
 import { newClock } from './clock.js';
+import { keepBonds } from './seas.js';
 import { defaultIndustry } from './industry.js';
 import { defaultForces } from './forces.js';
 import { defaultThreats, threatCap } from './threats.js';
@@ -414,6 +415,13 @@ const MIGRATIONS = {
   32(state, world) {
     if (world.war?.clock && !state.nilfgaard) state.nilfgaard = newClock(world, state.seed ?? 1, state.day);
     state.version = 33;
+    return state;
+  },
+  // M30 E: Skellige joins as a realm at sea, bound to Cintra.
+  33(state, world) {
+    addMissingRealms(state, world);
+    keepBonds(state, world);
+    state.version = 34;
     return state;
   },
 };

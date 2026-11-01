@@ -96,7 +96,8 @@
       "lyria_rivia": { "eternal_fire": 15, "melitele": 60, "old_ways": 25 },
       "angren": { "eternal_fire": 5, "melitele": 45, "old_ways": 50 },
       "nilfgaard": { "eternal_fire": 10, "melitele": 30, "old_ways": 60 },
-      "toussaint": { "eternal_fire": 5, "melitele": 70, "old_ways": 25 }
+      "toussaint": { "eternal_fire": 5, "melitele": 70, "old_ways": 25 },
+      "skellige": { "eternal_fire": 0, "melitele": 20, "old_ways": 80 }
     },
     "fervour": { "redania": { "eternal_fire": 15 }, "brokilon": { "old_ways": 20 } }
   }
