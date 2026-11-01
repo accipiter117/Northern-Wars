@@ -49,7 +49,8 @@ export function faithHtml(app) {
   const tense = Object.entries(state.settlements)
     .filter(([, s]) => tensionWeight(world, s) > 0)
     .sort((a, b) => b[1].tension - a[1].tension)
-    .slice(0, 5)
+    // Three, so seven faiths still fit on two screens (M32 A).
+    .slice(0, 3)
     .map(([id, s]) => `<button type="button" class="row realm-row" data-place="${id}" data-go="town:${id}">
       <span class="row-main"><span class="row-name">${escapeHtml(world.byId[id].name)}${s.troubled > 0 ? ' <span class="down">(riot-struck)</span>' : ''}</span></span>
       <span class="row-end">${describeLevel(s.tension, TENSION_WORDS)}</span></button>`).join('');
@@ -169,6 +170,8 @@ function cultHtml(app) {
   const rows = seen.map(([id, v]) => `<button type="button" class="row realm-row" data-cult="${id}" data-go="town:${id}">
       <span class="row-main"><span class="row-name">${escapeHtml(world.byId[id].name)}</span></span>
       <span class="row-end">${v >= 60 ? 'Deep-rooted' : v >= 30 ? 'Spreading' : 'Whispers'}</span></button>`).join('');
-  return `<div data-part="cult"><h3>${escapeHtml(c.name)}</h3>${rows ? `<div class="rows">${rows}</div>` : ''}
-    <p class="sub">${rows ? 'A cult of the Lion-headed Spider.' : 'No whisper of the Lion-headed Spider in the realm.'} It feeds on hunger, plague and despair, and starves where the people are fed and calm.</p></div>`;
+  // Nothing to say until it is known to work somewhere.
+  if (!rows) return '<div data-part="cult"></div>';
+  return `<div data-part="cult"><h3>${escapeHtml(c.name)}</h3><div class="rows">${rows}</div>
+    <p class="sub">A cult of the Lion-headed Spider. It feeds on hunger, plague and despair, and starves where the people are fed and calm.</p></div>`;
 }

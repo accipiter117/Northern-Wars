@@ -67,7 +67,7 @@ test('the faith sheet: bars, perks, a power resting with its ring, and an act do
   await page.click('[data-tab="court"]');
   await page.click('[data-sub="faith"]');
   await page.waitForSelector('[data-part="faiths"]');
-  assert.deepEqual(await page.$$eval('.faith-bar', (els) => els.map((e) => e.dataset.faith)), ['eternal_fire', 'melitele', 'old_ways']);
+  assert.deepEqual(await page.$$eval('.faith-bar', (els) => els.map((e) => e.dataset.faith)), ['eternal_fire', 'melitele', 'old_ways', 'great_sun', 'kreve', 'lebioda', 'freya']);
   // Melitele at level 3: three perks held, the fourth next and greyed.
   assert.equal(await page.locator('[data-part="faith-melitele"] .perks li.has').count(), 3);
   assert.equal(await page.locator('[data-part="faith-melitele"] .perks li.next').count(), 1);
