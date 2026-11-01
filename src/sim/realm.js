@@ -27,6 +27,7 @@ import { monthlyFaiths } from './faiths.js';
 import { stepRebellionDay } from './rebellion.js';
 import { stepVassalsDay } from './vassals.js';
 import { stepEmpireDay } from './empire.js';
+import { dailyStrategy } from './strategy.js';
 import { stepSeasDay } from './seas.js';
 import { resolveOrders, noteTheirMoves, marchingNow } from './board.js';
 
@@ -54,6 +55,8 @@ export function stepRealmDay(state, world, rng) {
   if (state.gold) stepGoldDay(state, world, rng);
   if (state.works) stepWorksDay(state, world);
   if (state.wars) {
+    // Rulers take stock, each on its own day of the month (M30 F).
+    if (state.realms && world.strategy) dailyStrategy(state, world, rng);
     stepArmiesDay(state, world, rng);
     // A rising's seat retaken or its lord taken in the field (M27 C).
     if (state.houses) stepRebellionDay(state, world, rng);

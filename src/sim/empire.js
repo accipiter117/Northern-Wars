@@ -51,6 +51,8 @@ export function stepEmpireDay(state, world) {
   const c = E(world);
   const rid = empireOf(state, world);
   if (!c || !rid) return;
+  // The heartland pays for the war it sends north (M30 F).
+  if (c.subsidy && state.nilfgaard?.stage === 'war' && state.day % 30 === 0) state.realms[rid].treasury += c.subsidy;
   const e = (state.empire ??= { next: state.day + reinforcementGap(state, world), arrived: 0 });
   if (state.day < e.next) return;
   e.next = state.day + reinforcementGap(state, world);

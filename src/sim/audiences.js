@@ -523,8 +523,10 @@ export function wantedPact(state, world, a, b) {
   for (const [big, small] of [[a, b], [b, a]]) {
     if (pd.small.includes(small) && !pd.small.includes(big) && aff >= 20 && dangerTo(state, world, small) > 0.6 && powerOf(state, world, big) >= powerOf(state, world, small) * pd.power) wants.push(['protectorate', big, small]);
   }
-  if (aff >= c.allianceAt) wants.push(['alliance', a, b]);
-  if (aff >= c.defensiveAt) wants.push(['defensive', a, b]);
+  // A neutral crown (Kovir, M30 F) signs no pact that would draw it into a war.
+  const neutral = world.realms?.realms[a]?.neutral || world.realms?.realms[b]?.neutral;
+  if (aff >= c.allianceAt && !neutral) wants.push(['alliance', a, b]);
+  if (aff >= c.defensiveAt && !neutral) wants.push(['defensive', a, b]);
   if (aff >= c.tradeAt && world.neighbours.realms[a]?.trade && world.neighbours.realms[b]?.trade) wants.push(['trade', a, b]);
   // Only rivals, or a realm that fears the other, bother with a pact
   // against war.

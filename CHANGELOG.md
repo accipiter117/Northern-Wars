@@ -1,5 +1,9 @@
 # Changelog
 
+## M30 F Balance
+- The North's rulers now think on different days of the month, so the first of the month no longer stutters.
+- Kovir stays truly neutral, the league against the Empire is smaller, and the Empire's heartland pays for the war it sends.
+
 ## M30 E Skellige
 - Skellige joins the North: King Bran an Craite's islands, bound to Cintra by marriage.
 - From spring to autumn its longships raid the coasts of Cidaris, Kerack, Verden and the Empire. You can watch them sail.
