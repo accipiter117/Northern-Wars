@@ -9,6 +9,7 @@ import { dateOf } from './calendar.js';
 import { treatyBetween, makeTreaty } from './diplomacy.js';
 import { informed } from './realms.js';
 import { suzerainOf } from './tiers.js';
+import { pointInPolygon } from './geometry.js';
 
 const S = (world) => world.war?.seas;
 
@@ -48,7 +49,7 @@ export function raidTargets(state, world, rid) {
     if (treatyBetween(state, rid, realm, 'alliance') || treatyBetween(state, rid, realm, 'defensive')) continue;
     if (realm === TEMERIA && (z.paid > state.day || (state.neighbours[rid]?.relation ?? 0) >= c.spareAbove)) continue;
     // A vassal of the crown is spared while the crown has paid.
-    if (realm !== TEMERIA && suzerainOf(state, realm) === TEMERIA && z.paid > state.day) continue;
+    if (realm !== TEMERIA && suzerainOf(state, realm) === TEMERIA && (z.paid > state.day || (state.neighbours[rid]?.relation ?? 0) >= c.spareAbove)) continue;
     const towns = realm === TEMERIA ? Object.keys(state.settlements) : world.foreignByRealm[realm] ?? [];
     for (const id of towns) if (coastal(world, id) && ownerOf(state, world, id) === realm) out.push(id);
   }
@@ -67,10 +68,41 @@ export function seaPath(world, to) {
   const step = a <= b ? 1 : -1;
   const pts = [c.home];
   for (let i = a; i !== b + step; i += step) pts.push(lanes[i]);
+  // In to the nearest shore by the town that open water reaches from the
+  // last lane (not a sliver between two borders), else just off the town.
   const last = pts.at(-1);
-  const d = Math.hypot(last[0] - t.x, last[1] - t.y) || 1;
-  pts.push([t.x + ((last[0] - t.x) / d) * 22, t.y + ((last[1] - t.y) / d) * 22]);
+  let best = null;
+  for (let r = 8; r <= 80 && !best; r += 6) {
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      const q = [t.x + Math.cos(a) * r, t.y + Math.sin(a) * r];
+      if (onLand(world, q[0], q[1]) || !clearWater(world, last, q)) continue;
+      const d = Math.hypot(q[0] - last[0], q[1] - last[1]);
+      if (!best || d < best.d) best = { q, d };
+    }
+  }
+  if (best) pts.push(best.q);
+  else {
+    const d = Math.hypot(last[0] - t.x, last[1] - t.y) || 1;
+    pts.push([t.x + ((last[0] - t.x) / d) * 22, t.y + ((last[1] - t.y) / d) * 22]);
+  }
   return pts;
+}
+
+const landCache = new WeakMap();
+function onLand(world, x, y) {
+  let shapes = landCache.get(world);
+  if (!shapes) {
+    const g = world.geography;
+    shapes = [g.temeria, ...Object.values(g.neighbours).flatMap((n) => n.shapes), ...Object.values(g.lands ?? {}).flatMap((n) => n.shapes)];
+    landCache.set(world, shapes);
+  }
+  return shapes.some((sh) => pointInPolygon(x, y, sh));
+}
+
+function clearWater(world, a, b) {
+  for (let k = 1; k < 12; k++) if (onLand(world, a[0] + ((b[0] - a[0]) * k) / 12, a[1] + ((b[1] - a[1]) * k) / 12)) return false;
+  return true;
 }
 
 // Where a raid's longships are on a given day, for the map.
@@ -180,5 +212,5 @@ export function payOffLongships(state, world) {
   const c = S(world);
   state.treasury -= c.payoff.coin;
   seas(state).paid = state.day + c.payoff.months * 30;
-  addDispatch(state, `A chest of crowns goes to Kaer Trolde. For ${c.payoff.months} months Skellige's longships will leave Temeria and its vassals in peace.`, 'abroad');
+  addDispatch(state, `A chest of crowns goes to Kaer Trolde. For ${c.payoff.months} months Skellige's longships will leave Temeria's vassals in peace.`, 'abroad');
 }

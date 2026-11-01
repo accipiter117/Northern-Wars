@@ -237,13 +237,13 @@ function longshipsHtml(app, id) {
   const pay = canPayOffLongships(state, world);
   const status = [
     z.hired?.until > state.day ? `In our pay against ${escapeHtml(sideName(world, z.hired.against))} until ${formatDate(z.hired.until)}.` : '',
-    z.paid > state.day ? `Paid to spare Temeria and its vassals until ${formatDate(z.paid)}.` : '',
+    z.paid > state.day ? `Paid to spare our vassals' coasts until ${formatDate(z.paid)}.` : '',
     (z.raids ?? []).length ? `Longships at sea: ${z.raids.map((r) => escapeHtml(world.byId[r.to].name)).join(', ')}.` : '',
   ].filter(Boolean).join(' ');
   return `<div data-part="longships"><h3>The longships</h3>
     <p class="sub">Bound to Cintra by marriage, Skellige raids every other coast from spring to autumn. ${status}</p>
     <div class="build-list">${hire}
-      <button type="button" class="build" data-payoff ${orderAttr({ type: 'payOffLongships' }, `Pay Skellige ${c.payoff.coin} crowns to leave Temeria and its vassals in peace?`)} ${pay.ok ? '' : 'disabled'}>
+      <button type="button" class="build" data-payoff ${orderAttr({ type: 'payOffLongships' }, `Pay Skellige ${c.payoff.coin} crowns to leave our vassals' coasts in peace?`)} ${pay.ok ? '' : 'disabled'}>
         <span class="build-name">Pay them to keep away</span><span class="build-cost">${pay.ok ? `${number(c.payoff.coin)} crowns, ${c.payoff.months} months` : escapeHtml(pay.reason)}</span></button>
     </div></div>`;
 }
