@@ -281,6 +281,14 @@ Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
 - No full naval war yet: the longships are raids, not fleets.
 - Save version 34: an older save gains Skellige, bound to Cintra.
 
+### Balance and performance (M30 F)
+- Rulers take stock each on a day of their own (`thinkingDay` in strategy.js: spread over days 1 to 28 by realm), so the North's thinking no longer falls on the first of the month. The month's other work (frontier, clock, longships, ledgers) still turns on the first.
+- Kovir is neutral (realms.json neutral): it signs no alliance or defensive pact that would draw it into a war, and keeps out of the league against the Empire. Brokilon keeps out of the league too.
+- The league against the Empire forms later and smaller (average fear 25, members at 35, each answering a call one month in five), so the Empire's wars are not fought against the whole North at once.
+- The heartland pays for the war it sends: 900 crowns a month to the Empire while the clock is at War, and its standing army may reach 14,000 (500 men a regiment), so the provinces are not bankrupted by the regiments they are sent.
+- Skellige's longships put to sea in three months in five of the season (60%), raiding every year.
+- `node tools/widernorth.mjs [years] [seeds]` prints the wider North every five years: who holds Cintra and the crossings, the Empire's towns and army, Kovir's purse, Angren's free towns, the spheres, and over the run the wars started and fought, Skellige's raids by year, Angren's changes of hands and the spheres' shifts.
+
 ### Terrain art
 - Forests as massed trees with darker edges, ranges as shaded peaks sized by the range (snow on the great ones), hills as mounds, marsh as reeds and pools, rivers that taper from source to mouth with their names set along the curve, lakes with a shoreline and a highlight. Scatter is seeded, so the same tree stands in the same place every time. Terrain stays visible under the fog of war.
 - Level of detail by zoom: far out only the ranges, great forests and main rivers are named; marks thin out. The painted map is cut into 256-pixel tiles at six resolutions, painted a few per frame with a coarser tile standing in until the fine one is ready, and kept in a cache that grows to twice what one view needs. Panning across the whole North on a slowed CPU takes about a millisecond a frame.
