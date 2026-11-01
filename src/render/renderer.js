@@ -634,6 +634,19 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (z < (r.main ? 0.7 : 1.5)) continue;
       riverName(c, r);
     }
+    // Where the roads leave the map for the Empire's heart (M30 A).
+    if (z >= 0.7 && world.geography.roadEndLabel) {
+      c.font = `italic 600 12px ${SERIF}`;
+      c.fillStyle = 'rgba(236, 224, 194, 0.85)';
+      for (const e of prep.roadEnds) {
+        const p = toScreen(cam, e.x, e.y);
+        if (!inView(p)) continue;
+        c.strokeStyle = 'rgba(30, 24, 18, 0.6)';
+        c.lineWidth = 3;
+        c.strokeText(`${world.geography.roadEndLabel} ↓`, p.x, p.y - 10);
+        c.fillText(`${world.geography.roadEndLabel} ↓`, p.x, p.y - 10);
+      }
+    }
     // The realm's own name, faint across the heartland when zoomed out.
     if (z < 2.2) {
       c.font = `600 ${Math.round(18 + z * 4)}px ${SERIF}`;

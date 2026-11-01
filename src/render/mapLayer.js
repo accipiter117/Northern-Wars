@@ -13,6 +13,8 @@ export const COLOURS = {
   seaInk: 'rgba(225, 235, 230, 0.10)',
   neighbour: '#cdbf9b',
   beyond: '#d2c8ab',
+  // The Empire's heartland at the southern edge: dark, and never simulated.
+  heartland: '#6f665a',
   neighbourInk: 'rgba(40, 30, 20, 0.45)',
   land: '#dccaa0',
   ink: '#2b2116',
@@ -67,12 +69,14 @@ export function prepareMap(world) {
   const temeria = g.temeria;
   const landShapes = [temeria, ...Object.values(g.neighbours).flatMap((n) => n.shapes), ...Object.values(g.lands ?? {}).flatMap((n) => n.shapes)];
   const onLand = (x, y) => landShapes.some((sh) => pointInPolygon(x, y, sh));
+  // Scenery stays off the Empire's heartland at the edge (M30 A).
+  const bare = Object.values(g.lands ?? {}).filter((n) => n.heartland).flatMap((n) => n.shapes);
   const lands = [
     ...Object.entries(g.neighbours).map(([id, n]) => ({ id, n, beyond: false })),
     ...Object.entries(g.lands ?? {}).map(([id, n]) => ({ id, n, beyond: true })),
   ].map(({ id, n, beyond }) => {
     const biggest = n.shapes.reduce((a, b) => (area(b) > area(a) ? b : a));
-    return { id, name: n.name, beyond, paths: n.shapes.map(pathOf), label: labelSpot(biggest), boxes: n.shapes.map((sh) => boxOf(sh)), size: Math.sqrt(area(biggest)) };
+    return { id, name: n.name, beyond, heartland: !!n.heartland, paths: n.shapes.map(pathOf), label: labelSpot(biggest), boxes: n.shapes.map((sh) => boxOf(sh)), size: Math.sqrt(area(biggest)) };
   });
   // Temeria's own country stays inside Temeria; the atlas's country abroad
   // runs over whatever land it covers, borders or none, but never the sea.
@@ -156,6 +160,9 @@ export function prepareMap(world) {
     .map((s) => ({ ...s, box: { x0: Math.min(s.a.x, s.b.x) - 4, y0: Math.min(s.a.y, s.b.y) - 4, x1: Math.max(s.a.x, s.b.x) + 4, y1: Math.max(s.a.y, s.b.y) + 4 } }));
   const distantById = Object.fromEntries((g.distantTowns ?? []).map((t) => [t.id, t]));
   const roads = roadSegs([...g.roads, ...(g.foreignRoads ?? [])], (id) => world.byId[id] ?? distantById[id]);
+  // The roads south end at the map's edge, bound for the Empire's heart (M30 A).
+  const roadEnds = g.roadEnds ?? [];
+  for (const e of roadEnds) distantById[e.id] = e;
   const distantRoads = roadSegs(g.distantRoads ?? [], (id) => distantById[id] ?? world.byId[id]);
 
   // Scattered life on open land: a copse, a lone peak, a ring of standing
@@ -169,7 +176,7 @@ export function prepareMap(world) {
       const px = x + rng.next() * 34;
       const py = y + rng.next() * 34;
       const roll = rng.next();
-      if (roll > 0.42 || !onLand(px, py)) continue;
+      if (roll > 0.42 || !onLand(px, py) || bare.some((sh) => pointInPolygon(px, py, sh))) continue;
       if (terrain.some((t) => t.box.x0 < px && t.box.x1 > px && t.box.y0 < py && t.box.y1 > py && pointInPolygon(px, py, t.shape))) continue;
       if (places.some((p) => Math.hypot(p.x - px, p.y - py) < 32)) continue;
       if (allRoads.some((s) => nearSegment(px, py, s.a.x, s.a.y, s.b.x, s.b.y) < 9)) continue;
@@ -191,7 +198,7 @@ export function prepareMap(world) {
   const landClip = new Path2D();
   for (const sh of landShapes) landClip.addPath(pathOf(sh));
   const [mx0, my0, mx1, my1] = g.bounds ?? [0, 0, g.width, g.height];
-  return { landClip, bounds: { x0: mx0, y0: my0, x1: mx1, y1: my1 }, temeria: pathOf(temeria), temeriaBox: boxOf(temeria), neighbours: lands.filter((l) => !l.beyond), lands, terrain, rivers, lakes, roads, distantRoads, scatter, waves };
+  return { landClip, bounds: { x0: mx0, y0: my0, x1: mx1, y1: my1 }, temeria: pathOf(temeria), temeriaBox: boxOf(temeria), neighbours: lands.filter((l) => !l.beyond), lands, terrain, rivers, lakes, roads, distantRoads, roadEnds, scatter, waves };
 }
 
 // Draws the map in world units. `px` converts screen pixels to world units at
@@ -314,7 +321,7 @@ export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 
   for (const n of prep.lands) {
     n.paths.forEach((p, i) => {
       if (!seen(n.boxes[i])) return;
-      ctx.fillStyle = n.beyond ? COLOURS.beyond : COLOURS.neighbour;
+      ctx.fillStyle = n.heartland ? COLOURS.heartland : n.beyond ? COLOURS.beyond : COLOURS.neighbour;
       ctx.fill(p);
       if (tints[n.id]) {
         ctx.fillStyle = tints[n.id];
@@ -426,6 +433,19 @@ export function drawMap(ctx, prep, world, px, tints = {}, view = null, detail = 
   }
   ctx.stroke();
   ctx.setLineDash([]);
+  // The great imperial roads run on, paved and pale, off the map's edge.
+  ctx.beginPath();
+  for (const e of prep.roadEnds) {
+    for (const s of prep.distantRoads) {
+      if (s.b !== e && s.a !== e) continue;
+      if (!seen(s.box)) continue;
+      ctx.moveTo(s.a.x, s.a.y);
+      ctx.lineTo(s.b.x, s.b.y);
+    }
+  }
+  ctx.strokeStyle = 'rgba(226, 210, 172, 0.55)';
+  ctx.lineWidth = 2.4 * px;
+  ctx.stroke();
 
   if (seen(prep.temeriaBox)) {
     ctx.save();

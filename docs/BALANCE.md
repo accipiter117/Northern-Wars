@@ -66,6 +66,9 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 - **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
 - **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.
 
+### The wider North (M30)
+- **Part A (the map south)** changes no numbers: the new lands are mapped, not yet realms, so nothing in the rules reads them. The fog grid grows from 12,420 cells to 14,950, and building the world in Node takes about 120 ms against 114 ms before (the territory grid 51 ms against 42 ms).
+
 ### Crowns and vassals (M29)
 Twenty years untended (the crown takes no vassals), seeds 1 to 4, from `step` alone:
 

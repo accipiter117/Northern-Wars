@@ -106,6 +106,13 @@ export function newIntel(world) {
   return { explored, seen: {} };
 }
 
+// A fog from an older, smaller map grows to fit the world's grid: new
+// ground starts unexplored (M30 A).
+export function fitIntel(intel, world) {
+  const want = Math.ceil((world.grid.cols * world.grid.rows) / BITS);
+  while (intel.explored.length < want) intel.explored.push(0);
+}
+
 // Marks newly seen ground as explored and notes how each foreign settlement
 // in sight looks today, so the map can show it as last seen once the fog
 // returns.
