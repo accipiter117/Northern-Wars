@@ -9,6 +9,7 @@
 import { addDispatch, clamp } from './realm.js';
 import { makeRng, streamSeed } from './rng.js';
 import { sideName } from './conflict.js';
+import { bookEffect } from './book.js';
 
 const TEMERIA = 'temeria';
 const S = (world) => world.spies;
@@ -100,6 +101,8 @@ export function guardOf(state, world, target, owner = null) {
   let g = pick(c.homeGuard, target);
   const sm = state.spycraft?.spymaster;
   if (target === TEMERIA && sm && sm.turned !== owner) g += sm.skill / 4;
+  // Curfews, the king's riders and the inquisition catch agents too (M31 C).
+  if (target === TEMERIA) g += bookEffect(state, world, 'counterSpy');
   return g;
 }
 
@@ -227,7 +230,7 @@ export function foreignAtHome(state, world) {
   for (const o of spyOwners(state, world)) {
     if (o === TEMERIA) continue;
     const d = netDepth(state, o, TEMERIA);
-    const exact = knowsPlans(state, world, o);
+    const exact = knowsPlans(state, world, o) || (sc.known?.[o] ?? 0) > state.day;
     if (!exact && !sc.spymaster) continue;
     out.push({ owner: o, name: sideName(world, o), depth: exact ? Math.round(d) : null, band: band(d) });
   }

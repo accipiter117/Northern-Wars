@@ -3,7 +3,7 @@
 // and the foreign networks known to work in Temeria.
 import {
   ourDepth, spyUnlocked, settlesAt, spyExpense, foreignAtHome, spyTargets, canAppoint, formatDate, sideName,
-  OPERATIONS, opTargets, exposureOf, canOperate,
+  OPERATIONS, opTargets, exposureOf, canOperate, cluesOf,
 } from '../sim/index.js';
 import { cardHead, orderAttr } from './card.js';
 import { escapeHtml, number } from './format.js';
@@ -92,10 +92,24 @@ function networksHtml(world, state, ours) {
 function foreignHtml(world, state, sc) {
   const known = foreignAtHome(state, world);
   const rows = known.map((f) => `<div class="row realm-row short" data-foreign="${f.owner}"><span class="row-main"><span class="row-name">${escapeHtml(f.name)}</span>
-    <span class="row-sub">${f.depth !== null ? `${f.depth} deep, read from their own letters.` : 'As far as our spymaster can tell.'}</span></span>
+    <span class="row-sub">${f.depth !== null ? `${f.depth} deep, from their own letters or the agents we followed.` : 'As far as our spymaster can tell.'}</span></span>
     <span class="row-end">${BAND_WORDS[f.band]}</span></div>`).join('');
   const empty = sc.spymaster ? 'No foreign network is known to work in Temeria.' : 'Name a spymaster to learn who spies on Temeria.';
-  return `<div data-part="foreign-spies"><h3>Foreign agents in Temeria</h3>${rows || `<p class="sub">${empty}</p>`}</div>`;
+  const caught = sc.caught ? `<p class="sub">Agents taken by our watch this reign: ${sc.caught}.</p>` : '';
+  const lost = sc.lost && state.day - sc.lost.day < 365
+    ? `<p class="warn" data-part="spymaster-lost">${escapeHtml(sc.lost.name)} ${sc.lost.how === 'unmasked' ? `was unmasked as an agent of ${escapeHtml(sideName(world, sc.lost.by))} and taken` : 'was murdered'} on ${formatDate(sc.lost.day)}.</p>` : '';
+  return `<div data-part="foreign-spies"><h3>Foreign agents in Temeria</h3>${rows || `<p class="sub">${empty}</p>`}${caught}${lost}</div>${cluesHtml(world, state, sc)}`;
+}
+
+// Troubles at home that no one can explain, until the spymaster names who
+// paid for them (M31 C).
+function cluesHtml(world, state, sc) {
+  const list = cluesOf(state).slice(0, 6);
+  if (!list.length) return '';
+  const WHAT = { bribe: 'A lord\'s loyalty cooled', stir: 'Agitators in the streets', sabotage: 'Fire in the works', assassinate: 'A captain poisoned' };
+  const rows = list.map((k) => `<div class="row realm-row short" data-clue="${k.id}"><span class="row-main"><span class="row-name">${WHAT[k.kind]}: ${escapeHtml(k.what)}</span>
+    <span class="row-sub">${formatDate(k.day)}</span></span><span class="row-end">${k.named ? escapeHtml(sideName(world, k.owner)) : 'Unknown'}</span></div>`).join('');
+  return `<div data-part="clues"><h3>Troubles without a name</h3>${rows}<p class="sub">${sc.spymaster ? 'Our spymaster may yet name who paid for them.' : 'Without a spymaster no one will ever trace them.'}</p></div>`;
 }
 
 const OP_NAMES = { bribe: 'Bribe', stir: 'Stir a rising', sabotage: 'Sabotage', assassinate: 'Assassinate' };

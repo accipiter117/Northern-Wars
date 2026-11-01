@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | In progress (A and B done) |
+| M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | In progress (A to C done) |
 | M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | Done |
 | M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | Done |
 | M27 Lords worth having, traitors who pay | A and B: what lords give (guarding their lands, retinues, dues) and want; C and D: rebellion as a war and the Judgement; E: raising new houses | Done |
@@ -42,6 +42,11 @@ Part A, networks and the spymaster:
 Part B, operations:
 - By depth in the target realm: 50 bribe (a court, a governor or a vassal against its overlord), 60 stir a rising, 70 sabotage (works or a siege camp's stores), 85 assassinate (a commander or a spymaster, never a crowned ruler).
 - Each has a cost, a cooldown and a chance of exposure by the target's watch; exposure costs depth, trust with that ruler and sometimes the agent.
+
+Part C, counter-espionage:
+- Foreign networks in Temeria grow too; the spymaster and the laws (the king's riders, curfews, the inquisition) catch their agents.
+- A caught agent is a dilemma: hang, turn, trade back, or let go and follow.
+- Foreign operations against Temeria show their effects with a clue (a lord's loyalty falling, a works burned, a captain dead), and the spymaster may later name who did it.
 
 ## M30 acceptance criteria
 Part A, the map south of the Yaruga:

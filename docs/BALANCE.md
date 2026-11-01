@@ -652,6 +652,18 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - One operation a season in each realm (90 days' rest) keeps spying a lever, not a machine gun: a stirred rising costs a realm about a quarter of two garrisons and some prosperity, enough to tip a close war, never enough to win one alone.
   - **Dials**: `operations.kinds` (depth `at`, `coin`, `risk` and effects), `cooldown`, `maxRisk`, and the exposure costs (`depthLoss`, `trust`, `relation`, `agentLostChance`, `agentLostDepth`).
 
+- **Part C (counter-espionage)**, ten years untended (caught agents left to the default, the rope), seeds 1 to 3:
+
+| The crown keeps | Agents caught | Foreign operations in Temeria | Named by the spymaster | The Empire's network in Temeria at year 10 | Redania's |
+| --- | --- | --- | --- | --- | --- |
+| No spymaster | 14 to 18 | 8 to 12 (the screen keeps the last 12) | none | 42 to 53 | 38 to 42 |
+| A loyal spymaster (skill 55) | 16 to 24 | 0 to 2 | all of them | 43 to 45 | 24 to 34 |
+| The same, and curfews | 15 to 23 | 0 to 4 | all of them | 40 to 44 | 27 to 29 |
+
+  - About two agents a year come before the crown, so a caught spy is a real decision now and then, not a weekly chore. Hanging them all (the default) keeps foreign networks some ten points under where Part A left them.
+  - Without a spymaster the Empire's network climbs past 60, deep enough to stir towns as well as bribe lords, and does so about once a year; with one, foreign work in Temeria all but stops. Appointing a spymaster is the main defence; the laws add to it.
+  - **Dials**: `counter.catchBase` (0.12), `catchMax`, `gapDays` (45), the four answers, `foreignOps.chance` (0.06 x the owner's spend) and its war and pressure multipliers, and `nameChance` (0.06).
+
 - **Part A's dials**: `decay` (0.065) sets how fast networks settle; `budgetFull` (500) the sum that runs them at full pace; `homeGuard` and `guardCut` (150) how much a court's watch slows others; `turnAt`, `turnChance`, `killAt`, `killChance` the risk to the spymaster.
 
 ## Tools
