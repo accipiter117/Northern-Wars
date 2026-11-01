@@ -874,3 +874,7 @@ ul.orders li .chip { flex: none; }
 .crown-style { margin: 0 0 8px; font-style: italic; color: #d2ab5f; }
 .sphere summary { cursor: pointer; padding: 10px 0; min-height: 44px; font-weight: 600; }
 .realm-row.short .row-sub { font-size: 13px; }
+.spy-net { margin: 4px 0 10px; }
+.spy-key ul { margin: 6px 0; padding-left: 18px; }
+.spy-key li b { display: inline-block; min-width: 2em; color: var(--gold); }
+.spy-key summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }

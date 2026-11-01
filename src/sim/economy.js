@@ -24,6 +24,7 @@ import { dealLedger } from './deals.js';
 import { worksFactor, upkeepFactor } from './works.js';
 import { farmFactor, levyFactor } from './labour.js';
 import { loanLedger } from './loans.js';
+import { spyExpense } from './spies.js';
 import { bookEffect, outputMult } from './book.js';
 import { nonhumanShare } from './culture.js';
 import { churchLand, faithEffect } from './faiths.js';
@@ -387,6 +388,7 @@ export function monthlyLedger(state, world, rng = null) {
     gifts: stanceCost(state, world),
     companies: 0,
     embassies: Object.keys(state.embassies ?? {}).length * (world.realms?.intelligence.embassy.monthly ?? 0),
+    spies: spyExpense(state, world),
     armies: 0,
     occupation: 0,
     tribute: 0,

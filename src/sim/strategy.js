@@ -14,6 +14,7 @@ import { informed } from './realms.js';
 import { realmPotential, raiseRealmArmy, soldiersOf } from './war.js';
 import { musterPreview } from './armies.js';
 import { TEMERIA, hostile, atWar, warsOf, sideIndex, warScore, ownerOf, originOf, valueOf, sideName, placesHeldBy, leviedMap } from './conflict.js';
+import { hasSpy, knowsPlans } from './spies.js';
 import {
   D, parties, rulerShort, hasTrait, agendaOf, trustIn, changeTrust, remember, powerOf, treatiesOf, treatyBetween, partnerOf, bindingTreaty, endTreaty,
 } from './diplomacy.js';
@@ -490,10 +491,11 @@ export function intentions(state, world, rid) {
   const p = realm.posture;
   const def = ST(world).postures[p.kind];
   const embassy = !!state.embassies?.[rid] || !!treatyBetween(state, TEMERIA, rid, 'alliance');
-  const spy = (state.spies?.[rid] ?? 0) > state.day;
+  // An agent in place, or a network deep enough to read their letters (M31).
+  const spy = (state.spies?.[rid] ?? 0) > state.day || knowsPlans(state, world, rid);
   const realmName = sideName(world, rid);
   const out = { posture: null, aim: null, vague: ST(world).intel.vague[p.kind] };
-  if (embassy || spy) {
+  if (embassy || spy || hasSpy(state, world, rid)) {
     const why = p.reasons?.[0]?.text;
     out.posture = `${realmName} ${def.verb}${why ? `: ${why.charAt(0).toLowerCase()}${why.slice(1)}` : ''}.`;
   }

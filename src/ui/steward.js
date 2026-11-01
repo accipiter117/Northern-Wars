@@ -25,6 +25,7 @@ const GO = {
   edicts: ['court:laws', 'Repeal a costly edict'],
   gifts: ['diplomacy:realms', 'Send fewer gifts'],
   embassies: ['diplomacy:intel', 'Recall an embassy'],
+  spies: ['court:spies', 'Spend less on spies'],
   interest: ['treasury:taxes', 'Repay the bankers'],
   loans: ['treasury:taxes', 'See the loans'],
   tribute: ['military:war', 'See the terms'],

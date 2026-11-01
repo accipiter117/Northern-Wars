@@ -41,6 +41,7 @@ export const EXPENSES = [
   ['companies', 'Standing companies'],
   ['patrols', 'Patrols'],
   ['embassies', 'Embassies abroad'],
+  ['spies', 'Spies and the spymaster'],
   ['armies', 'Armies in the field'],
   ['occupation', 'Garrisons in conquered towns'],
   ['tribute', 'Tribute paid'],

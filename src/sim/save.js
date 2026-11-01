@@ -8,6 +8,7 @@ import { defaultThreats, threatCap } from './threats.js';
 import { defaultMeters, realmUnrest } from './meters.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
+import { newSpycraft, boostNet } from './spies.js';
 import { STATE_VERSION, newSettlement, defaultWar, createState } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
@@ -422,6 +423,16 @@ const MIGRATIONS = {
     addMissingRealms(state, world);
     keepBonds(state, world);
     state.version = 34;
+    return state;
+  },
+  // M31 A: spy networks start from the lore, as at the start of a reign;
+  // an agent already in place counts towards the crown's own.
+  34(state, world) {
+    if (world.spies && !state.spycraft) {
+      state.spycraft = newSpycraft(state, world);
+      for (const [rid, until] of Object.entries(state.spies ?? {})) if (until > state.day) boostNet(state, world, rid);
+    }
+    state.version = 35;
     return state;
   },
 };

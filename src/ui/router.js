@@ -9,6 +9,7 @@ import { stewardHtml } from './steward.js';
 import { lawsHtml } from './laws.js';
 import { noblesHtml, houseCard, swatch, depositionHtml, vassalCard } from './nobles.js';
 import { faithHtml, freshPowers } from './faith.js';
+import { spiesHtml } from './spies.js';
 import { crownStyle, suzerainOf } from '../sim/index.js';
 import { ledgerHtml, chronicleHtml } from './menu.js';
 import { industryHtml } from './trade.js';
@@ -23,7 +24,7 @@ import { boardCard, boardTitle, ordersHtml } from './board.js';
 
 export const SUBS = {
   realm: [['labour', 'Labour'], ['overview', 'Overview'], ['places', 'Places']],
-  court: [['inbox', 'Decisions'], ['laws', 'Laws'], ['houses', 'Great houses'], ['faith', 'Faith']],
+  court: [['inbox', 'Decisions'], ['laws', 'Laws'], ['houses', 'Great houses'], ['faith', 'Faith'], ['spies', 'Spies']],
   treasury: [['ledger', 'Ledger'], ['taxes', 'Taxes and loans'], ['trade', 'Trade'], ['industry', 'Mines and industry']],
   military: [['forces', 'Forces'], ['threats', 'Threats'], ['garrisons', 'Garrisons'], ['war', 'War']],
   diplomacy: [['realms', 'Rulers'], ['pacts', 'Pacts'], ['envoys', 'Audiences'], ['intel', 'Spies and embassies']],
@@ -49,6 +50,7 @@ function tabScreen(app, tab) {
   if (tab === 'court') {
     if (sub === 'laws') html = lawsHtml(app);
     else if (sub === 'houses') html = noblesHtml(app);
+    else if (sub === 'spies') html = spiesHtml(app);
     else if (sub === 'faith') {
       html = faithHtml(app);
       if (app.memory.faithSeen !== app.state.day) {

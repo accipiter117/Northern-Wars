@@ -13,6 +13,7 @@ import { companySightCircles } from './forces.js';
 import { TEMERIA, ownerOf } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
 import { territoryOwners, territoryAt } from './territory.js';
+import { hasSpy } from './spies.js';
 
 export function buildGrid(world) {
   const g = world.geography;
@@ -68,7 +69,7 @@ export function visionOf(state, world, positions = []) {
     if (cap) circles.push({ x: cap.x, y: cap.y, r: v.embassy });
   }
   for (const [rid, n] of Object.entries(state.neighbours ?? {})) {
-    if ((state.spies?.[rid] ?? 0) > state.day || sharesSight(state, rid)) realms.add(rid);
+    if (hasSpy(state, world, rid) || sharesSight(state, rid)) realms.add(rid);
     else if (n.stance === 'friendly' && n.relation >= v.allyAt) realms.add(rid);
     else if (n.stance === 'friendly' && n.relation >= v.friendlyAt) {
       for (const id of world.foreignByRealm[rid] ?? []) circles.push({ x: world.byId[id].x, y: world.byId[id].y, r: v.friendly });

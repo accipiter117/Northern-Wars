@@ -2,7 +2,7 @@ import { relationTarget, foreignTrade, canSetStance, formatDate, canOpenEmbassy,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { realmWarHtml, siegeNote } from './war.js';
-import { sideName } from '../sim/index.js';
+import { sideName, ourDepth, hasSpy } from '../sim/index.js';
 import { cardHead, orderAttr, section } from './card.js';
 import { dealFormHtml } from './market.js';
 import { icon } from './icons.js';
@@ -154,13 +154,15 @@ export function intelListHtml(app) {
     const bits = [];
     if ((state.spies[rid] ?? 0) > state.day) bits.push(`an agent until ${formatDate(state.spies[rid])}`);
     if (state.embassies[rid]) bits.push('an embassy');
+    if (ourDepth(state, rid) >= 1) bits.push(`a network ${Math.round(ourDepth(state, rid))} deep`);
     const known = (world.foreignByRealm[rid] ?? []).filter((id) => state.ambient.intel?.seen[id]).length;
     return `<button type="button" class="row realm-row" data-go="realm:${rid}">
       <span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[rid].name)}</span>
       <span class="row-sub">${bits.length ? `We have ${bits.join(' and ')}.` : 'Only what our border watchers see.'} ${known} place${known === 1 ? '' : 's'} known.</span></span></button>`;
   }).join('');
   return `${cardHead({
-    status: '<span>Embassies watch a capital and bring its news; spies show a whole realm for a time, at the risk of being caught. Open a realm to send either.</span>',
+    status: '<span>Embassies watch a capital and bring its news; spies show a whole realm for a time, at the risk of being caught. Open a realm to send either. The networks and the spymaster are kept under the Court.</span>',
+    actions: '<button type="button" class="act" data-tab-go="court:spies"><span class="act-label">Spies and the spymaster</span></button>',
     chips: [{ icon: 'castle', label: 'Embassies', value: embassies }, { icon: 'target', label: 'Spies abroad', value: spies }, { icon: 'coin', label: 'Embassy', value: `${c.embassy.monthly} a month` }],
   })}<div data-part="intel"><div class="rows">${rows}</div></div>`;
 }
@@ -345,6 +347,7 @@ export function intelligenceHtml(world, state, rid) {
   const c = world.realms.intelligence;
   let sight = 'Only what our border watchers and merchants can see.';
   if ((state.spies[rid] ?? 0) > state.day) sight = `All of it, through our agent, until ${formatDate(state.spies[rid])}.`;
+  else if (hasSpy(state, world, rid)) sight = `All of it, through our network there (${Math.round(ourDepth(state, rid))} deep).`;
   else if (n.stance === 'friendly' && n.relation >= v.allyAt) sight = 'All of it: they are true friends and hide nothing.';
   else if (n.stance === 'friendly' && n.relation >= v.friendlyAt) sight = 'The country round their towns, which they share as friends.';
   if (state.embassies[rid]) sight += ' Our embassy watches their capital.';
