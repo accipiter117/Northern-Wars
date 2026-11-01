@@ -4,7 +4,7 @@
 // wait (war declared on Temeria, a siege, a rebellion, a deposition) also
 // raise a banner across the top.
 import {
-  houseDef, judgementEffects, crimesOf, JUDGEMENTS,
+  houseDef, judgementEffects, crimesOf, JUDGEMENTS, candidatesFor,
   TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText, worksDecisionText, envoysWaiting,
 } from '../sim/index.js';
 import { escapeHtml } from './format.js';
@@ -35,6 +35,16 @@ export function pendingDecisions(state, world, acked = Infinity) {
       key: `judgement:${j.id}`, kind: 'judgement', id: j.id, house: j.house, urgent: true, daysLeft: left(j.day, world.houses.judgement.days),
       kicker: 'The king\'s judgement', title: `The judgement of ${def.lord}`, text: crimesOf(state, world, j),
       choices: JUDGEMENTS.map((k) => fx[k]), fallback: 1, colours: def.colours,
+    });
+  }
+  // Lands waiting for a new house (M27 E): stays open until one is raised.
+  for (const r of state.raisings ?? []) {
+    const cands = candidatesFor(state, world);
+    const where = r.lands.map((id) => world.byId[id]?.name).filter(Boolean).join(', ');
+    out.push({
+      key: `raising:${r.id}`, kind: 'raising', id: r.id, daysLeft: null, kicker: 'Lands without a lord', title: `Raise a new house to hold ${where}`,
+      text: cands.length ? 'The crown holds them for now. Choose a loyal commander to raise as their lord: the new house will be grateful for years.' : 'The crown holds them for now. No commander has yet earned them: a captain who leads an army or wins fights for the crown, or a loyal younger son, may in time.',
+      choices: cands.map((c) => `${c.lord} (${c.traits.map((t) => world.houses.traits[t]?.name).join(', ')}). ${c.deed}`), fallback: -1,
     });
   }
   // What to do with a town taken, who is to hold a town gained, a rising (M19).

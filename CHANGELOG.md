@@ -1,5 +1,11 @@
 # Changelog
 
+## M27 E New houses
+- When a lord is stripped, exiled or beheaded, his lands wait for a new house. Choose a loyal commander (a captain of one of your armies, a captain of a company that has won its fights, or a loyal younger son) and raise them as lord.
+- The new house is grateful for years, wants little at first and flies a banner of its own over its towns. Until you choose, the crown holds the lands.
+- You can also raise a new house by giving it one of your conquered towns.
+- After a beheading, a scaffold stands at the traitor's seat for a few days.
+
 ## M27 C and D Rebellion as a war, and the king's judgement
 - A house that rises now goes to war: its castles and villages fly its banners, its garrisons go over, its dues stop, and its host takes the field and besieges your towns. Disloyal neighbours may join.
 - Crush it with your armies: take the rebel's seat, or break his host and take him in battle. Beaten badly, he may sue for mercy. Leave it too long with no army and he forces terms on you.

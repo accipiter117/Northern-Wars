@@ -11,6 +11,7 @@ import { addDispatch, clamp } from './realm.js';
 import { lawStands } from './book.js';
 import { totalPopulation } from './state.js';
 import { rise, monthlyRebellion } from './rebellion.js';
+import { monthlyGratitude } from './newhouses.js';
 import { fallHouse, monthlyExiles, judge } from './judgement.js';
 import { monthlyGuard, guardUnrest, monthlyWants, grantWant, obeys, commandable } from './lords.js';
 
@@ -21,6 +22,8 @@ const cfg = (world) => world.houses;
 export function defaultHouses(world) {
   const out = {};
   for (const [id, h] of Object.entries(cfg(world).houses)) {
+    // Houses raised in another reign (M27 E) do not begin a new one.
+    if (h.raised !== undefined) continue;
     out[id] = { loyalty: h.loyalty, favour: 0, grievance: 0, ambition: h.ambition, office: false, exemptUntil: null, rebel: null, lastAction: {} };
   }
   return out;
@@ -28,6 +31,7 @@ export function defaultHouses(world) {
 
 export function applyHoldings(state, world) {
   for (const [id, h] of Object.entries(cfg(world).houses)) {
+    if (h.raised !== undefined) continue;
     for (const sid of h.holdings) if (state.settlements[sid]) state.settlements[sid].holder = id;
   }
 }
@@ -37,7 +41,7 @@ export function holdingsOf(state, houseId) {
 }
 
 function traitsOf(world, houseId) {
-  return cfg(world).houses[houseId].traits.map((t) => cfg(world).traits[t]);
+  return (cfg(world).houses[houseId]?.traits ?? []).map((t) => cfg(world).traits[t]);
 }
 
 export function housePower(state, world, houseId) {
@@ -56,7 +60,7 @@ export function loyaltyTarget(state, world, houseId) {
   let t = c.houses[houseId].loyalty;
   t += (state.opinion.nobles - 50) * c.nobleOpinionWeight;
   t += (authority(state, world) - 50) * c.standingWeight;
-  t += h.favour - h.grievance;
+  t += h.favour - h.grievance + (h.gratitude ?? 0);
   // A loved crown keeps its lords' hearts (M27 B).
   if (c.moods) t += ((state.love ?? 50) - 50) * c.moods.loveLoyalty;
   if (h.office) t += c.officeLoyalty;
@@ -117,6 +121,7 @@ export function monthlyHouses(state, world, rng) {
   void sum;
   // What the lords give and want (M27 A and B).
   monthlyGuard(state, world, rng);
+  monthlyGratitude(state, world);
   monthlyWants(state, world, rng);
   rebellions(state, world, rng);
   monthlyExiles(state, world, rng);

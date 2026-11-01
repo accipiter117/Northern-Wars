@@ -57,6 +57,9 @@ export function faithMarks(state, world) {
     }
   }
 
+  // A traitor's scaffold at his seat for some days after a beheading (M27 D).
+  if ((state.scaffold?.until ?? 0) > state.day && world.byId[state.scaffold.place]) out.push({ kind: 'block', place: state.scaffold.place });
+
   // The Book on the map: the king's riders on the roads round the towns,
   // and gibbets standing at the capital's crossroads under public
   // executions.

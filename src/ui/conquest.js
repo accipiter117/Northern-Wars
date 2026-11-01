@@ -3,6 +3,7 @@
 // the Diplomacy tab, how much the North fears us, the league sworn against
 // us, and the rulers we have driven into exile.
 import {
+  canOfferTown,
   TEMERIA, sideName, formatDate, integrationParts, canResettle, canRepair, canRequisition, peopleOf, fearOfTemeria, northFear, claimantName,
   canPension, pensionCost, canSpyOnClaimant, crushOdds, ownerOf, worthOf,
 } from '../sim/index.js';
@@ -44,6 +45,9 @@ export function conquestTownHtml(world, state, id) {
         <span class="build-name">Bring settlers from Temeria</span><span class="build-blurb">Integration rises faster for a year; some locals lose their land and side with the old crown.</span>
         <span class="build-cost">${resettle.ok ? `${number(resettle.cost)} crowns` : escapeHtml(resettle.reason)}</span></button>`}
       ${repairs}
+      ${s.holder === 'crown' ? (() => { const c = canOfferTown(state, world, id); return `<button type="button" class="build" data-offer-town ${orderAttr({ type: 'offerTown', settlement: id })} ${c.ok ? '' : 'disabled'}>
+        <span class="build-name">Raise a new house to hold it</span><span class="build-blurb">A loyal commander made its lord: grateful for years, and it guards the town.</span>
+        <span class="build-cost">${c.ok ? 'Choose the commander in the Court' : escapeHtml(c.reason)}</span></button>`; })() : ''}
     </div></div>`;
   return out;
 }

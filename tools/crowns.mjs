@@ -67,6 +67,8 @@ export function makeCrowns(world) {
   // judge him, the steward with a fine and a hostage, the tyrant with the axe.
   function crushRising(s, verdict) {
     for (const j of [...(s.judgements ?? [])]) s = act(s, { type: 'judgement', id: j.id, choice: verdict });
+    // A fallen house's lands go to the first loyal commander (M27 E).
+    for (const r of [...(s.raisings ?? [])]) s = act(s, { type: 'raising', id: r.id, choice: 0 });
     const rebel = Object.keys(s.houses).find((id) => s.houses[id].rebel);
     if (!rebel) return s;
     const seat = world.houses.houses[rebel]?.seat;

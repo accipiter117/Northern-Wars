@@ -5,6 +5,7 @@
 // record of the realm that took it. state.lands keeps every town whose realm
 // differs from the one it had when the reign began; the world's lists of
 // home and foreign towns, and Temeria's own road network, follow it.
+import { registerHouses } from './newhouses.js';
 import { newSettlement, totalPopulation } from './state.js';
 import { seasonOf } from './calendar.js';
 import { addDispatch, clamp } from './realm.js';
@@ -22,6 +23,8 @@ const C = (world) => world.conquest;
 // applyAction, a loaded save) calls it, so a world shared by many states
 // (the tests, the tools) always matches the state in hand.
 export function syncWorld(world, state) {
+  // Houses raised in this reign (M27 E) are known to the world by their ids.
+  registerHouses(world, state);
   if (!world.foreign) return world;
   const lands = state?.lands ?? {};
   const key = Object.keys(lands).sort().map((id) => `${id}:${lands[id].realm}`).join(',');

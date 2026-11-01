@@ -193,6 +193,7 @@ async function boot() {
     ...(state.warDecisions ?? []).map((d) => `warDecision:${d.id}`),
     ...(state.conquest?.decisions ?? []).map((d) => `conquestDecision:${d.id}`),
     ...(state.judgements ?? []).map((d) => `judgement:${d.id}`),
+    ...(state.raisings ?? []).map((d) => `raising:${d.id}`),
     ...(state.works?.decisions ?? []).map((d) => `worksDecision:${d.id}`),
     ...state.events.map((d) => `event:${d.id}`),
     ...state.demands.map((d) => `demand:${d.id}`),
