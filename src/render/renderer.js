@@ -117,16 +117,48 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   let dirty = true;
   let lastSelected = null;
   let ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
+  // The map round the towns that changed hands: the cells of the territory
+  // grid that belong to them, and a margin for the borders drawn round them.
+  function movedArea(moved) {
+    if (!moved.size || !world.foreign) return null;
+    const t = territoryOwners(world);
+    const idx = new Set(t.towns.map((tw, i) => (moved.has(tw.id) ? i : -1)).filter((i) => i >= 0));
+    if (!idx.size) return null;
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (let i = 0; i < t.town.length; i++) {
+      if (!idx.has(t.town[i])) continue;
+      const x = t.x0 + (i % t.cols) * t.cell;
+      const y = t.y0 + Math.floor(i / t.cols) * t.cell;
+      if (x < x0) x0 = x;
+      if (y < y0) y0 = y;
+      if (x > x1) x1 = x;
+      if (y > y1) y1 = y;
+    }
+    if (x0 === Infinity) return null;
+    const m = 60;
+    return { x0: x0 - m, y0: y0 - m, x1: x1 + t.cell + m, y1: y1 + t.cell + m };
+  }
+
   // Towns change realm for good (M19): the lists of ours and theirs follow.
   let landsVersion = world.landsVersion;
+  let realmWas = { ...(world.realmOf ?? {}) };
   function followLands() {
     if (landsVersion === world.landsVersion) return;
     landsVersion = world.landsVersion;
     foreignOrdered = [...(world.foreign ?? [])].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
     ordered = [...world.geography.settlements].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type]);
     infraState = null;
-    // The borders follow the towns: the painted map is drawn afresh.
-    tiles.clear();
+    // The borders follow the towns: the country round the towns that changed
+    // hands is painted afresh (M30 C), the rest of the map kept.
+    const now = world.realmOf ?? {};
+    const moved = new Set([...Object.keys(now), ...Object.keys(realmWas)].filter((id) => now[id] !== realmWas[id]));
+    realmWas = { ...now };
+    const box = movedArea(moved);
+    if (box) tiles.clearArea(box);
+    else tiles.clear();
     baseDirty = true;
     dirty = true;
   }
@@ -171,7 +203,12 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   let tintKey = '';
   let tints = {};
   function updateTints(state) {
-    const buckets = Object.entries(state.neighbours).map(([id, n]) => [id, Math.round(n.relation / 10)]);
+    // Only a change the eye can see repaints the map: between -20 and +20 no
+    // tint is drawn at all, and past +-100 the tint stops deepening (M30 C:
+    // a relation crossing a tenth inside the untinted band cleared every
+    // tile, and the board stuttered).
+    const shown = (b) => (b >= 2 ? Math.min(b, 10) : b <= -2 ? Math.max(b, -10) : 0);
+    const buckets = Object.entries(state.neighbours).map(([id, n]) => [id, shown(Math.round(n.relation / 10))]);
     const key = buckets.map(([id, b]) => `${id}${b}`).join() + ownKey;
     if (key === tintKey) return;
     tintKey = key;

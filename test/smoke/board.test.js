@@ -24,7 +24,10 @@ test.after(async () => {
 
 // Two months in, with Cintra's army marching on Sodden for the dashed line.
 function realm() {
-  const s = step(createState(world, 20), 60, world, { ambient: false });
+  // Mid-month (day 50, not 60): the frames measured below are the board's
+  // own, not the turn of the month, when towns may change hands and the
+  // country round them is painted afresh (M30 C).
+  const s = step(createState(world, 20), 50, world, { ambient: false });
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
   const a = s.armies.find((x) => x.side === 'cintra');
