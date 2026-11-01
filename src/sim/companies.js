@@ -104,6 +104,13 @@ export function mercenaryCompanies(world, id) {
 // men as men-at-arms, its levy as militia and bowmen.
 export function realmCompanies(world, rid, standing, levied) {
   const name = world.geography?.neighbours?.[rid]?.name ?? rid;
+  // A realm with its own kind of army (the Empire's disciplined regiments,
+  // Toussaint's knights, M30 C): every man split by its shares.
+  const own = world.war?.realmCompanies?.[rid];
+  if (Array.isArray(own)) {
+    const men = standing + levied;
+    return own.flatMap((c) => split(men * c.share, c.type === 'knights' ? 100 : 200, c.type, { source: 'standing', xp: c.xp ?? 0, name: `${name} ${c.name}` }));
+  }
   return [
     ...split(standing, 150, 'menatarms', { source: 'standing', name: `${name} men-at-arms` }),
     ...split(levied * 0.6, 200, 'militia', { source: 'levy', name: `${name} levies` }),

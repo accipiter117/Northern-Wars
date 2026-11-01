@@ -137,6 +137,51 @@
       "population": 160,
       "garrison": 5,
       "prosperity": 20
+    },
+    "nazair_city": {
+      "population": 12000,
+      "garrison": 900,
+      "prosperity": 62
+    },
+    "metinna_city": {
+      "population": 14000,
+      "garrison": 900,
+      "prosperity": 64
+    },
+    "ebbing_city": {
+      "population": 9000,
+      "garrison": 700,
+      "prosperity": 58
+    },
+    "assengard": {
+      "population": 4000,
+      "garrison": 400,
+      "prosperity": 56
+    },
+    "tergano": {
+      "population": 3500,
+      "garrison": 350,
+      "prosperity": 55
+    },
+    "dun_turga": {
+      "population": 300,
+      "garrison": 400,
+      "prosperity": 45
+    },
+    "rhys_rhun": {
+      "population": 300,
+      "garrison": 350,
+      "prosperity": 45
+    },
+    "beauclair": {
+      "population": 11000,
+      "garrison": 500,
+      "prosperity": 82
+    },
+    "castel_ravello": {
+      "population": 300,
+      "garrison": 250,
+      "prosperity": 60
     }
   },
   "frontier": {
@@ -151,7 +196,7 @@
     "wildness": 3,
     "wildLevel": 15
   },
-  "tierNote": "M29: each realm's tier. Great powers (Temeria, Redania, Kaedwen, Aedirn) court and protect; middle crowns (Cintra) act as rulers do but rarely start trouble with a great power alone; petty kingdoms keep their distance from great kings and seek protection; Mahakam is petty but can only ever be a protectorate; Brokilon sits outside the tiers (none). M30 B: Kovir and Poviss and Lyria and Rivia are middle crowns, the Hengfors League a petty kingdom, and Angren lawless (tier none, no ruler: its towns go to whoever takes them).",
+  "tierNote": "M29: each realm's tier. Great powers (Temeria, Redania, Kaedwen, Aedirn) court and protect; middle crowns (Cintra) act as rulers do but rarely start trouble with a great power alone; petty kingdoms keep their distance from great kings and seek protection; Mahakam is petty but can only ever be a protectorate; Brokilon sits outside the tiers (none). M30 B: Kovir and Poviss and Lyria and Rivia are middle crowns, the Hengfors League a petty kingdom, and Angren lawless (tier none, no ruler: its towns go to whoever takes them). M30 C: the Nilfgaardian Empire is a great power over four provinces; Toussaint a petty duchy that starts as the Empire's vassal (startsVassalOf).",
   "realms": {
     "redania": {
       "tier": "great",
@@ -360,6 +405,42 @@
         "#9a8a6a"
       ],
       "builds": []
+    },
+    "nilfgaard": {
+      "tier": "great",
+      "capital": "nazair_city",
+      "colours": [
+        "#1a1a1a",
+        "#d9b45a"
+      ],
+      "builds": [
+        "walls",
+        "market",
+        "fields",
+        "workshop",
+        "granary"
+      ],
+      "governors": {
+        "nazair": "Governor Ardal aep Dahy",
+        "metinna": "Governor Coehoorn",
+        "mag_turga": "Governor Rience aep Glyn",
+        "ebbing": "Governor Vattier"
+      },
+      "note": "The Nilfgaardian Empire (M30 C): one realm over four provinces, each under an imperial governor. One treasury, one diplomacy, one set of aims; no great houses."
+    },
+    "toussaint": {
+      "tier": "petty",
+      "capital": "beauclair",
+      "colours": [
+        "#7a2a4a",
+        "#e8d48a"
+      ],
+      "builds": [
+        "market",
+        "fields",
+        "walls"
+      ],
+      "startsVassalOf": "nilfgaard"
     }
   },
   "economy": {

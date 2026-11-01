@@ -1,5 +1,5 @@
 {
-  "note": "M30: the North widened. Merged over data/north-geography.json (the M15 atlas, kept unchanged) by tools/north.mjs: realm outlines here replace the atlas's, terrain zones of the same name replace the atlas's, and the rest is added. Part A: the map south of the Yaruga (the Empire's provinces traced whole, Ebbing added, the heartland as a dark band at the edge). Original abstraction; approximate. Part B: Kovir takes in Poviss as one realm (absorbs), and Angren gains three frontier towns.",
+  "note": "M30: the North widened. Merged over data/north-geography.json (the M15 atlas, kept unchanged) by tools/north.mjs: realm outlines here replace the atlas's, terrain zones of the same name replace the atlas's, and the rest is added. Part A: the map south of the Yaruga (the Empire's provinces traced whole, Ebbing added, the heartland as a dark band at the edge). Original abstraction; approximate. Part B: Kovir takes in Poviss as one realm (absorbs), and Angren gains three frontier towns. Part C: the Nilfgaardian Empire takes in its four northern provinces (Nazair, Metinna, Mag Turga and Ebbing) as one realm, keeping their names as provinces.",
   "bounds": [
     -600,
     -650,
@@ -429,6 +429,16 @@
       "absorbs": [
         "poviss"
       ]
+    },
+    "nilfgaard": {
+      "name": "The Nilfgaardian Empire",
+      "absorbs": [
+        "nazair",
+        "metinna",
+        "mag_turga",
+        "ebbing"
+      ],
+      "provinces": true
     }
   },
   "terrain": {

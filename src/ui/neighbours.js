@@ -10,6 +10,7 @@ import { pendingDecisions, inboxHtml } from './inbox.js';
 import { portraitImg } from './audience.js';
 import { occupiedHtml, fearHtml, fearWord, worthHtml } from './conquest.js';
 import { parties, rulerShort, moodWord, treatyDef, intentions, tierOf, suzerainOf, canOfferProtection, canPressure, protectorateOnly } from '../sim/index.js';
+import { governors } from '../sim/empire.js';
 
 const WORDS = ['Hostile', 'Cold', 'Wary', 'Cordial', 'Warm'];
 
@@ -208,6 +209,7 @@ export function realmCard(app, id) {
       ],
     })}
     <div data-part="envoys">${envoys.length ? inboxHtml(envoys).replace(/data-part="[^"]*"/g, '') : ''}</div>
+    ${provincesHtml(world, id)}
     ${suzerainHtml(app, id)}
     <div data-part="stance"><h3>Our stance</h3><div class="build-list">${stances}</div></div>
     ${world.market && !hostile(state, TEMERIA, id) ? section(memory, route, 'trade', 'Trade', dealFormHtml(app, id, 'now'), { open: !!state.market?.deals?.[id] }) : ''}
@@ -216,6 +218,14 @@ export function realmCard(app, id) {
     ${world.realms ? `<div data-part="intel">${intelligenceHtml(world, state, id)}</div>` : ''}
     ${section(memory, route, 'cares', 'What they care about', cares ? `<ul class="cares">${cares}</ul>` : '')}
   `;
+}
+
+// An empire's provinces and their governors (M30 C).
+function provincesHtml(world, id) {
+  const list = governors(world, id);
+  if (!list.length) return '';
+  return `<div data-part="provinces"><h3>Provinces</h3><ul class="plain">${list.map((p) => `<li>${escapeHtml(p.name)}${p.governor ? `: ${escapeHtml(p.governor)}` : ''}</li>`).join('')}</ul>
+    <p class="sub">One treasury, one diplomacy and one set of aims. Fresh regiments march up from the heartland, faster in war.</p></div>`;
 }
 
 // A lawless frontier (M30 B): no ruler, no court, no stance or trade; its

@@ -634,6 +634,20 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
       if (z < (r.main ? 0.7 : 1.5)) continue;
       riverName(c, r);
     }
+    // An empire's provinces, named small under the realm's own name (M30 C).
+    if (z >= 0.9) {
+      c.font = `italic 600 ${Math.round(10 + Math.min(4, z))}px ${SERIF}`;
+      for (const pv of prep.provinces ?? []) {
+        const p = toScreen(cam, pv.label.x, pv.label.y + 26);
+        if (!inView(p)) continue;
+        const w = pv.name.length * 9;
+        const mine = { x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - 8, y1: p.y + 8 };
+        if (regionBoxes.some((b) => mine.x0 < b.x1 && mine.x1 > b.x0 && mine.y0 < b.y1 && mine.y1 > b.y0)) continue;
+        regionBoxes.push(mine);
+        c.fillStyle = 'rgba(52, 40, 28, 0.55)';
+        spaced(c, pv.name.toUpperCase(), p.x, p.y, 2, 'rgba(236, 224, 194, 0.5)');
+      }
+    }
     // Where the roads leave the map for the Empire's heart (M30 A).
     if (z >= 0.7 && world.geography.roadEndLabel) {
       c.font = `italic 600 12px ${SERIF}`;

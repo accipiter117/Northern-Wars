@@ -11,7 +11,9 @@ import { STATE_VERSION } from '../../src/sim/state.js';
 
 const world = await nodeWorld();
 const g = world.geography;
-const maxY = (id) => Math.max(...g.lands[id].shapes.flat().map(([, y]) => y));
+// The Empire's provinces are part of one realm since M30 C.
+const land = (id) => g.lands[id] ?? g.neighbours[id] ?? g.neighbours.nilfgaard.provinces[id];
+const maxY = (id) => Math.max(...land(id).shapes.flat().map(([, y]) => y));
 const near = (a, b) => a.shapes.some((p) => b.shapes.some((q) => p.some(([x, y]) => q.some(([u, v]) => Math.hypot(x - u, y - v) < 2))));
 
 test('the map runs about 450 further south, to the Empire\'s heartland', () => {
@@ -22,29 +24,29 @@ test('the map runs about 450 further south, to the Empire\'s heartland', () => {
   // The provinces reach the band rather than being cut off by the old edge.
   for (const id of ['nazair', 'mag_turga', 'metinna', 'ebbing']) {
     assert.ok(maxY(id) > 1700, `${id} is whole`);
-    assert.ok(near(g.lands[id], band), `${id} meets the heartland`);
+    assert.ok(near(land(id), band), `${id} meets the heartland`);
   }
   // Toussaint closes above Metinna instead of at a straight edge.
-  assert.ok(near(g.lands.toussaint, g.lands.metinna));
+  assert.ok(near(land('toussaint'), land('metinna')));
   for (const [id, n] of Object.entries(g.lands)) {
     for (const [x, y] of n.shapes.flat()) assert.ok(x >= g.bounds[0] && x <= g.bounds[2] && y >= g.bounds[1] && y <= g.bounds[3], `${id} out of bounds at ${x},${y}`);
   }
 });
 
 test('Ebbing lies below Cintra and west of Nazair, with a capital and towns', () => {
-  const e = g.lands.ebbing;
+  const e = land('ebbing');
   assert.equal(e.name, 'Ebbing');
   assert.ok(near(e, g.neighbours.cintra), 'it borders Cintra');
-  assert.ok(near(e, g.lands.nazair), 'it borders Nazair');
-  const towns = world.distantTowns.filter((t) => t.land === 'ebbing');
+  assert.ok(near(e, land('nazair')), 'it borders Nazair');
+  const towns = [...world.distantTowns, ...world.foreign].filter((t) => e.shapes.some((sh) => pointInPolygon(t.x, t.y, sh)));
   assert.ok(towns.length >= 3 && towns.length <= 5, `${towns.length} towns`);
   assert.equal(towns.filter((t) => t.type === 'city').length, 1, 'one capital city');
   for (const t of towns) assert.ok(e.shapes.some((sh) => pointInPolygon(t.x, t.y, sh)), t.id);
   // West of Nazair: every Ebbing town stands west of Nazair's capital.
-  const nazair = world.distantTowns.find((t) => t.id === 'nazair_city');
+  const nazair = world.byId.nazair_city;
   for (const t of towns) assert.ok(t.x < nazair.x, t.id);
   // Its own roads, and a road on to Cintra.
-  const roads = g.distantRoads.filter(([a, b]) => towns.some((t) => t.id === a || t.id === b));
+  const roads = [...g.distantRoads, ...g.foreignRoads].filter(([a, b]) => towns.some((t) => t.id === a || t.id === b));
   assert.ok(roads.length >= towns.length - 1);
   assert.ok(roads.some(([a, b]) => [a, b].some((id) => world.byId[id]?.realm === 'cintra')), 'a road to Cintra');
 });

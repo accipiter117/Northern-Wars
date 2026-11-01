@@ -16,6 +16,30 @@
   "engageRange": 16,
   "watchRange": 150,
   "minArmy": 80,
+  "realmCompanies": {
+    "note": "M30 C: realms whose armies are not the North's usual men-at-arms, levies and bowmen. Every man of such a realm's army, standing or levied, is split by these shares into companies of the type, with the experience given.",
+    "nilfgaard": [
+      { "type": "menatarms", "share": 0.4, "xp": 0.5, "name": "imperial infantry" },
+      { "type": "knights", "share": 0.2, "xp": 0.5, "name": "imperial heavy horse" },
+      { "type": "crossbows", "share": 0.25, "xp": 0.4, "name": "imperial crossbowmen" },
+      { "type": "militia", "share": 0.15, "xp": 0.2, "name": "provincial levies" }
+    ],
+    "toussaint": [
+      { "type": "knights", "share": 0.35, "xp": 0.4, "name": "knights errant" },
+      { "type": "menatarms", "share": 0.3, "xp": 0.2, "name": "ducal guard" },
+      { "type": "crossbows", "share": 0.15, "xp": 0.1, "name": "crossbowmen" },
+      { "type": "militia", "share": 0.2, "xp": 0, "name": "levies" }
+    ]
+  },
+  "empire": {
+    "note": "M30 C: fresh regiments march in from the Empire's heartland to the imperial town nearest a road end: men soldiers every peace days at peace, every war days while the Empire is at war (and every war days times quicken once the Nilfgaard clock reaches War, M30 D), up to cap soldiers in the Empire's standing army.",
+    "realm": "nilfgaard",
+    "men": 400,
+    "peace": 90,
+    "war": 30,
+    "quicken": 0.75,
+    "cap": 9000
+  },
   "raise": {
     "levy": {
       "third": 0.33,
@@ -272,14 +296,17 @@
       "kovir": 0.05,
       "hengfors": 0.15,
       "lyria_rivia": 0.6,
-      "angren": 0
+      "angren": 0,
+      "nilfgaard": 0.7,
+      "toussaint": 0.1
     },
     "greed": {
       "redania": 0.45,
       "kaedwen": 0.6,
       "cintra": 0.25,
       "verden": 0.25,
-      "lyria_rivia": 0.35
+      "lyria_rivia": 0.35,
+      "nilfgaard": 0.6
     },
     "reach": 260,
     "atWarOpportunism": 1.2,
@@ -489,6 +516,18 @@
         "heavy": 0.05,
         "levy": 0.65,
         "cav": 0
+      },
+      "nilfgaard": {
+        "missile": 0.25,
+        "heavy": 0.4,
+        "levy": 0.1,
+        "cav": 0.25
+      },
+      "toussaint": {
+        "missile": 0.1,
+        "heavy": 0.3,
+        "levy": 0.3,
+        "cav": 0.3
       }
     },
     "companyKind": {

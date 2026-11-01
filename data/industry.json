@@ -151,7 +151,16 @@
       "arms",
       "horses"
     ],
-    "angren": []
+    "angren": [],
+    "nilfgaard": [
+      "arms",
+      "cloth",
+      "horses"
+    ],
+    "toussaint": [
+      "spirit",
+      "horses"
+    ]
   },
   "silver": {
     "amount": 40

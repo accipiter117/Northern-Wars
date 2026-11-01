@@ -94,7 +94,9 @@
       "kovir": { "eternal_fire": 40, "melitele": 45, "old_ways": 15 },
       "hengfors": { "eternal_fire": 20, "melitele": 45, "old_ways": 35 },
       "lyria_rivia": { "eternal_fire": 15, "melitele": 60, "old_ways": 25 },
-      "angren": { "eternal_fire": 5, "melitele": 45, "old_ways": 50 }
+      "angren": { "eternal_fire": 5, "melitele": 45, "old_ways": 50 },
+      "nilfgaard": { "eternal_fire": 10, "melitele": 30, "old_ways": 60 },
+      "toussaint": { "eternal_fire": 5, "melitele": 70, "old_ways": 25 }
     },
     "fervour": { "redania": { "eternal_fire": 15 }, "brokilon": { "old_ways": 20 } }
   }
