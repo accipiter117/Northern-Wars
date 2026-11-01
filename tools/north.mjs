@@ -1,6 +1,6 @@
 // Rebuilds the North beyond Temeria in data/geography.json from the traced
-// atlas in data/north-geography.json (and the map south of the Yaruga in
-// data/south-geography.json, M30 A): the realms' outlines, the lands beyond
+// atlas in data/north-geography.json (and M30's additions in
+// data/wider-north.json): the realms' outlines, the lands beyond
 // (not yet realms), forests, mountains, hills and marsh, the rivers and
 // lakes, every foreign town, and a road network laid to suit them. Temeria's
 // own outline, towns, roads and terrain are left exactly as they are.
@@ -166,11 +166,11 @@ function ontoLand(x, y, shapes, inset) {
 
 // ---- The atlas ----
 
-// The M15 atlas with the map south of the Yaruga (M30 A) laid over it:
+// The M15 atlas with M30's additions (data/wider-north.json) laid over it:
 // outlines and terrain zones of the same name are replaced, the rest added.
 export async function readAtlas() {
   const north = await read('data/north-geography.json');
-  const south = await read('data/south-geography.json');
+  const south = await read('data/wider-north.json');
   const terrain = {};
   for (const kind of new Set([...Object.keys(north.terrain), ...Object.keys(south.terrain ?? {})])) {
     const mine = south.terrain?.[kind] ?? [];
