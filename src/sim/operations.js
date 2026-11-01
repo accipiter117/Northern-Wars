@@ -88,15 +88,19 @@ export function operate(state, world, rng, rid, kind, target) {
   return { exposed: false };
 }
 
-function strike(state, world, rng, rid, kind, target, k) {
+// What an operation does to its target; by is the power that paid for it
+// (the crown, or since M31 D a foreign power working on another).
+export function strike(state, world, rng, rid, kind, target, k, by = TEMERIA) {
   const name = sideName(world, rid);
   const realm = state.realms[rid];
   if (kind === 'bribe' && target === 'vassal') {
     realm.vassal.loyalty = clamp(realm.vassal.loyalty - k.loyalty, 0, 100);
+    if (by !== TEMERIA) return `Foreign gold has found its way into the treasury of ${name}, and its loyalty to ${sideName(world, suzerainOf(state, rid))} is cooling.`;
     return `Temerian gold has found its way into the treasury of ${name}. Its loyalty to ${sideName(world, suzerainOf(state, rid))} is cooling.`;
   }
   if (kind === 'bribe') {
-    changeTrust(state, world, rid, TEMERIA, k.trust);
+    changeTrust(state, world, rid, by, k.trust);
+    if (by !== TEMERIA) return `Voices at the court of ${name} now speak warmly of ${sideName(world, by)}.`;
     if (state.neighbours[rid]) state.neighbours[rid].relation = clamp(state.neighbours[rid].relation + k.relation, -100, 100);
     return `Several voices at the court of ${name} now speak warmly of Temeria. They have been well paid to.`;
   }

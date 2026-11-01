@@ -1,5 +1,9 @@
 # Changelog
 
+## M31 D Spies: the great powers at it
+- The great powers now spy on each other. The Emperor spends most, and more again once he turns on the North. Dijkstra's Redania comes next; Henselt barely bothers.
+- They bribe, stir and burn in their rivals' courts, and only take to knives in war. You hear of it where you have eyes, and learn who paid where your networks reach.
+
 ## M31 C Counter-espionage
 - Foreign spies are now caught in Temeria, more often with a good spymaster, curfews, the king's riders or the inquisition.
 - A caught agent is your decision: hang them, turn them, trade them back, or let them go and follow them (which may unmask a spymaster of yours in foreign pay).
