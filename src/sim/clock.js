@@ -127,7 +127,7 @@ export function monthlyClock(state, world, rng) {
   const army = raiseRealmArmy(state, world, rid, [against], 'muster');
   if (!army) return;
   const reason = `the Emperor will have ${world.byId[aim].name}`;
-  state.musters.push({ realm: rid, against, army: army.id, day: state.day + (world.strategy?.war?.musterDays ?? 30), aim, reason, pact: null });
+  state.musters.push({ realm: rid, against, army: army.id, day: state.day + (world.strategy?.war?.musterDays ?? 30), aim, reason, pact: null, clock: true });
   state.realms[rid].aim = { town: aim, against, since: state.day, reason };
   south(state, `${Math.round(army.soldiers)} imperial soldiers gather at ${world.byId[army.at].name}. They mean to take ${world.byId[aim].name} from ${sideName(world, against)}.`);
 }
