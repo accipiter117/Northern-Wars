@@ -24,6 +24,23 @@
     { "at": 70, "key": "sabotage", "short": "sabotage", "text": "Sabotage works or a siege camp's stores" },
     { "at": 85, "key": "assassinate", "short": "assassination", "text": "Assassinate a commander, a lord or a spymaster" }
   ],
+  "operations": {
+    "note": "M31 B: what a network deep enough can do (at: the depth needed). Each costs coin and puts the realm's networks on cooldown (days). It may be exposed: risk x the target's watch / 40 (Temeria adds a quarter of the spymaster's skill to it) x the spymaster's trait (cautious less, ruthless more), less as depth passes the need (to half at 25 points over), at most maxRisk. Exposed, it fails: the network loses depthLoss, the ruler's trust in the crown falls by trust (half again with a ruthless spymaster) and their relation by relation, and one time in agentLostChance the agent is taken (a further agentLostDepth).",
+    "cooldown": 90,
+    "maxRisk": 0.85,
+    "depthLoss": 15,
+    "trust": 15,
+    "relation": 10,
+    "agentLostChance": 0.5,
+    "agentLostDepth": 10,
+    "traitRisk": { "cautious": 0.6, "ruthless": 1.3 },
+    "kinds": {
+      "bribe": { "at": 50, "coin": 600, "risk": 0.15, "loyalty": 20, "trust": 12, "relation": 8 },
+      "stir": { "at": 60, "coin": 800, "risk": 0.2, "towns": 2, "prosperity": 12, "garrison": 0.25, "people": 0.02, "treasury": 300 },
+      "sabotage": { "at": 70, "coin": 1000, "risk": 0.25, "siegeFood": 0.25, "siegeWalls": 0.2, "prosperity": 15, "treasury": 600 },
+      "assassinate": { "at": 85, "coin": 1500, "risk": 0.35, "soldiers": 0.12, "morale": 25, "army": 0.08, "networks": 20 }
+    }
+  },
   "spymaster": {
     "wage": 120,
     "candidates": 3,

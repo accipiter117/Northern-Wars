@@ -878,3 +878,4 @@ ul.orders li .chip { flex: none; }
 .spy-key ul { margin: 6px 0; padding-left: 18px; }
 .spy-key li b { display: inline-block; min-width: 2em; color: var(--gold); }
 .spy-key summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.spy-net[data-go] { cursor: pointer; }
