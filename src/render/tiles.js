@@ -100,6 +100,15 @@ export function createTiles({ paint, size = 256, cap = 140 }) {
   return {
     draw,
     clear: () => cache.clear(),
+    // Forget only the tiles over part of the map (M30 C: a town changing
+    // hands repaints the country round it, not the whole North).
+    clearArea(box) {
+      for (const k of [...cache.keys()]) {
+        const [l, tx, ty] = k.split(':').map(Number);
+        const w = span(l);
+        if (tx * w < box.x1 && (tx + 1) * w > box.x0 && ty * w < box.y1 && (ty + 1) * w > box.y0) cache.delete(k);
+      }
+    },
     stats,
     get size() { return cache.size; },
   };

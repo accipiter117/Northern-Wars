@@ -30,7 +30,8 @@ test('the southern map: Ebbing below Cintra, the provinces whole, the heartland 
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
   const facts = await page.evaluate(() => {
     const g = window.northernWars.world.geography;
-    return { bottom: g.bounds[3], ends: g.roadEnds.length, ebbing: !!g.lands.ebbing, heartland: !!g.lands.heartland?.heartland };
+    // Ebbing is a province of the Empire since M30 C.
+    return { bottom: g.bounds[3], ends: g.roadEnds.length, ebbing: !!(g.lands.ebbing ?? g.neighbours.nilfgaard?.provinces?.ebbing), heartland: !!g.lands.heartland?.heartland };
   });
   assert.deepEqual(facts, { bottom: 1950, ends: 3, ebbing: true, heartland: true });
   await page.evaluate(() => { const nw = window.northernWars; nw.zoomTo(0.9); nw.lookAt(330, 1700); });

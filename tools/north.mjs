@@ -19,7 +19,7 @@ const read = async (f) => JSON.parse(await readFile(join(ROOT, f), 'utf8'));
 
 // The realms the game simulates. Every other land in the atlas is drawn and
 // named, ready to become a realm later.
-export const MODELLED = ['redania', 'kaedwen', 'aedirn', 'mahakam', 'cidaris', 'kerack', 'brokilon', 'verden', 'brugge', 'sodden', 'cintra', 'kovir', 'hengfors', 'lyria_rivia', 'angren'];
+export const MODELLED = ['redania', 'kaedwen', 'aedirn', 'mahakam', 'cidaris', 'kerack', 'brokilon', 'verden', 'brugge', 'sodden', 'cintra', 'kovir', 'hengfors', 'lyria_rivia', 'angren', 'nilfgaard', 'toussaint'];
 
 // The foreign towns before M15, kept here so the build always maps from the
 // same starting point, however many times it runs.
@@ -41,7 +41,7 @@ const OLD = [
 // realm's chief town and keeps the old id, so saves and data still find it.
 const SEATS = { verden: ['verden_town', 'Hamm'], sodden: ['sodden_keep', 'Kagen'] };
 // Towns whose atlas names would clash with a realm's id.
-const CLASH = new Set([...MODELLED, 'ebbing', 'heartland', 'hengfors', 'kovir', 'poviss', 'lyria_rivia', 'toussaint', 'angren', 'nazair', 'mag_turga', 'dol_blathanna', 'skellige', 'korath', 'metinna', 'tir_tochair']);
+const CLASH = new Set([...MODELLED, 'ebbing', 'heartland', 'nilfgaard', 'hengfors', 'kovir', 'poviss', 'lyria_rivia', 'toussaint', 'angren', 'nazair', 'mag_turga', 'dol_blathanna', 'skellige', 'korath', 'metinna', 'tir_tochair']);
 // Old foreign terrain the atlas replaces (and Brokilon, redrawn to its new outline).
 const DROP = new Set(['Kestrel Mountains', 'Mahakam', 'Redanian woods', 'Cintran fens', 'Sodden hills']);
 
@@ -181,10 +181,13 @@ export async function readAtlas() {
   const realms = { ...north.realms };
   const moved = {};
   for (const [rid, r] of Object.entries(south.realms ?? {})) {
-    const { absorbs = [], ...rest } = r;
-    realms[rid] = { ...north.realms[rid], ...rest };
+    const { absorbs = [], provinces = false, ...rest } = r;
+    realms[rid] = { shapes: [], ...north.realms[rid], ...rest, ...(rest.name ? { renamed: true } : {}) };
     for (const other of absorbs) {
-      realms[rid].shapes = [...realms[rid].shapes, ...realms[other].shapes];
+      const land = realms[other] ?? north.realms[other];
+      realms[rid].shapes = [...realms[rid].shapes, ...land.shapes];
+      // An empire keeps its provinces' names on the map (M30 C).
+      if (provinces) (realms[rid].provinces ??= {})[other] = { name: land.name, shapes: land.shapes };
       delete realms[other];
       moved[other] = rid;
     }
@@ -211,7 +214,8 @@ export async function buildNorth() {
   const modelled = new Set(MODELLED);
 
   const neighbours = {};
-  for (const rid of MODELLED) neighbours[rid] = { name: geo.neighbours[rid]?.name ?? north.realms[rid].name, shapes: north.realms[rid].shapes };
+  // A name given in data/wider-north.json wins over the one already built.
+  for (const rid of MODELLED) neighbours[rid] = { name: north.realms[rid].renamed ? north.realms[rid].name : geo.neighbours[rid]?.name ?? north.realms[rid].name, shapes: north.realms[rid].shapes, ...(north.realms[rid].provinces ? { provinces: north.realms[rid].provinces } : {}) };
   const lands = {};
   for (const [rid, r] of Object.entries(north.realms)) if (!modelled.has(rid)) lands[rid] = { name: r.name, shapes: r.shapes, ...(r.heartland ? { heartland: true } : {}) };
 

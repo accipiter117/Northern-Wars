@@ -24,7 +24,7 @@ test('the geography is built from the atlas and the build is current', async () 
   assert.deepEqual(JSON.parse(JSON.stringify(geography)), JSON.parse(JSON.stringify(g)), 'data/geography.json is out of date: run node tools/north.mjs');
   assert.equal(Object.keys(g.neighbours).length + Object.keys(g.lands).length, Object.keys(north.realms).length);
   assert.deepEqual(Object.keys(g.neighbours).sort(), [...MODELLED].sort());
-  for (const id of ['dol_blathanna', 'nazair', 'mag_turga', 'toussaint', 'tir_tochair', 'metinna', 'korath', 'skellige', 'ebbing', 'heartland']) assert.ok(g.lands[id], id);
+  for (const id of ['dol_blathanna', 'tir_tochair', 'korath', 'skellige', 'heartland']) assert.ok(g.lands[id], id);
   // Every traced town is on the map, in a realm or a land beyond.
   assert.equal(world.foreign.length + world.distantTowns.length, north.towns.length);
   for (const t of north.towns) assert.ok([...world.foreign, ...world.distantTowns].some((s) => s.name === t.name), t.name);

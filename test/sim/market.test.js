@@ -21,6 +21,9 @@ const act = (s, a) => {
 const quiet = (s) => {
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
+  // Dilemmas left open would be answered by default, coin and all, outside
+  // the month's ledger.
+  if (s.dilemmas) s.dilemmas.open = [];
   return s;
 };
 // Run to the first of the next month, when the ledger is drawn up.
@@ -157,7 +160,7 @@ test('a loan comes at once and is repaid with interest; a missed payment costs m
 });
 
 test('loot, ransoms, coin in peace terms and requisitions come in at once and show on the ledger', () => {
-  let s = run(quiet(createState(world, 7)), 62);
+  let s = quiet(run(quiet(createState(world, 7)), 62));
   const t0 = s.treasury;
   windfall(s, 'loot', 400);
   windfall(s, 'requisition', 150);

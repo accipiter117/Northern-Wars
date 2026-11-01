@@ -246,6 +246,35 @@
         770
       ],
       "cares": {}
+    },
+    "nilfgaard": {
+      "ruler": "Emperor Emhyr var Emreis",
+      "temper": "The White Flame of the south. Patient, cold and certain the North will be his.",
+      "relation": -10,
+      "trade": 10,
+      "gateway": "vidort",
+      "entry": [
+        595,
+        900
+      ],
+      "cares": {
+        "book:standing_companies": -5,
+        "book:open_markets": 5
+      }
+    },
+    "toussaint": {
+      "ruler": "Duchess Anna Henrietta",
+      "temper": "Wine, knights and tournaments. Loyal to the Emperor while it pays to be.",
+      "relation": 15,
+      "trade": 14,
+      "gateway": "red_fort",
+      "entry": [
+        900,
+        870
+      ],
+      "cares": {
+        "book:open_markets": 10
+      }
     }
   }
 }

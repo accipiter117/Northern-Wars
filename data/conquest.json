@@ -245,6 +245,38 @@
         "old_ways": 0.5
       },
       "distance": 0.35
+    },
+    "nilfgaard": {
+      "name": "Nilfgaardians",
+      "adjective": "Nilfgaardian",
+      "mix": {
+        "human": 0.95,
+        "dwarf": 0.02,
+        "elf": 0.02,
+        "halfling": 0.01
+      },
+      "faith": {
+        "eternal_fire": 0.1,
+        "melitele": 0.3,
+        "old_ways": 0.6
+      },
+      "distance": 0.8
+    },
+    "toussaint": {
+      "name": "Toussainters",
+      "adjective": "Toussaint",
+      "mix": {
+        "human": 0.92,
+        "dwarf": 0.03,
+        "elf": 0.03,
+        "halfling": 0.02
+      },
+      "faith": {
+        "eternal_fire": 0.05,
+        "melitele": 0.7,
+        "old_ways": 0.25
+      },
+      "distance": 0.6
     }
   },
   "occupation": {

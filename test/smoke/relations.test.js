@@ -42,7 +42,7 @@ test('the relations screen in order of weight, with spheres folded, and the crow
   await page.waitForSelector('[data-part="great"]');
   const order = await page.$$eval('[data-part="realms"] > [data-part]', (els) => els.map((e) => e.dataset.part));
   assert.deepEqual(order, ['great', 'vassals', 'middle', 'spheres', 'petty', 'lawless']);
-  assert.deepEqual(await page.$$eval('[data-part="great"] [data-realm]', (els) => els.map((e) => e.dataset.realm)), ['redania', 'kaedwen', 'aedirn']);
+  assert.deepEqual(await page.$$eval('[data-part="great"] [data-realm]', (els) => els.map((e) => e.dataset.realm)), ['redania', 'kaedwen', 'aedirn', 'nilfgaard']);
   assert.deepEqual((await page.$$eval('[data-part="vassals"] [data-realm]', (els) => els.map((e) => e.dataset.realm))).sort(), ['brugge', 'sodden']);
   assert.equal(await page.locator('[data-part="sphere-redania"]').count(), 1);
   assert.equal(await page.locator('[data-part="sphere-redania"]').getAttribute('open'), null, 'folded');

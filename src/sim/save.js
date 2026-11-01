@@ -402,6 +402,13 @@ const MIGRATIONS = {
     state.version = 31;
     return state;
   },
+  // M30 C: the Nilfgaardian Empire over its four provinces, and Toussaint
+  // as its vassal, join as at the start of a reign.
+  31(state, world) {
+    addMissingRealms(state, world);
+    state.version = 32;
+    return state;
+  },
 };
 
 // Realms the world has and the save does not: taken from a fresh reign.

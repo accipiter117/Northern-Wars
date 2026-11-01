@@ -1,5 +1,11 @@
 # Changelog
 
+## M30 C The Empire
+- Nilfgaard is on the map: Nazair, Metinna, Mag Turga and Ebbing as one empire under Emperor Emhyr, each province with its governor.
+- Its armies are disciplined regulars (infantry, heavy horse and crossbowmen), and fresh regiments keep marching up from the south, faster in war.
+- Toussaint, rich in wine and knights, starts as the Empire's vassal; you can offer it Temeria's protection instead.
+- Old saves gain the Empire and Toussaint as they stand at the start of a reign.
+
 ## M30 B Four northern realms
 - Kovir and Poviss under King Esterad Thyssen: the richest crown in the North after the great powers, selling to everyone and fighting for no one. Its pikemen are for hire unless you are at war with it.
 - The Hengfors League under King Niedamir: small, cold and careful, and often drawn into Kaedwen's or Redania's sphere.

@@ -78,6 +78,11 @@ export function prepareMap(world) {
     const biggest = n.shapes.reduce((a, b) => (area(b) > area(a) ? b : a));
     return { id, name: n.name, beyond, heartland: !!n.heartland, paths: n.shapes.map(pathOf), label: labelSpot(biggest), boxes: n.shapes.map((sh) => boxOf(sh)), size: Math.sqrt(area(biggest)) };
   });
+  // An empire's provinces keep their names on the map (M30 C).
+  const provinces = Object.values(g.neighbours).flatMap((n) => Object.values(n.provinces ?? {}).map((p) => {
+    const biggest = p.shapes.reduce((a, b) => (area(b) > area(a) ? b : a));
+    return { name: p.name, label: labelSpot(biggest) };
+  }));
   // Temeria's own country stays inside Temeria; the atlas's country abroad
   // runs over whatever land it covers, borders or none, but never the sea.
   const ownShapes = (realm) => (realm ? landShapes : [temeria]);
@@ -198,7 +203,7 @@ export function prepareMap(world) {
   const landClip = new Path2D();
   for (const sh of landShapes) landClip.addPath(pathOf(sh));
   const [mx0, my0, mx1, my1] = g.bounds ?? [0, 0, g.width, g.height];
-  return { landClip, bounds: { x0: mx0, y0: my0, x1: mx1, y1: my1 }, temeria: pathOf(temeria), temeriaBox: boxOf(temeria), neighbours: lands.filter((l) => !l.beyond), lands, terrain, rivers, lakes, roads, distantRoads, roadEnds, scatter, waves };
+  return { landClip, bounds: { x0: mx0, y0: my0, x1: mx1, y1: my1 }, temeria: pathOf(temeria), temeriaBox: boxOf(temeria), neighbours: lands.filter((l) => !l.beyond), lands, terrain, rivers, lakes, roads, distantRoads, roadEnds, provinces, scatter, waves };
 }
 
 // Draws the map in world units. `px` converts screen pixels to world units at

@@ -21,6 +21,7 @@ import { defaultLabour, startingFuel } from './labour.js';
 import { defaultBook } from './book.js';
 import { defaultFaiths } from './faiths.js';
 import { defaultMarket } from './market.js';
+import { startingVassals } from './empire.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
 export function defaultWar() {
@@ -30,7 +31,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 31;
+export const STATE_VERSION = 32;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -106,6 +107,8 @@ export function createState(world, seed = 1) {
   applyHoldings(state, world);
   if (state.labour) state.labour.fuel = startingFuel(state, world);
   // The North's standing pacts, as they stand when the reign begins (M18).
+  // Vassals a realm starts with (Toussaint to the Empire, M30 C).
+  startingVassals(state, world);
   seedPacts(state, world);
   if (world.grid) {
     state.ambient.intel = newIntel(world);
