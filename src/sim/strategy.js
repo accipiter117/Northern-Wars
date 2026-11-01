@@ -9,6 +9,7 @@ import { appetiteAgainst } from './tiers.js';
 import { blocBound, mayStartWar } from './blocs.js';
 import { authority } from './meters.js';
 import { addDispatch, clamp } from './realm.js';
+import { dateOf } from './calendar.js';
 import { informed } from './realms.js';
 import { realmPotential, raiseRealmArmy, soldiersOf } from './war.js';
 import { musterPreview } from './armies.js';
@@ -441,9 +442,23 @@ function probe(state, world, rng, rid, a) {
 
 // ---- The month ----
 
-export function monthlyStrategy(state, world, rng) {
+// Each ruler takes stock on a day of the month of its own (M30 F), so the
+// North's thinking is spread over the month instead of falling at once.
+export function thinkingDay(world, rid) {
+  const ids = Object.keys(world.foreignByRealm ?? {}).sort();
+  return 1 + ((Math.max(0, ids.indexOf(rid)) * 11) % 28);
+}
+
+export function dailyStrategy(state, world, rng) {
   if (!ST(world)) return;
-  for (const rid of Object.keys(state.realms)) {
+  const today = dateOf(state.day).day;
+  const due = Object.keys(state.realms).filter((rid) => thinkingDay(world, rid) === today);
+  if (due.length) monthlyStrategy(state, world, rng, due);
+}
+
+export function monthlyStrategy(state, world, rng, only = null) {
+  if (!ST(world)) return;
+  for (const rid of only ?? Object.keys(state.realms)) {
     if (!D(world)?.rulers[rid] || state.realms[rid].fallen) continue;
     const realm = state.realms[rid];
     const a = assess(state, world, rid);

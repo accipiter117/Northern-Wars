@@ -7,7 +7,7 @@ import { sendFigure, courtOf } from './figures.js';
 import { addDispatch, clamp } from './realm.js';
 import { ownerOf, leviedMap, besieged } from './conflict.js';
 import { sharesSight } from './diplomacy.js';
-import { monthlyStrategy, armyUpkeep } from './strategy.js';
+import { armyUpkeep } from './strategy.js';
 import { monthlyFrontier } from './frontier.js';
 import { monthlyClock } from './clock.js';
 import { monthlySeas } from './seas.js';
@@ -167,8 +167,7 @@ export function monthlyRealms(state, world, rng) {
       } else realm.debtMonths = 0;
     }
   }
-  // Rulers take stock and choose their course before they build or arm.
-  if (st) monthlyStrategy(state, world, rng);
+  // Since M30 F rulers take stock each on a day of their own (dailyStrategy).
   // The lawless frontier (M30 B): the strong take its towns; outlaws rise.
   monthlyFrontier(state, world, rng);
   // The Nilfgaard clock (M30 D): watching, pressure, war.
