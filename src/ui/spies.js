@@ -108,7 +108,9 @@ export function operationsHtml(world, state, rid) {
   const d = ourDepth(state, rid);
   const rest = (state.spycraft.cooldown?.[rid] ?? 0) - state.day;
   const name = sideName(world, rid);
-  const rows = OPERATIONS.map((kind) => {
+  // Only what the depth allows, and the next work it would open.
+  const nextKind = OPERATIONS.find((kind) => d < o.kinds[kind].at);
+  const rows = OPERATIONS.filter((kind) => d >= o.kinds[kind].at || kind === nextKind).map((kind) => {
     const k = o.kinds[kind];
     if (d < k.at) return `<p class="sub" data-op-locked="${kind}">${OP_NAMES[kind]}: our network must be ${k.at} deep.</p>`;
     const targets = opTargets(state, world, rid, kind);
@@ -122,6 +124,7 @@ export function operationsHtml(world, state, rid) {
     }).join('');
   }).join('');
   const last = state.spycraft.last?.realm === rid ? `<p class="sub">Last work here: ${OP_NAMES[state.spycraft.last.kind].toLowerCase()}, ${state.spycraft.last.exposed ? 'found out' : 'done'} on ${formatDate(state.spycraft.last.day)}.</p>` : '';
+  if (d < o.kinds[OPERATIONS[0]].at) return `<div data-part="operations"><p class="sub" data-op-locked="${OPERATIONS[0]}">Our network there is ${Math.round(d)} deep. At ${o.kinds[OPERATIONS[0]].at} our agents could go to work.</p></div>`;
   return `<div data-part="operations"><h3>Our network: ${Math.round(d)} deep</h3>
     ${rest > 0 ? `<p class="sub">Our agents are lying low for ${rest} days after the last work.</p>` : ''}${last}
     <div class="build-list">${rows}</div></div>`;
