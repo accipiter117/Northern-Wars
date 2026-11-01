@@ -182,7 +182,7 @@ export async function readAtlas() {
   const moved = {};
   for (const [rid, r] of Object.entries(south.realms ?? {})) {
     const { absorbs = [], provinces = false, ...rest } = r;
-    realms[rid] = { shapes: [], ...north.realms[rid], ...rest };
+    realms[rid] = { shapes: [], ...north.realms[rid], ...rest, ...(rest.name ? { renamed: true } : {}) };
     for (const other of absorbs) {
       const land = realms[other] ?? north.realms[other];
       realms[rid].shapes = [...realms[rid].shapes, ...land.shapes];
@@ -214,7 +214,8 @@ export async function buildNorth() {
   const modelled = new Set(MODELLED);
 
   const neighbours = {};
-  for (const rid of MODELLED) neighbours[rid] = { name: geo.neighbours[rid]?.name ?? north.realms[rid].name, shapes: north.realms[rid].shapes, ...(north.realms[rid].provinces ? { provinces: north.realms[rid].provinces } : {}) };
+  // A name given in data/wider-north.json wins over the one already built.
+  for (const rid of MODELLED) neighbours[rid] = { name: north.realms[rid].renamed ? north.realms[rid].name : geo.neighbours[rid]?.name ?? north.realms[rid].name, shapes: north.realms[rid].shapes, ...(north.realms[rid].provinces ? { provinces: north.realms[rid].provinces } : {}) };
   const lands = {};
   for (const [rid, r] of Object.entries(north.realms)) if (!modelled.has(rid)) lands[rid] = { name: r.name, shapes: r.shapes, ...(r.heartland ? { heartland: true } : {}) };
 
