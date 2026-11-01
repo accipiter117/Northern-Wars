@@ -72,8 +72,11 @@ test('thirty untended years: the hoard levels off, Love is not left at the cap, 
   assert.ok(s.love < 90, `love ${s.love}`);
   const pop = Object.values(s.settlements).reduce((n, st) => n + Object.values(st.population).reduce((p, q) => p + q, 0), 0);
   // Since M20 an untended realm's works fall to ruin, its woodpiles run
-  // dry once its lumber camps are gone, and its people dwindle.
-  assert.ok(pop / pop0 > 0.35 && pop / pop0 < 0.95, `population ratio ${pop / pop0}`);
+  // dry once its lumber camps are gone, and its people dwindle. Since M27
+  // its neglected lords rise again and again and their hosts take its
+  // towns, so it may fall to about a third of its people (0.30 to 0.45 on
+  // seed 5, as the dice fall); it still lives.
+  assert.ok(pop / pop0 > 0.25 && pop / pop0 < 0.95, `population ratio ${pop / pop0}`);
   const conds = Object.values(s.settlements).flatMap((x) => x.buildings.map((b) => x.cond?.[b] ?? 100));
   assert.ok(conds.reduce((a, b) => a + b, 0) / conds.length < 25, 'its works lie in ruins');
 });
