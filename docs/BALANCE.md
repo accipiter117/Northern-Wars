@@ -652,7 +652,7 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - One operation a season in each realm (90 days' rest) keeps spying a lever, not a machine gun: a stirred rising costs a realm about a quarter of two garrisons and some prosperity, enough to tip a close war, never enough to win one alone.
   - **Dials**: `operations.kinds` (depth `at`, `coin`, `risk` and effects), `cooldown`, `maxRisk`, and the exposure costs (`depthLoss`, `trust`, `relation`, `agentLostChance`, `agentLostDepth`).
 
-- **Part C (counter-espionage)**, ten years untended (caught agents left to the default, the rope), seeds 1 to 3:
+- **Part C (counter-espionage)**, measured before Part D softened foreign work at home, ten years untended (caught agents left to the default, the rope), seeds 1 to 3:
 
 | The crown keeps | Agents caught | Foreign operations in Temeria | Named by the spymaster | The Empire's network in Temeria at year 10 | Redania's |
 | --- | --- | --- | --- | --- | --- |
@@ -664,6 +664,20 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Hanging was first worth Fear +3. Two hangings a year then held Fear up enough to calm the Scoia'tael under harsh laws (sympathy 59 after ten years of persecution against 85 before M31 C), so a spy hanged is worth Fear +1: the rope is a message to foreign courts, not a terror for the realm.
   - Without a spymaster the Empire's network holds near 60, deep enough to stir towns as well as bribe lords, and does so about once a year; with one, foreign work in Temeria all but stops. Appointing a spymaster is the main defence; the laws add to it.
   - **Dials**: `counter.catchBase` (0.12), `catchMax`, `gapDays` (45), the four answers, `foreignOps.chance` (0.06 x the owner's spend) and its war and pressure multipliers, and `nameChance` (0.06).
+
+- **Part D (the great powers at it)**, thirty years untended, from `node tools/spies.mjs 30 1,2,3` (mean depth in the courts of Temeria, Redania, Kaedwen, Aedirn, Cintra and Kovir, the owner's own left out):
+
+| Seed | The Empire, years 5 to 30 | Redania | Aedirn | Kaedwen | The Empire in Cintra | Its operations on others (bribe/stir/sabotage/assassinate) | Found out | Redania's | Agents the crown took |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 67 to 71 | 44 to 48 | 18 to 20 | 6 to 8 | 73 to 81 | 24 (2/8/13/1) | 6 | 3 bribes | 47 (0 to 3 a year) |
+| 2 | 67 to 72 | 45 to 48 | 18 to 20 | 7 to 8 | 81 | 32 (0/11/21/0) | 2 | 3 bribes | 46 (0 to 4 a year) |
+| 3 | 67 to 71 | 44 to 48 | 17 to 20 | 7 to 8 | 81 | 21 (0/6/15/0) | 0 | none | 47 (0 to 4 a year) |
+
+  - The Empire's networks are deep across the North from the first years (the clock presses within one to sixteen months, and its spending rises to 1.4), and it works against its northern rivals about once a year, mostly stirring towns and burning granaries; knives come out only in its wars. Redania's networks seldom pass 50 in a court it quarrels with, so it bribes a court now and then; Aedirn and Kaedwen never reach working depth.
+  - With a loyal spymaster (seed 1, `yes`): 62 agents taken in thirty years (0 to 4 a year), and the Empire's network in Temeria swings between 36 and 58 instead of 46 and 70.
+  - **Spying does not decide a war.** `node tools/widernorth.mjs 30 1,2,3` against the M30 F table: the Empire holds 28, 22 and 22 towns at year 30 (M30 F: 22, 22, 20), starts 9, 8 and 12 wars (15, 10, 8), and Cintra's capital is Cintran at each ten-year count. A sabotaged camp or a dead commander shifts a siege or a battle; it does not turn a war.
+  - Part D's heavier imperial spending first let the Empire stir an untended Temeria often enough to cost it a third of its people in ten years (seed 1262: 0.68 of the start against 0.87 with no foreign work at all, the longrun test's floor being 0.7). Foreign work at home now stirs a town by 8 unrest (not 15) and burns 6 prosperity (not 10), and the Empire's pressure multiplies it by 1.5 (not 2): 0.82.
+  - **Dials**: `owners[...].spend` and `warSpend`, and `operations.ai` (`chance` 0.05, `atWar` 3, `rivalTrust` 40, `empireNorth` 1, `cooldown` 180).
 
 - **Part A's dials**: `decay` (0.065) sets how fast networks settle; `budgetFull` (500) the sum that runs them at full pace; `homeGuard` and `guardCut` (150) how much a court's watch slows others; `turnAt`, `turnChance`, `killAt`, `killChance` the risk to the spymaster.
 

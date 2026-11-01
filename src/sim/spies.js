@@ -91,7 +91,16 @@ function skillOf(state, world, owner) {
 function spendOf(state, world, owner) {
   const c = S(world);
   if (owner === TEMERIA) return Math.max(c.minFactor, (state.spycraft?.budget ?? 0) / c.budgetFull);
-  return c.minFactor + (1 - c.minFactor) * c.owners[owner].spend;
+  return c.minFactor + (1 - c.minFactor) * aiSpend(state, world, owner);
+}
+
+// What an AI power spends on spies, by its ruler's temper (M31 D): the
+// Emperor more again once his clock presses on the North.
+export function aiSpend(state, world, owner) {
+  const o = S(world).owners[owner];
+  if (!o) return 0;
+  const pressing = state.nilfgaard?.realm === owner && state.nilfgaard.stage !== 'watching';
+  return pressing ? (o.warSpend ?? o.spend) : o.spend;
 }
 
 // How hard a realm is to work in: its own watch at home, and in Temeria the
