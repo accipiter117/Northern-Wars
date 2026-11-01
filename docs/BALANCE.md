@@ -68,6 +68,17 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 
 ### The wider North (M30)
 - **Part A (the map south)** changes no numbers: the new lands are mapped, not yet realms, so nothing in the rules reads them. The fog grid grows from 12,420 cells to 14,950, and building the world in Node takes about 120 ms against 114 ms before (the territory grid 51 ms against 42 ms).
+- **Part B (four northern realms)**, ten years untended, seeds 1 to 3, from `step` alone:
+
+| Seed | Kovir's purse | Lyria's | Hengfors's | Cintra's | Wars started | Angren's towns changed hands | Hengfors's suzerain |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 26,768 | 13,292 | 8,394 | 15,020 | Kaedwen 2, Cintra 1 | 6 times | Kaedwen from year 5 |
+| 2 | 27,080 | 13,041 | 7,260 | 3,251 | Cintra 3, Kaedwen 1, Redania 1 | 9 times | Kaedwen from year 3 |
+| 3 | 27,524 | 13,722 | 5,721 | 15,696 | Kaedwen 3, Cintra 1 | 10 times | none |
+
+  - Kovir is the richest realm below the great powers on every run and starts no war (aggression 0.05).
+  - Angren never stays taken: Sodden and Lyria take its towns now and then (5% a month times their aggression), and outlaws throw thin garrisons out (up to 6% a month, none at 250 men). At year ten it holds two or three of its four towns. The first pass treated Angren as an ordinary realm: Lyria declared war on it and took every town within six months, and its "ruler" went into exile.
+  - Meve starts no war in these runs: her neighbours are great powers (Aedirn), Mahakam and Angren (no war needed there), and a middle crown seldom takes on a great power alone (M29). Part F tunes her to fight.
 
 ### Crowns and vassals (M29)
 Twenty years untended (the crown takes no vassals), seeds 1 to 4, from `step` alone:

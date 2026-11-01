@@ -1,5 +1,12 @@
 # Changelog
 
+## M30 B Four northern realms
+- Kovir and Poviss under King Esterad Thyssen: the richest crown in the North after the great powers, selling to everyone and fighting for no one. Its pikemen are for hire unless you are at war with it.
+- The Hengfors League under King Niedamir: small, cold and careful, and often drawn into Kaedwen's or Redania's sphere.
+- Lyria and Rivia under Queen Meve: proud, warlike and well disposed to Temeria.
+- Angren: a lawless frontier with no ruler. March on its towns whenever you like, no war needed; but hold them thinly and outlaws will throw you out. Its bogs breed bandits and beasts.
+- Old saves gain the four realms as they stand at the start of a reign.
+
 ## M30 A The map south
 - The map now runs well south of the Yaruga: Nazair, Mag Turga, Metinna and Toussaint are drawn whole, and Ebbing appears on the coast below Cintra.
 - Along the southern edge lies the Empire's heartland, dark and unexplored, where the great roads run off the map "To the City of the Golden Towers".
