@@ -26,11 +26,18 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
+| M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A done) |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
 | M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | Done |
 | M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | Done |
 | M27 Lords worth having, traitors who pay | A and B: what lords give (guarding their lands, retinues, dues) and want; C and D: rebellion as a war and the Judgement; E: raising new houses | Done |
 | M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | Done |
+
+## M32 acceptance criteria
+Part A, five more faiths:
+- The Great Sun, Kreve, Lebioda and Freya on the M26 model (Devotion, five levels, perks, a power at level 3, development acts, clashes), each with followers by place from the lore and in the Book's Faith of the crown; foreign realms carry their own mix.
+- The Great Sun spreads north with the Empire's agents and armies; Lebioda dislikes war and the Fire's burnings.
+- Coram Agh Tera is a cult, never a faith the crown can grow: it spreads where hunger, plague and despair are high, gives rise to dark dilemmas, and can be rooted out by force, by the inquisition, or by easing the misery that feeds it.
 
 ## M31 acceptance criteria
 Part A, networks and the spymaster:

@@ -100,3 +100,5 @@ export {
 } from './spies.js';
 export { OPERATIONS, opTargets, exposureOf, canOperate } from './operations.js';
 export { catchChance, cluesOf, CAUGHT } from './counter.js';
+export { cultOf, cultIn, misery, CULT_CHOICES } from './cult.js';
+export { realmLean } from './faiths.js';

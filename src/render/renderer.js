@@ -1110,7 +1110,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // The faiths and the Book on the map (M26 E), close up only: pyres,
   // groves, hospice banners, processions, the king's pilgrimage, the
   // king's riders and the capital's standing gibbets.
-  const FAITH_TINT = { eternal_fire: '#c0582c', melitele: '#d9c27a', old_ways: '#5f7d4c' };
+  const FAITH_TINT = { eternal_fire: '#c0582c', melitele: '#d9c27a', old_ways: '#5f7d4c', great_sun: '#e8b84a', kreve: '#7d8aa0', lebioda: '#c9b8e0', freya: '#4f9db0' };
   function drawFaithMarks(state) {
     if (zoomRel() < 1.4) return;
     const size = 12 * Math.max(0.9, Math.min(1.8, Math.sqrt(zoomRel())));

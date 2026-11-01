@@ -12,6 +12,7 @@ import { bookEffect, crownFaith, signed } from './book.js';
 import { creditLimit } from './economy.js';
 import { destroyThreat, threatName } from './threats.js';
 import { nonhumanShare, realmFaith } from './culture.js';
+import { atWar, TEMERIA } from './conflict.js';
 
 const D = (world) => world.devotion;
 const say = (state, text) => addDispatch(state, text, 'faith');
@@ -66,6 +67,8 @@ export function faithEffects(state, world) {
   if (pw && (state.faiths.blessing ?? 0) > state.day) out.foodYield = (out.foodYield ?? 0) + pw.foodYield;
   const bt = D(world).faiths.old_ways?.powers?.belleteyn;
   if (bt && (state.faiths.belleteyn ?? 0) > state.day) out.growth = (out.growth ?? 0) + bt.growth;
+  const fr = D(world).faiths.freya?.powers?.freya;
+  if (fr && (state.faiths.freya ?? 0) > state.day) out.growth = (out.growth ?? 0) + fr.growth;
   return out;
 }
 
@@ -84,6 +87,9 @@ export function monthlyFaiths(state, world, rng) {
   const crown = crownFaith(state);
   // Grants of land keep a faith's fervour up; preachers turn their town.
   for (const g of F.lands) F.fervour[g.faith] = (F.fervour[g.faith] ?? 0) + cfg.acts.land.fervour;
+  // Lebioda's faithful turn from a crown at war (M32 A).
+  if (cfg.lebioda && F.fervour.lebioda !== undefined && atWar(state, TEMERIA)) F.fervour.lebioda = Math.max(0, F.fervour.lebioda - cfg.lebioda.warFade);
+  greatSun(state, world);
   F.preachers = F.preachers.filter((p) => p.until > state.day);
   for (const p of F.preachers) shiftTown(state, p.town, p.faith, cfg.acts.preachers.share * 3);
   for (const f of FAITHS(world)) {
@@ -117,15 +123,53 @@ function shiftTown(state, id, f, pts) {
   s.faith[f] += take;
 }
 
+// The Great Sun spreads north with the Empire (M32 A): with its agents,
+// once their network in Temeria runs deep, and faster where its armies
+// stand near.
+function greatSun(state, world) {
+  const g = D(world).greatSun;
+  if (!g || !D(world).faiths.great_sun) return;
+  const depth = state.spycraft?.nets?.nilfgaard?.temeria ?? 0;
+  const agents = Math.max(0, depth - g.agentsFrom) * g.perAgent;
+  const armies = (state.armies ?? []).filter((a) => a.side === 'nilfgaard' && a.soldiers > 0);
+  for (const [id, s] of Object.entries(state.settlements)) {
+    if (!s.faith || s.faith.great_sun === undefined) continue;
+    let pts = agents;
+    const t = world.byId[id];
+    if (armies.some((a) => { const p = armyAt(world, a); return p && Math.hypot(p.x - t.x, p.y - t.y) <= g.armyReach; })) pts += g.perArmy;
+    if (pts > 0) shiftTown(state, id, 'great_sun', pts);
+  }
+}
+
+const armyAt = (world, a) => (a.x !== undefined ? a : world.byId[a.at] ?? null);
+
+// A realm's lean, with the Great Sun carried in by the Empire's agents and
+// its overlordship (M32 A), taken evenly from the rest.
+export function realmLean(state, world, rid) {
+  const cfg = D(world);
+  const lean = { ...(cfg.realms?.lean?.[rid] ?? {}) };
+  const g = cfg.greatSun;
+  if (!g || rid === 'nilfgaard' || !Object.keys(lean).length) return lean;
+  let add = (state.spycraft?.nets?.nilfgaard?.[rid] ?? 0) * g.networkLean;
+  if (state.realms?.[rid]?.suzerain === 'nilfgaard') add += g.vassalLean;
+  add = Math.min(add, 60 - (lean.great_sun ?? 0));
+  if (add <= 0) return lean;
+  const rest = Object.entries(lean).filter(([f]) => f !== 'great_sun');
+  const total = rest.reduce((a, [, v]) => a + v, 0) || 1;
+  for (const [f, v] of rest) lean[f] = v - (add * v) / total;
+  lean.great_sun = (lean.great_sun ?? 0) + add;
+  return lean;
+}
+
 // The AI realms (M26 C) keep their own Devotion by the same drift, toward
 // their lean.
 function realmsMonth(state, world) {
   const cfg = D(world);
   const F = state.faiths;
-  for (const [rid, lean] of Object.entries(cfg.realms?.lean ?? {})) {
+  for (const rid of Object.keys(cfg.realms?.lean ?? {})) {
     if (!state.realms?.[rid] || state.realms[rid].fallen) continue;
     const row = (F.realms[rid] ??= {});
-    for (const [f, v] of Object.entries(lean)) {
+    for (const [f, v] of Object.entries(realmLean(state, world, rid))) {
       const target = clamp(v * cfg.shareWeight + (cfg.realms.fervour?.[rid]?.[f] ?? 0), 0, 100);
       row[f] = clamp((row[f] ?? 0) + (target - (row[f] ?? 0)) * cfg.drift, 0, 100);
     }
@@ -221,7 +265,8 @@ export function canFaithAct(state, world, kind, f, town = null, works = null) {
   if (a.coin && state.treasury - a.coin < -creditLimit(state, world)) return { ok: false, reason: `Needs ${a.coin} crowns.` };
   const month = dateOf(state.day).month;
   const ours = (id) => state.settlements[id] && !state.settlements[id].occupier;
-  if (['endow', 'preachers', 'purge', 'healers', 'circle', 'land'].includes(kind) && !ours(town)) return { ok: false, reason: 'Choose a place of ours.' };
+  if (['endow', 'preachers', 'purge', 'healers', 'circle', 'land', 'order'].includes(kind) && !ours(town)) return { ok: false, reason: 'Choose a place of ours.' };
+  if (kind === 'oath' && !(state.armies ?? []).some((x) => x.side === TEMERIA && x.soldiers > 0)) return { ok: false, reason: 'The crown has no army in the field.' };
   if (kind === 'festival') {
     const fest = cfg.faiths[f].festival;
     if (!fest.months.includes(month)) return { ok: false, reason: `Only in its season (${monthsText(fest.months)}).` };
@@ -276,6 +321,8 @@ export function doFaithAct(state, world, kind, f, town = null, works = null) {
     const gone = state.threats.list.filter((t) => t.kind === 'scoiatael' && !t.abroad && near(world, town, t, a.radius));
     for (const t of gone) destroyThreat(state, world, t);
     nudge(state, world, 'fear', a.fear, 'The Fire\'s purges');
+    // Lebioda's faithful turn from the burnings (M32 A).
+    if (cfg.lebioda && F.fervour.lebioda !== undefined) F.fervour.lebioda = Math.max(0, F.fervour.lebioda - cfg.lebioda.purge);
     for (const [g, v] of Object.entries(a.opinion ?? {})) if (state.opinion?.[g] !== undefined) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);
     F.pyre = { town, until: state.day + 10 };
     say(state, `The Fire's zealots purge the woods round ${name}: ${gone.length} Scoia'tael hideout${gone.length === 1 ? '' : 's'} burned, and pyres in the square.`);
@@ -291,6 +338,21 @@ export function doFaithAct(state, world, kind, f, town = null, works = null) {
     F.belleteyn = state.day + a.days;
     nudge(state, world, 'love', a.love, 'Belleteyn');
     say(state, 'The realm keeps Belleteyn: fires on the hills, dancing till dawn, and many a child expected by winter.');
+  } else if (kind === 'order') {
+    const s = state.settlements[town];
+    s.unrest = clamp(s.unrest - a.unrest, 0, 100);
+    nudge(state, world, 'fear', a.fear, 'Imperial order');
+    say(state, `Sun-priests preach obedience in ${name}, and the watch enforces it. The streets are very quiet.`);
+  } else if (kind === 'oath') {
+    for (const x of state.armies ?? []) if (x.side === TEMERIA && typeof x.morale === 'number') x.morale = Math.min(100, x.morale + a.morale);
+    say(state, 'Before Kreve\'s altar the crown\'s soldiers swear their oaths again. They march the straighter for it.');
+  } else if (kind === 'alms') {
+    nudge(state, world, 'love', a.love, 'Alms for the poor');
+    for (const s of Object.values(state.settlements)) if (!s.occupier) s.unrest = clamp(s.unrest - a.unrest, 0, 100);
+    say(state, 'In the Prophet\'s name the crown gives bread and copper in every market square. Even the beggars bless the king.');
+  } else if (kind === 'freya') {
+    F.freya = state.day + a.days;
+    say(state, 'Freya\'s priestesses bless the marriage beds of the realm. The midwives will be busy come winter.');
   } else if (kind === 'circle') {
     const t = state.threats.list.filter((x) => x.kind === 'monsters' && !x.abroad && near(world, town, x, a.radius))[0];
     const what = threatName(world, t).toLowerCase();

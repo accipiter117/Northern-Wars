@@ -1,5 +1,30 @@
 {
-  "eternal_fire": { "name": "The Eternal Fire", "short": "Eternal Fire" },
-  "melitele": { "name": "Melitele", "short": "Melitele" },
-  "old_ways": { "name": "The Old Ways", "short": "Old Ways" }
+  "eternal_fire": {
+    "name": "The Eternal Fire",
+    "short": "Eternal Fire"
+  },
+  "melitele": {
+    "name": "Melitele",
+    "short": "Melitele"
+  },
+  "old_ways": {
+    "name": "The Old Ways",
+    "short": "Old Ways"
+  },
+  "great_sun": {
+    "name": "The Great Sun",
+    "short": "Great Sun"
+  },
+  "kreve": {
+    "name": "Kreve",
+    "short": "Kreve"
+  },
+  "lebioda": {
+    "name": "Lebioda",
+    "short": "Lebioda"
+  },
+  "freya": {
+    "name": "Freya",
+    "short": "Freya"
+  }
 }

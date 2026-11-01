@@ -202,6 +202,11 @@ test('deterrence: a weakly held Temeria is invaded, a strongly held one only pro
         // A strong crown keeps its lords: since M27 a sullen house holds
         // back its retinue, and the realm looks weaker for it.
         for (const h of Object.values(s.houses)) h.loyalty = Math.max(h.loyalty, 55);
+        // And is held in some regard, as the weak crown is not (M24 B): left
+        // to drift, Love sank to 13 and Fear to 2 in four years, and seed 3
+        // was invaded in its last month (M32 A moved the run).
+        s.love = Math.max(s.love, 40);
+        s.fear = Math.max(s.fear, 30);
       }
       s = step(s, 30, world, { ambient: false });
       s.diplomacy.requests = [];

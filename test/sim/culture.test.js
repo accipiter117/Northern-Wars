@@ -61,7 +61,10 @@ test('persecution brings riots and Scoia\'tael commandos, and drives elves to sy
   }
   assert.ok(s.chronicle.some((d) => /^Riot in/.test(d.text)));
   assert.ok(commandos > 0, 'commandos came out of the woods');
-  assert.ok(s.sympathy > 50);
+  // From 20 at the start. Since M32 A the Fire holds a smaller share of each
+  // town (Kreve, Lebioda and the Sun take theirs), so persecution heats the
+  // quarters a little less: well past 40, where it was past 50.
+  assert.ok(s.sympathy > 40, `sympathy ${s.sympathy}`);
 });
 
 test('a pogrom kills and scatters non-humans and angers Mahakam', () => {

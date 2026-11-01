@@ -6,7 +6,7 @@ import { form } from './memory.js';
 import { cooling } from './cooldown.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 
-export const FAITH_COLOURS = { eternal_fire: '#c0582c', melitele: '#d9c27a', old_ways: '#5f7d4c' };
+export const FAITH_COLOURS = { eternal_fire: '#c0582c', melitele: '#d9c27a', old_ways: '#5f7d4c', great_sun: '#e8b84a', kreve: '#7d8aa0', lebioda: '#c9b8e0', freya: '#4f9db0' };
 export const PEOPLE_COLOURS = { human: '#c9b48a', dwarf: '#9a6a3a', elf: '#6f9a5a', halfling: '#d28c4a' };
 export const TENSION_WORDS = ['Calm', 'Uneasy', 'Strained', 'Bitter', 'Boiling'];
 const SYMPATHY_WORDS = ['Scarcely a whisper', 'Muttering', 'Open sympathy', 'Many in the woods', 'A rising'];
@@ -62,6 +62,7 @@ export function faithHtml(app) {
     <div data-part="sympathy"><h3>The Scoia'tael</h3>
       ${gaugeHtml('Sympathy among the elves', state.sympathy, describeLevel(state.sympathy, SYMPATHY_WORDS), true)}
       <p class="sub">Grows when the elves are wronged. Above three in five, commandos strike on the roads near the forests.</p></div>
+    ${cultHtml(app)}
     <div data-part="tense"><h3>Where tempers run high</h3><div class="rows">${tense || '<p class="sub">Nowhere yet.</p>'}</div></div>
   `;
 }
@@ -118,13 +119,15 @@ function townFor(app, kind, id) {
   const { world, state } = app;
   const towns = Object.keys(state.settlements).filter((x) => !state.settlements[x].occupier);
   if (['purge', 'circle', 'healers'].includes(kind)) return towns.find((x) => canFaithAct(state, world, kind, id, x).ok) ?? null;
+  // Imperial order (M32 A): the most troubled town.
+  if (kind === 'order') return [...towns].sort((a, b) => state.settlements[b].unrest - state.settlements[a].unrest)[0] ?? null;
   const big = towns.filter((x) => ['town', 'city'].includes(world.byId[x].type)).sort((a, b) => (state.settlements[b].faith?.[id] ?? 0) - (state.settlements[a].faith?.[id] ?? 0));
   return kind === 'preachers' ? big[1] ?? big[0] : big[0];
 }
 
 function actButton(app, kind, id, name, text, cooldown, coin) {
   const { world, state } = app;
-  const needsTown = ['endow', 'preachers', 'purge', 'circle', 'healers'].includes(kind);
+  const needsTown = ['endow', 'preachers', 'purge', 'circle', 'healers', 'order'].includes(kind);
   const town = needsTown ? townFor(app, kind, id) : null;
   const check = needsTown && !town ? canFaithAct(state, world, kind, id, Object.keys(state.settlements)[0]) : canFaithAct(state, world, kind, id, town);
   const left = faithRest(state, world, kind, id);
@@ -155,4 +158,17 @@ function landHtml(app, id) {
     break;
   }
   return `${offer}${grants}`;
+}
+
+// Coram Agh Tera (M32 A): where the cult is known to work, and what feeds it.
+function cultHtml(app) {
+  const { world, state } = app;
+  const c = world.devotion?.cult;
+  if (!c) return '';
+  const seen = Object.entries(state.cult?.towns ?? {}).filter(([, v]) => v >= 15).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const rows = seen.map(([id, v]) => `<button type="button" class="row realm-row" data-cult="${id}" data-go="town:${id}">
+      <span class="row-main"><span class="row-name">${escapeHtml(world.byId[id].name)}</span></span>
+      <span class="row-end">${v >= 60 ? 'Deep-rooted' : v >= 30 ? 'Spreading' : 'Whispers'}</span></button>`).join('');
+  return `<div data-part="cult"><h3>${escapeHtml(c.name)}</h3>${rows ? `<div class="rows">${rows}</div>` : ''}
+    <p class="sub">${rows ? 'A cult of the Lion-headed Spider.' : 'No whisper of the Lion-headed Spider in the realm.'} It feeds on hunger, plague and despair, and starves where the people are fed and calm.</p></div>`;
 }

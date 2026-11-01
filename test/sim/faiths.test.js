@@ -115,7 +115,11 @@ test('the faith of the crown grows twice as fast', () => {
 
 // Two years with the rivals held at the given Devotion each month.
 function clashYears(devotion, ...laws) {
-  let s = fresh(2);
+  return clashYearsOn(2, devotion, ...laws);
+}
+
+function clashYearsOn(seed, devotion, ...laws) {
+  let s = fresh(seed);
   signLaws(s, world, ...laws);
   const start = s.faiths.clashes;
   for (let m = 0; m < 24; m++) {
@@ -130,8 +134,12 @@ test('rival faiths clash only when both are strong, and Freedom of worship halve
   const strong = clashYears({ eternal_fire: 60, old_ways: 55, melitele: 50 });
   assert.ok(strong.n >= 6, `${strong.n} clashes`);
   assert.ok(strong.s.chronicle.some((c) => c.kind === 'faith' && /Clash of faiths/.test(c.text)), 'a clash report');
-  const free = clashYears({ eternal_fire: 60, old_ways: 55, melitele: 50 }, 'freedom_of_worship');
-  assert.ok(free.n < strong.n * 0.75, `${strong.n} -> ${free.n}`);
+  // Over three reigns, so a few clashes either way do not decide it.
+  const held = { eternal_fire: 60, old_ways: 55, melitele: 50 };
+  const sum = (...laws) => [2, 3, 4].reduce((a, seed) => a + clashYearsOn(seed, held, ...laws).n, 0);
+  const all = sum();
+  const free = sum('freedom_of_worship');
+  assert.ok(free < all * 0.75, `${all} -> ${free}`);
 });
 
 test('under the inquisition the Fire wins every clash', () => {

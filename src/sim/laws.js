@@ -167,7 +167,7 @@ export function opinionUnrest(state, world, id, s) {
   const o = state.opinion;
   let u = 0;
   for (const [g, scope] of Object.entries(fx.settlementUnrest)) u += (50 - o[g]) * (scope[type] ?? 0);
-  for (const [f, share] of Object.entries(s.faith)) u += (50 - o[f]) * fx.faithUnrest * (share / 100);
+  for (const [f, share] of Object.entries(s.faith)) u += (50 - (o[f] ?? 50)) * fx.faithUnrest * (share / 100);
   let pop = 0;
   for (const n of Object.values(s.population)) pop += n;
   if (pop > 0) {
