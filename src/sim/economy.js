@@ -28,6 +28,7 @@ import { bookEffect, outputMult } from './book.js';
 import { nonhumanShare } from './culture.js';
 import { churchLand, faithEffect } from './faiths.js';
 import { marketLedger, noteMade, noteUsed, noteSpill, offer, isHeld, marketGoodOf } from './market.js';
+import { clockLine } from './clock.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -142,7 +143,9 @@ export function stewardReport(state, world) {
   const hoard = Math.round(Math.max(0, (last.treasury ?? state.treasury) - u.hoardFree) * u.hoardPerMonth);
   // What fighting brought in (M24 D), line by line.
   const war = WAR_TAKINGS.map((key) => ({ key, v: Math.round(sum(last.income[key])) })).filter((w) => w.v > 0);
-  return { month: last.month, year: last.year, in: Math.round(income), out: Math.round(out), net: Math.round(net), costs, hoard, war };
+  // A line on the Empire, once the Nilfgaard clock runs (M30 D).
+  const south = clockLine(state, world);
+  return { month: last.month, year: last.year, in: Math.round(income), out: Math.round(out), net: Math.round(net), costs, hoard, war, south };
 }
 
 export function realmStock(state) {

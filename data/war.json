@@ -40,6 +40,22 @@
     "quicken": 0.75,
     "cap": 9000
   },
+  "clock": {
+    "note": "M30 D: the Nilfgaard clock. Stages Watching (envoys, merchants, spies), Pressure (raids across the Yaruga, refugees, demands on Cintra, petty kings courted) and War (invasion). The war waits behind a gate: for now it opens on a day drawn when the reign begins, gate.minDays to gate.maxDays in (one to three years); M33 (Dawn of the Reign) will replace it. Pressure begins at pressureAt of the way to the gate. aims are the towns the Empire marches on, in order, each once the one before is held. Each month of Pressure: raids.chance of a raid on a border town of a raided realm (prosperity and unrest), refugees.chance of refugees (people lost there, sympathy in Temeria), demands.trust off Cintra's trust in the Empire, court.chance of pressing a petty kingdom in reach into vassalage, and fear.monthly on every northern ruler's fear of the Empire (more at War). Petty kingdoms within threatReach of the Empire count as threatened from Pressure on, and seek protection (M29 B). Once the northern rulers' average fear of the Empire reaches league.at, those at league.member or more swear a league against it; each month a member not yet in a war the Empire is fighting against another member joins it with chance league.join (a call to arms).",
+    "realm": "nilfgaard",
+    "gate": { "minDays": 365, "maxDays": 1095 },
+    "pressureAt": 0.45,
+    "aims": ["cintra_city", "sodden_keep", "brugge_city", "mayena", "maribor"],
+    "raided": ["cintra", "sodden", "brugge"],
+    "raids": { "chance": 0.35, "prosperity": 4, "unrest": 6 },
+    "refugees": { "chance": 0.25, "people": 0.01, "sympathy": 2 },
+    "demands": { "chance": 0.3, "trust": -6 },
+    "court": { "chance": 0.12, "targets": ["brugge", "sodden", "verden", "cidaris", "kerack"], "loyalty": 40 },
+    "fear": { "monthly": 1.5, "war": 3, "max": 80 },
+    "threatReach": 900,
+    "watching": { "chance": 0.4 },
+    "league": { "at": 20, "member": 25, "join": 0.35 }
+  },
   "raise": {
     "levy": {
       "third": 0.33,

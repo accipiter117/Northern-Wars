@@ -1,5 +1,11 @@
 # Changelog
 
+## M30 D The Nilfgaard clock
+- The Empire watches first: envoys, merchants and spies, and the odd hard choice when one of them comes to Vizima.
+- Then it presses: raids across the Yaruga, refugees on the roads, threats to Cintra, and petty kings bought with imperial gold.
+- Then, somewhere between one and three years in, it invades: Cintra first, then Sodden and Brugge, then the road to the Pontar.
+- The North is afraid, and fear binds it into a league that answers the Empire's wars. The Steward now reports what comes from the south.
+
 ## M30 C The Empire
 - Nilfgaard is on the map: Nazair, Metinna, Mag Turga and Ebbing as one empire under Emperor Emhyr, each province with its governor.
 - Its armies are disciplined regulars (infantry, heavy horse and crossbowmen), and fresh regiments keep marching up from the south, faster in war.

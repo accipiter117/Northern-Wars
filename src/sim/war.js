@@ -331,7 +331,8 @@ function resolveMusters(state, world, rng) {
     const army = state.armies.find((a) => a.id === m.army);
     const against = m.against ?? TEMERIA;
     const realm = state.realms[m.realm];
-    const still = !m.show && army && realm?.posture?.kind === 'expand' && m.aim && ownerOf(state, world, m.aim) === against
+    // The Nilfgaard clock's musters march whatever the Emperor's mood that month (M30 D).
+    const still = !m.show && army && (m.clock || realm?.posture?.kind === 'expand') && m.aim && ownerOf(state, world, m.aim) === against
       && !hostile(state, m.realm, against) && truceUntil(state, m.realm, against) <= state.day;
     if (!still) {
       if (army) disbandArmy(state, world, army, true);

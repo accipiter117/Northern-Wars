@@ -264,6 +264,15 @@ Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
 - The Empire follows every common rule (battles, sieges, conquest, fear, audiences, deals, peace and separate peace) and, as a great power within reach of Brugge and Sodden, seeks vassals among the North's petty kingdoms by the M29 routes. Imperial envoys, merchants and spies before the war come with the clock (Part D).
 - Save version 32: an older save gains the Empire and Toussaint (its vassal) as at the start of a reign.
 
+### The Nilfgaard clock (M30 D)
+- Three stages (war.json clock; src/sim/clock.js): Watching (envoys, merchants and spies: news from the south, and three dilemmas brought by imperial envoys, merchants and spies that move the crown's standing with the Empire), Pressure (raids across the Yaruga on Cintra, Sodden and Brugge, refugees walking north, demands on Cintra, the Empire pressing Brugge, Sodden and the coast kingdoms into vassalage) and War (invasion).
+- The war waits behind a gate. For now the gate opens on a day drawn from the reign's seed, one to three years in, and Pressure begins a little under halfway there; M33 (Dawn of the Reign) replaces `gateOpen` so the war waits on the player's own path. Before War the Empire starts no war of its own (`mayStartWar`).
+- Aims in order: Cintra, then Sodden and Brugge, then the road to the Pontar (Mayena, Maribor). At War, each time it is free the Empire musters against the holder of the first aim it does not hold.
+- The North reacts: from Pressure on every northern ruler's fear of the Empire grows (1.5 a month, 3 at war); once the average reaches 20, those at 25 or more swear a league against it, and each month a member not yet fighting joins a war the Empire wages on another member (35%: a call to arms). Petty kingdoms within 900 of the Empire count as threatened and seek a protector, never the Empire itself.
+- Reinforcements come faster once the clock reaches War (Part C).
+- A "From the south" line in the Steward's report says where the clock stands.
+- Save version 33: an older save's clock starts watching from the save's own date.
+
 ### Terrain art
 - Forests as massed trees with darker edges, ranges as shaded peaks sized by the range (snow on the great ones), hills as mounds, marsh as reeds and pools, rivers that taper from source to mouth with their names set along the curve, lakes with a shoreline and a highlight. Scatter is seeded, so the same tree stands in the same place every time. Terrain stays visible under the fog of war.
 - Level of detail by zoom: far out only the ranges, great forests and main rivers are named; marks thin out. The painted map is cut into 256-pixel tiles at six resolutions, painted a few per frame with a coarser tile standing in until the fine one is ready, and kept in a cache that grows to twice what one view needs. Panning across the whole North on a slowed CPU takes about a millisecond a frame.

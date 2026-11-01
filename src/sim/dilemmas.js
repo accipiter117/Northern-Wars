@@ -46,6 +46,8 @@ function holds(state, world, when = {}) {
   if (when.season && !when.season.includes(dateOf(state.day).season)) return false;
   if (when.war !== undefined && !!atWar(state, TEMERIA) !== when.war) return false;
   if (when.treasury !== undefined && state.treasury < when.treasury) return false;
+  // The Nilfgaard clock's stage (M30 D).
+  if (when.clock && !when.clock.includes(state.nilfgaard?.stage)) return false;
   if (when.anyOf && !when.anyOf.some((w) => holds(state, world, w))) return false;
   return true;
 }
@@ -124,7 +126,11 @@ export function monthlyDilemmas(state, world, rng) {
 
 function open(state, world, id, place, house) {
   const d = dilemmasOf(state);
-  d.open.push({ id: d.nextId++, dilemma: id, place, house, day: state.day });
+  // A dilemma brought by a foreign court (an imperial envoy, M30 D) moves
+  // the crown's standing with that court.
+  const from = D(world).dilemmas[id]?.realm;
+  const realm = from && state.realms?.[from] && !state.realms[from].fallen ? from : undefined;
+  d.open.push({ id: d.nextId++, dilemma: id, place, house, day: state.day, ...(realm ? { realm } : {}) });
   d.seen[id] = state.day;
   d.last = state.day;
 }

@@ -32,7 +32,10 @@ test('a bandit camp\'s purse is its hoard and the burghers\' bounty, paid when i
 });
 
 test('beasts pay a reward and trophies; a witcher\'s fee comes off; Scoia\'tael pay only under bounties', () => {
-  const s = quiet(run(createState(world, 1), 200));
+  // The first seed with a beast at home by day 200 (which lairs stand
+  // shifts with the North's dice).
+  let s = null;
+  for (let seed = 1; seed <= 6 && !s?.threats.list.some((t) => t.kind === 'monsters' && !t.abroad); seed++) s = quiet(run(createState(world, seed), 200));
   const beast = s.threats.list.find((t) => t.kind === 'monsters' && !t.abroad);
   const p = threatPurse(s, world, beast);
   assert.deepEqual(p.parts.map((x) => x.key), ['reward', 'trophies']);
