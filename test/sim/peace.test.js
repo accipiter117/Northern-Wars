@@ -134,6 +134,10 @@ test('the steward makes about 1,500 a month at peace; the careless crown a littl
   // Since M27 the lords' dues are a real line even from a careless crown's
   // lukewarm houses, so it clears a little more than it once did.
   assert.ok(Math.abs(year(careless, 3)) < 1000, `careless year 3 ${year(careless, 3)}`);
-  assert.ok(year(idle, 5) < 0, `idle year 5 ${year(idle, 5)}`);
+  // The idle crown slides from a full chest into the red and stays near it.
+  // Since M29 vassals and blocs move the dice enough that its fifth year
+  // hovers either side of nothing, so the test asks for the slide itself.
+  assert.ok(year(idle, 5) < year(idle, 1) - 1000, `idle year 1 ${year(idle, 1)}, year 5 ${year(idle, 5)}`);
+  assert.ok(year(idle, 5) < 250, `idle year 5 ${year(idle, 5)}`);
   assert.ok(year(steward, 3) > year(careless, 3) + 700);
 });
