@@ -144,6 +144,15 @@ A rising used to be an abstract tally over months; now it is fought. Code in src
   - Unanswered after 60 days, the council takes the fine and hostage.
 - **Impunity**: because he rose against his king, stripping, exile and execution cost no Love and give the other houses no grievance. Doing it to a lord who never rose keeps its weight: stripping a title costs Unrest and grievances as before, and a new "Execute the lord" action on the house card costs Unrest +40 (half at once), Love −12 and a grievance of 25 in every other house.
 
+#### Raising a new house (M27 E)
+Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
+- A stripped, exiled or executed lord's lands go to the crown and wait in the Court inbox ("Lands without a lord") for a new house. The game offers up to three candidates, each with a name, two traits and a line on what they did: the captains of the crown's armies in the field, captains of standing companies that have won fights, and a younger son of any house at loyalty 60 or more.
+- The new house is named for its founder (House Venn, or House Brodowin-Dorndal for a younger son), starts at loyalty 85 and ambition 10, wants nothing for six months, and flies a banner of its own (a field no other house flies, never near the crown's blue). It is grateful: 25 is added to its loyalty's target, fading by 3% a month (about a third left after three years).
+- With no one fit, the crown keeps the lands (they pay it directly) and the choice stays open until someone is.
+- The crown can also raise a house by giving one of its conquered towns: "Raise a new house to hold it" on a conquered town's card opens the same choice.
+- Houses grow and shrink over a reign; a raised house rises and is judged like any other. A new reign begins with the five founding houses.
+- On the map, the new banner flies over its towns; the chronicle records the ceremony; a beheading leaves a scaffold at the old seat for ten days.
+
 #### As built in M5
 - Houses (invented): Dravnik (Mayena; proud, warlike), Wolbrecht (Houtborg; devout, cautious), Ostrowicz (Petrelsteyn; old blood, schemer), Gelbrand (Red Fort; greedy, pious), Brodowin (Dorndal; loyalist). Each holds its seat and two villages.
 - Held lands: the crown takes 50% of their taxes and trade (0% while exempt or in rebellion) and pays none of their soldiers.

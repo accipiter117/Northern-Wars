@@ -66,6 +66,9 @@ From `node tools/laws.mjs <seed>`: a reign half a year in, with the path's lower
 - **The steward with the Book.** It now signs the King's Justice, Charity and Melitele as the faith of the crown. On seeds 1 to 3 it clears about +1,600 a month in year 2 and +1,380 to +1,490 in year 3 (M24 C: about +1,500), the difference being the edicts the laws cost (Poor relief 80, Hospices 60 and the faith 100 a month), paid back in Love (100 by year 3) and lives.
 - **Dials worth knowing.** Each law's numbers are in data/book.json; `inkDays` (30), `lawCooldown` (90) and `repeal` set how often the Book can change and what a repeal costs.
 
+### New houses (M27 E)
+The tyrant in `tools/crowns.mjs` now raises the first candidate for every fallen house's lands. Over five years on seeds 1 to 3 it beheads seven or eight lords: the five founders and two or three of the houses it raised. A new house starts at loyalty 85 with 25 of gratitude, but under a crown with no Love its loyalty sinks within two or three years and it rises in turn. The tyrant clears +1,610 to +1,950 a month in year 3 (−17 to +660 before Part E) and −442 to +339 in year 5; its risings fall at different times on each run, so these swing widely. The steward never loses a house, so it never raises one.
+
 ### Rebellion and judgement (M27 C and D)
 Five years of the model crowns in `tools/crowns.mjs`, seeds 1 to 3 (rounded down). Both now meet a rising the same way: raise the levies at the town nearest the rebel's seat and besiege it, keeping the army until the rising is over. The steward judges with a fine and a hostage, the tyrant with the axe.
 
