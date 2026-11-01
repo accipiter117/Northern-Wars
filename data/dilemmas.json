@@ -2531,6 +2531,126 @@
     }
    ],
    "default": 1
+  },
+  "imperial_envoy": {
+    "title": "An envoy from the south",
+    "text": "A Nilfgaardian envoy in black and gold asks for a private hearing. The Emperor, he says, has no quarrel with Temeria. He would pay well to know that Vizima will not meddle in the affairs of Cintra.",
+    "realm": "nilfgaard",
+    "when": {
+      "clock": [
+        "watching",
+        "pressure"
+      ]
+    },
+    "choices": [
+      {
+        "label": "Take the gold and promise nothing",
+        "fx": {
+          "coin": 1200,
+          "relation": 5,
+          "love": -2
+        }
+      },
+      {
+        "label": "Hear him out, give him wine, send him home",
+        "fx": {
+          "relation": 2
+        }
+      },
+      {
+        "label": "Tell him Cintra's friends are Temeria's friends",
+        "fx": {
+          "relation": -15,
+          "trust": -5,
+          "love": 3
+        }
+      }
+    ],
+    "default": 1
+  },
+  "imperial_merchants": {
+    "title": "Merchants who ask too much",
+    "text": "Nilfgaardian merchants have taken rooms at {place} and buy everything at a good price. They also buy maps, and ask where the fords are, and how deep the Yaruga runs in August.",
+    "place": {
+      "types": [
+        "town",
+        "city"
+      ]
+    },
+    "realm": "nilfgaard",
+    "when": {
+      "clock": [
+        "watching",
+        "pressure"
+      ]
+    },
+    "choices": [
+      {
+        "label": "Trade is trade. Leave them be",
+        "fx": {
+          "coin": 400,
+          "prosperity": 2
+        }
+      },
+      {
+        "label": "Have them watched",
+        "fx": {
+          "coin": -150
+        }
+      },
+      {
+        "label": "Expel them and burn their maps",
+        "fx": {
+          "relation": -10,
+          "fear": 2,
+          "prosperity": -2
+        }
+      }
+    ],
+    "default": 0
+  },
+  "imperial_spy": {
+    "title": "A spy in the castle",
+    "text": "The watch at {place} has taken a clerk copying the garrison rolls for a man paid in imperial gold. He weeps and names three others.",
+    "place": {
+      "types": [
+        "castle",
+        "town",
+        "city"
+      ]
+    },
+    "realm": "nilfgaard",
+    "when": {
+      "clock": [
+        "watching",
+        "pressure"
+      ]
+    },
+    "choices": [
+      {
+        "label": "Hang all four",
+        "fx": {
+          "fear": 4,
+          "love": -2,
+          "relation": -5
+        }
+      },
+      {
+        "label": "Feed them false rolls and let them run",
+        "fx": {
+          "coin": -200,
+          "relation": -2
+        }
+      },
+      {
+        "label": "Quietly send them south with a warning",
+        "fx": {
+          "relation": 3,
+          "fear": -2
+        }
+      }
+    ],
+    "default": 0
   }
  }
 }
