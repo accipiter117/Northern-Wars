@@ -130,6 +130,15 @@ On the great houses' model (M27). Code in src/sim/vassals.js; numbers in data/di
 - **Independence**: below loyalty 20 with ambition over 60 and no heir held, he may rise, a war fought with the normal armies and sieges. His capital taken, he comes to a Judgement card with four choices, each with its effects: depose him for a pliant heir (still a vassal, loyalty 85); annex the kingdom (its towns become Temeria's, to be won over by M19 integration, and its title passes to the crown for ever); pardon him (loyalty 75; the other vassals' ambition +8); or execute him (Fear +25 at home and the other vassals fall into line, but every crown's trust in Temeria falls by 20 and fear of Temeria rises across the North). Unanswered for 60 days, the council deposes him.
 - **On the map** a vassal's towns are washed lightly in its suzerain's colour; they keep their own borders and names.
 
+#### Blocs and the petty kings (M29 D)
+Code in src/sim/blocs.js; numbers in data/diplomacy.json (`blocs`).
+- **A war with a suzerain draws in its vassals**: each at loyalty 55 or more marches beside it; below that by chance, falling to none at 25; one that stays home loses 8 loyalty. Our own vassals answer Temeria the same way.
+- **A treaty with a great power covers its vassals**: a pact with a suzerain binds its vassals too (and a vassal is bound by its suzerain's pacts) when a ruler weighs a war.
+- **A vassal makes no war of its own**: it plans no conquest and schemes no probe while it has a suzerain; it is drawn into its suzerain's wars instead.
+- **The petty kings think once a month, cheaply**: are they threatened (a war or a muster), who would protect them, how is their suzerain treating them (loyalty, tribute, protection owed), and is a rival offering better (courting). A rival courts only within reach and with room for another vassal.
+- **Ambition turns to restlessness**: a vassal's loyalty is pulled down by three tenths of his ambition; the crown cools it by granting his wants, and an AI suzerain honours its vassals now and then.
+- **Save version 29**: every protectorate treaty in an old save becomes suzerainty, its vassal's loyalty 50 plus half the old relation (for an AI protector, 60).
+
 ### Faith, culture and peoples
 - Faiths: the Eternal Fire (zealous, urban, hostile to non-humans and magic), Melitele (healing, charity, women and the poor), the Old Ways (rural, druidic, Velen).
 - Each settlement has a faith mix that shifts over time with patronage, laws, preachers and events.

@@ -65,7 +65,7 @@ export function threatened(state, world, rid) {
 }
 
 // A great power can hold only so many vassals; the AI takes no more.
-const roomFor = (state, world, p) => p === TEMERIA || vassalsOfSide(state, p) < S(world).ai.most;
+export const roomFor = (state, world, p) => p === TEMERIA || vassalsOfSide(state, p) < S(world).ai.most;
 const vassalsOfSide = (state, p) => Object.keys(state.realms ?? {}).filter((r) => !state.realms[r].fallen && suzerainOf(state, r) === p).length;
 
 // Who a threatened petty king would turn to: the great power he likes best,
@@ -87,7 +87,7 @@ function capitalOf(world, side) {
   return world.byId[side === TEMERIA ? world.kingdom.capital : world.realms.realms[side]?.capital];
 }
 
-function distance(world, a, b) {
+export function distance(world, a, b) {
   const p = capitalOf(world, a);
   const q = capitalOf(world, b);
   return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : 1000;

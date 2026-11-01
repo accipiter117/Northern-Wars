@@ -1,5 +1,11 @@
 # Changelog
 
+## M29 D Blocs
+- A great power and its vassals stand together: go to war with a suzerain and its loyal vassals march too (and yours march with you; a vassal who stays home is remembered for it).
+- A treaty with a great power covers its vassals, and a vassal makes no war of its own.
+- Vassals grow restless as their ambition grows; feed their wants to keep them. Rival powers court disloyal vassals, so spheres shift over the years.
+- Old saves keep their protectorates as vassals.
+
 ## M29 C Vassal kings
 - Your vassal kings now behave like lords abroad: each has loyalty and ambition, one want at a time, and a card with what his kingdom gives (tribute, men when called, guarding its own lands) and your options (honours, a summons, more or less tribute, a hostage, a town given back).
 - You owe them protection: leave a vassal to fight alone and he, and your other vassals, will remember.

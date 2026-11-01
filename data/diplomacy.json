@@ -19,9 +19,10 @@
     "ai": { "reach": 900, "ratio": 3, "affinity": 0, "chance": 0.01, "most": 3 }
   },
   "vassals": {
-    "note": "M29 C: vassal kings as lords abroad. Loyalty drifts by loyalty.drift a month toward loyalty.base plus relationWeight x relations with the suzerain (affinity for an AI one), less tributeWeight for each step of tribute demanded above the usual; ambition grows ambitionPerMonth. Tribute is tribute.share of his income times his tribute setting, all of it from loyalty fullAbove, none below noneBelow (Mahakam pays none). Called to arms he sends retinue.share of his kingdom's potential army, all from fullAbove, half below, none under refuseBelow. At loyalty guardAbove he breaks a camp or lair in his lands at guardChance a month. Attacked, he expects his suzerain at war with the attacker within protection.graceDays: answered, loyalty +answered; ignored, loyalty ignored, and every other vassal of that suzerain othersNotice. Below court.below a rival great power may court him (chance a month): the crown is warned first, and after warnDays still disloyal he goes over (loyalty court.loyalty); the crown can outbid the rival (matchCoin, +matchLoyalty) or warn him (+warnLoyalty and his heir at Vizima for warnHostageDays). Below revolt.below with ambition over ambitionAbove and no heir held, he may rise (chance a month) in a war for independence; his capital taken, he comes to the Judgement. Mahakam resents meddling: a summons or a hostage costs mahakamMeddle loyalty.",
+    "note": "M29 C: vassal kings as lords abroad. Loyalty drifts by loyalty.drift a month toward loyalty.base plus relationWeight x relations with the suzerain (affinity for an AI one), less tributeWeight for each step of tribute demanded above the usual and ambitionWeight a point of his ambition; ambition grows ambitionPerMonth, and an AI suzerain honours its vassal at aiHonours.chance a month, cooling his ambition by aiHonours.ambition. Tribute is tribute.share of his income times his tribute setting, all of it from loyalty fullAbove, none below noneBelow (Mahakam pays none). Called to arms he sends retinue.share of his kingdom's potential army, all from fullAbove, half below, none under refuseBelow. At loyalty guardAbove he breaks a camp or lair in his lands at guardChance a month. Attacked, he expects his suzerain at war with the attacker within protection.graceDays: answered, loyalty +answered; ignored, loyalty ignored, and every other vassal of that suzerain othersNotice. Below court.below a rival great power may court him (chance a month): the crown is warned first, and after warnDays still disloyal he goes over (loyalty court.loyalty); the crown can outbid the rival (matchCoin, +matchLoyalty) or warn him (+warnLoyalty and his heir at Vizima for warnHostageDays). Below revolt.below with ambition over ambitionAbove and no heir held, he may rise (chance a month) in a war for independence; his capital taken, he comes to the Judgement. Mahakam resents meddling: a summons or a hostage costs mahakamMeddle loyalty.",
     "ambitionPerMonth": 1,
-    "loyalty": { "base": 45, "relationWeight": 0.4, "tributeWeight": 30, "drift": 0.05 },
+    "loyalty": { "base": 50, "relationWeight": 0.4, "tributeWeight": 30, "ambitionWeight": 0.3, "drift": 0.05 },
+    "aiHonours": { "chance": 0.04, "ambition": 35 },
     "tribute": { "share": 0.25, "fullAbove": 50, "noneBelow": 20 },
     "retinue": { "share": 0.35, "fullAbove": 55, "refuseBelow": 30 },
     "guardAbove": 50,
@@ -46,6 +47,12 @@
       "pardon": { "loyalty": 75, "othersAmbition": 8 },
       "execute": { "fear": 25, "othersLoyalty": 15, "othersAmbition": 20, "trust": -20, "fearAbroad": 3, "heirLoyalty": 60 }
     }
+  },
+  "blocs": {
+    "note": "M29 D: blocs. A war with a suzerain draws in each of its vassals: all of those at loyalty joinAbove or more, the rest by chance falling to none at refuseBelow; one that refuses loses refusedLoyalty. A treaty with a suzerain covers its vassals; a vassal starts no war of its own.",
+    "joinAbove": 55,
+    "refuseBelow": 25,
+    "refusedLoyalty": -8
   },
   "rulers": {
     "redania": {

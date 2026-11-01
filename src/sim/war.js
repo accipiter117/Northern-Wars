@@ -2,6 +2,7 @@
 // invaded by a neighbour it has soured or that smells weakness, be called to
 // a friend's side, or watch its neighbours fight one another. Wars end in a
 // peace: towns handed back or kept, sometimes tribute, and a truce.
+import { drawInVassals } from './blocs.js';
 import { nudge, authority } from './meters.js';
 import { realmCompanies } from './companies.js';
 import { windfall } from './economy.js';
@@ -76,6 +77,8 @@ export function startWar(state, world, rng, attacker, defender, cause) {
   // Treaties bring their partners in: foreign rulers answer by temper and
   // trust; a partner of ours attacked (or an ally attacking) asks for us.
   if (state.diplomacy) {
+    // A suzerain's vassals march with it (M29 D).
+    drawInVassals(state, world, rng, war);
     treatyCalls(state, world, rng, war);
     if (attacker !== TEMERIA && defender !== TEMERIA) crownCall(state, world, war);
   }
