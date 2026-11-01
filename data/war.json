@@ -32,13 +32,14 @@
     ]
   },
   "empire": {
-    "note": "M30 C: fresh regiments march in from the Empire's heartland to the imperial town nearest a road end: men soldiers every peace days at peace, every war days while the Empire is at war (and every war days times quicken once the Nilfgaard clock reaches War, M30 D), up to cap soldiers in the Empire's standing army.",
+    "note": "M30 C: fresh regiments march in from the Empire's heartland to the imperial town nearest a road end: men soldiers every peace days at peace, every war days while the Empire is at war (and every war days times quicken once the Nilfgaard clock reaches War, M30 D), up to cap soldiers in the Empire's standing army. M30 F: the heartland also sends subsidy crowns a month while the clock is at War, so the regiments it sends do not bankrupt the provinces that keep them.",
     "realm": "nilfgaard",
-    "men": 400,
+    "men": 500,
     "peace": 90,
     "war": 30,
     "quicken": 0.75,
-    "cap": 9000
+    "cap": 14000,
+    "subsidy": 900
   },
   "clock": {
     "note": "M30 D: the Nilfgaard clock. Stages Watching (envoys, merchants, spies), Pressure (raids across the Yaruga, refugees, demands on Cintra, petty kings courted) and War (invasion). The war waits behind a gate: for now it opens on a day drawn when the reign begins, gate.minDays to gate.maxDays in (one to three years); M33 (Dawn of the Reign) will replace it. Pressure begins at pressureAt of the way to the gate. aims are the towns the Empire marches on, in order, each once the one before is held. Each month of Pressure: raids.chance of a raid on a border town of a raided realm (prosperity and unrest), refugees.chance of refugees (people lost there, sympathy in Temeria), demands.trust off Cintra's trust in the Empire, court.chance of pressing a petty kingdom in reach into vassalage, and fear.monthly on every northern ruler's fear of the Empire (more at War). Petty kingdoms within threatReach of the Empire count as threatened from Pressure on, and seek protection (M29 B). Once the northern rulers' average fear of the Empire reaches league.at, those at league.member or more swear a league against it; each month a member not yet in a war the Empire is fighting against another member joins it with chance league.join (a call to arms).",
