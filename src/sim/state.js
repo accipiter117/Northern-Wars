@@ -111,8 +111,11 @@ export function createState(world, seed = 1) {
   // The North's standing pacts, as they stand when the reign begins (M18).
   // Vassals a realm starts with (Toussaint to the Empire, M30 C).
   startingVassals(state, world);
-  // Bonds a realm starts with (Skellige to Cintra, M30 E).
+  // Bonds a realm starts with (Skellige to Cintra, M30 E), signed long ago:
+  // no news of them as the reign begins.
+  const told = state.chronicle.length;
   keepBonds(state, world);
+  state.chronicle.length = told;
   // The Nilfgaard clock starts watching (M30 D).
   if (world.war?.clock) state.nilfgaard = newClock(world, state.seed, day);
   seedPacts(state, world);
