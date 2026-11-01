@@ -135,7 +135,7 @@ export function mercenaryOffer(state, world, id) {
   const m = W(world).raise.mercenaries?.companies?.[id];
   if (!m) return { ok: false, reason: 'No such company.' };
   if ((state.armies ?? []).some((a) => (a.mercs ?? []).some((x) => x.id === id))) return { ok: false, reason: 'Already in our pay.' };
-  if (m.from !== 'free' && m.from !== 'kovir' && hostile(state, TEMERIA, m.from)) return { ok: false, reason: `Not while we are at war with ${sideName(world, m.from)}.` };
+  if (m.from !== 'free' && hostile(state, TEMERIA, m.from)) return { ok: false, reason: `Not while we are at war with ${sideName(world, m.from)}.` };
   if (m.afterWar) {
     const ended = (state.warsEnded ?? []).some((d) => state.day - d <= m.afterWar) || (state.wars ?? []).length > 0;
     if (!ended) return { ok: false, reason: 'Only to be had while a war is fresh.' };

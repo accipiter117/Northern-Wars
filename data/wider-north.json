@@ -1,5 +1,5 @@
 {
-  "note": "M30: the North widened. Merged over data/north-geography.json (the M15 atlas, kept unchanged) by tools/north.mjs: realm outlines here replace the atlas's, terrain zones of the same name replace the atlas's, and the rest is added. Part A: the map south of the Yaruga (the Empire's provinces traced whole, Ebbing added, the heartland as a dark band at the edge). Original abstraction; approximate.",
+  "note": "M30: the North widened. Merged over data/north-geography.json (the M15 atlas, kept unchanged) by tools/north.mjs: realm outlines here replace the atlas's, terrain zones of the same name replace the atlas's, and the rest is added. Part A: the map south of the Yaruga (the Empire's provinces traced whole, Ebbing added, the heartland as a dark band at the edge). Original abstraction; approximate. Part B: Kovir takes in Poviss as one realm (absorbs), and Angren gains three frontier towns.",
   "bounds": [
     -600,
     -650,
@@ -423,6 +423,12 @@
           ]
         ]
       ]
+    },
+    "kovir": {
+      "name": "Kovir and Poviss",
+      "absorbs": [
+        "poviss"
+      ]
     }
   },
   "terrain": {
@@ -810,6 +816,27 @@
       "x": 1060,
       "y": 1650,
       "realm": "metinna"
+    },
+    {
+      "name": "Carrow",
+      "type": "castle",
+      "x": 1250,
+      "y": 900,
+      "realm": "angren"
+    },
+    {
+      "name": "Burnt Holt",
+      "type": "village",
+      "x": 1185,
+      "y": 1075,
+      "realm": "angren"
+    },
+    {
+      "name": "Mirefall",
+      "type": "village",
+      "x": 1455,
+      "y": 1000,
+      "realm": "angren"
     }
   ],
   "roadEnds": [

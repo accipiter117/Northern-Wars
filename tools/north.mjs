@@ -19,7 +19,7 @@ const read = async (f) => JSON.parse(await readFile(join(ROOT, f), 'utf8'));
 
 // The realms the game simulates. Every other land in the atlas is drawn and
 // named, ready to become a realm later.
-export const MODELLED = ['redania', 'kaedwen', 'aedirn', 'mahakam', 'cidaris', 'kerack', 'brokilon', 'verden', 'brugge', 'sodden', 'cintra'];
+export const MODELLED = ['redania', 'kaedwen', 'aedirn', 'mahakam', 'cidaris', 'kerack', 'brokilon', 'verden', 'brugge', 'sodden', 'cintra', 'kovir', 'hengfors', 'lyria_rivia', 'angren'];
 
 // The foreign towns before M15, kept here so the build always maps from the
 // same starting point, however many times it runs.
@@ -176,12 +176,25 @@ export async function readAtlas() {
     const mine = south.terrain?.[kind] ?? [];
     terrain[kind] = [...(north.terrain[kind] ?? []).map((z) => mine.find((m) => m.name === z.name) ?? z), ...mine.filter((m) => !(north.terrain[kind] ?? []).some((z) => z.name === m.name))];
   }
+  // A realm may take in a neighbouring land as one (Kovir and Poviss): its
+  // outlines join the realm's and its towns change hands.
+  const realms = { ...north.realms };
+  const moved = {};
+  for (const [rid, r] of Object.entries(south.realms ?? {})) {
+    const { absorbs = [], ...rest } = r;
+    realms[rid] = { ...north.realms[rid], ...rest };
+    for (const other of absorbs) {
+      realms[rid].shapes = [...realms[rid].shapes, ...realms[other].shapes];
+      delete realms[other];
+      moved[other] = rid;
+    }
+  }
   return {
     ...north,
-    realms: { ...north.realms, ...south.realms },
-    terrain,
-    rivers: { ...north.rivers, ...south.rivers },
-    towns: [...north.towns, ...(south.towns ?? [])],
+    realms,
+    terrain: Object.fromEntries(Object.entries(terrain).map(([k, zs]) => [k, zs.map((z) => (moved[z.realm] ? { ...z, realm: moved[z.realm] } : z))])),
+    rivers: Object.fromEntries(Object.entries({ ...north.rivers, ...south.rivers }).map(([k, r]) => [k, moved[r.realm] ? { ...r, realm: moved[r.realm] } : r])),
+    towns: [...north.towns, ...(south.towns ?? [])].map((t) => (moved[t.realm] ? { ...t, realm: moved[t.realm] } : t)),
     roadEnds: south.roadEnds ?? [],
     roadEndLabel: south.roadEndLabel,
     bounds: south.bounds,
@@ -246,7 +259,7 @@ export async function buildNorth() {
   // Map each old foreign town to the town that now stands for it.
   const renamed = {};
   for (const [id, , realm, x, y] of OLD) {
-    if (foreign.some((t) => t.id === id)) continue;
+    if (foreign.some((t) => t.id === id && t.realm === realm)) continue;
     const pool = foreign.filter((t) => t.realm === realm);
     let best = null;
     for (const t of pool) if (!best || dist(t, { x, y }) < dist(best, { x, y })) best = t;

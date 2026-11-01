@@ -115,6 +115,8 @@ export function warBetween(state, a, b) {
 
 export function hostile(state, a, b) {
   if (a === b) return false;
+  // A lawless frontier (M30 B) is anyone's to fall on, no war declared.
+  if (state.realms?.[a]?.lawless || state.realms?.[b]?.lawless) return true;
   // A rebel house is at war with the crown alone, while its rising lasts.
   const ra = rebelHouse(a);
   const rb = rebelHouse(b);
