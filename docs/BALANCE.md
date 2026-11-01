@@ -620,6 +620,12 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
 | Peace | war.json `peace.acceptMargin`, `prizeAt`, `cityPrizeAt` | 10; a prize at 45, a city only at 90 | Wars end sooner, and cost less land |
 | Armies' pay | war.json `raise.fieldPayPerSoldier`, `companyCoin`, `companyMonthly` | 0.15 a man a month; 250 and 60 a company | War drains the treasury faster |
 
+### Five more faiths (M32 A)
+- At the start the realm's Devotion runs: the Fire 18, Melitele 29, the Old Ways 13, Lebioda 6, Kreve 4, the Great Sun 1, Freya 0. Five untended years later (seed 1): the Fire 19, Melitele 28, the Old Ways 12, Lebioda 5, Kreve 4, the Great Sun 2, Freya 0; the Sun's share of Vizima has grown from 1 to 3 as the Empire's network in Temeria passed 60. Abroad, Sodden (the Empire's vassal) leans 23 to the Sun, Cintra 12, Toussaint 39.
+- The new faiths start low: reaching a power at level 3 (Devotion 60) takes the crown's patronage (Faith of the crown, temples, preachers, festivals), as the old three do.
+- Coram Agh Tera, ten untended years on seeds 1 to 3: its strongest cell peaks at 45, 22 and 16, and only seed 1 sees it come to light (once). It is a famine and plague cult: the test that starves Anchor (hunger 0.9, Unrest 80) brings it to light within eight months. Part E measures it over thirty years.
+- **Dials**: each faith's perks and powers, `townShares`, `realms.lean`, `greatSun` (`agentsFrom` 40, `perAgent` 0.004, `perArmy` 0.5, `networkLean` 0.15, `vassalLean` 15), `lebioda` (`warFade` 2, `purge` 6), and `cult` (`grow` 6, `fade` 1.5, `prosperityFade` 2, `spreadAt` 50, `dilemmaAt` 30, `gapDays` 120, and the four answers).
+
 ### Spies (M31)
 - **Part A (networks and the spymaster).** Networks are deterministic until Part B's operations, so seeds 1 to 3 give the same depths (from `step`, the crown idle):
 

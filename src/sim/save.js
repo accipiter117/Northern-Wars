@@ -9,6 +9,7 @@ import { defaultMeters, realmUnrest } from './meters.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
 import { newSpycraft, boostNet } from './spies.js';
+import { withShares } from './world.js';
 import { STATE_VERSION, newSettlement, defaultWar, createState } from './state.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
@@ -433,6 +434,27 @@ const MIGRATIONS = {
       for (const [rid, until] of Object.entries(state.spies ?? {})) if (until > state.day) boostNet(state, world, rid);
     }
     state.version = 35;
+    return state;
+  },
+  // M32 A: the Great Sun, Kreve, Lebioda and Freya take their share of
+  // every town, their Devotion as the faithful stand, and the foreign
+  // realms their new mix; the cult has yet to show itself.
+  35(state, world) {
+    const shares = world.devotion?.townShares;
+    if (shares) {
+      for (const [id, s] of Object.entries(state.settlements)) if (s.faith) s.faith = withShares(s.faith, shares, world.byId[id]?.type);
+      const fresh = defaultFaiths(state, world);
+      const F = (state.faiths ??= fresh);
+      for (const f of Object.keys(fresh.devotion)) {
+        F.devotion[f] ??= fresh.devotion[f];
+        F.fervour[f] ??= 0;
+      }
+      for (const [rid, row] of Object.entries(fresh.realms)) {
+        const old = (F.realms[rid] ??= {});
+        for (const [f, v] of Object.entries(row)) old[f] ??= v;
+      }
+    }
+    state.version = 36;
     return state;
   },
 };

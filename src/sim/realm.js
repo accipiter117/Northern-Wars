@@ -1,5 +1,6 @@
 // The realm's day: the economy turns, moods drift, and on the first of each
 // month the ledger and the census are drawn up.
+import { monthlyCult } from './cult.js';
 import { stepMetersDay, monthlyMeters, crownCalm, threatUnrest } from './meters.js';
 import { dateOf } from './calendar.js';
 import { stepEconomyDay, monthlyLedger, buildingEffects, foodNeed, creditLimit } from './economy.js';
@@ -124,6 +125,8 @@ export function stepRealmDay(state, world, rng) {
     monthlyCulture(state, world, rng);
     // The faiths' Devotion, perks and clashes (M26 C).
     monthlyFaiths(state, world, rng);
+    // Coram Agh Tera, where hunger and plague feed it (M32 A).
+    monthlyCult(state, world);
     monthlyPetition(state, world, rng);
     // Dilemmas that follow from the crown's laws, and demands for change (M28).
     monthlyDilemmas(state, world, rng);

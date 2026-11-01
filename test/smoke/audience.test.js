@@ -163,8 +163,14 @@ test('a long press on a ruler\'s capital offers an audience', async () => {
 // Screenshots for a human: an audience, the deal table mid-negotiation and
 // the web of alliances, upright and held flat.
 test('screenshots: an audience, the deal table and the web of pacts', async () => {
-  let s = createState(world, 1);
-  s = step(s, 12 * 365, world, { ambient: false });
+  // Twelve years on, in a reign where Cintra still stands to receive us
+  // (one in which it falls is no audience at all).
+  let s = null;
+  for (let seed = 1; seed < 6 && !s; seed++) {
+    const t = step(createState(world, seed), 12 * 365, world, { ambient: false });
+    if (t.realms.cintra && !t.realms.cintra.fallen) s = t;
+  }
+  assert.ok(s, 'Cintra stands in one of five reigns');
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
   // Calanthe warmed by a gift and a deal kept, so her mood has its reasons.

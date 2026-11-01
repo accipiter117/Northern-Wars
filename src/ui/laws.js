@@ -106,7 +106,7 @@ function lawCard(app, f, law, tier) {
   const meters = Object.entries(law.meters ?? {}).filter(([, v]) => v).map(([k, v]) => `${k[0].toUpperCase()}${k.slice(1)} ${v > 0 ? '+' : ''}${v}`).join(', ');
   const cost = `${law.cost ? `${law.cost} crowns` : 'No coin'}; needs Authority ${law.authority}`;
   const signs = law.choose === 'faith'
-    ? world.book.faiths.map((fid) => signButton(state, world, law, fid, `Sign for ${world.groups.groups[fid]?.name ?? fid}`)).join('')
+    ? world.book.faiths.map((fid) => signButton(state, world, law, fid, `Sign for ${world.groups.groups[fid]?.name ?? world.devotion?.faiths[fid]?.name ?? fid}`)).join('')
     : signButton(state, world, law, null, 'Sign it into the Book');
   return `<div class="book-law detail" data-book-law="${law.id}">
     <button type="button" class="bl-close" data-set="open:null" aria-label="Close">${icon('up')}</button>

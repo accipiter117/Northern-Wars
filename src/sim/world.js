@@ -17,6 +17,8 @@ export function buildWorld({ kingdom, geography, settlements, ambient, economy, 
   const byId = {};
   for (const s of geography.settlements) byId[s.id] = s;
   for (const s of foreign) byId[s.id] = s;
+  // The faiths M32 A adds take their share of every town's founding mix.
+  if (devotion?.townShares) for (const [id, d] of Object.entries(settlements.settlements)) d.faith = withShares(d.faith, devotion.townShares, byId[id]?.type);
   const realmOf = {};
   const foreignByRealm = {};
   for (const s of foreign) {
@@ -282,4 +284,16 @@ export function nearby(world, from, hops) {
   }
   seen.delete(from);
   return [...seen];
+}
+
+// A founding faith mix with the newer faiths carved out of it, evenly from
+// the rest, by kind of place (data/devotion.json townShares).
+export function withShares(faith, shares, type) {
+  const out = { ...faith };
+  const add = {};
+  for (const [f, by] of Object.entries(shares)) if (out[f] === undefined) add[f] = by[type] ?? by.default ?? 0;
+  const take = Object.values(add).reduce((a, b) => a + b, 0);
+  const rest = Object.values(out).reduce((a, b) => a + b, 0) || 1;
+  for (const k of Object.keys(out)) out[k] = (out[k] * (100 - take)) / rest;
+  return { ...out, ...add };
 }

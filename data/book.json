@@ -163,7 +163,11 @@
               "opinionBy": {
                 "eternal_fire": { "eternal_fire": 15, "melitele": -8, "old_ways": -10, "elf": -6, "dwarf": -6 },
                 "melitele": { "melitele": 15, "eternal_fire": -10, "peasants": 4 },
-                "old_ways": { "old_ways": 15, "eternal_fire": -12, "peasants": 3 }
+                "old_ways": { "old_ways": 15, "eternal_fire": -12, "peasants": 3 },
+                "great_sun": { "eternal_fire": -20, "melitele": -6, "nobles": -8, "burghers": 3 },
+                "kreve": { "eternal_fire": -4, "nobles": 4, "peasants": 2 },
+                "lebioda": { "eternal_fire": -8, "burghers": 5, "peasants": 3 },
+                "freya": { "eternal_fire": -10, "peasants": 2 }
               },
               "opinion": {}, "meters": { "love": 1 },
               "reaction": "The king hears mass in the chosen faith; the other temples count their faithful." },
@@ -178,5 +182,5 @@
       }
     }
   },
-  "faiths": ["eternal_fire", "melitele", "old_ways"]
+  "faiths": ["eternal_fire", "melitele", "old_ways", "great_sun", "kreve", "lebioda", "freya"]
 }

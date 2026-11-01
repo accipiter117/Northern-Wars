@@ -13,6 +13,7 @@ import { atWar, TEMERIA } from './conflict.js';
 import { houseDef } from './lords.js';
 import { changeTrust, rulerShort } from './diplomacy.js';
 import { caughtText, resolveCaught } from './counter.js';
+import { cultText, resolveCult } from './cult.js';
 import { sideName } from './conflict.js';
 
 const D = (world) => world.dilemmas;
@@ -156,7 +157,7 @@ function drawDemand(state, world, rng) {
 // ---- Words ----
 
 const GROUP_NAMES = { nobles: 'the lords', burghers: 'the burghers', peasants: 'the peasants', eternal_fire: 'the Eternal Fire', melitele: "Melitele's faithful", old_ways: 'the Old Ways', dwarf: 'the dwarves', elf: 'the elves', halfling: 'the halflings' };
-const FAITH_NAMES = { eternal_fire: 'the Fire', melitele: 'Melitele', old_ways: 'the Old Ways' };
+const FAITH_NAMES = { eternal_fire: 'the Fire', melitele: 'Melitele', old_ways: 'the Old Ways', great_sun: 'the Great Sun', kreve: 'Kreve', lebioda: 'Lebioda', freya: 'Freya' };
 const sign = (v) => (v > 0 ? `+${v}` : `${v}`);
 
 // One short line of what a choice does, shown before the crown chooses.
@@ -189,6 +190,8 @@ export function dilemmaText(state, world, o) {
   const cfg = D(world);
   // A foreign agent taken by the watch (M31 C).
   if (o.agent) return caughtText(state, world, o);
+  // Coram Agh Tera come to light (M32 A).
+  if (o.cult) return cultText(state, world, o);
   if (o.demand) {
     const x = cfg.demands.list[o.demand];
     const act = x.act ?? 'sign';
@@ -267,6 +270,12 @@ export function resolveDilemma(state, world, id, choice, ignored = false) {
     if (choice < 0 || choice > 3) return false;
     d.open = d.open.filter((q) => q !== o);
     return resolveCaught(state, world, o, choice, ignored);
+  }
+  if (o.cult) {
+    if (choice < 0 || choice > 3) return false;
+    if (!resolveCult(state, world, o, choice, ignored)) return false;
+    d.open = d.open.filter((q) => q !== o);
+    return true;
   }
   if (o.demand) return resolveDemandForChange(state, world, o, choice, ignored);
   const x = o.realmRequest ? cfg.realmRequests[o.realmRequest] : cfg.dilemmas[o.dilemma];
@@ -350,7 +359,7 @@ export function stepDilemmasDay(state, world) {
   if (!cfg || !state.dilemmas) return;
   for (const o of [...state.dilemmas.open]) {
     if (state.day - o.day < cfg.defaultDays) continue;
-    const fb = o.agent ? 0 : o.demand ? 1 : o.realmRequest ? (cfg.realmRequests?.[o.realmRequest]?.default ?? 0) : (cfg.dilemmas[o.dilemma]?.default ?? 0);
+    const fb = o.agent ? 0 : o.cult ? 3 : o.demand ? 1 : o.realmRequest ? (cfg.realmRequests?.[o.realmRequest]?.default ?? 0) : (cfg.dilemmas[o.dilemma]?.default ?? 0);
     if (!resolveDilemma(state, world, o.id, fb, true)) state.dilemmas.open = state.dilemmas.open.filter((x) => x !== o);
   }
   if (state.dilemmas.promises.length) settlePromises(state, world);

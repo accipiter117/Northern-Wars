@@ -1,5 +1,10 @@
 # Changelog
 
+## M32 A Five more faiths
+- The Great Sun, Kreve, Lebioda and Freya join the realm's faiths, each with its own perks and a power: imperial order, an oath of arms, alms for the poor, Freya's blessing. Any of them can be the crown's faith.
+- The Great Sun creeps north with the Empire's agents and armies. Lebioda's faithful turn away from a crown at war.
+- A cult of the Lion-headed Spider, Coram Agh Tera, grows where people starve and sicken. Burn it out, send the inquisitors, or feed the hungry.
+
 ## M31 D Spies: the great powers at it
 - The great powers now spy on each other. The Emperor spends most, and more again once he turns on the North. Dijkstra's Redania comes next; Henselt barely bothers.
 - They bribe, stir and burn in their rivals' courts, and only take to knives in war. You hear of it where you have eyes, and learn who paid where your networks reach.
