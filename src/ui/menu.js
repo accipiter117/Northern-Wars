@@ -191,6 +191,8 @@ const CHRONICLE_KINDS = {
 
 // The chronicle: how this reign stands, then every dispatch, newest first,
 // grouped by year and filtered by subject.
+const CHRONICLE_ALL = 14;
+
 export function chronicleHtml(state, filter = 'all') {
   const r = state.reign;
   let pop = 0;
@@ -211,8 +213,14 @@ export function chronicleHtml(state, filter = 'all') {
     `<button type="button" class="chip${k === filter ? ' on' : ''}" data-chronicle="${k}" aria-pressed="${k === filter}">${label}</button>`).join(' ');
   let year = null;
   const items = [];
+  // With fifteen realms' news (M30 B), "All" shows the newest fourteen; a
+  // kind above shows the rest of its own.
+  let shown = 0;
+  let more = 0;
   for (const d of state.chronicle.slice().reverse()) {
     if (filter !== 'all' && (d.kind ?? 'realm') !== filter) continue;
+    if (filter === 'all' && shown >= CHRONICLE_ALL) { more++; continue; }
+    shown++;
     const y = dateOf(d.day).year;
     if (y !== year) {
       year = y;
@@ -223,6 +231,6 @@ export function chronicleHtml(state, filter = 'all') {
   return `
     <div data-part="summary">${summary}</div>
     <div data-part="filter"><div class="chips chronicle-filter">${chips}</div></div>
-    <div data-part="entries"><ul class="chronicle">${items.join('') || '<li>Nothing of note yet.</li>'}</ul></div>
+    <div data-part="entries"><ul class="chronicle">${items.join('') || '<li>Nothing of note yet.</li>'}</ul>${more ? `<p class="sub">${more} older entr${more === 1 ? 'y' : 'ies'}: choose a kind above to see them.</p>` : ''}</div>
   `;
 }
