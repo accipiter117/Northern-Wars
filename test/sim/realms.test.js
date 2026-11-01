@@ -63,10 +63,14 @@ test('the fog is cosmetic: what the crown sees never changes the game', () => {
   assert.equal(strip(run(createState(world, 9), 300)), strip(run(createState(world, 9), 300, false)));
 });
 
-test('neighbouring realms grow over the years, and mend their works', () => {
+test('neighbouring realms grow over the years, and mend their works', async () => {
   // Grown well past where it began (since M27 a neglected Temeria, wracked
   // by risings, may tempt Redania to a war that costs it people late on, so
   // the measure is its best year, not the last).
+  // A world of its own: the tests before this one leave the shared world's
+  // caches as their reigns had them, which shifted this ten-year run.
+  const world = await nodeWorld();
+  const run = (x, days, ambient = true) => step(x, days, world, { ambient });
   const s0 = createState(world, 4);
   let s = s0;
   const pop = (x, rid) => Object.values(x.realms[rid].settlements).reduce((a, t) => a + t.population, 0);

@@ -57,7 +57,11 @@ const quiet = (s) => {
 };
 
 test('a threat card shows its purse, and a beast\'s card the purse less a witcher\'s fee', async () => {
-  const s = quiet(step(createState(world, 1), 200, world, { ambient: false }));
+  // The first seed with a camp and a beast at home by day 200 (which stand
+  // shifts with the North's dice).
+  const both = (x) => x && x.threats.list.some((t) => t.kind === 'bandits' && !t.abroad) && x.threats.list.some((t) => t.kind === 'monsters' && !t.abroad);
+  let s = null;
+  for (let seed = 1; seed <= 8 && !both(s); seed++) s = quiet(step(createState(world, seed), 200, world, { ambient: false }));
   const camp = s.threats.list.find((t) => t.kind === 'bandits' && !t.abroad);
   const beast = s.threats.list.find((t) => t.kind === 'monsters' && !t.abroad);
   for (const t of [camp, beast]) t.sighted = true;

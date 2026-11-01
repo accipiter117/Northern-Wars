@@ -166,9 +166,15 @@ test('unpaid companies lose heart, then men desert', () => {
   s = act(s, { type: 'recruit', settlement: 'maribor', kind: 'menatarms' });
   const men = s.forces.companies[0].men;
   s.treasury = -world.economy.debt.creditLimit * 2;
-  s = run(s, 125);
+  // The pay goes unpaid while the debt is past the bankers' limit (a good
+  // month or a windfall may bring it back under before the end).
+  let unpaid = false;
+  for (let m = 0; m < 5; m++) {
+    s = run(s, 25);
+    unpaid ||= s.unpaid;
+  }
   const c = s.forces.companies[0];
-  assert.ok(s.unpaid);
+  assert.ok(unpaid);
   assert.ok(!c || c.men < men, 'men deserted');
   assert.ok(!c || c.morale < world.forces.morale.start);
   assert.ok(s.chronicle.some((d) => /deserted/.test(d.text)));
