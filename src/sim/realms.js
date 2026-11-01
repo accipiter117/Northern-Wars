@@ -12,6 +12,7 @@ import { monthlyFrontier } from './frontier.js';
 import { monthlyClock } from './clock.js';
 import { monthlySeas } from './seas.js';
 import { monthlySpies, hasSpy, boostNet } from './spies.js';
+import { monthlyCounter } from './counter.js';
 import { integrationFactor } from './conquest.js';
 import { startingWorks, worksFactor, upkeepFactor } from './works.js';
 import { giveWorks } from './state.js';
@@ -177,6 +178,8 @@ export function monthlyRealms(state, world, rng) {
   monthlySeas(state, world, rng);
   // Spy networks grow and fade; foreign ones reach for our spymaster (M31).
   monthlySpies(state, world, rng);
+  // Foreign agents caught at home, and their work against us (M31 C).
+  monthlyCounter(state, world, rng);
   for (const [rid, realm] of Object.entries(state.realms)) {
     if (realm.fallen) continue;
     // Since M20 no one builds: rulers mend what their land gave them (works.js).

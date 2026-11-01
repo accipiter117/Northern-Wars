@@ -44,7 +44,7 @@ test('the Spies screen: budget, spymaster and networks', async () => {
   // Redania's are known, read from their own letters.
   assert.equal(await page.locator('[data-candidate]').count(), world.spies.spymaster.candidates);
   assert.equal(await page.locator('[data-foreign]').count(), 1);
-  assert.match(await page.textContent('[data-foreign="redania"]'), /deep, read from their own letters/);
+  assert.match(await page.textContent('[data-foreign="redania"]'), /deep, from their own letters/);
   // Redania first among our networks; its plans are open to us.
   assert.equal(await page.locator('.spy-net').first().getAttribute('data-net'), 'redania');
   assert.match(await page.textContent('[data-net="redania"]'), /plans and spies/);
@@ -84,6 +84,52 @@ test('the Spies screen: budget, spymaster and networks', async () => {
   await page.waitForSelector('[data-op="stir:land"][disabled]');
   await page.waitForTimeout(400);
   await page.screenshot({ path: join(OUT, 'portrait-spy-operation-done.png') });
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('a caught agent before the crown, and troubles without a name', async () => {
+  const s = step(createState(world, 1), 30, world, { ambient: false });
+  for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
+  s.diplomacy.requests = [];
+  s.dilemmas ??= { open: [], later: [], seen: {}, nextId: 1, last: -Infinity, lastDemand: -Infinity, promises: [], silenced: {} };
+  s.dilemmas.open = [{ id: s.dilemmas.nextId++, agent: 'nilfgaard', realm: 'nilfgaard', op: 'sabotage', day: s.day }];
+  s.spycraft.spymaster = { id: 1, name: 'Dame Ysolde Carrow', from: 'a widowed courtier', trait: 'cautious', skill: 58, since: s.day - 200 };
+  s.spycraft.clues = [
+    { id: 2, owner: 'redania', kind: 'bribe', day: s.day - 120, what: 'House Brodowin', named: true },
+    { id: 3, owner: 'nilfgaard', kind: 'stir', day: s.day - 20, what: 'Maribor', named: false },
+  ];
+  s.spycraft.caught = 3;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  await page.addInitScript((sv) => localStorage.setItem('northern-wars.save', sv), serialize(s));
+  await page.goto(`${base}?paused&nohints`);
+  await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  await page.click('[data-tab="court"]');
+  await page.click('[data-sub="inbox"]');
+  const dec = page.locator('.decision', { hasText: 'An agent of' });
+  await dec.waitFor();
+  assert.match(await dec.textContent(), /tinderbox in the granaries/);
+  assert.equal(await dec.locator('[data-choice]').count(), 4);
+  await dec.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(OUT, 'portrait-caught-agent.png') });
+  // Follow the spy.
+  await dec.locator('[data-choice="3"]').click();
+  await page.waitForFunction(() => !window.northernWars.state.dilemmas.open.some((o) => o.agent));
+  assert.ok(await page.evaluate(() => window.northernWars.state.spycraft.known.nilfgaard > window.northernWars.state.day));
+  await page.click('[data-sub="spies"]');
+  await page.waitForSelector('[data-part="clues"]');
+  assert.equal(await page.locator('[data-clue]').count(), 2);
+  assert.match(await page.textContent('[data-clue="2"]'), /Redania/);
+  assert.match(await page.textContent('[data-clue="3"]'), /Unknown/);
+  assert.match(await page.textContent('[data-foreign="nilfgaard"]'), /agents we followed/);
+  await page.evaluate(() => document.querySelector('[data-part="foreign-spies"]').scrollIntoView({ block: 'start' }));
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(OUT, 'portrait-spies-clues.png') });
   assert.deepEqual(errors, []);
   await context.close();
 });

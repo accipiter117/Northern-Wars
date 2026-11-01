@@ -1,5 +1,10 @@
 # Changelog
 
+## M31 C Counter-espionage
+- Foreign spies are now caught in Temeria, more often with a good spymaster, curfews, the king's riders or the inquisition.
+- A caught agent is your decision: hang them, turn them, trade them back, or let them go and follow them (which may unmask a spymaster of yours in foreign pay).
+- Foreign courts now work against you: a lord's loyalty cools, a town is stirred up, a granary burns. Your spymaster may later name who paid for it.
+
 ## M31 B Spy operations
 - A deep enough network can now act: bribe a court or loosen a vassal from its overlord, stir a rising, burn a siege camp's stores or a capital's granaries, or kill a commander or a rival spymaster.
 - Every operation costs silver and may be found out. The button shows the odds; if caught, you lose agents and that ruler's trust.

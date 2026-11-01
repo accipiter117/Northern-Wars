@@ -26,14 +26,14 @@
         "iron": {
           "name": "The Iron Hand", "leans": "Fear",
           "laws": [
-            { "id": "curfews", "name": "Curfews and the watch", "headline": "Unrest falls by 10 everywhere, and Fear grows each month.", "blurb": "Bells at dusk, the watch on every corner, and the stocks for anyone abroad after dark.", "cost": 200, "authority": 25,
-              "effects": { "unrest": -10, "fear": 1.5, "prosperity": { "town": -1, "city": -1 } }, "opinion": { "burghers": -5, "nobles": 3 }, "meters": { "fear": 5, "love": -2 },
+            { "id": "curfews", "name": "Curfews and the watch", "headline": "Unrest falls by 10 everywhere, Fear grows each month, and foreign agents are caught more often.", "blurb": "Bells at dusk, the watch on every corner, and the stocks for anyone abroad after dark.", "cost": 200, "authority": 25,
+              "effects": { "counterSpy": 10, "unrest": -10, "fear": 1.5, "prosperity": { "town": -1, "city": -1 } }, "opinion": { "burghers": -5, "nobles": 3 }, "meters": { "fear": 5, "love": -2 },
               "reaction": "The streets empty at the curfew bell; the taverns curse the watch under their breath." },
             { "id": "executions", "name": "Public executions", "headline": "Unlocks Hang the ringleaders: a town's Unrest falls by 20, Fear rises by 15 (every 30 days).", "blurb": "Justice done where all can see it.", "cost": 150, "authority": 30, "unlocks": "hang",
               "effects": {}, "opinion": { "eternal_fire": 3, "peasants": -3 }, "meters": { "fear": 6, "love": -2 },
               "reaction": "A scaffold rises in Vizima's square. Nobody laughs at the watch any more." },
-            { "id": "riders", "name": "The king's riders", "headline": "Bandit threats near the roads are halved, and Fear grows.", "blurb": "Armed riders in the king's colours patrol every high road and hang highwaymen where they catch them.", "cost": 400, "authority": 40,
-              "effects": { "banditRoads": -0.5, "fear": 2, "garrisonUpkeep": 0.1 }, "opinion": { "peasants": -4, "nobles": 3 }, "meters": { "fear": 4 },
+            { "id": "riders", "name": "The king's riders", "headline": "Bandit threats near the roads are halved, foreign agents are caught more often, and Fear grows.", "blurb": "Armed riders in the king's colours patrol every high road and hang highwaymen where they catch them.", "cost": 400, "authority": 40,
+              "effects": { "counterSpy": 8, "banditRoads": -0.5, "fear": 2, "garrisonUpkeep": 0.1 }, "opinion": { "peasants": -4, "nobles": 3 }, "meters": { "fear": 4 },
               "reaction": "Bodies swing at the crossroads and the merchants travel without guards again." }
           ]
         }
@@ -170,8 +170,8 @@
             { "id": "restrictions", "name": "Restrictions on non-humans", "headline": "Fear grows, the Eternal Fire rejoices, and non-humans grow restless and leave.", "blurb": "Non-humans may not own land, bear arms or live outside their quarters.", "cost": 200, "authority": 30,
               "effects": { "fear": 1.5, "nonhumanExodus": 0.01 }, "opinion": { "dwarf": -15, "elf": -15, "halfling": -15, "eternal_fire": 10 }, "meters": { "fear": 4 },
               "reaction": "Walls go up round the non-human quarters; the Fire's preachers call it the first step." },
-            { "id": "inquisition", "name": "The inquisition", "headline": "Unlocks Witch hunt: clear the Scoia'tael from a region (every 60 days), and Fear grows.", "blurb": "The Fire's inquisitors may question anyone, anywhere, in the king's name.", "cost": 400, "authority": 40, "unlocks": "witchhunt",
-              "effects": { "fear": 1 }, "opinion": { "eternal_fire": 8, "elf": -8, "old_ways": -6 }, "meters": { "fear": 5, "love": -2 },
+            { "id": "inquisition", "name": "The inquisition", "headline": "Unlocks Witch hunt: clear the Scoia'tael from a region (every 60 days). Foreign agents are caught far more often, and Fear grows.", "blurb": "The Fire's inquisitors may question anyone, anywhere, in the king's name.", "cost": 400, "authority": 40, "unlocks": "witchhunt",
+              "effects": { "counterSpy": 15, "fear": 1 }, "opinion": { "eternal_fire": 8, "elf": -8, "old_ways": -6 }, "meters": { "fear": 5, "love": -2 },
               "reaction": "Grey-robed inquisitors ride out of Vizima; the forests go very quiet." }
           ]
         }

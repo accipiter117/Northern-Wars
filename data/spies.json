@@ -41,6 +41,19 @@
       "assassinate": { "at": 85, "coin": 1500, "risk": 0.35, "soldiers": 0.12, "morale": 25, "army": 0.08, "networks": 20 }
     }
   },
+  "counter": {
+    "note": "M31 C: foreign networks in Temeria. Each month each foreign network may lose an agent to the crown's watch: catchBase x its depth / 50 x the crown's watch / 40 (homeGuard, a quarter of the spymaster's skill, and the counterSpy of laws: curfews, the king's riders, the inquisition), at most catchMax, one caught agent before the crown at a time and none within gapDays of the last. A caught agent is a decision: hang (Fear, their network hurt, their ruler angry), turn (our network in their realm deepens, or the agent was playing us), trade back (trust and goodwill, a smaller dent), or follow (their network rolled up a little, its depth known for a year, and a traitor spymaster in their pay unmasked). Foreign networks also work against Temeria (foreignOps, a month's chance x the owner's spend; triple at war with us, double for the Empire under pressure), at the depth each needs; the crown's watch may catch them at it (the operation's risk x watch / 40). Their work leaves a clue; a spymaster may later name who did it (nameChance a month x skill / 50).",
+    "catchBase": 0.12,
+    "catchMax": 0.3,
+    "gapDays": 45,
+    "hang": { "fear": 1, "network": 12, "relation": -8, "trust": -6 },
+    "turn": { "base": 0.35, "perSkill": 0.006, "gain": 12, "failLoss": 5, "failGain": 6 },
+    "trade": { "relation": 6, "trust": 8, "network": 5 },
+    "follow": { "network": 8, "knowDays": 365 },
+    "foreignOps": { "chance": 0.06, "atWar": 3, "pressure": 2, "loyalty": 10, "unrest": 15, "prosperity": 10, "morale": 20, "soldiers": 0.08 },
+    "nameChance": 0.06,
+    "clueDays": 720
+  },
   "spymaster": {
     "wage": 120,
     "candidates": 3,
