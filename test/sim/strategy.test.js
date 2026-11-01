@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { nodeWorld } from '../helpers.js';
 import { createState, step, serialize, deserialize, intentions, ownerOf, applyAction } from '../../src/sim/index.js';
 import { STATE_VERSION } from '../../src/sim/state.js';
-import { assess, postureScores, choosePosture, armyTarget, deterrence, strengthOf } from '../../src/sim/strategy.js';
+import { assess, postureScores, choosePosture, armyTarget, deterrence, strengthOf, monthlyStrategy } from '../../src/sim/strategy.js';
 import { monthlyRealms } from '../../src/sim/realms.js';
 import { startWar, applyPeace } from '../../src/sim/war.js';
 import { makeTreaty, treatyBetween } from '../../src/sim/diplomacy.js';
@@ -89,6 +89,8 @@ test('standing armies cost their upkeep; debt brings desertion; a court spends a
   t.realms.cintra.treasury = -800;
   t.realms.cintra.army = 1000;
   monthlyRealms(t, world, makeRng(3));
+  // Since M30 F rulers take stock on a day of their own; here, at once.
+  monthlyStrategy(t, world, makeRng(3), ['cintra']);
   assert.ok(t.realms.cintra.army < 1000);
   assert.equal(t.realms.cintra.posture.kind, 'consolidate');
   // A huge hoard is spent down by the court, month by month.
