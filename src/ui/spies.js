@@ -3,6 +3,7 @@
 // and the foreign networks known to work in Temeria.
 import {
   ourDepth, spyUnlocked, settlesAt, spyExpense, foreignAtHome, spyTargets, canAppoint, formatDate, sideName,
+  OPERATIONS, opTargets, exposureOf, canOperate,
 } from '../sim/index.js';
 import { cardHead, orderAttr } from './card.js';
 import { escapeHtml, number } from './format.js';
@@ -81,10 +82,10 @@ function networksHtml(world, state, ours) {
       const goal = Math.round(settlesAt(state, world, 'temeria', rid));
       const word = goal > d + 1 ? `growing towards ${goal}` : goal < d - 1 ? `fading towards ${goal}` : 'holding';
       const sub = `${open.length ? `Opens: ${open.map((u) => u.short).join(', ')}. ` : ''}${next ? `At ${next.at}: ${next.short}.` : ''}`;
-      return `<div class="spy-net" data-net="${rid}">${gaugeHtml(escapeHtml(sideName(world, rid)), d, `${Math.round(d)}, ${word}`, false)}<p class="sub" title="${escapeHtml(open.map((u) => u.text).join('. '))}">${escapeHtml(sub)}</p></div>`;
+      return `<div class="spy-net" data-net="${rid}" data-go="realm:${rid}" role="button" tabindex="0">${gaugeHtml(escapeHtml(sideName(world, rid)), d, `${Math.round(d)}, ${word}`, false)}<p class="sub" title="${escapeHtml(open.map((u) => u.text).join('. '))}">${escapeHtml(sub)}</p></div>`;
     }).join('');
   const key = world.spies.unlocks.map((u) => `<li><b>${u.at}</b> ${escapeHtml(u.text)}</li>`).join('');
-  return `<div data-part="networks"><h3>Our networks abroad</h3>${rows}
+  return `<div data-part="networks"><h3>Our networks abroad</h3><p class="sub">Tap a realm to set our agents to work there.</p>${rows}
     <details class="spy-key" data-part="spy-key"><summary>What each depth opens</summary><ul>${key}</ul></details></div>`;
 }
 
@@ -95,4 +96,33 @@ function foreignHtml(world, state, sc) {
     <span class="row-end">${BAND_WORDS[f.band]}</span></div>`).join('');
   const empty = sc.spymaster ? 'No foreign network is known to work in Temeria.' : 'Name a spymaster to learn who spies on Temeria.';
   return `<div data-part="foreign-spies"><h3>Foreign agents in Temeria</h3>${rows || `<p class="sub">${empty}</p>`}</div>`;
+}
+
+const OP_NAMES = { bribe: 'Bribe', stir: 'Stir a rising', sabotage: 'Sabotage', assassinate: 'Assassinate' };
+
+// The realm card's operations (M31 B): what our network there can do now,
+// and what it could do deeper. Never a crowned ruler.
+export function operationsHtml(world, state, rid) {
+  const o = world.spies?.operations;
+  if (!o || !state.spycraft || !state.realms?.[rid]) return '';
+  const d = ourDepth(state, rid);
+  const rest = (state.spycraft.cooldown?.[rid] ?? 0) - state.day;
+  const name = sideName(world, rid);
+  const rows = OPERATIONS.map((kind) => {
+    const k = o.kinds[kind];
+    if (d < k.at) return `<p class="sub" data-op-locked="${kind}">${OP_NAMES[kind]}: our network must be ${k.at} deep.</p>`;
+    const targets = opTargets(state, world, rid, kind);
+    if (!targets.length) return `<p class="sub" data-op-locked="${kind}">${OP_NAMES[kind]}: nothing to strike there now.</p>`;
+    const risk = Math.round(exposureOf(state, world, rid, kind) * 100);
+    return targets.map((t) => {
+      const check = canOperate(state, world, rid, kind, t.id);
+      return `<button type="button" class="build" data-op="${kind}:${t.id}" ${orderAttr({ type: 'spyOp', realm: rid, kind, target: t.id }, `${OP_NAMES[kind]} in ${name} (${t.label.toLowerCase()})? One chance in ${Math.max(1, Math.round(100 / Math.max(1, risk)))} it is found out, and ${name} will know whose silver paid for it.`, { final: true })} ${check.ok ? '' : 'disabled'}>
+        <span class="build-name">${OP_NAMES[kind]}: ${escapeHtml(t.label)}</span>
+        <span class="build-cost">${check.ok ? `${number(k.coin)} crowns, ${risk}% risk. ${escapeHtml(t.line)}` : escapeHtml(check.reason)}</span></button>`;
+    }).join('');
+  }).join('');
+  const last = state.spycraft.last?.realm === rid ? `<p class="sub">Last work here: ${OP_NAMES[state.spycraft.last.kind].toLowerCase()}, ${state.spycraft.last.exposed ? 'found out' : 'done'} on ${formatDate(state.spycraft.last.day)}.</p>` : '';
+  return `<div data-part="operations"><h3>Our network: ${Math.round(d)} deep</h3>
+    ${rest > 0 ? `<p class="sub">Our agents are lying low for ${rest} days after the last work.</p>` : ''}${last}
+    <div class="build-list">${rows}</div></div>`;
 }

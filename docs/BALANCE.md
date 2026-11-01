@@ -637,7 +637,22 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Networks settle within two or three years (6.5% of depth fades each month), so the starting depths matter only early; after that skill, coin and openness decide.
   - The crown's networks, with a spymaster of skill 49 and four years of spending: 250 a month brings most courts to 13 to 17 (nothing seen); 500 to 26 to 34 (armies seen, plans not yet); 800 to 42 to 54 (plans read in most courts). Mahakam stays under 12 and Brokilon under 4 at any budget. 500 a month is about a sixth of an untended crown's income (3,000 a month in year 2), so seeing the North is a real choice.
   - A spymaster's watch holds the Empire's network in Temeria near 57 (55 to 60 by the spymaster's skill, against 65 with the office empty), Redania's near 43 and Aedirn's near 18. Above 50 the Empire may buy the spymaster: 0.4% a month, so about one spymaster in three over ten years for an ordinary trait, two in three if greedy, one in five if cautious, never if loyal. At 75 they may kill the spymaster, which no network reaches in Temeria while a spymaster keeps watch; Part D's heavier imperial spending as the war nears will bring it closer.
-  - **Dials worth knowing**: `decay` (0.065) sets how fast networks settle; `budgetFull` (500) the sum that runs them at full pace; `homeGuard` and `guardCut` (150) how much a court's watch slows others; `turnAt`, `turnChance`, `killAt`, `killChance` the risk to the spymaster.
+- **Part B (operations).** The chance an operation is found out, at exactly the depth it needs, with no spymaster's trait (a cautious spymaster takes 40% off; ruthless adds 30%; every point of depth beyond the need takes 2% off, to half at 25 over):
+
+| Realm | Bribe (50) | Stir (60) | Sabotage (70) | Assassinate (85) |
+| --- | --- | --- | --- | --- |
+| Kaedwen | 9% | 13% | 16% | 22% |
+| Aedirn | 11% | 15% | 19% | 26% |
+| Kerack | 8% | 10% | 13% | 18% |
+| Mahakam | 19% | 25% | 31% | 44% |
+| Redania | 21% | 28% | 34% | 48% |
+| The Empire | 22% | 30% | 38% | 52% |
+
+  - Reaching the depths is the real price: from Part A, 800 a month and a good spymaster bring most courts to 42 to 54, so bribes are within reach of a crown that pays for them, a rising or sabotage needs years of spending on one court, and assassination is for a crown that has made one rival its life's work. Dijkstra's Redania and the Empire make even the cheap work dangerous.
+  - One operation a season in each realm (90 days' rest) keeps spying a lever, not a machine gun: a stirred rising costs a realm about a quarter of two garrisons and some prosperity, enough to tip a close war, never enough to win one alone.
+  - **Dials**: `operations.kinds` (depth `at`, `coin`, `risk` and effects), `cooldown`, `maxRisk`, and the exposure costs (`depthLoss`, `trust`, `relation`, `agentLostChance`, `agentLostDepth`).
+
+- **Part A's dials**: `decay` (0.065) sets how fast networks settle; `budgetFull` (500) the sum that runs them at full pace; `homeGuard` and `guardCut` (150) how much a court's watch slows others; `turnAt`, `turnChance`, `killAt`, `killChance` the risk to the spymaster.
 
 ## Tools
 - `node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds] [ledger]` for the tables above (it counts raids, deaths, road-days held, camps cleared, fights and companies); `ledger` prints each year's month, line by line. The crowns themselves live in `tools/crowns.mjs`.

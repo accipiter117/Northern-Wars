@@ -19,6 +19,7 @@ import { canHouseAction, houseAction, resolveDemand } from './houses.js';
 import { canSetGarrison, resolveEvent } from './military.js';
 import { canRecruit, recruit, canOrderCompany, orderCompany, disbandCompany } from './forces.js';
 import { witcherCost } from './threats.js';
+import { canOperate, operate } from './operations.js';
 import { canSetBudget, setBudget, canAppoint, appoint, dismiss } from './spies.js';
 import { canOpenEmbassy, openEmbassy, closeEmbassy, canSendSpy, sendSpy } from './realms.js';
 import { makeRng } from './rng.js';
@@ -324,6 +325,16 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     setBudget(next, world, action.amount);
+    return { state: next };
+  }
+  if (action.type === 'spyOp') {
+    const check = canOperate(state, world, action.realm, action.kind, action.target);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    // Exposure is the game's own dice, so a save resumes it.
+    const rng = makeRng(next.rng.game);
+    operate(next, world, rng, action.realm, action.kind, action.target);
+    next.rng.game = rng.seed;
     return { state: next };
   }
   if (action.type === 'spymaster') {

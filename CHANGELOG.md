@@ -1,5 +1,10 @@
 # Changelog
 
+## M31 B Spy operations
+- A deep enough network can now act: bribe a court or loosen a vassal from its overlord, stir a rising, burn a siege camp's stores or a capital's granaries, or kill a commander or a rival spymaster.
+- Every operation costs silver and may be found out. The button shows the odds; if caught, you lose agents and that ruler's trust.
+- Tap a realm on the Spies screen to see what your agents can do there.
+
 ## M31 A Spies: networks and the spymaster
 - Every great power now keeps spies in the other courts. Nilfgaard's networks are the deepest and grow the fastest; Dijkstra's Redania is the best in the North.
 - Name a spymaster from three candidates, each with a skill and a character, and set how much silver the networks get each month.

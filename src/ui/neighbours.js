@@ -4,6 +4,7 @@ import { number, escapeHtml, describeLevel } from './format.js';
 import { realmWarHtml, siegeNote } from './war.js';
 import { sideName, ourDepth, hasSpy } from '../sim/index.js';
 import { cardHead, orderAttr, section } from './card.js';
+import { operationsHtml } from './spies.js';
 import { dealFormHtml } from './market.js';
 import { icon } from './icons.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
@@ -365,6 +366,7 @@ export function intelligenceHtml(world, state, rid) {
   const known = seen.map((id) => `<button type="button" class="chip" data-foreign="${id}" data-go="foreign:${id}">${escapeHtml(world.byId[id].name)}</button>`).join(' ');
   return `<h3>What we see</h3><p class="sub">${sight}</p>
     <div class="build-list">${embassy}${spy}</div>
+    ${operationsHtml(world, state, rid)}
     <h3>Places we know</h3><div class="chips">${known || '<p class="sub">None yet. Their land lies under the fog.</p>'}</div>`;
 }
 

@@ -98,3 +98,4 @@ export { who as rulerSubject, ourVassals, vassalOf, tributeOf, vassalRetinue, va
 export {
   spycraftOf, netDepth, ourDepth, unlocked as spyUnlocked, hasSpy, knowsPlans, settlesAt, spyExpense, foreignAtHome, band as netBand, spyTargets, canSetBudget, canAppoint,
 } from './spies.js';
+export { OPERATIONS, opTargets, exposureOf, canOperate } from './operations.js';

@@ -65,6 +65,25 @@ test('the Spies screen: budget, spymaster and networks', async () => {
   await page.evaluate(() => document.querySelector('[data-part="foreign-spies"]').scrollIntoView({ block: 'start' }));
   await page.waitForTimeout(400);
   await page.screenshot({ path: join(OUT, 'portrait-spies-foreign.png') });
+  // Tap Kaedwen's network: its card, with the operations our depth allows.
+  await page.evaluate(() => {
+    const nw = window.northernWars;
+    nw.state.spycraft.nets.temeria.kaedwen = 72;
+  });
+  await page.click('[data-net="kaedwen"]');
+  await page.waitForSelector('[data-part="operations"]');
+  assert.equal(await page.locator('[data-op^="bribe:"]').count(), 1);
+  assert.equal(await page.locator('[data-op="sabotage:works"]').count(), 1);
+  assert.equal(await page.locator('[data-op-locked="assassinate"]').count(), 1);
+  await page.evaluate(() => document.querySelector('[data-part="operations"]').scrollIntoView({ block: 'start' }));
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(OUT, 'portrait-spy-operations.png') });
+  await page.click('[data-op="stir:land"]');
+  await page.click('#dialog-yes');
+  await page.waitForFunction(() => window.northernWars.state.spycraft.last?.kind === 'stir');
+  await page.waitForSelector('[data-op="stir:land"][disabled]');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(OUT, 'portrait-spy-operation-done.png') });
   assert.deepEqual(errors, []);
   await context.close();
 });
