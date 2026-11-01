@@ -92,3 +92,4 @@ export { judgementsOf, crimesOf, judgementEffects, fineOf, JUDGEMENTS } from './
 export { rebelArmies } from './rebellion.js';
 export { rebelSide, rebelHouse } from './conflict.js';
 export { candidatesFor, canOfferTown } from './newhouses.js';
+export { tierOf, isGreat, suzerainOf, vassalsOf, titlesOf, crownStyle, asksAudience, appetiteAgainst } from './tiers.js';

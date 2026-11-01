@@ -9,6 +9,7 @@ import { stewardHtml } from './steward.js';
 import { lawsHtml } from './laws.js';
 import { noblesHtml, houseCard, swatch, depositionHtml } from './nobles.js';
 import { faithHtml, freshPowers } from './faith.js';
+import { crownStyle } from '../sim/index.js';
 import { ledgerHtml, chronicleHtml } from './menu.js';
 import { industryHtml } from './trade.js';
 import { marketHtml, taxesHtml } from './market.js';
@@ -72,7 +73,9 @@ function tabScreen(app, tab) {
     else if (sub === 'pacts') html = pactsHtml(app);
     else html = neighboursHtml(app);
   }
-  return { title: TAB_TITLES[tab], html: `${segs(list, sub)}${html}` };
+  // Foltest's style heads the Court, growing with each title won (M29 A).
+  const style = tab === 'court' ? `<p class="crown-style" data-part="style">${escapeHtml(crownStyle(app.state, app.world))}</p>` : '';
+  return { title: TAB_TITLES[tab], html: `${style}${segs(list, sub)}${html}` };
 }
 
 const gone = (title, what) => ({ title, html: `<div data-part="head"><p class="sub">${what}</p></div>` });

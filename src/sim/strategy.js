@@ -5,6 +5,7 @@
 // it: the size of its standing army, what it builds, the war it chooses and
 // how it probes a neighbour too strong to attack. Works for any party with a
 // realm in data/realms.json and a ruler in data/diplomacy.json.
+import { appetiteAgainst } from './tiers.js';
 import { authority } from './meters.js';
 import { addDispatch, clamp } from './realm.js';
 import { informed } from './realms.js';
@@ -181,6 +182,8 @@ export function assess(state, world, rid) {
     let sum = parts.reduce((a, x) => a + x.value, 0);
     if (p === TEMERIA) vsTemeria = { value: sum, ratio, parts };
     if (bound(state, rid, p)) sum *= o.allyCut;
+    // A middle or petty crown seldom takes on a great power alone (M29 A).
+    if (!atWar(state, p)) sum *= appetiteAgainst(world, rid, p);
     if (!aimTown) sum *= 0.5;
     if (!best || sum > best.value) best = { against: p, value: sum, parts, aim: aimTown, ratio };
   }

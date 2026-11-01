@@ -1,5 +1,12 @@
 # Changelog
 
+## M29 A Tiers of crowns, and one relations screen
+- The North's rulers now come in tiers: great powers (Temeria, Redania, Kaedwen, Aedirn), a middle crown (Cintra) and petty kingdoms (Sodden, Brugge, Verden, Cidaris, Kerack, Mahakam).
+- Petty kings keep their distance: unless relations are warm or they bring a very good offer, they send short requests to your inbox (ships against pirates, grain in a lean year, bandits from over the border) instead of seeking an audience.
+- Middle and petty crowns rarely pick a fight with a great power on their own.
+- The Rulers screen is sorted by weight: the great powers first, then your vassals, the middle crowns, other powers' spheres folded under their overlord, and the petty kingdoms last.
+- Foltest's style heads the Court and grows with each title you win, such as Prince of Sodden or Protector of Brugge.
+
 ## M28 Dilemmas, not paperwork
 - Repairs leave the inbox. A standing order on the Treasury tab: mend the cheap and ask about the dear (the default, up to 400 crowns), rebuild everything, patch everything, or ask each time. Cheap repairs start by themselves, food and fuel first, with one line a month. The dear ones come to court together, once a month, on one card.
 - 54 dilemmas that follow from the crown's own choices: at least two for every path of the Book of Laws, and more for the faiths, the lords, war, the seasons and everyday matters. Each choice shows what it does before the crown chooses; some lead to a second dilemma weeks later. None returns within two years, save the seasonal ones.

@@ -3,6 +3,8 @@
 // before war and the reasons for it. And what the rulers do of their own
 // accord: ask for audiences with real proposals, tax our caravans when they
 // sour on us, and make and break pacts among themselves by the same rules.
+import { asksAudience } from './tiers.js';
+import { openRealmRequest } from './dilemmas.js';
 import { nudge, authority } from './meters.js';
 import { sendFigure, courtOf } from './figures.js';
 import { addDispatch, clamp } from './realm.js';
@@ -16,7 +18,7 @@ import {
   D, parties, rulerShort, traitMult, traitSum, hasTrait, agendaOf, trustIn, changeTrust, remember, fearOf, dangerTo, powerOf,
   treatyDef, treatiesOf, treatyBetween, partnerOf, makeTreaty, endTreaty, monthlyTreaties, monthlyTrust, monthlyMemories, setRenewable,
 } from './diplomacy.js';
-import { proposeDeal, weighDeal, signDeal, describeItem, treatyValue } from './deals.js';
+import { proposeDeal, weighDeal, signDeal, describeItem, treatyValue, ourValue } from './deals.js';
 
 const A = (world) => D(world).actions;
 const say = (state, text) => addDispatch(state, text, 'abroad');
@@ -346,6 +348,22 @@ export function monthlyRequests(state, world, rng) {
     if (!state.realms?.[pid] || !state.neighbours[pid]) continue;
     if (state.diplomacy.requests.some((q) => q.realm === pid) || cooldown(state, pid, 'request') > state.day) continue;
     if (hostile(state, TEMERIA, pid) && (state.day - (warBetween(state, TEMERIA, pid)?.since ?? state.day)) / 30 < world.war.peace.minMonths) continue;
+    // A petty king keeps his distance from a great one (M29 A): unless
+    // relations are warm, he sends a short request rather than an envoy, and
+    // comes in person only with a very good offer.
+    if (!asksAudience(state, world, pid)) {
+      if (hostile(state, TEMERIA, pid)) continue;
+      const items = rng.chance(c.chance) ? proposeDeal(state, world, pid) : null;
+      if (items?.length && asksAudience(state, world, pid, ourValue(state, world, pid, items))) {
+        newRequest(state, world, pid, 'deal', items);
+        continue;
+      }
+      if (rng.chance(D(world).tiers.requestChance * c.chance * 4)) {
+        openRealmRequest(state, world, rng, pid);
+        setCooldown(state, pid, 'request', c.cooldown);
+      }
+      continue;
+    }
     const chance = c.chance * (hasTrait(world, pid, 'greedy') || hasTrait(world, pid, 'ambitious') ? 1.3 : 1);
     if (!rng.chance(chance)) continue;
     if (!hostile(state, TEMERIA, pid) && hostilityTo(state, world, pid) > 0.4 && fearOf(state, world, pid) < 1 && (hasTrait(world, pid, 'ambitious') || hasTrait(world, pid, 'greedy'))) {
