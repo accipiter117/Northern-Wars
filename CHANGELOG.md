@@ -1,5 +1,12 @@
 # Changelog
 
+## M29 C Vassal kings
+- Your vassal kings now behave like lords abroad: each has loyalty and ambition, one want at a time, and a card with what his kingdom gives (tribute, men when called, guarding its own lands) and your options (honours, a summons, more or less tribute, a hostage, a town given back).
+- You owe them protection: leave a vassal to fight alone and he, and your other vassals, will remember.
+- Rival powers court a disloyal vassal; you are warned first and can outbid them or warn him.
+- A vassal who rises for his independence fights a real war. Take his capital and judge him: depose him for a pliant heir, annex his kingdom (and keep its title for ever), pardon him, or execute him at a cost to Temeria's name in every court.
+- Vassals' lands are washed lightly in their overlord's colour on the map.
+
 ## M29 B Becoming an overlord
 - A petty king at war or under threat may ask for Temeria's protection: take him under your wing and he becomes your vassal, and you win his title.
 - From a petty kingdom's card you can offer protection, or press it to bend the knee with Fear and a gift, the odds shown before you try.

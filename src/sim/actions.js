@@ -40,6 +40,7 @@ import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin
 import { canSignLaw, signLaw, canRepeal, repealLaw } from './book.js';
 import { canFaithAct, doFaithAct, revokeLand } from './faiths.js';
 import { judge } from './judgement.js';
+import { canVassalAction, vassalAction, judgeVassal, answerCourting } from './vassals.js';
 import { answerProtection, canOfferProtection, offerProtection, canPressure, pressure } from './suzerainty.js';
 import { candidatesFor, raiseHouse, openRaising, canOfferTown } from './newhouses.js';
 import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
@@ -198,6 +199,20 @@ export function applyAction(state, world, action) {
     if (action.type === 'pressure') pressure(next, world, rng, action.realm, action.gift ?? 0);
     else offerProtection(next, world, rng, action.realm);
     next.rng.game = rng.seed;
+    return { state: next };
+  }
+  // Vassal kings (M29 C): the crown's hand, a judgement, a courting answered.
+  if (action.type === 'vassal') {
+    const check = canVassalAction(state, world, action.realm, action.kind);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    vassalAction(next, world, action.realm, action.kind);
+    return { state: next };
+  }
+  if (action.type === 'vassalJudgement' || action.type === 'courting') {
+    const next = structuredClone(state);
+    const ok = action.type === 'vassalJudgement' ? judgeVassal(next, world, action.id, action.choice) : answerCourting(next, world, action.id, action.choice);
+    if (!ok) return { state, error: 'That has been settled.' };
     return { state: next };
   }
   // The king's judgement on a rebel lord (M27 D).

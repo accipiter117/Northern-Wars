@@ -4,7 +4,7 @@
 // wait (war declared on Temeria, a siege, a rebellion, a deposition) also
 // raise a banner across the top.
 import {
-  houseDef, judgementEffects, crimesOf, JUDGEMENTS, candidatesFor,
+  houseDef, judgementEffects, crimesOf, JUDGEMENTS, candidatesFor, vassalJudgementEffects, VASSAL_JUDGEMENTS, rulerSubject,
   dilemmaText,
   TEMERIA, eventText, demandText, envoyText, petitionText, warDecisionText, sideName, hostile, requestText, rulerShort, conquestDecisionText, worksDecisionText, envoysWaiting,
 } from '../sim/index.js';
@@ -46,6 +46,26 @@ export function pendingDecisions(state, world, acked = Infinity) {
       kicker: `A plea from ${sideName(world, a.realm)}`, title: `${rulerShort(world, a.realm)} asks for Temeria's protection`,
       text: `${sideName(world, a.realm)} is threatened and asks to become Temeria's vassal: it will pay tribute and send men when called, and Temeria must defend it.${title ? ` The king would be ${title}.` : ''}`,
       choices: ['Take them under our protection', 'Refuse'], fallback: 1,
+    });
+  }
+  // A rebel vassal king before Temeria (M29 C), and a warning that a vassal
+  // is being courted by a rival.
+  for (const j of state.vassalJudgements ?? []) {
+    const fx = vassalJudgementEffects(state, world, j);
+    out.push({
+      key: `vassalJudgement:${j.id}`, kind: 'vassalJudgement', id: j.id, house: j.realm, urgent: true, daysLeft: left(j.day, world.diplomacy.vassals.judgement.days),
+      kicker: 'The judgement of a vassal king', title: `The judgement of ${rulerSubject(world, j.realm)}${/^the ruler/.test(rulerSubject(world, j.realm)) ? '' : ` of ${sideName(world, j.realm)}`}`,
+      text: `${rulerSubject(world, j.realm, true)} rose against Temeria, the suzerain, and lost the capital and the war.`,
+      choices: VASSAL_JUDGEMENTS.map((k) => fx[k]), fallback: 0, colours: world.realms.realms[j.realm]?.colours ?? ['#555', '#eee'],
+    });
+  }
+  for (const w of state.vassalNews?.warnings ?? []) {
+    const c = world.diplomacy.vassals.court;
+    out.push({
+      key: `courting:${w.id}`, kind: 'courting', id: w.id, realm: w.realm, daysLeft: left(w.day, c.warnDays),
+      kicker: `Word from ${sideName(world, w.realm)}`, title: `${rulerSubject(world, w.realm, true)}${/^The ruler/.test(rulerSubject(world, w.realm, true)) ? '' : ` of ${sideName(world, w.realm)}`} has received ${sideName(world, w.by)}'s envoys`,
+      text: `Our vassal ${sideName(world, w.realm)} is being courted by ${sideName(world, w.by)}. If his loyalty stays low, he will go over to them.`,
+      choices: [`Outbid them: ${c.matchCoin} crowns and promises (loyalty +${c.matchLoyalty})`, `Warn him and take his heir to Vizima (loyalty +${c.warnLoyalty}, no rising for two years)`, 'Let him choose'], fallback: 2,
     });
   }
   // Lands waiting for a new house (M27 E): stays open until one is raised.
@@ -145,8 +165,8 @@ export function decisionHtml(d, { compact = false } = {}) {
   const soon = d.daysLeft !== null && d.daysLeft <= 5;
   const left = d.daysLeft === null ? '' : `<span class="left${soon ? ' soon' : ''}">${d.daysLeft} day${d.daysLeft === 1 ? '' : 's'} left</span>`;
   // The Judgement card carries the lord's portrait slot, in his banner's colours.
-  const portrait = d.kind === 'judgement' ? `<span class="judge-portrait" data-portrait="${d.house}" style="background:${d.colours[0]};border-color:${d.colours[1]}"></span>` : '';
-  return `<div class="decision${d.urgent ? ' urgent-dec' : ''}${d.kind === 'judgement' ? ' judgement' : ''}" data-decision="${d.key}">
+  const portrait = d.kind === 'judgement' || d.kind === 'vassalJudgement' ? `<span class="judge-portrait" data-portrait="${d.house}" style="background:${d.colours[0]};border-color:${d.colours[1]}"></span>` : '';
+  return `<div class="decision${d.urgent ? ' urgent-dec' : ''}${d.kind === 'judgement' || d.kind === 'vassalJudgement' ? ' judgement' : ''}" data-decision="${d.key}">
     <div class="decision-top"><span class="envoy-from">${escapeHtml(d.kicker)}</span>${left}</div>
     ${portrait}<h4>${escapeHtml(d.title)}</h4>
     ${compact ? '' : `<p>${escapeHtml(text)}</p>`}

@@ -14,6 +14,7 @@ import { remember } from './diplomacy.js';
 import { stationedStrength, freeCompanies, huntOdds } from './forces.js';
 import { destroyThreat, threatName } from './threats.js';
 import { obeys } from './lords.js';
+import { vassalMuster, vassalsCalled } from './vassals.js';
 import { thinkRebel } from './rebellion.js';
 import { retinueCompanies, mercenaryCompanies, realmCompanies, normalise, bandStrength, placeMuster, districtLevy } from './companies.js';
 import { districtOf } from './labour.js';
@@ -79,6 +80,9 @@ export function musterPreview(state, world, opts) {
       houses.push(h);
     }
   }
+  // Vassal kings send their kingdoms' companies with the lords (M29 C).
+  const vassals = opts.nobles ? vassalMuster(state, world) : {};
+  const vassalMen = Object.values(vassals).reduce((a, n) => a + n, 0);
   const mercs = (opts.mercs ?? []).filter((id) => mercenaryOffer(state, world, id).ok);
   const mc = r.mercenaries?.companies ?? {};
   const mercMen = mercs.reduce((a, id) => a + mc[id].men, 0);
@@ -87,8 +91,8 @@ export function musterPreview(state, world, opts) {
   const coin = mercs.reduce((a, id) => a + mc[id].coin, 0);
   const monthly = Math.round(levyMen * r.pay.levy + retinueMen * r.pay.retinue + mercs.reduce((a, id) => a + mc[id].monthly, 0));
   return {
-    levy, houses, refuse, retinues, mercs, mercMen, companies: 0, units: units.map((c) => c.id), unitMen,
-    levyMen, retinueMen, hands: levyMen + retinueMen, soldiers: levyMen + retinueMen + mercMen + unitMen, coin, monthly,
+    levy, houses, refuse, retinues, vassals, vassalMen, mercs, mercMen, companies: 0, units: units.map((c) => c.id), unitMen,
+    levyMen, retinueMen, hands: levyMen + retinueMen, soldiers: levyMen + retinueMen + vassalMen + mercMen + unitMen, coin, monthly,
     days: gatherDays(world, opts.muster, Object.keys(levy)),
   };
 }
@@ -190,6 +194,7 @@ export function canRaise(state, world, opts) {
 export function raiseArmy(state, world, opts) {
   const w = W(world);
   const p = musterPreview(state, world, opts);
+  if (Object.keys(p.vassals ?? {}).length) vassalsCalled(state, world, p.vassals);
   // Since M21 the levies come from the people, not the garrisons.
   if (!w.raise.muster) for (const [id, n] of Object.entries(p.levy)) state.settlements[id].garrison -= n;
   state.treasury -= p.coin;
@@ -237,6 +242,7 @@ export function raiseArmy(state, world, opts) {
   a.bands = [
     ...districtLevy(world, p.levy, districtOf(world)),
     ...Object.entries(p.retinues ?? {}).flatMap(([h, n]) => retinueCompanies(world, h, n)),
+    ...Object.entries(p.vassals ?? {}).flatMap(([rid, n]) => realmCompanies(world, rid, n * 0.5, n * 0.5).map((b) => ({ ...b, source: 'vassal', from: rid }))),
     ...(p.mercs ?? []).flatMap((id) => mercenaryCompanies(world, id)),
     ...p.units.map((id) => {
       const c = state.forces.companies.find((x) => x.id === id);

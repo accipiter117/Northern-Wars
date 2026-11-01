@@ -796,6 +796,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     board.draw(state, cam, b, { selected: selection?.realm ?? null, orders: state.orders?.list ?? [] });
     if (b >= 0.99) return;
     ctx.globalAlpha = 1 - b;
+    drawVassalTint(state);
     drawLifeLayer(state, frac);
     drawCrownMarks(state);
     drawFaithMarks(state);
@@ -1034,6 +1035,31 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
           const a = Math.atan2(q.y - st.y, q.x - st.x);
           getSprite('mark', 'gibbet').draw(ctx, p.x + Math.cos(a) * (r + size * 2), p.y + Math.sin(a) * (r + size * 2), size);
         }
+      }
+    }
+  }
+
+  // A vassal's lands (M29 C), washed lightly in its suzerain's colour; they
+  // keep their own borders and names.
+  function drawVassalTint(state) {
+    for (const [rid, realm] of Object.entries(state.realms ?? {})) {
+      const lord = realm.suzerain;
+      if (!lord || realm.fallen) continue;
+      const [field] = sideColours(world, lord);
+      for (const id of world.foreignByRealm[rid] ?? []) {
+        if (realm.settlements[id]?.owner) continue;
+        const st = world.byId[id];
+        if (!st) continue;
+        const p = toScreen(cam, st.x, st.y);
+        const r = (WASH[st.type] ?? 50) * 1.3 * cam.scale;
+        if (p.x < -r || p.y < -r || p.x > cam.viewW + r || p.y > cam.viewH + r) continue;
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+        grad.addColorStop(0, hexAlpha(field, 0.22));
+        grad.addColorStop(1, hexAlpha(field, 0));
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
   }

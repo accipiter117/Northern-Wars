@@ -1,5 +1,6 @@
 import {
   loyaltyTarget, housePower, holdingsOf, canHouseAction, formatDate, dateOf, houseDef, houseGives, wantText, houseDues, houseRetinue, lawEffects,
+  vassalOf, vassalGives, vassalWantText, canVassalAction, rulerShort, sideName,
 } from '../sim/index.js';
 import { gaugeHtml } from './faith.js';
 import { number, escapeHtml, describeLevel } from './format.js';
@@ -111,6 +112,46 @@ export function houseCard(app, id) {
     </div>${pickList}</div>
     <div data-part="lands"><h3>Lands</h3><div class="chips">${lands || '<p class="sub">None.</p>'}</div></div>
     ${section(memory, route, 'traits', 'Character', `<ul class="cares">${def.traits.map((t) => `<li><b>${escapeHtml(world.houses.traits[t].name)}.</b> ${escapeHtml(world.houses.traits[t].about)}</li>`).join('')}</ul>`)}
+  `;
+}
+
+// A vassal king's card (M29 C), in the style of a house card: banner, king,
+// loyalty and ambition, what he gives and wants, and the crown's hand.
+const VASSAL_ACTIONS = [
+  ['honours', 'Bestow honours', (a) => `${a.coin} crowns. Loyalty +${a.loyalty}.`],
+  ['summon', 'Summon to court', () => 'Cools his ambition for a season.'],
+  ['tribute', 'Demand more tribute', (a) => `Half again as much. Loyalty ${a.loyalty}.`],
+  ['ease', 'Ease his tribute', (a) => `Loyalty +${a.loyalty}.`],
+  ['hostage', 'Take a hostage', (a) => `His heir at Vizima: no rising while held. Loyalty ${a.loyalty}, Fear +${a.fear}.`],
+  ['town', 'Grant him a town', (a) => `A town of his we hold, given back. Loyalty +${a.loyalty}.`],
+];
+
+export function vassalCard(app, rid) {
+  const { world, state } = app;
+  const v = vassalOf(state, world, rid);
+  const [field, charge] = world.realms.realms[rid]?.colours ?? ['#555', '#eee'];
+  const gives = vassalGives(state, world, rid);
+  const want = vassalWantText(state, world, rid);
+  const actions = VASSAL_ACTIONS.map(([kind, label, cost]) => {
+    const check = canVassalAction(state, world, rid, kind);
+    return `<button type="button" class="build" data-vassal-action="${kind}" ${orderAttr({ type: 'vassal', realm: rid, kind }, kind === 'tribute' || kind === 'hostage' ? `${label}: ${sideName(world, rid)}?` : '')} ${check.ok ? '' : 'disabled'}>
+      <span class="build-name">${label}</span><span class="build-cost">${check.ok ? cost(world.diplomacy.vassals.actions[kind]) : escapeHtml(check.reason)}</span></button>`;
+  }).join('');
+  const badges = [v.rebel ? '<span class="badge bad">In arms against us</span>' : '', v.courted ? `<span class="badge bad">Courted by ${escapeHtml(sideName(world, v.courted.by))}</span>` : '', (v.hostageUntil ?? 0) > state.day ? '<span class="badge">Heir held at Vizima</span>' : ''].join(' ');
+  return `
+    <div data-part="head">
+      <div class="house-head">
+        <span class="house-banner" style="background:${field};border-color:${charge}"><i style="background:${charge}"></i></span>
+        <div><p class="house-lord">${escapeHtml(rulerShort(world, rid))} of ${escapeHtml(sideName(world, rid))}</p><p class="sub">Our vassal since ${formatDate(v.since)}. ${badges}</p></div>
+      </div>
+      ${gaugeHtml('Loyalty', v.loyalty, describeLevel(v.loyalty, LOYALTY_WORDS), v.loyalty < 30)}
+      ${gaugeHtml('Ambition', v.ambition, describeLevel(v.ambition, AMBITION_WORDS), v.ambition > 70)}
+    </div>
+    <div data-part="gives"><h3>What the kingdom gives</h3><ul class="gives"><li data-give="tribute">${escapeHtml(gives.tribute)}</li><li data-give="retinue">${escapeHtml(gives.retinue)}</li><li data-give="guard">${escapeHtml(gives.guard)}</li></ul>
+      <p class="sub">In return, Temeria owes it protection: attacked and left alone, it will not forget.</p></div>
+    <div data-part="wants"><h3>What the king wants</h3>${want ? `<p><b>${escapeHtml(want.title)}.</b> ${escapeHtml(want.text)} <span class="sub">${escapeHtml(want.how)}</span></p>` : '<p class="sub">Nothing for now.</p>'}</div>
+    <div data-part="actions"><h3>The crown's hand</h3><div class="build-list">${actions}</div></div>
+    <div data-part="realm-link"><button type="button" class="act" data-go="realm:${rid}"><span class="act-label">The realm's card</span><span class="act-sub">Relations, trade, an audience</span></button></div>
   `;
 }
 

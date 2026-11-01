@@ -5,6 +5,7 @@
 // sour on us, and make and break pacts among themselves by the same rules.
 import { asksAudience } from './tiers.js';
 import { monthlySuzerainty } from './suzerainty.js';
+import { monthlyVassals } from './vassals.js';
 import { openRealmRequest } from './dilemmas.js';
 import { nudge, authority } from './meters.js';
 import { sendFigure, courtOf } from './figures.js';
@@ -661,6 +662,8 @@ export function monthlyDiplomacy(state, world, rng) {
   aiPacts(state, world, rng);
   // Petty kings seek protectors; great powers press them (M29 B).
   monthlySuzerainty(state, world, rng);
+  // Vassal kings as lords abroad (M29 C).
+  monthlyVassals(state, world, rng);
   monthlyRequests(state, world, rng);
 }
 
