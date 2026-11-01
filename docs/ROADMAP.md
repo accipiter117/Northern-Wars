@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | In progress (A to D done) |
+| M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | In progress (A to E done) |
 | M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | Done |
 | M27 Lords worth having, traitors who pay | A and B: what lords give (guarding their lands, retinues, dues) and want; C and D: rebellion as a war and the Judgement; E: raising new houses | Done |
 | M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | Done |
@@ -52,6 +52,10 @@ Part D, the Nilfgaard clock:
 - Watching, Pressure and War, with aims in order (Cintra, then Sodden and Brugge, then the Pontar).
 - The war waits behind a gate that opens one to three years in for now, built so M33 can hold it.
 - The North's fear of the Empire drives a league and calls to arms; petty kings near it seek protection; a "From the south" line in the Steward's report.
+
+Part E, Skellige at sea:
+- Skellige is a middle crown of islands, bound to Cintra, that holds no mainland land and makes no war of its own.
+- Its longships raid the coasts in season along simple sea lanes, drawn on the water; the crown can hire them against a rival or pay them off.
 
 ## M29 acceptance criteria
 Part A, tiers and the relations screen:
