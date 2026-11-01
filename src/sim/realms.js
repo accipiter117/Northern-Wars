@@ -11,6 +11,7 @@ import { armyUpkeep } from './strategy.js';
 import { monthlyFrontier } from './frontier.js';
 import { monthlyClock } from './clock.js';
 import { monthlySeas } from './seas.js';
+import { monthlySpies, hasSpy, boostNet } from './spies.js';
 import { integrationFactor } from './conquest.js';
 import { startingWorks, worksFactor, upkeepFactor } from './works.js';
 import { giveWorks } from './state.js';
@@ -72,7 +73,7 @@ export function informed(state, world, rid) {
   const n = state.neighbours[rid];
   const v = R(world).vision;
   if (state.embassies?.[rid]) return true;
-  if ((state.spies?.[rid] ?? 0) > state.day) return true;
+  if (hasSpy(state, world, rid)) return true;
   if (sharesSight(state, rid)) return true;
   if (n && n.stance === 'friendly' && n.relation >= v.friendlyAt) return true;
   return n ? n.relation > world.neighbours.closedBelow && world.neighbours.realms[rid].trade > 0 : false;
@@ -174,6 +175,8 @@ export function monthlyRealms(state, world, rng) {
   monthlyClock(state, world, rng);
   // Skellige's longships in season (M30 E).
   monthlySeas(state, world, rng);
+  // Spy networks grow and fade; foreign ones reach for our spymaster (M31).
+  monthlySpies(state, world, rng);
   for (const [rid, realm] of Object.entries(state.realms)) {
     if (realm.fallen) continue;
     // Since M20 no one builds: rulers mend what their land gave them (works.js).
@@ -374,6 +377,8 @@ export function sendSpy(state, world, rng, rid) {
     return;
   }
   state.spies[rid] = state.day + c.days;
+  // An agent in place also deepens the crown's network there (M31).
+  boostNet(state, world, rid);
   // His road there, on the map (M23 C).
   sendFigure(state, world, { kind: 'spy', from: world.kingdom.capital, to: courtOf(world, rid), about: `a season's watch on ${name}` });
   say(state, `An agent is in place in ${name}. For a season we shall know what happens there.`);

@@ -21,6 +21,7 @@
   "book": "data/book.json",
   "devotion": "data/devotion.json",
   "dilemmas": "data/dilemmas.json",
+  "spies": "data/spies.json",
   "northIds": "data/north-ids.json",
   "start": {
     "year": 1262,

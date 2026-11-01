@@ -620,6 +620,25 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
 | Peace | war.json `peace.acceptMargin`, `prizeAt`, `cityPrizeAt` | 10; a prize at 45, a city only at 90 | Wars end sooner, and cost less land |
 | Armies' pay | war.json `raise.fieldPayPerSoldier`, `companyCoin`, `companyMonthly` | 0.15 a man a month; 250 and 60 a company | War drains the treasury faster |
 
+### Spies (M31)
+- **Part A (networks and the spymaster).** Networks are deterministic until Part B's operations, so seeds 1 to 3 give the same depths (from `step`, the crown idle):
+
+| Network | At the start | Year 3 | Year 10 |
+| --- | --- | --- | --- |
+| The Empire in Temeria | 32 | 62 | 64 |
+| The Empire in Cintra | 45 | 69 | 71 |
+| The Empire in Mahakam | 30 | 18 | 17 |
+| Redania in Temeria | 35 | 48 | 49 |
+| Redania in the Empire | 12 | 21 | 21 |
+| Aedirn in Temeria | 15 | 20 | 20 |
+| Kaedwen in Temeria | 10 | 8 | 8 |
+| The crown's deepest, with no budget | 10 | 5 | 5 |
+
+  - Networks settle within two or three years (6.5% of depth fades each month), so the starting depths matter only early; after that skill, coin and openness decide.
+  - The crown's networks, with a spymaster of skill 49 and four years of spending: 250 a month brings most courts to 13 to 17 (nothing seen); 500 to 26 to 34 (armies seen, plans not yet); 800 to 42 to 54 (plans read in most courts). Mahakam stays under 12 and Brokilon under 4 at any budget. 500 a month is about a sixth of an untended crown's income (3,000 a month in year 2), so seeing the North is a real choice.
+  - A spymaster's watch holds the Empire's network in Temeria near 57 (55 to 60 by the spymaster's skill, against 65 with the office empty), Redania's near 43 and Aedirn's near 18. Above 50 the Empire may buy the spymaster: 0.4% a month, so about one spymaster in three over ten years for an ordinary trait, two in three if greedy, one in five if cautious, never if loyal. At 75 they may kill the spymaster, which no network reaches in Temeria while a spymaster keeps watch; Part D's heavier imperial spending as the war nears will bring it closer.
+  - **Dials worth knowing**: `decay` (0.065) sets how fast networks settle; `budgetFull` (500) the sum that runs them at full pace; `homeGuard` and `guardCut` (150) how much a court's watch slows others; `turnAt`, `turnChance`, `killAt`, `killChance` the risk to the spymaster.
+
 ## Tools
 - `node tools/longrun.mjs [years] [idle|steward|spendthrift|tyrant] [seeds] [ledger]` for the tables above (it counts raids, deaths, road-days held, camps cleared, fights and companies); `ledger` prints each year's month, line by line. The crowns themselves live in `tools/crowns.mjs`.
 - `node tools/realms.mjs [years] [steward|idle] [seeds] [quiet]` for how the foreign realms govern: per realm per decade their postures, treasury in months of income, standing army and buildings, then their wars with aims and the M18 targets.

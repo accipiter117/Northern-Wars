@@ -1,0 +1,50 @@
+{
+  "note": "M31: spies. Every great power keeps a network in each other realm, 0 to 100 deep. Each month a network grows by growth times its master's skill / 50, times the target's openness, times what is spent (budgetFactor: the crown's budget against budgetFull, at least minFactor; an AI power spends by its own spend), less the target's own counter-espionage (homeGuard, cutting growth by its value / guardCut), and loses decay (a share) of its depth, so each settles where growth and fading meet. Starting depths are from the lore: Nilfgaard's networks grow fastest everywhere, Redania's (Dijkstra) are the deepest in the North, Kaedwen's crude, Aedirn's modest. Petty and middle crowns keep only a guard at home. unlocks name what each depth shows or allows (operations come with Part B). The crown's spymaster is chosen from candidates (skill and a trait); the office costs wage crowns a month (without one the crown's networks grow at owners.temeria.skill), and a deep foreign network at home may buy or kill the spymaster (turnAt, turnChance, killAt, killChance a month, less for a loyal or cautious master).",
+  "owners": {
+    "temeria": { "skill": 40, "spend": 0, "start": { "default": 0, "redania": 8, "kaedwen": 10, "aedirn": 8, "lyria_rivia": 6, "cintra": 6 } },
+    "redania": { "skill": 80, "spend": 1.0, "start": { "default": 25, "temeria": 35, "kaedwen": 30, "aedirn": 28, "kovir": 30, "cintra": 25, "nilfgaard": 12 } },
+    "kaedwen": { "skill": 30, "spend": 0.3, "start": { "default": 6, "temeria": 10, "redania": 10, "aedirn": 12, "hengfors": 15 } },
+    "aedirn": { "skill": 50, "spend": 0.6, "start": { "default": 10, "temeria": 15, "kaedwen": 15, "redania": 12, "lyria_rivia": 18 } },
+    "nilfgaard": { "skill": 90, "spend": 1.2, "start": { "default": 30, "temeria": 32, "cintra": 45, "brugge": 40, "sodden": 40, "toussaint": 60, "redania": 25 } }
+  },
+  "openness": { "default": 0.75, "redania": 0.95, "kovir": 0.95, "cintra": 0.85, "kerack": 0.9, "cidaris": 0.85, "temeria": 0.8, "nilfgaard": 0.5, "mahakam": 0.25, "brokilon": 0.1, "angren": 0.6, "skellige": 0.5, "toussaint": 0.85 },
+  "homeGuard": { "default": 20, "temeria": 25, "redania": 55, "nilfgaard": 60, "kaedwen": 25, "aedirn": 30, "mahakam": 50, "brokilon": 70, "kovir": 40 },
+  "guardCut": 150,
+  "growth": 3,
+  "decay": 0.065,
+  "budgetFull": 500,
+  "budgetSteps": [0, 100, 250, 500, 800],
+  "minFactor": 0.15,
+  "spyBoost": 15,
+  "unlocks": [
+    { "at": 20, "key": "armies", "short": "armies and treasury", "text": "Its armies, treasury and treaties; its armies seen on the map" },
+    { "at": 35, "key": "plans", "short": "plans and spies", "text": "Its ruler's plans, and its own spies in Temeria" },
+    { "at": 50, "key": "bribe", "short": "bribes", "text": "Bribe a lord, a governor or a petty king" },
+    { "at": 60, "key": "stir", "short": "stirring revolt", "text": "Stir the Scoia'tael or a peasant revolt" },
+    { "at": 70, "key": "sabotage", "short": "sabotage", "text": "Sabotage works or a siege camp's stores" },
+    { "at": 85, "key": "assassinate", "short": "assassination", "text": "Assassinate a commander, a lord or a spymaster" }
+  ],
+  "spymaster": {
+    "wage": 120,
+    "candidates": 3,
+    "refreshDays": 180,
+    "turnAt": 50,
+    "turnChance": 0.004,
+    "killAt": 75,
+    "killChance": 0.01,
+    "pool": [
+      { "name": "Sir Aldric Vass", "from": "a lord's younger son", "skill": [45, 60] },
+      { "name": "Captain Merrit Haan", "from": "a former mercenary captain", "skill": [50, 65] },
+      { "name": "Tobias Grell", "from": "a reformed smuggler", "skill": [55, 75] },
+      { "name": "Dame Ysolde Carrow", "from": "a widowed courtier", "skill": [45, 65] },
+      { "name": "Brother Anselm", "from": "a lapsed priest of the Fire", "skill": [40, 60] },
+      { "name": "Jorund Weiss", "from": "a Novigrad fence", "skill": [50, 70] }
+    ],
+    "traits": {
+      "cautious": { "name": "Cautious", "line": "Slow, but rarely caught or turned.", "skill": -5, "turn": 0.5 },
+      "ruthless": { "name": "Ruthless", "line": "Quick and bloody; foreign courts take such work ill.", "skill": 8, "turn": 1 },
+      "greedy": { "name": "Greedy", "line": "Able, and for sale to the highest bidder.", "skill": 5, "turn": 2.5 },
+      "loyal": { "name": "Loyal", "line": "Steady, and not for sale at any price.", "skill": 0, "turn": 0 }
+    }
+  }
+}

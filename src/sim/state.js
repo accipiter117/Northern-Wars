@@ -23,6 +23,7 @@ import { defaultFaiths } from './faiths.js';
 import { defaultMarket } from './market.js';
 import { startingVassals } from './empire.js';
 import { newClock } from './clock.js';
+import { newSpycraft } from './spies.js';
 import { keepBonds } from './seas.js';
 
 // Wars, armies and what they leave behind; empty in a realm at peace.
@@ -33,7 +34,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 34;
+export const STATE_VERSION = 35;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -118,6 +119,8 @@ export function createState(world, seed = 1) {
   state.chronicle.length = told;
   // The Nilfgaard clock starts watching (M30 D).
   if (world.war?.clock) state.nilfgaard = newClock(world, state.seed, day);
+  // Spy networks across the North, and an empty spymaster's office (M31).
+  if (world.spies) state.spycraft = newSpycraft(state, world);
   seedPacts(state, world);
   if (world.grid) {
     state.ambient.intel = newIntel(world);

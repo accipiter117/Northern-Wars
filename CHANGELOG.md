@@ -1,5 +1,11 @@
 # Changelog
 
+## M31 A Spies: networks and the spymaster
+- Every great power now keeps spies in the other courts. Nilfgaard's networks are the deepest and grow the fastest; Dijkstra's Redania is the best in the North.
+- Name a spymaster from three candidates, each with a skill and a character, and set how much silver the networks get each month.
+- A deep enough network shows a realm's armies on the map, and deeper still its ruler's plans. Foreign spies work in Temeria too, and a deep enough network may buy or kill your spymaster.
+- The new Spies screen is under the Court.
+
 ## M30 F Balance
 - The North's rulers now think on different days of the month, so the first of the month no longer stutters.
 - Kovir stays truly neutral, the league against the Empire is smaller, and the Empire's heartland pays for the war it sends.

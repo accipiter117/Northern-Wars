@@ -95,3 +95,6 @@ export { candidatesFor, canOfferTown } from './newhouses.js';
 export { tierOf, isGreat, suzerainOf, vassalsOf, titlesOf, crownStyle, asksAudience, appetiteAgainst } from './tiers.js';
 export { protectionAsks, canOfferProtection, offerOdds, canPressure, pressureOdds, protectorateOnly } from './suzerainty.js';
 export { who as rulerSubject, ourVassals, vassalOf, tributeOf, vassalRetinue, vassalGives, vassalWantText, canVassalAction, vassalJudgementEffects, VASSAL_JUDGEMENTS } from './vassals.js';
+export {
+  spycraftOf, netDepth, ourDepth, unlocked as spyUnlocked, hasSpy, knowsPlans, settlesAt, spyExpense, foreignAtHome, band as netBand, spyTargets, canSetBudget, canAppoint,
+} from './spies.js';
