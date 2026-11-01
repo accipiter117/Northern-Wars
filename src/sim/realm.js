@@ -25,6 +25,7 @@ import { stepWorksDay, monthlyWorks, worksUnrest } from './works.js';
 import { stepLabourDay, monthlyLabour } from './labour.js';
 import { monthlyFaiths } from './faiths.js';
 import { stepRebellionDay } from './rebellion.js';
+import { stepVassalsDay } from './vassals.js';
 import { resolveOrders, noteTheirMoves, marchingNow } from './board.js';
 
 const CHRONICLE_LIMIT = 400;
@@ -54,6 +55,8 @@ export function stepRealmDay(state, world, rng) {
     stepArmiesDay(state, world, rng);
     // A rising's seat retaken or its lord taken in the field (M27 C).
     if (state.houses) stepRebellionDay(state, world, rng);
+    // A rebel vassal king's capital taken (M29 C).
+    stepVassalsDay(state, world);
     stepWarDecisionsDay(state, world);
     stepConquestDay(state, world);
   }

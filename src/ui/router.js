@@ -7,9 +7,9 @@ import { realmTab, meterCard, repairOrderHtml } from './realmTab.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { stewardHtml } from './steward.js';
 import { lawsHtml } from './laws.js';
-import { noblesHtml, houseCard, swatch, depositionHtml } from './nobles.js';
+import { noblesHtml, houseCard, swatch, depositionHtml, vassalCard } from './nobles.js';
 import { faithHtml, freshPowers } from './faith.js';
-import { crownStyle } from '../sim/index.js';
+import { crownStyle, suzerainOf } from '../sim/index.js';
 import { ledgerHtml, chronicleHtml } from './menu.js';
 import { industryHtml } from './trade.js';
 import { marketHtml, taxesHtml } from './market.js';
@@ -86,6 +86,7 @@ export function renderRoute(app, route) {
   switch (kind) {
     case 'tab': return tabScreen(app, arg);
     case 'town': return world.byId[arg] && state.settlements[arg] ? { title: escapeHtml(world.byId[arg].name), html: townCard(app, arg) } : gone('Gone', 'No such place.');
+    case 'vassal': return state.realms?.[arg] && suzerainOf(state, arg) === 'temeria' ? { title: escapeHtml(world.geography.neighbours[arg]?.name ?? arg), html: vassalCard(app, arg) } : gone('Gone', 'No longer our vassal.');
     case 'house': return world.houses.houses[arg] && state.houses[arg] ? { title: `${swatch(world, arg)} ${escapeHtml(world.houses.houses[arg].name)}`, html: houseCard(app, arg) } : gone('Gone', 'No such house.');
     case 'board': return state.realms?.[arg] && !state.realms[arg].fallen ? { title: boardTitle(app, arg), html: boardCard(app, arg) } : gone('Gone', 'No such realm.');
     case 'orders': return { title: 'The month\'s orders', html: ordersHtml(app) };

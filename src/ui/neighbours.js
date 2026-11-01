@@ -107,7 +107,8 @@ export function neighboursHtml(app) {
     const sub = fallen ? `Fell to ${escapeHtml(sideName(world, fallen.by))} in ${formatDate(fallen.day)}.`
       : short ? `${escapeHtml(world.neighbours.realms[id].ruler)}.`
         : `${escapeHtml(world.neighbours.realms[id].ruler)}. ${world.neighbours.stances[n.stance].name} stance. ${tradeLine(world, state, id)}.${fear}`;
-    return `<button type="button" class="row realm-row${short ? ' short' : ''}" data-realm="${id}" data-tier="${tierOf(world, id)}" data-go="realm:${id}">
+    const ours = suzerainOf(state, id) === TEMERIA && state.realms[id]?.vassal;
+    return `<button type="button" class="row realm-row${short ? ' short' : ''}" data-realm="${id}" data-tier="${tierOf(world, id)}" data-go="${ours ? 'vassal' : 'realm'}:${id}">
       ${icon('dove')}<span class="row-main"><span class="row-name">${escapeHtml(world.geography.neighbours[id].name)}${waiting.has(id) ? ' <span class="badge bad">Asks an audience</span>' : ''}${hostile(state, TEMERIA, id) ? ' <span class="badge bad">At war</span>' : ''}${fallen ? ' <span class="badge">Fallen</span>' : ''}</span>
       <span class="row-sub">${sub}</span></span>
       <span class="row-end">${fallen ? '' : `${describeLevel((n.relation + 100) / 2, WORDS)}${trendArrow(state, world, id)}`}</span></button>`;
@@ -215,7 +216,7 @@ function suzerainHtml(app, id) {
   const pct = (v) => `${Math.round(v * 100)}%`;
   const status = lord === TEMERIA ? `Our vassal${state.realms[id]?.vassal ? ` since ${formatDate(state.realms[id].vassal.since)}` : ''}.`
     : lord ? `A vassal of ${escapeHtml(sideName(world, lord))}.` : 'Independent.';
-  if (lord === TEMERIA) return `<div data-part="suzerain"><h3>Suzerainty</h3><p class="sub">${status}</p></div>`;
+  if (lord === TEMERIA) return `<div data-part="suzerain"><h3>Suzerainty</h3><p class="sub">${status}</p><button type="button" class="act" data-go="vassal:${id}"><span class="act-label">The vassal king's card</span><span class="act-sub">Loyalty, tribute, his wants and the crown's hand</span></button></div>`;
   const offer = canOfferProtection(state, world, id);
   const buttons = [`<button type="button" class="build" data-offer-protection ${orderAttr({ type: 'offerProtection', realm: id }, `Offer ${escapeHtml(sideName(world, id))} the crown's protection?`)} ${offer.ok ? '' : 'disabled'}>
     <span class="build-name">Offer protection</span><span class="build-blurb">An envoy offers to take them under Temeria's wing. Welcome when they are in danger.</span>

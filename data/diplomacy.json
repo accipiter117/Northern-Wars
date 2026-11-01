@@ -18,6 +18,35 @@
     "peace": { "loyalty": 35 },
     "ai": { "reach": 900, "ratio": 3, "affinity": 0, "chance": 0.01, "most": 3 }
   },
+  "vassals": {
+    "note": "M29 C: vassal kings as lords abroad. Loyalty drifts by loyalty.drift a month toward loyalty.base plus relationWeight x relations with the suzerain (affinity for an AI one), less tributeWeight for each step of tribute demanded above the usual; ambition grows ambitionPerMonth. Tribute is tribute.share of his income times his tribute setting, all of it from loyalty fullAbove, none below noneBelow (Mahakam pays none). Called to arms he sends retinue.share of his kingdom's potential army, all from fullAbove, half below, none under refuseBelow. At loyalty guardAbove he breaks a camp or lair in his lands at guardChance a month. Attacked, he expects his suzerain at war with the attacker within protection.graceDays: answered, loyalty +answered; ignored, loyalty ignored, and every other vassal of that suzerain othersNotice. Below court.below a rival great power may court him (chance a month): the crown is warned first, and after warnDays still disloyal he goes over (loyalty court.loyalty); the crown can outbid the rival (matchCoin, +matchLoyalty) or warn him (+warnLoyalty and his heir at Vizima for warnHostageDays). Below revolt.below with ambition over ambitionAbove and no heir held, he may rise (chance a month) in a war for independence; his capital taken, he comes to the Judgement. Mahakam resents meddling: a summons or a hostage costs mahakamMeddle loyalty.",
+    "ambitionPerMonth": 1,
+    "loyalty": { "base": 45, "relationWeight": 0.4, "tributeWeight": 30, "drift": 0.05 },
+    "tribute": { "share": 0.25, "fullAbove": 50, "noneBelow": 20 },
+    "retinue": { "share": 0.35, "fullAbove": 55, "refuseBelow": 30 },
+    "guardAbove": 50,
+    "guardChance": 0.3,
+    "protection": { "graceDays": 60, "answered": 10, "ignored": -25, "othersNotice": -6 },
+    "court": { "below": 35, "chance": 0.15, "warnDays": 90, "loyalty": 55, "matchCoin": 800, "matchLoyalty": 20, "warnLoyalty": 8, "warnHostageDays": 730 },
+    "revolt": { "below": 20, "ambitionAbove": 60, "chance": 0.2 },
+    "mahakamMeddle": -12,
+    "cooldown": 180,
+    "wants": { "convert": 25, "gap": 120, "lapseDays": 270, "unmet": 8, "kinds": { "land": { "weight": 1 }, "command": { "weight": 0.5 }, "help": { "weight": 1.5 }, "honours": { "weight": 1.5 }, "tribute": { "weight": 1 } } },
+    "actions": {
+      "honours": { "coin": 400, "loyalty": 10 },
+      "summon": { "ambition": -15, "loyalty": -2 },
+      "tribute": { "more": 0.5, "loyalty": -12, "cooldown": 365 },
+      "ease": { "less": 0.5, "least": 0.5, "loyalty": 8 },
+      "hostage": { "days": 1095, "loyalty": -10, "fear": 3, "cooldown": 1095 },
+      "town": { "loyalty": 20 }
+    },
+    "judgement": {
+      "days": 60,
+      "depose": { "loyalty": 85, "ambition": 5 },
+      "pardon": { "loyalty": 75, "othersAmbition": 8 },
+      "execute": { "fear": 25, "othersLoyalty": 15, "othersAmbition": 20, "trust": -20, "fearAbroad": 3, "heirLoyalty": 60 }
+    }
+  },
   "rulers": {
     "redania": {
       "id": "vizimir",
