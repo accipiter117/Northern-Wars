@@ -656,12 +656,13 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
 
 | The crown keeps | Agents caught | Foreign operations in Temeria | Named by the spymaster | The Empire's network in Temeria at year 10 | Redania's |
 | --- | --- | --- | --- | --- | --- |
-| No spymaster | 14 to 18 | 8 to 12 (the screen keeps the last 12) | none | 42 to 53 | 38 to 42 |
-| A loyal spymaster (skill 55) | 16 to 24 | 0 to 2 | all of them | 43 to 45 | 24 to 34 |
-| The same, and curfews | 15 to 23 | 0 to 4 | all of them | 40 to 44 | 27 to 29 |
+| No spymaster | 14 to 17 | 7 to 12 (the screen keeps the last 12) | none | 59 | 29 to 47 |
+| A loyal spymaster (skill 55) | 20 to 21 | 1 to 5 | most of them | 43 to 56 | 31 to 36 |
+| The same, and curfews (seeds 1 and 2) | 24 | none | none needed | 29 to 44 | 28 to 36 |
 
   - About two agents a year come before the crown, so a caught spy is a real decision now and then, not a weekly chore. Hanging them all (the default) keeps foreign networks some ten points under where Part A left them.
-  - Without a spymaster the Empire's network climbs past 60, deep enough to stir towns as well as bribe lords, and does so about once a year; with one, foreign work in Temeria all but stops. Appointing a spymaster is the main defence; the laws add to it.
+  - Hanging was first worth Fear +3. Two hangings a year then held Fear up enough to calm the Scoia'tael under harsh laws (sympathy 59 after ten years of persecution against 85 before M31 C), so a spy hanged is worth Fear +1: the rope is a message to foreign courts, not a terror for the realm.
+  - Without a spymaster the Empire's network holds near 60, deep enough to stir towns as well as bribe lords, and does so about once a year; with one, foreign work in Temeria all but stops. Appointing a spymaster is the main defence; the laws add to it.
   - **Dials**: `counter.catchBase` (0.12), `catchMax`, `gapDays` (45), the four answers, `foreignOps.chance` (0.06 x the owner's spend) and its war and pressure multipliers, and `nameChance` (0.06).
 
 - **Part A's dials**: `decay` (0.065) sets how fast networks settle; `budgetFull` (500) the sum that runs them at full pace; `homeGuard` and `guardCut` (150) how much a court's watch slows others; `turnAt`, `turnChance`, `killAt`, `killChance` the risk to the spymaster.

@@ -46,7 +46,7 @@
     "catchBase": 0.12,
     "catchMax": 0.3,
     "gapDays": 45,
-    "hang": { "fear": 3, "network": 12, "relation": -8, "trust": -6 },
+    "hang": { "fear": 1, "network": 12, "relation": -8, "trust": -6 },
     "turn": { "base": 0.35, "perSkill": 0.006, "gain": 12, "failLoss": 5, "failGain": 6 },
     "trade": { "relation": 6, "trust": 8, "network": 5 },
     "follow": { "network": 8, "knowDays": 365 },
