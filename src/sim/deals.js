@@ -4,6 +4,7 @@
 // Acceptable, Close, They want more, or Insulting. What is agreed is carried
 // out by the simulation: lump sums at once, monthly payments and deliveries
 // through the ledger, goods on the road as caravans.
+import { makeVassal } from './suzerainty.js';
 import { windfall } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { settleOwnership } from './lands.js';
@@ -202,6 +203,7 @@ export function refusal(state, world, pid, items) {
     if (war.sides[sideIndex(war, TEMERIA)][0] !== TEMERIA) return 'Our ally leads this war; only it can make the peace.';
     if ((state.day - war.since) / 30 < world.war.peace.minMonths) return `${name} refuses: no one makes peace in the first ${world.war.peace.minMonths} months of a war.`;
     if (peace.terms === 'vassal' && (world.foreignByRealm[pid] ?? []).length > (world.conquest?.vassal.maxTowns ?? 0)) return `${name} laughs: ${realm} is too great to be anyone's vassal.`;
+    if (peace.terms === 'vassal' && world.realms?.realms[pid]?.protectorateOnly) return `${name} will make peace, but Mahakam takes protection, never a master.`;
   }
   for (const i of items) {
     if (i.kind === 'treaty') {
@@ -508,6 +510,8 @@ export function signDeal(state, world, pid, items) {
       const monthly = Math.max(20, Math.round((state.realms[pid]?.income ?? 100) * v.tributeShare));
       makeTreaty(state, world, 'protectorate', TEMERIA, pid, { years: v.years, terms: { monthly } });
       SAY(state, `${name} bends the knee: ${sideName(world, pid)} becomes Temeria's vassal, paying ${monthly} crowns a month.`);
+      // Suzerain and vassal (M29 B).
+      if (world.diplomacy?.suzerainty) makeVassal(state, world, pid, TEMERIA, 'peace', world.diplomacy.suzerainty.peace.loyalty);
     }
     for (const i of cede) setOwner(state, world, i.town, i.from === 'us' ? pid : TEMERIA);
   }

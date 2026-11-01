@@ -40,6 +40,7 @@ import { canSetSplit, setSplit, shiftSplit, canCall, makeCall, canPin, togglePin
 import { canSignLaw, signLaw, canRepeal, repealLaw } from './book.js';
 import { canFaithAct, doFaithAct, revokeLand } from './faiths.js';
 import { judge } from './judgement.js';
+import { answerProtection, canOfferProtection, offerProtection, canPressure, pressure } from './suzerainty.js';
 import { candidatesFor, raiseHouse, openRaising, canOfferTown } from './newhouses.js';
 import { canGiveOrder, giveOrder, cancelOrder } from './board.js';
 
@@ -180,6 +181,23 @@ export function applyAction(state, world, action) {
     if (!check.ok) return { state, error: check.reason };
     const next = structuredClone(state);
     openRaising(next, world, [action.settlement], action.settlement);
+    return { state: next };
+  }
+  // Suzerainty (M29 B): a petty king's plea for protection answered, the
+  // crown's own offer of protection, or pressure with a gift.
+  if (action.type === 'protection') {
+    const next = structuredClone(state);
+    if (!answerProtection(next, world, action.id, action.choice === 0)) return { state, error: 'That plea has been answered.' };
+    return { state: next };
+  }
+  if (action.type === 'offerProtection' || action.type === 'pressure') {
+    const check = action.type === 'pressure' ? canPressure(state, world, action.realm, action.gift ?? 0) : canOfferProtection(state, world, action.realm);
+    if (!check.ok) return { state, error: check.reason };
+    const next = structuredClone(state);
+    const rng = makeRng(next.rng.game);
+    if (action.type === 'pressure') pressure(next, world, rng, action.realm, action.gift ?? 0);
+    else offerProtection(next, world, rng, action.realm);
+    next.rng.game = rng.seed;
     return { state: next };
   }
   // The king's judgement on a rebel lord (M27 D).

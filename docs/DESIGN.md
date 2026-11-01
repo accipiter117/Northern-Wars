@@ -111,6 +111,14 @@ Not Crusader Kings: no families, inheritance law or claims. The North's rulers a
 - **One relations screen** (Diplomacy, Rulers), sorted by weight: the great powers in full, then our own vassals, the middle crowns, other powers' spheres folded under each suzerain (one line a vassal, one tap to open), and the independent petty kingdoms in a short list at the end.
 - **Titles**: each vassal gives its suzerain a title (Prince of Sodden, Protector of Brugge, Protector of Mahakam, Overlord of Verden, Lord of the Cidarian Coast, Protector of Kerack). Foltest starts with none; his style heads the Court screen and grows with each ("Foltest, King of Temeria, Prince of Sodden, Protector of Brugge"). Until suzerainty arrives (Part B), a protectorate treaty makes its protector the suzerain.
 
+#### Becoming suzerain (M29 B)
+The protectorate treaty and the vassal peace term widen into one relationship, suzerain and vassal, held on the vassal realm (`suzerain`, and `vassal` with its route, loyalty and ambition). One suzerain at a time; only petty kingdoms become vassals. Code in src/sim/suzerainty.js; numbers in data/diplomacy.json (`suzerainty`).
+- **Protection**: a petty king truly threatened (at war, or an army mustering against him) and in danger asks the great power he likes best (relations, strength, nearness, fewer vassals) for protection. If that is Temeria, the plea waits in the Court inbox ("The King of Kerack asks for Temeria's protection"); taken, he becomes our vassal at loyalty 60; refused, relations fall and he will not ask again for a year. An AI power takes him at once. The crown can also offer protection through an envoy from the realm's card, its odds shown (better when he is in danger and relations are good), once each half year.
+- **Pressure**: from the realm's card, with no gift, 500 or 1,500 crowns, each with its odds: Fear of Temeria (M19) does most of the work, with the gift, relations and the crown's strength over his. Accepted, he is a reluctant vassal (loyalty 25); refused, relations fall, and the crown may not try again for a year.
+- **Peace terms**: "Become our vassal" at the peace with a beaten petty kingdom makes it a vassal (loyalty 35), with its tribute treaty.
+- **Mahakam** accepts protection only: no pressure, no peace terms.
+- **The AI's great powers** take threatened petty kings under protection and press weaker neighbours within reach (900 map units) at 1% a month a pair, each holding at most three vassals; so spheres form (Redania in the west, Aedirn over Sodden; Kaedwen, far from every petty kingdom, waits for the Hengfors League in M30).
+
 ### Faith, culture and peoples
 - Faiths: the Eternal Fire (zealous, urban, hostile to non-humans and magic), Melitele (healing, charity, women and the poor), the Old Ways (rural, druidic, Velen).
 - Each settlement has a faith mix that shifts over time with patronage, laws, preachers and events.
