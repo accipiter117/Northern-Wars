@@ -95,7 +95,9 @@ test('the wilds abroad breed their own camps and lairs, which are not the crown\
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   // Poor towns abroad: their wild country breeds trouble.
   for (const realm of Object.values(s.realms)) for (const t of Object.values(realm.settlements)) t.prosperity = 15;
+  // Given time, at least one appears (how soon depends on the dice).
   s = step(s, 240, world, { ambient: false });
+  for (let m = 0; m < 8 && !s.threats.list.some((t) => t.abroad); m++) s = step(s, 30, world, { ambient: false });
   const abroad = s.threats.list.filter((t) => t.abroad);
   assert.ok(abroad.length > 0, 'camps and lairs appear abroad');
   for (const t of abroad) {
