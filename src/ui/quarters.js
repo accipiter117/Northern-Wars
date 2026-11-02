@@ -1,6 +1,6 @@
 // A town's non-human quarter on its card (M32 B): who lives there, how they
 // regard the crown and their neighbours, the pogrom risk and what drives it.
-import { quarterOf, dateOf } from '../sim/index.js';
+import { quarterOf, dateOf, townGifts } from '../sim/index.js';
 import { escapeHtml, number } from './format.js';
 
 const signed = (v) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
@@ -36,6 +36,16 @@ export function quarterHtml(app, id) {
     </dl>
     ${q.warn ? `<p class="sub down" data-part="pogrom-warning">The quarter bars its doors at dusk. Ease what drives it below, or a mob may go through it.</p>` : ''}
     ${q.pogrom ? `<p class="sub">${escapeHtml(pogromStain(q))}</p>` : ''}
+    ${giftsHtml(app, id)}
     <details class="quarter-why"><summary>What stirs and calms the town</summary><dl class="ledger">${factors}</dl></details>
   </div>`;
+}
+
+// What the town's peoples bring it (M32 C), as far as their goodwill goes.
+function giftsHtml(app, id) {
+  const { state, world } = app;
+  const lines = townGifts(state, world, state.settlements[id]).lines;
+  if (!lines.length) return '';
+  return `<div data-part="gifts"><h3>What they bring</h3><dl class="ledger">${lines.map((l) => `<div><dt>${escapeHtml(l.name)}</dt><dd>${escapeHtml(l.line)}</dd></div>`).join('')}</dl>
+    <p class="sub">More as they think better of the crown; less, or nothing, as they think worse.</p></div>`;
 }

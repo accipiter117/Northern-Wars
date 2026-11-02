@@ -5,6 +5,7 @@ import { addDispatch } from './realm.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
+import { refreshGifts } from './peoples.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { newIntel, updateIntel, visionOf } from './vision.js';
@@ -130,6 +131,8 @@ export function createState(world, seed = 1) {
   state.faiths = defaultFaiths(state, world);
   for (const id of Object.keys(settlements)) settlements[id].tension = tensionTarget(state, world, id);
   state.unrest = realmUnrest(state, world);
+  // What each people brings its towns from the first day (M32 C).
+  refreshGifts(state, world);
   if (k.opening) addDispatch(state, k.opening);
   return state;
 }

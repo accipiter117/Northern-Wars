@@ -27,7 +27,7 @@
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
 | M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | Done |
-| M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A and B done) |
+| M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A to C done) |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
 | M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | Done |
 | M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | Done |
@@ -68,6 +68,11 @@ Part B, the non-human quarters:
 - Gnomes are a people where the lore puts them. Every town with a meaningful share of dwarves, elves, halflings or gnomes has a quarter on its town card: how it regards the crown and its neighbours, and a pogrom risk with what drives it.
 - The risk rises with persecution laws, hunger, the Fire's preaching, Scoia'tael attacks nearby and refugees, and falls with the charter, garrisons, prosperity and Lebioda's or Melitele's Devotion. A pogrom brings deaths, ruined works, the quarter emptied, Scoia'tael recruits and a stain on the town.
 - Quarter dilemmas through the M28 machinery: a guild seat, a shop burned, a debt called in, a grove ploughed, a halfling inn's licence, a gnome smith's patent.
+
+Part C, what each people brings:
+- Dwarves raise smithing and mining where they live, and dwarven companies can be raised when relations are good (more easily with Mahakam under the crown's protection).
+- Gnomes raise fine crafts and arms; halflings the harvest, inns and prosperity; elves heal in plague and train archers when willing.
+- The Vivaldi bank's rates and limits move with how the crown treats the dwarves; non-human volunteers join the crown's armies in war when relations are high.
 
 ## M31 acceptance criteria
 Part A, networks and the spymaster:

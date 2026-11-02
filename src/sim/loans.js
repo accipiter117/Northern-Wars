@@ -8,6 +8,7 @@ import { addDispatch } from './realm.js';
 import { ledgerNet, windfall } from './economy.js';
 import { bookEffect } from './book.js';
 import { number } from './text.js';
+import { bankRate } from './peoples.js';
 
 const L = (world) => world.economy.loans;
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -29,13 +30,15 @@ export function monthlyIncome(state, world) {
 }
 
 export function loanCap(state, world) {
-  return Math.round(monthlyIncome(state, world) * L(world).capMonths);
+  // The Vivaldi bank (M32 C) lends more where the dwarves are content:
+  // a tenth more for each ten points of their goodwill above 50.
+  return Math.round(monthlyIncome(state, world) * L(world).capMonths * Math.max(0.5, 1 + ((state.opinion?.dwarf ?? 50) - 50) / 100));
 }
 
 export function loanTerms(state, world, sum) {
   const c = L(world);
   // The royal bank (M26) borrows at half the rate.
-  const rate = c.rate * Math.max(0.1, 1 + bookEffect(state, world, 'interest'));
+  const rate = c.rate * Math.max(0.1, 1 + bookEffect(state, world, 'interest')) * bankRate(state, world);
   const payment = monthlyPayment(sum, rate, c.months);
   return { sum, months: c.months, payment: Math.round(payment), total: Math.round(payment * c.months), rate };
 }

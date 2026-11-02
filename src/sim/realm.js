@@ -9,6 +9,7 @@ import { lawEffects, stepOpinionDay, opinionUnrest } from './laws.js';
 import { stepNeighboursDay, monthlyEnvoy } from './neighbours.js';
 import { monthlyDiplomacy, stepDiplomacyDay } from './audiences.js';
 import { stepCultureDay, monthlyCulture, tensionUnrest } from './culture.js';
+import { monthlyPeoples } from './peoples.js';
 import { stepPetitionsDay, monthlyPetition } from './petitions.js';
 import { stepDilemmasDay, monthlyDilemmas } from './dilemmas.js';
 import { stepFiguresDay } from './figures.js';
@@ -123,6 +124,7 @@ export function stepRealmDay(state, world, rng) {
     // Rulers' own requests for audiences replace the old random envoys.
     if (!state.diplomacy) monthlyEnvoy(state, world, rng);
     monthlyCulture(state, world, rng);
+    monthlyPeoples(state, world, rng);
     // The faiths' Devotion, perks and clashes (M26 C).
     monthlyFaiths(state, world, rng);
     // Coram Agh Tera, where hunger and plague feed it (M32 A).

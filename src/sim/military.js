@@ -88,7 +88,7 @@ function plagueMonth(state, world, rng) {
   const spreadTo = [];
   for (const [id, s] of Object.entries(state.settlements)) {
     if (!plagueActive(state, s)) continue;
-    const care = (s.priestesses || crownFaith(state) === 'melitele' ? p.melitele : 1) * Math.max(0.2, 1 + localFx(world, s, 'plagueDeaths')) * Math.max(0, 1 + bookEffect(state, world, 'plagueDeaths') + faithEffect(state, world, 'plagueDeaths'));
+    const care = (1 - (s.gifts?.plague ?? 0)) * (s.priestesses || crownFaith(state) === 'melitele' ? p.melitele : 1) * Math.max(0.2, 1 + localFx(world, s, 'plagueDeaths')) * Math.max(0, 1 + bookEffect(state, world, 'plagueDeaths') + faithEffect(state, world, 'plagueDeaths'));
     let dead = 0;
     for (const k of Object.keys(s.population)) {
       const n = Math.round(s.population[k] * p.deathsPerMonth * care);
