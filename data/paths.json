@@ -1,0 +1,57 @@
+{
+  "note": "M33 B: the five great powers' paths. The crown's own steps are goals with rewards, checked each month in order. A rival's step comes on its own: once `months` have passed since the last, with `chance` a month; its effects change that realm (army: soldiers to its standing army; treasury: crowns; nets: depth added to its spy networks in the realms named, or everywhere; garrison: men in a town of its own; elves: how Aedirn settles Dol Blathanna). The news reaches Temeria in full where it has eyes in that court (informed), as a rumour elsewhere.",
+  "temeria": {
+    "ruler": "Foltest",
+    "name": "The Lion's House in Order",
+    "steps": [
+      { "id": "dawn", "name": "The cities in order", "text": "Set Vizima, Maribor, Gors Velen, Ellander and White Bridge in order (the Dawn).", "done": { "type": "dawn" }, "reward": { "love": 3, "coin": 500 }, "where": "court:dawn" },
+      { "id": "sodden", "name": "Prince of Sodden", "text": "Bring Sodden under the crown's protection or make it a vassal.", "done": { "type": "suzerain", "realm": "sodden" }, "reward": { "coin": 1000, "fear": 2 }, "where": "diplomacy:realms" },
+      { "id": "brugge", "name": "Protector of Brugge", "text": "Bring Brugge under the crown's protection or make it a vassal.", "done": { "type": "suzerain", "realm": "brugge" }, "reward": { "coin": 1000, "fear": 2 }, "where": "diplomacy:realms" },
+      { "id": "mahakam", "name": "Protector of Mahakam", "text": "Offer the dwarves of Mahakam the crown's protection, and have them take it.", "done": { "type": "suzerain", "realm": "mahakam" }, "reward": { "coin": 1500, "love": 2 }, "where": "diplomacy:realms" },
+      { "id": "cintra", "name": "An understanding with Cintra", "text": "Come to terms with Queen Calanthe: any treaty with Cintra, or her trust at 60 or more.", "done": { "type": "understanding", "realm": "cintra", "trust": 60 }, "reward": { "love": 3, "coin": 1000 }, "where": "diplomacy:envoys" }
+    ]
+  },
+  "redania": {
+    "ruler": "Vizimir II",
+    "name": "Eyes in Every Court",
+    "war": "Redania is never surprised.",
+    "steps": [
+      { "id": "networks", "name": "Dijkstra's networks", "text": "Dijkstra's agents are in every capital of the North.", "months": 6, "chance": 0.25, "effects": { "nets": { "all": 15 } } },
+      { "id": "novigrad", "name": "Novigrad brought to heel", "text": "Novigrad and the Hierarch bend the knee to Tretogor.", "months": 8, "chance": 0.2, "effects": { "treasury": 3000 } },
+      { "id": "treasury", "name": "The treasury filled", "text": "Redania's treasury is full, and its tax farmers are feared.", "months": 6, "chance": 0.25, "effects": { "treasury": 5000 } },
+      { "id": "sorceress", "name": "A sorceress at court", "text": "Philippa Eilhart sits at Vizimir's right hand.", "months": 6, "chance": 0.2, "effects": { "nets": { "all": 10 }, "army": 1000 } }
+    ]
+  },
+  "kaedwen": {
+    "ruler": "Henselt",
+    "name": "The Iron Kingdom",
+    "war": "The hardest northern army.",
+    "steps": [
+      { "id": "blue", "name": "The Blue Mountains cleared", "text": "Henselt's men root the Scoia'tael out of the Blue Mountains, cave by cave.", "months": 6, "chance": 0.25, "effects": { "army": 1500 } },
+      { "id": "drilled", "name": "The army drilled", "text": "Kaedwen's levies drill all winter; they march like regulars now.", "months": 6, "chance": 0.25, "effects": { "army": 3000 } },
+      { "id": "banard", "name": "Ban Ard bound to the crown", "text": "The mages of Ban Ard swear to serve the crown in war.", "months": 8, "chance": 0.2, "effects": { "army": 1500, "nets": { "redania": 10, "aedirn": 10 } } },
+      { "id": "marches", "name": "The marches claimed", "text": "Henselt presses his claim on Aedirn's border marches, and garrisons them.", "months": 8, "chance": 0.2, "effects": { "army": 2000 } }
+    ]
+  },
+  "aedirn": {
+    "ruler": "Demavend III",
+    "name": "The Valley and the Mines",
+    "war": "Depends on the elves of Dol Blathanna, who may side with the Empire.",
+    "steps": [
+      { "id": "elves", "name": "Dol Blathanna settled", "text": "Demavend settles the elves of Dol Blathanna", "months": 6, "chance": 0.2, "effects": { "elves": { "loyalty": 0.5 } } },
+      { "id": "forts", "name": "Vengerberg and the Pontar fortified", "text": "New walls go up at Vengerberg and along the Pontar.", "months": 8, "chance": 0.2, "effects": { "army": 2000, "garrison": { "vengerberg": 400 } } },
+      { "id": "mines", "name": "The mines of Upper Aedirn", "text": "The mines of Upper Aedirn are opened, and silver comes down the valleys.", "months": 8, "chance": 0.2, "effects": { "treasury": 5000 } }
+    ]
+  },
+  "nilfgaard": {
+    "ruler": "Emhyr var Emreis",
+    "name": "The White Flame Looks North",
+    "war": "The invasion.",
+    "steps": [
+      { "id": "governors", "name": "The governors bound", "text": "Emhyr binds the provincial governors to him with hostages and gold.", "months": 4, "chance": 0.3, "effects": { "treasury": 8000 } },
+      { "id": "toussaint", "name": "Toussaint made sure", "text": "Toussaint swears loyalty again, with its duchess's hand on the Emperor's banner.", "months": 4, "chance": 0.3, "effects": { "treasury": 4000 } },
+      { "id": "agents", "name": "Agents deep in Cintra", "text": "Imperial agents are in Calanthe's own household.", "months": 4, "chance": 0.3, "effects": { "nets": { "cintra": 25, "sodden": 10, "brugge": 10 } } },
+      { "id": "host", "name": "The host at the Yaruga", "text": "The Emperor's host masses on the Yaruga's southern bank.", "months": 6, "chance": 0.25, "effects": { "army": 8000 } }
+    ]
+  }
+}

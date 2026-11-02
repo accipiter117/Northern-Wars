@@ -633,6 +633,10 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### The five paths (M33 B)
+- In a plain run of seed 1 the rivals had taken one or two steps each after two years (Redania 1 of 4, Kaedwen 2 of 4, Aedirn 2 of 3, the Empire 2 of 4). Emhyr's four steps take about two and a half years on average (four to six months' wait each, then 25 to 30% a month); Part D tunes the pace against the Road to War.
+- What the steps add is large on purpose: Kaedwen's army +8,000 in all, the Empire's host +8,000 and its treasury +12,000, Redania's networks +25 everywhere. A crown that dawdles meets them stronger.
+
 ### The city quests (M33 A)
 - The Dawn's five places start 15 prosperity down. Without trying, two years in (seeds 1 to 3, the same each time): the idle crown sets one place in order (Vizima: the standing repair order mends the Old Manor, the garrison clears the drowners, the town stays calm), the steward two. Neither strikes a deal with Mahakam, stations a company at Ellander or puts 300 men at White Bridge: those wait for the player, as the quests mean them to.
 - The quest threats are small (three drowners, 14 and 12 bandits) and sighted from the first day; the three court quests come at days 20, 45 and 70.

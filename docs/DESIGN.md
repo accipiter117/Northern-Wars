@@ -405,6 +405,17 @@ Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
 - **The Dawn screen** (Court › The Dawn) shows how many places are in order and what to do next, then each place with its chains: what the step asks, how far it has got (a works' condition, the town's tension and calm days, the men at the crossing, whether the beasts are still there), what it pays and a tap through to where it is done (a town card, Threats, Forces, Decisions, the Book of Laws, Faith, Trade or Labour). Fifteen sub-screens now, with the Dawn in the Court.
 - A reign begun before M33 skips the Dawn (save version 38).
 
+### The five paths (M33 B)
+- Each great power has a path fitting its ruler (src/sim/paths.js, data/paths.json), shown under the Dawn screen in a fold of its own (shut while the Dawn lasts).
+- **Foltest, The Lion's House in Order** (the crown's own, goals in order, each paid): the cities in order (the Dawn; 500 crowns, Love +3); Prince of Sodden and Protector of Brugge (each under the crown's protection or a vassal; 1,000 crowns, Fear +2 each); Protector of Mahakam (protection only; 1,500 crowns, Love +2); an understanding with Calanthe (any treaty with Cintra, or her trust at 60; 1,000 crowns, Love +3).
+- **The rivals' steps come on their own**: once a step's months have passed since the last, with its chance each month. Each changes the realm:
+  - **Vizimir II, Eyes in Every Court**: Dijkstra's networks (every network +15), Novigrad brought to heel (3,000 crowns), the treasury filled (5,000), a sorceress at court (networks +10, army +1,000). In war: Redania is never surprised.
+  - **Henselt, The Iron Kingdom**: the Blue Mountains cleared (army +1,500), the army drilled (+3,000), Ban Ard bound (+1,500, networks in Redania and Aedirn +10), the marches claimed (+2,000). In war: the hardest northern army.
+  - **Demavend III, The Valley and the Mines**: Dol Blathanna settled, by loyalty or by force (an even chance; force doubles the elves who cross to the Scoia'tael, loyalty cuts them to a quarter), Vengerberg and the Pontar fortified (army +2,000, Vengerberg's garrison +400), the mines of Upper Aedirn (5,000 crowns). In war: it depends on the elves.
+  - **Emhyr var Emreis, The White Flame Looks North**: the governors bound (8,000 crowns), Toussaint made sure (4,000), agents deep in Cintra (networks in Cintra +25, Sodden and Brugge +10), the host at the Yaruga (army +8,000). In war: the invasion.
+- **The news** of each step reaches the chronicle in full where the crown has eyes in that court (an embassy, a network 20 deep, a friend or trade), as a rumour elsewhere; the paths' fold names a rival's steps only as far as those eyes reach. Part C waits on Foltest's and Emhyr's paths.
+- A reign from before M33 has Foltest's path behind it; the rivals start from the beginning (save version 39).
+
 ## Spies (M31)
 Every great power keeps spy networks in the other courts; the crown has a spymaster. Numbers live in data/spies.json; the rules in src/sim/spies.js.
 

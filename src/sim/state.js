@@ -7,6 +7,7 @@ import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
 import { refreshGifts } from './peoples.js';
 import { newDawn, skippedDawn } from './dawn.js';
+import { newPaths } from './paths.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { newIntel, updateIntel, visionOf } from './vision.js';
@@ -36,7 +37,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 38;
+export const STATE_VERSION = 39;
 
 // `dawn: false` starts a reign without the Dawn's quests (M33 A), for
 // tests and tools about other things.
@@ -139,6 +140,8 @@ export function createState(world, seed = 1, { dawn = true } = {}) {
   // The Dawn of the reign (M33 A): five places to set in order.
   if (dawn) newDawn(state, world);
   else state.dawn = skippedDawn(state);
+  // The five great powers' paths (M33 B).
+  state.paths = newPaths(state, world);
   if (k.opening) addDispatch(state, k.opening);
   return state;
 }

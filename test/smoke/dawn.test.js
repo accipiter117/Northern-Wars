@@ -50,6 +50,14 @@ test('the Dawn screen: places, quests, the next step and a tap through', async (
   await marsh.scrollIntoViewIfNeeded();
   await page.waitForTimeout(150);
   await page.screenshot({ path: join(OUT, 'portrait-dawn-quest.png') });
+  // The five paths (M33 B), in their fold below.
+  await page.evaluate(() => { document.querySelector('[data-sec="paths"]').open = true; });
+  await page.waitForSelector('[data-part="paths"]');
+  assert.match(await page.textContent('[data-part="paths"]'), /Your path: The Lion's House in Order[\s\S]*The cities in order[\s\S]*Prince of Sodden[\s\S]*The other crowns[\s\S]*Vizimir II[\s\S]*Henselt[\s\S]*Demavend III[\s\S]*Emhyr var Emreis/);
+  await page.evaluate(() => document.querySelector('[data-part="paths"]').scrollIntoView({ block: 'start' }));
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: join(OUT, 'portrait-paths.png') });
+  await marsh.scrollIntoViewIfNeeded();
   await marsh.click();
   await page.waitForSelector('[data-part="threats"]');
   assert.match(await page.textContent('[data-part="threats"]'), /drowner|Beasts/i);
