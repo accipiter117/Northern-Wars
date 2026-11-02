@@ -11,6 +11,7 @@ import { monthlyDiplomacy, stepDiplomacyDay } from './audiences.js';
 import { stepCultureDay, monthlyCulture, tensionUnrest } from './culture.js';
 import { monthlyPeoples } from './peoples.js';
 import { monthlyForest } from './forest.js';
+import { stepDawnDay } from './dawn.js';
 import { stepPetitionsDay, monthlyPetition } from './petitions.js';
 import { stepDilemmasDay, monthlyDilemmas } from './dilemmas.js';
 import { stepFiguresDay } from './figures.js';
@@ -52,6 +53,7 @@ export function stepRealmDay(state, world, rng) {
   stepCultureDay(state, world);
   stepPetitionsDay(state, world);
   stepDilemmasDay(state, world);
+  stepDawnDay(state, world);
   stepFiguresDay(state);
   stepHousesDay(state, world);
   stepEventsDay(state, world, rng);

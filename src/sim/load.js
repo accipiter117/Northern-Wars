@@ -4,7 +4,7 @@ import { buildWorld } from './world.js';
 // so the same code builds the world in both places.
 export async function loadWorld(readJson, kingdomId = 'temeria') {
   const kingdom = await readJson(`data/kingdoms/${kingdomId}.json`);
-  const [geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds, diplomacy, strategy, conquest, spaces, labour, market, meters, book, devotion, dilemmas, spies] = await Promise.all([
+  const [geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds, diplomacy, strategy, conquest, spaces, labour, market, meters, book, devotion, dilemmas, spies, dawn] = await Promise.all([
     readJson(kingdom.geography),
     readJson(kingdom.settlements),
     readJson('data/ambient.json'),
@@ -38,6 +38,7 @@ export async function loadWorld(readJson, kingdomId = 'temeria') {
     kingdom.devotion ? readJson(kingdom.devotion) : null,
     kingdom.dilemmas ? readJson(kingdom.dilemmas) : null,
     kingdom.spies ? readJson(kingdom.spies) : null,
+    kingdom.dawn ? readJson(kingdom.dawn) : null,
   ]);
-  return buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds, diplomacy, strategy, conquest, spaces, labour, market, meters, book, devotion, dilemmas, spies });
+  return buildWorld({ kingdom, geography, settlements, ambient, economy, buildings, laws, groups, neighbours, envoys, culture, petitions, houses, demands, military, events, realms, war, trade, gold, industry, forces, northIds, diplomacy, strategy, conquest, spaces, labour, market, meters, book, devotion, dilemmas, spies, dawn });
 }

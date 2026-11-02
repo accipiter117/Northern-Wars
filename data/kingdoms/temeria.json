@@ -22,6 +22,7 @@
   "devotion": "data/devotion.json",
   "dilemmas": "data/dilemmas.json",
   "spies": "data/spies.json",
+  "dawn": "data/dawn.json",
   "northIds": "data/north-ids.json",
   "start": {
     "year": 1262,

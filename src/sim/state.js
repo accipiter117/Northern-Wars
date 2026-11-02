@@ -6,6 +6,7 @@ import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours } from './neighbours.js';
 import { tensionTarget } from './culture.js';
 import { refreshGifts } from './peoples.js';
+import { newDawn } from './dawn.js';
 import { defaultHouses, applyHoldings, newReign } from './houses.js';
 import { defaultRealms } from './realms.js';
 import { newIntel, updateIntel, visionOf } from './vision.js';
@@ -35,7 +36,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 37;
+export const STATE_VERSION = 38;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -133,6 +134,8 @@ export function createState(world, seed = 1) {
   state.unrest = realmUnrest(state, world);
   // What each people brings its towns from the first day (M32 C).
   refreshGifts(state, world);
+  // The Dawn of the reign (M33 A): five places to set in order.
+  newDawn(state, world);
   if (k.opening) addDispatch(state, k.opening);
   return state;
 }

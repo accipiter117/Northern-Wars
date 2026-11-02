@@ -1,0 +1,176 @@
+{
+  "note": "M33 A: the Dawn of the Reign. Five places, two or three short chains each, each teaching one system with what already exists. A step is done when its `done` test holds; `setup` runs when the step begins, `after` days late if it says so. Each chain pays its reward; a place whose chains are all done returns to full prosperity (its founding prosperity plus fullBonus, at most fullCap). The places start run down by startDrop. Steps: repair (a works at condition repairedAt or more), threat (the threat the step raised is gone), calm (the town's tension at or below `below` for `days`), deal (a trade deal with `realm`), dilemma (the step's dilemma answered), law (any of `laws` signed), endow (a faith endowed at the town), company (a company stationed at the town), defence (garrison and companies there at least `min` men), unrest (the town's unrest at or below `below`).",
+  "startDrop": 15,
+  "fullBonus": 10,
+  "fullCap": 90,
+  "repairedAt": 90,
+  "places": {
+    "vizima": {
+      "teaches": "Repairs and labour",
+      "line": "The capital is tired. Its manor houses stand empty, the lake shore belongs to drowners, and the Temple Quarter simmers.",
+      "chains": {
+        "manor": {
+          "name": "The Old Manor",
+          "reward": { "coin": 300, "love": 2 },
+          "steps": [
+            { "text": "The Old Manor in the merchants' quarter has stood empty since the striga. Its roof is in and the quarter rots around it. Send masons.", "where": "town:vizima:works", "setup": { "damage": { "town": "vizima", "works": "quarter", "to": 30 } }, "done": { "type": "repair", "town": "vizima", "works": "quarter" } }
+          ]
+        },
+        "marsh": {
+          "name": "The lake marshes",
+          "reward": { "coin": 250, "prosperity": 3 },
+          "steps": [
+            { "text": "Drowners have crept up out of the reeds by the lake. The fishermen will not go out. Send a company to clear them.", "where": "military:threats", "setup": { "threat": { "town": "vizima", "kind": "monsters", "species": "drowners", "count": 3, "terrain": ["marsh", "lake", "river"] } }, "done": { "type": "threat" } },
+            { "text": "With the drowners gone, the boats can go out again. Put hands to the fishing: see that Vizima's harbour is manned.", "where": "realm:labour", "done": { "type": "manned", "town": "vizima", "works": "harbour", "at": 0.8 } }
+          ]
+        },
+        "temple": {
+          "name": "The Temple Quarter",
+          "reward": { "love": 3, "prosperity": 2 },
+          "steps": [
+            { "text": "Humans and non-humans live packed together in the Temple Quarter, and the tavern talk is ugly. Keep the town's tension at 25 or below for a month: a charter, a garrison, full bellies.", "where": "town:vizima:people", "done": { "type": "calm", "town": "vizima", "below": 25, "days": 30 } }
+          ]
+        }
+      }
+    },
+    "maribor": {
+      "teaches": "Trade and the market",
+      "line": "Maribor lives by trade, and its trade has gone quiet.",
+      "chains": {
+        "mahakam": {
+          "name": "The Mahakam road",
+          "reward": { "coin": 300, "prosperity": 3 },
+          "steps": [
+            { "text": "Dwarven traders used to come down the Mahakam road. Strike a trade deal with Mahakam, and they will come again.", "where": "treasury:trade", "done": { "type": "deal", "realm": "mahakam" } }
+          ]
+        },
+        "mint": {
+          "name": "The quarrel over the mint",
+          "reward": { "coin": 200, "love": 1 },
+          "steps": [
+            { "text": "The masters of the mint and the town's moneychangers are at each other's throats. Hear them out at court.", "where": "court:inbox", "after": 20, "setup": { "dilemma": { "id": "dawn_mint", "town": "maribor" } }, "done": { "type": "dilemma", "id": "dawn_mint" } }
+          ]
+        },
+        "road": {
+          "name": "The eastern road",
+          "reward": { "coin": 250, "prosperity": 2 },
+          "steps": [
+            { "text": "Bandits sit on the eastern road and take a toll in blood. Clear them.", "where": "military:threats", "setup": { "threat": { "town": "maribor", "kind": "bandits", "men": 14 } }, "done": { "type": "threat" } }
+          ]
+        }
+      }
+    },
+    "gors_velen": {
+      "teaches": "The Book of Laws",
+      "line": "Gors Velen lies in the shadow of Thanedd, and its burghers want their rights in writing.",
+      "chains": {
+        "thanedd": {
+          "name": "The mages of Thanedd",
+          "reward": { "coin": 200 },
+          "steps": [
+            { "text": "Mages from Thanedd ask for privileges in the town: licences, a house, the crown's protection. Answer them at court.", "where": "court:inbox", "after": 45, "setup": { "dilemma": { "id": "dawn_thanedd", "town": "gors_velen" } }, "done": { "type": "dilemma", "id": "dawn_thanedd" } }
+          ]
+        },
+        "smugglers": {
+          "name": "The coast road",
+          "reward": { "coin": 250, "prosperity": 2 },
+          "steps": [
+            { "text": "Smugglers work the coast road by night, and pay the watch to look away. Send soldiers.", "where": "military:threats", "setup": { "threat": { "town": "gors_velen", "kind": "bandits", "men": 12 } }, "done": { "type": "threat" } }
+          ]
+        },
+        "charter": {
+          "name": "The town's charter",
+          "reward": { "love": 2, "prosperity": 3 },
+          "steps": [
+            { "text": "The burghers ask for a charter. Sign one in the Book of Laws: the Charter of the commons, or merchant charters.", "where": "court:laws", "done": { "type": "law", "laws": ["commons_charter", "merchant_charters"] } }
+          ]
+        }
+      }
+    },
+    "ellander": {
+      "teaches": "Faith",
+      "line": "Ellander keeps Melitele's temple, and the Fire's preachers have come to argue with her priestesses.",
+      "chains": {
+        "temple": {
+          "name": "Melitele's temple",
+          "reward": { "love": 2, "prosperity": 2 },
+          "steps": [
+            { "text": "Melitele's temple at Ellander needs a patron. Endow it, from the Faith screen.", "where": "court:faith", "done": { "type": "endow", "town": "ellander", "faith": "melitele" } }
+          ]
+        },
+        "pilgrims": {
+          "name": "The pilgrims' road",
+          "reward": { "coin": 150, "love": 1 },
+          "steps": [
+            { "text": "Pilgrims will not walk to Ellander without an escort. Station a company there.", "where": "military:forces", "done": { "type": "company", "town": "ellander" } }
+          ]
+        },
+        "preachers": {
+          "name": "The Fire's preachers",
+          "reward": { "love": 1, "prosperity": 2 },
+          "steps": [
+            { "text": "Fire preachers shout in Ellander's square that the priestesses harbour witches. Deal with them at court.", "where": "court:inbox", "after": 70, "setup": { "dilemma": { "id": "dawn_preachers", "town": "ellander" } }, "done": { "type": "dilemma", "id": "dawn_preachers" } }
+          ]
+        }
+      }
+    },
+    "white_bridge": {
+      "teaches": "The military",
+      "line": "White Bridge holds the Pontar crossing, and both its bridge and its garrison have been let go.",
+      "chains": {
+        "bridge": {
+          "name": "The bridge and its toll",
+          "reward": { "coin": 300, "prosperity": 3 },
+          "steps": [
+            { "text": "The toll bridge is half fallen into the Pontar. Mend it, and the toll comes back.", "where": "town:white_bridge:works", "setup": { "damage": { "town": "white_bridge", "works": "tollbridge", "to": 25 } }, "done": { "type": "repair", "town": "white_bridge", "works": "tollbridge" } }
+          ]
+        },
+        "crossing": {
+          "name": "The Pontar crossing",
+          "reward": { "love": 1, "fear": 1 },
+          "steps": [
+            { "text": "Raiders cross the Pontar where they please. Hold the crossing with 300 men or more: raise the garrison or station a company.", "where": "town:white_bridge:military", "done": { "type": "defence", "town": "white_bridge", "min": 300 } }
+          ]
+        }
+      }
+    }
+  },
+  "dilemmas": {
+    "dawn_mint": {
+      "title": "The quarrel over the mint",
+      "text": "The masters of Maribor's mint say the moneychangers clip every coin that passes through their hands. The moneychangers say the mint strikes light. Both bring ledgers; both bring friends.",
+      "place": { "types": ["town", "city"] },
+      "choices": [
+        { "label": "Side with the mint: hang a moneychanger for clipping", "fx": { "fear": 2, "opinion": { "burghers": -4 }, "prosperity": 1 } },
+        { "label": "Side with the moneychangers: the mint pays a fine", "fx": { "coin": 150, "opinion": { "burghers": 4 } } },
+        { "label": "A royal assayer for both, at the crown's cost", "fx": { "coin": -100, "love": 1, "prosperity": 2 } }
+      ],
+      "default": 2,
+      "dawn": true
+    },
+    "dawn_thanedd": {
+      "title": "The mages of Thanedd",
+      "text": "Three mages from Thanedd ask for a house in Gors Velen, licences to practise and the crown's protection from the Fire's preachers. They offer their skills in return.",
+      "place": { "types": ["town", "city"] },
+      "choices": [
+        { "label": "Grant them all of it", "fx": { "opinion": { "eternal_fire": -6, "burghers": 3 }, "prosperity": 2 } },
+        { "label": "A house, but no licences", "fx": { "opinion": { "eternal_fire": -2 } } },
+        { "label": "Send them back to their island", "fx": { "opinion": { "eternal_fire": 4, "burghers": -2 } } }
+      ],
+      "default": 1,
+      "dawn": true
+    },
+    "dawn_preachers": {
+      "title": "Fire preachers at Ellander",
+      "text": "Preachers of the Eternal Fire stand on barrels in Ellander's square and call Melitele's priestesses witches. The priestesses ask the crown to send them away; the preachers ask who will stop them.",
+      "place": { "types": ["town", "city", "village"] },
+      "choices": [
+        { "label": "Send them packing", "fx": { "opinion": { "eternal_fire": -6, "melitele": 6 }, "townUnrest": -4 } },
+        { "label": "Let them preach, but not in the temple's shadow", "fx": { "opinion": { "eternal_fire": -1, "melitele": 2 } } },
+        { "label": "Let them preach where they please", "fx": { "opinion": { "eternal_fire": 5, "melitele": -6 }, "townUnrest": 4 } }
+      ],
+      "default": 1,
+      "dawn": true
+    }
+  }
+}

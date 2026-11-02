@@ -11,6 +11,7 @@ import { districtOf } from './labour.js';
 import { newSpycraft, boostNet } from './spies.js';
 import { withShares } from './world.js';
 import { STATE_VERSION, newSettlement, defaultWar, createState } from './state.js';
+import { skippedDawn } from './dawn.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
 import { defaultDiplomacy, makeTreaty } from './diplomacy.js';
@@ -469,6 +470,12 @@ const MIGRATIONS = {
     }
     if (state.opinion && state.opinion.gnome === undefined) state.opinion.gnome = state.opinion.dwarf ?? 50;
     state.version = 37;
+    return state;
+  },
+  // M33 A: a reign begun before the Dawn skips it.
+  37(state) {
+    state.dawn ??= skippedDawn(state);
+    state.version = 38;
     return state;
   },
 };
