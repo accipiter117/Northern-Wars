@@ -8,6 +8,7 @@ import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
 import { cardHead, orderAttr, section } from './card.js';
 import { settingHtml } from './market.js';
+import { recruitAccount } from '../sim/forest.js';
 
 const MORALE = (m) => (m >= 75 ? 'eager' : m >= 55 ? 'steady' : m >= 35 ? 'shaken' : 'close to breaking');
 const XP = (x) => (x >= 0.6 ? 'veterans' : x >= 0.25 ? 'seasoned' : 'green');
@@ -121,7 +122,8 @@ export function threatsHtml(app) {
       ${sighted.length > 8 ? section(app.memory, 'tab:military', 'more-threats', `${sighted.length - 8} more`, sighted.slice(8).map((t) => threatRow(world, state, t)).join('')) : ''}
       ${rumours ? `<p class="sub">And ${rumours} rumour${rumours === 1 ? '' : 's'} of something further off: send a company or build watchtowers to see.</p>` : ''}
       ${abroad ? `<p class="sub">${abroad} camp${abroad === 1 ? '' : 's'} and lair${abroad === 1 ? '' : 's'} seen over the border. Theirs to deal with, so long as they stay there.</p>` : ''}
-      ${foes.length ? `<p class="warn">Enemy armies in the field: ${foes.map((a) => escapeHtml(a.name)).join(', ')}.</p>` : ''}</div>`;
+      ${foes.length ? `<p class="warn">Enemy armies in the field: ${foes.map((a) => escapeHtml(a.name)).join(', ')}.</p>` : ''}</div>
+    ${forestHtml(state)}`;
 }
 
 // ---- A company's card ----
@@ -217,7 +219,19 @@ export function threatCard(app, id) {
       actions,
       extra: purseLine,
     })}
-    ${others ? `<div data-part="others"><h3>Or send another</h3><div class="build-list">${others}</div></div>` : ''}`;
+    ${others ? `<div data-part="others"><h3>Or send another</h3><div class="build-list">${others}</div></div>` : ''}
+    ${t.kind === 'scoiatael' ? forestHtml(state) : ''}`;
+}
+
+// Where the Scoia'tael's recruits came from this year (M32 D), so the link
+// between the crown's laws and the forests is plain.
+export function forestHtml(state) {
+  const a = recruitAccount(state);
+  if (!a.total && a.pool < 1) return '';
+  const rows = a.rows.map((r) => `<div><dt>${escapeHtml(r.label[0].toUpperCase() + r.label.slice(1))}</dt><dd>${number(r.n)}</dd></div>`).join('');
+  return `<div data-part="forest"><h3>Where their recruits come from</h3>
+    <p class="sub">${a.total ? `This year ${number(a.total)} have gone to the woods.` : 'None have gone to the woods this year.'} About ${number(a.pool)} wait there now; the more there are, the more often and the stronger the commandos strike.</p>
+    ${rows ? `<dl class="ledger">${rows}</dl>` : ''}</div>`;
 }
 
 // ---- A town's companies and recruiting ----

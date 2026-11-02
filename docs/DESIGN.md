@@ -212,6 +212,18 @@ No new systems: what does nothing is fixed, what is hidden is surfaced, what is 
 - **A pogrom** is a disaster: half to four-fifths of every non-human people there gone (three in ten of them dead, the rest fled), two of the town's works burned (30 to 60 condition), the elves' and dwarves' opinion -10 (halflings -5, gnomes -8), Mahakam and Brokilon -10, Scoia'tael sympathy +15, and fifteen in a hundred of the elven and dwarven young gone to the woods (`state.scoiatael.recruits`, which Part D draws on). The town is remembered for it: the card names the pogrom with its dead and fled, and the quarter's regard for the crown is 20 lower, fading over five years.
 - **Quarter dilemmas** through the M28 machinery, each in a town with a quarter of that people (a place may now ask for `quarter`, and an answer may move the quarter's `tension`): a dwarf's shop burned (hang the arsonists, pay for it, or call it an accident), a dwarf's debt called in, an elven grove ploughed, a halfling inn's licence, a gnome smith's patent, and the dwarves' guild seat under the charter.
 
+### The Scoia'tael and the laws (M32 D)
+- The Scoia'tael recruit from the crown's own young non-humans (src/sim/forest.js, `scoiatael` in data/culture.json). Each month every town sends 1.2 recruits for each thousand of its young (elves count fully, dwarves 0.3, gnomes 0.2, halflings 0.1), and more for each of:
+  - **the laws against them**: restrictions +100%, the inquisition +50%, the Fire as the crown's faith +30%;
+  - **hunger in the quarter**: +200% at full hunger;
+  - **old grievances**: up to +150% as the elves' opinion falls from 45 towards nothing.
+  Tolerance and good times keep the young at home: freedom of worship -30%, the charter -50%, and a point less for each point of prosperity above 50 (more below it).
+- **Pogroms** send 15% of the elven and dwarven young they drive out to the woods at once (Part B).
+- **Foreign silver**: the Empire's network in Temeria, and any hostile court's, sends 0.08 recruits a month for each point it runs deeper than 40.
+- **Dol Blathanna**: 1.5 elves a month cross from Aedirn while it stands, twice that while Aedirn is at war.
+- **The pool** (`state.scoiatael.recruits`, fading 2% a month) is what the commandos draw on: each recruit makes a commando 1% likelier (up to 2.5 times), lowers the sympathy they need by a fifth of a point (up to 15), and 40% of the pool joins each new band.
+- **Plainly shown**: the Threats screen, and every commando's card, say how many went to the woods this year, how many wait there now, and why (pogroms, the laws against them, hunger in the quarters, old grievances, restless young, foreign silver, elves out of Dol Blathanna), the largest first.
+
 ### What each people brings (M32 C)
 - Each non-human people gives the towns it lives in a gift (src/sim/peoples.js, `gifts` in data/culture.json). Its weight in a town is its share of the people there against a tenth (full at 10% or more) times its mood: (opinion - 25) / 50, from nothing at 25 or below to 1.2 at 85. So at the start (opinion 50) a people gives half its gift, a loved one more than its full gift, a wronged one nothing. Each town keeps its gifts for the month (`s.gifts`, refreshed with the month and at the start).
   - **Dwarves**, smiths and miners: the smithy, armoury, weaponsmith and mint +30%, workshops +15%; iron and stone output, gold and silver +20%.

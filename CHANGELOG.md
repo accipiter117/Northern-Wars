@@ -1,5 +1,10 @@
 # Changelog
 
+## M32 D The Scoia'tael and the laws
+- The Scoia'tael now recruit from your own young elves and dwarves: harsh laws, hunger and pogroms send more to the woods; tolerance and good times keep them at home.
+- The Empire's spies and the elves of Aedirn's Dol Blathanna feed them too.
+- The more there are in the woods, the more often and the harder the commandos strike. The Threats screen and every commando's card say where this year's recruits came from.
+
 ## M32 C What each people brings
 - Dwarves make the smithies and mines of their towns pay more, gnomes the workshops and the arms, halflings the harvest and the inns, and elves heal the sick. The better they think of you, the more they give; wrong them and it stops. Each town's quarter lists what they bring.
 - Dwarven axemen, the sturdiest foot in the North, can be raised where enough dwarves live and like the crown.
