@@ -229,7 +229,8 @@ export function stepLabourDay(state, world) {
   const mending = Object.values(state.settlements).reduce((a, t) => a + Object.keys(t.repair ?? {}).length, 0);
   const onCall = {
     repairs: Math.max(0, report.repairs.hands - mending * l.crew),
-    levies: atWar(state, TEMERIA) ? 0 : report.levies.hands,
+    // Called up (the levy call) or at war, the levies stand to.
+    levies: atWar(state, TEMERIA) || (state.labour.calls.levy?.until ?? 0) > state.day ? 0 : report.levies.hands,
   };
   let free = (onCall.repairs + onCall.levies) * l.spread;
   for (const kind of ON_CALL_TO) {

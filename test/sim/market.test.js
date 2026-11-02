@@ -24,6 +24,9 @@ const quiet = (s) => {
   // Dilemmas left open would be answered by default, coin and all, outside
   // the month's ledger.
   if (s.dilemmas) s.dilemmas.open = [];
+  // The crown asks before each repair, so no card of dear repairs (the
+  // flooded gold seams, M34 A) spends coin and stone on its own.
+  if (s.works) s.works.order = { mode: 'ask', limit: 400 };
   return s;
 };
 // Run to the first of the next month, when the ledger is drawn up.

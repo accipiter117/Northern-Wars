@@ -79,13 +79,18 @@ test('levies bring soldiers to Vizima at the cost of a grievance', () => {
 test('demands arrive, are answered, and default to refusal if ignored', () => {
   let s = createState(world, 1);
   let seen = 0;
-  for (let m = 0; m < 36; m++) {
-    s = run(s, 30);
+  let unanswered = 0;
+  // In ten-day steps: a demand stands only twenty days before it defaults.
+  for (let m = 0; m < 108; m++) {
+    const last = s.chronicle.at(-1);
+    s = run(s, 10);
     seen += s.demands.length;
     for (const d of s.demands) assert.ok(s.day - d.day < world.houses.demandDefaultDays);
+    // Counted as they come: three years of news outrun the chronicle.
+    unanswered += s.chronicle.slice(s.chronicle.indexOf(last) + 1).filter((d) => /no answer came from the throne/.test(d.text)).length;
   }
   assert.ok(seen > 0);
-  assert.ok(s.chronicle.some((d) => /no answer came from the throne/.test(d.text)));
+  assert.ok(unanswered > 0);
 
   const t = createState(world, 1);
   t.demands.push({ id: 4, house: 'dravnik', demand: 'land', day: t.day, target: 'cleves' });
