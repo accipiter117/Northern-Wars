@@ -898,3 +898,10 @@ ul.orders li .chip { flex: none; }
 .head-more > summary { min-height: 36px; display: flex; align-items: center; color: var(--muted); font-size: 14px; cursor: pointer; }
 .chronicle .like > summary { color: var(--muted); font-size: 13px; cursor: pointer; min-height: 32px; display: flex; align-items: center; }
 .chronicle .like ul { margin: 4px 0 0; padding-left: 14px; font-size: 14px; }
+
+/* The Dawn (M33 A) */
+.dawn-place { margin-top: 12px; }
+.dawn-place h3 small { font-weight: normal; opacity: 0.75; }
+.dawn-place.done h3 { opacity: 0.7; }
+.dawn-chain.done { opacity: 0.6; }
+.dawn-chain b { font-weight: 600; }

@@ -4,8 +4,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SUBS, canonicalTab, mendSubs, goWhere } from '../../src/ui/router.js';
 
-test('fourteen sub-screens across the five tabs', () => {
-  assert.equal(Object.values(SUBS).reduce((a, l) => a + l.length, 0), 14);
+test('fifteen sub-screens across the five tabs', () => {
+  // Fifteen since M33 A brought the Dawn into the Court.
+  assert.equal(Object.values(SUBS).reduce((a, l) => a + l.length, 0), 15);
   assert.deepEqual(SUBS.diplomacy.map(([id]) => id), ['realms', 'envoys', 'spies']);
 });
 

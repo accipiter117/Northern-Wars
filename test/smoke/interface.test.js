@@ -340,7 +340,7 @@ test('no tab or card opens longer than about two screens', async () => {
     const h = await page.evaluate(() => document.getElementById('sheet-body').scrollHeight);
     if (h > limit) tooLong.push(`${name}: ${h}px`);
   };
-  const subs = { realm: ['overview', 'labour'], court: ['inbox', 'laws', 'faith', 'houses'], treasury: ['ledger', 'trade'], military: ['forces', 'threats', 'war'], diplomacy: ['realms', 'envoys', 'spies'] };
+  const subs = { realm: ['overview', 'labour'], court: ['inbox', 'dawn', 'laws', 'faith', 'houses'], treasury: ['ledger', 'trade'], military: ['forces', 'threats', 'war'], diplomacy: ['realms', 'envoys', 'spies'] };
   for (const [tab, list] of Object.entries(subs)) {
     await page.click(`[data-tab="${tab}"]`);
     for (const sub of list) {

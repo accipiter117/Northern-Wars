@@ -72,7 +72,7 @@ test('every act with a rest belongs to the crown\'s hand', () => {
 
 test('every sub-screen a link or a saved place names exists', () => {
   const known = new Set(Object.entries(SUBS).flatMap(([tab, list]) => list.map(([id]) => `${tab}:${id}`)));
-  assert.equal(known.size, 14);
+  assert.equal(known.size, 15);
   const files = [];
   const walk = (dir) => {
     for (const f of readdirSync(dir, { withFileTypes: true })) {
