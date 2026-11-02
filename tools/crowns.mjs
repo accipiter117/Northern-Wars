@@ -594,5 +594,12 @@ export function makeCrowns(world) {
     return s;
   }
 
-  return { answer, steward, tyrant, warlord, standing, careless, crushRising };
+  // The tolerant crown (M32 E): the steward, but along the Book's path of
+  // tolerance (freedom of worship, the non-human charter, licensed mages).
+  function tolerant(s, month, spend) {
+    s = signAlong(s, [['faith', 'tolerance']]);
+    return steward(s, month, spend);
+  }
+
+  return { answer, steward, tyrant, warlord, standing, careless, crushRising, tolerant };
 }
