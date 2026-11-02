@@ -72,7 +72,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
   let swallow = false;
   let tipTimer = 0;
   const hideTip = () => { tip.hidden = true; };
-  for (const b of document.querySelectorAll('#topbar .good, #topbar .meter, #topbar .hand-button')) {
+  for (const b of document.querySelectorAll('#topbar [data-name]')) {
     b.title = b.dataset.name;
     b.addEventListener('pointerdown', () => {
       clearTimeout(held);
@@ -90,14 +90,17 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
     });
     for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => clearTimeout(held));
     b.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Capture, so the tap that ends a long press never reaches the speed or
+    // More buttons' own handlers either.
     b.addEventListener('click', (e) => {
       if (swallow) {
         swallow = false;
         e.preventDefault();
+        e.stopImmediatePropagation();
         return;
       }
-      onMeter(b.dataset.go);
-    });
+      if (b.dataset.go) onMeter(b.dataset.go);
+    }, { capture: true });
   }
 
   let last = '';

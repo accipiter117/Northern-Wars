@@ -61,7 +61,11 @@ export function goldLedger(state, world, income, put = () => {}) {
   if (!state.gold) return;
   for (const { id, settlement } of activeMines(state, world)) {
     const y = goldYield(state, world, id);
+    const before = state.gold.deposits[id].remaining;
     state.gold.deposits[id].remaining -= y;
+    // Word when a seam begins to thin (M34 D): the mine pays less from now.
+    const thin = G(world).deposits[id].gold * G(world).taper;
+    if (before >= thin && state.gold.deposits[id].remaining < thin) say(state, `${G(world).deposits[id].name} at ${world.byId[settlement].name} is running thin: the miners chase narrower veins, and it pays less each month now.`);
     // Royal mines (M26): the crown's overseers take more of what is dug.
     const take = y * crownShare(state, world, state.settlements[settlement]) * (1 + bookEffect(state, world, 'mines'));
     income.gold += take;
@@ -164,7 +168,7 @@ export function stepGoldDay(state, world, rng) {
     const hidden = depositsOf(world, p.settlement).find((d) => !state.gold.deposits[d].known);
     if (hidden && rng.chance(G(world).prospect.find)) {
       state.gold.deposits[hidden].known = true;
-      say(state, `Gold! The prospectors above ${name} have struck ${G(world).deposits[hidden].name}. ${world.spaces ? 'Old workings lie flooded there: rebuild the gold mine to open them.' : 'A gold mine can be sunk there.'}`);
+      say(state, `Gold! The prospectors above ${name} have struck ${G(world).deposits[hidden].name}. ${world.spaces ? 'Old workings lie flooded there: reopen them from Needs attention.' : 'A gold mine can be sunk there.'}`);
     } else if (hidden) {
       say(state, `The prospectors come back from the hills above ${name} with sore backs and empty pans. The old miners swear there is gold there still.`);
     } else {

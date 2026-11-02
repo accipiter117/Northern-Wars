@@ -117,7 +117,7 @@
       "id": "gold",
       "trigger": "goldWaiting",
       "title": "Gold in the hills",
-      "text": "Old gold workings lie flooded near Carreras, Zavada, Razwan, Petrelsteyn and Rissberg. Rebuild the gold mine from the town's Works and it pays the treasury every month until the seam runs out. Others may hide elsewhere in the hills: send prospectors from a hill town's card. Gold draws miners and dwarves, but also bandits and greedy neighbours."
+      "text": "Old gold workings lie flooded near Carreras, Zavada, Razwan, Petrelsteyn and Rissberg. Reopen them from Needs attention in the Realm's Overview, or from Trade and mines in the Treasury, and each pays the treasury every month until the seam runs out. Others may hide elsewhere in the hills: send prospectors from a hill town's card. Gold draws miners and dwarves, but also bandits and greedy neighbours."
     },
     {
       "id": "repairs",

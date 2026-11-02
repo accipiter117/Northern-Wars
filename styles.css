@@ -894,3 +894,7 @@ ul.orders li .chip { flex: none; }
   #more-button, .hand-button { width: 38px; min-width: 38px; }
   .bar-main { gap: 4px; }
 }
+.head-more { margin: 4px 0 0; }
+.head-more > summary { min-height: 36px; display: flex; align-items: center; color: var(--muted); font-size: 14px; cursor: pointer; }
+.chronicle .like > summary { color: var(--muted); font-size: 13px; cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.chronicle .like ul { margin: 4px 0 0; padding-left: 14px; font-size: 14px; }

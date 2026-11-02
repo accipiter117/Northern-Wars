@@ -822,7 +822,7 @@ test('the Treasury, town accounts and the industries close up', async () => {
     await page.waitForSelector('#sheet:not([hidden])');
     const text = await page.textContent('#sheet-body');
     // One ledger of grouped lines first (M21), the full breakdown under Details.
-    assert.match(await page.textContent('[data-part="ledger"]'), /Income[\s\S]*Taxes[\s\S]*Trade and sales[\s\S]*Crafts and goods[\s\S]*Total income[\s\S]*Expenses[\s\S]*War[\s\S]*Crafts and goods[\s\S]*Repairs[\s\S]*Total expenses/);
+    assert.match(await page.textContent('[data-part="ledger"]'), /Income[\s\S]*Taxes[\s\S]*Trade and sales[\s\S]*Crafts and goods[\s\S]*Total income[\s\S]*Expenses[\s\S]*Garrisons[\s\S]*Upkeep and repairs[\s\S]*Court and gifts[\s\S]*Repairs and decrees[\s\S]*Total expenses/);
     assert.match(text, /Treasury[\s\S]*Head tax[\s\S]*Crafts[\s\S]*Market hall[\s\S]*Goods from the chains[\s\S]*Cloth sold[\s\S]*Bridge tolls[\s\S]*Rents[\s\S]*Crown trade routes[\s\S]*Where the money came from/);
     await page.screenshot({ path: join(OUT, `${vp.name}-treasury.png`), fullPage: false });
     await page.click('[data-sec="places"] > summary');

@@ -1,5 +1,11 @@
 # Changelog
 
+## M34 D Cards, ledger and reports
+- Cards show four figures at most, with the rest under Details, and nothing that reads 0.
+- The ledger's spending is four groups (armies, garrisons, upkeep and repairs, court and gifts), each with its total.
+- A month of near-identical reports (three farms burned near three villages) now reads as one, with the rest a tap away.
+- Gold only speaks up when a mine opens, runs thin or is lost. Long press any top-bar symbol to see its name.
+
 ## M34 C Fewer, clearer screens
 - Fourteen screens where there were twenty. Taxes and loans now sit under the Ledger, mines and gold under Trade, garrisons under Forces, pacts under Audiences, and both spy screens are one, under Diplomacy.
 - What a screen gathers from another sits in a fold you can open or shut; the game remembers which.

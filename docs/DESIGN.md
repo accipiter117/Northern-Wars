@@ -174,6 +174,13 @@ No new systems: what does nothing is fixed, what is hidden is surfaced, what is 
 - **Diplomacy:** Rulers, Audiences and pacts (the pacts and the web of alliances in a fold), and Spies (the Court's Spies screen moved here, its five deepest networks shown and the other courts one tap down, with embassies and agents abroad in a fold).
 - Old sub-screen ids (in saved navigation and in links the game gives) lead to their new homes and open the fold they mean (`canonicalTab`, `goWhere`, `mendSubs` in router.js).
 
+**Part D, cards, ledger and reports.**
+- **Cards** (src/ui/card.js `cardHead`): at most four figures (`HEAD_FIGS`) under a card's title; any more sit in a Details fold. A figure at 0 (or +0, or 0%) is left off unless the card marks it as one to keep.
+- **The ledger** gathers income in five groups (taxes, trade, crafts, war and tribute, other) and expenses in four: Armies (armies, companies, patrols, occupation, witchers), Garrisons, Upkeep and repairs (upkeep, routes, imports) and Court and gifts (court, edicts, gifts, embassies, spies, tribute, interest, loans, deals). Each group shows its total and opens to its lines; the crafts are one line. Groups and lines at 0 are hidden (taxes always shows).
+- **Merged reports** (menu.js `mergeReports`): reports of the same kind in the same month whose words differ only in numbers and names ("Raiders burned a farm near X", three times) show once, with "and N more like it that month" to open the rest.
+- **Gold** speaks only when it changes: a mine reopened, a seam running thin (when what is left falls past the taper), or a mine lost. The flooded seams wait quietly in Needs attention and on Trade and mines.
+- **The top bar**: every symbol carries its name (shown on long press and read by screen readers): treasury, food, Love, Fear, the crown's hand, speeds and More.
+
 ### Five more faiths (M32 A)
 - The Great Sun, Kreve, Lebioda and Freya join the Eternal Fire, Melitele and the Old Ways on the M26 model (data/devotion.json): Devotion 0 to 100 in five levels, five perks each, a power at level 3, the same acts to develop them (endow, preachers, festival, pilgrimage, church land), and the Book's Faith of the crown can name any of them.
   - **The Great Sun**, Nilfgaard's creed: order in the towns (Unrest -3), obedient taxpayers (tax +5%), cheaper garrisons, Fear, stronger garrisons. Power: Imperial order (250 crowns, every 120 days): the most troubled town's Unrest -20, Fear +2. It clashes with the Fire.

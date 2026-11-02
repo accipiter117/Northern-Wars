@@ -25,10 +25,19 @@ export function info(text, key = 'info') {
 }
 
 // The head of a card: status, chips and main actions.
+export const HEAD_FIGS = 4;
+const isZero = (v) => v === 0 || v === '0' || v === '+0' || v === '0%';
+
+// At most four figures that matter (M34 D): those at 0 are hidden unless
+// marked keep, and the rest wait one tap down under Details.
 export function cardHead({ status = '', chips: figs = [], actions = '', infoText = '', extra = '' }) {
+  const shown = figs.filter((c) => c && (c.keep || !isZero(c.value)));
+  const first = shown.slice(0, HEAD_FIGS);
+  const more = shown.slice(HEAD_FIGS);
   return `<div data-part="head" class="card-head">
     ${status || infoText ? `<div class="status">${status}${info(infoText)}</div>` : ''}
-    ${figs.length ? chips(figs) : ''}
+    ${first.length ? chips(first) : ''}
+    ${more.length ? `<details class="head-more" data-part="head-more"><summary>Details</summary>${chips(more)}</details>` : ''}
     ${extra}
     ${actions ? `<div class="actions">${actions}</div>` : ''}
   </div>`;
