@@ -486,6 +486,13 @@ const MIGRATIONS = {
     state.version = 39;
     return state;
   },
+  // M33 C: the Road to War. A reign whose clock already reached War keeps
+  // its war, begun the day the clock turned.
+  39(state) {
+    state.road ??= { pretext: null, began: state.nilfgaard?.stage === 'war' ? state.nilfgaard.since : null, calls: {} };
+    state.version = 40;
+    return state;
+  },
 };
 
 // Realms the world has and the save does not: taken from a fresh reign.

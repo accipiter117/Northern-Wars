@@ -416,6 +416,12 @@ Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
 - **The news** of each step reaches the chronicle in full where the crown has eyes in that court (an embassy, a network 20 deep, a friend or trade), as a rumour elsewhere; the paths' fold names a rival's steps only as far as those eyes reach. Part C waits on Foltest's and Emhyr's paths.
 - A reign from before M33 has Foltest's path behind it; the rivals start from the beginning (save version 39).
 
+### The Road to War (M33 C)
+- The First Northern War waits on five boxes (src/sim/road.js, `road` in war.json's clock), shown as the Road to War on the Dawn screen (at the top once the Dawn is over): Foltest's path complete; Emhyr's path complete; the Empire's network in Cintra 70 deep (the crown's own network in Cintra slows it, by 0.05 a month for each point it runs above 30); a pretext (once Emhyr's path is done and his agents are in place, 25% a month: Calanthe spurns an imperial envoy, or a border incident on the Yaruga boils over); and the year 1263 or later. Each box says what moves it.
+- This replaces the clock's drawn gate (`gateOpen`): Pressure still begins as before, but War waits for all five. While it waits the rivals' paths run on and the Empire's host keeps growing (M30 C reinforcements), so delay costs.
+- When all five are ticked the war begins of itself: the Empire falls on Cintra; Skellige stands with her; Sodden and Brugge are drawn in on their suzerain's side; the chronicle marks the end of the Dawn. **The Call of the North** reaches Vizima as a decision (join the coalition: Temeria enters the war on Cintra's side, Love +2, Fear +2; stand aside: Love -3, and the North remembers); Redania, Kaedwen and Aedirn each answer with an 85% chance, 120 to 180 days late, in time for Sodden, or stand aside (25 off every northern crown's trust in them, 15 on their fear of the Empire). The Nilfgaard clock's War stage (M30 D) takes it from there.
+- A reign whose clock had already reached War keeps its war (save version 40).
+
 ## Spies (M31)
 Every great power keeps spy networks in the other courts; the crown has a spymaster. Numbers live in data/spies.json; the rules in src/sim/spies.js.
 

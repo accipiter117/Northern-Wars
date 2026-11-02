@@ -14,6 +14,7 @@ import { raiseRealmArmy } from './war.js';
 import { makeVassal, roomFor, distance } from './suzerainty.js';
 import { suzerainOf } from './tiers.js';
 import { livingRealms } from './lands.js';
+import { roadOpen, beginFirstWar, monthlyRoad } from './road.js';
 
 const K = (world) => world.war?.clock;
 export const STAGES = ['watching', 'pressure', 'war'];
@@ -31,10 +32,12 @@ export function newClock(world, seed, day) {
 export const clockOf = (state) => state.nilfgaard ?? null;
 export const clockStage = (state) => state.nilfgaard?.stage ?? null;
 
-// Whether the war may begin. M33 replaces this with the player's path.
+// Whether the war may begin: since M33 C, when the Road to War's five
+// boxes are all ticked (the drawn day only where there is no road).
 export function gateOpen(state, world) {
   const k = clockOf(state);
-  return !!k && state.day >= k.warDay;
+  if (!k) return false;
+  return K(world).road ? roadOpen(state, world) : state.day >= k.warDay;
 }
 
 // The Empire makes no war of its own before the clock reaches War.
@@ -73,7 +76,7 @@ export function clockLine(state, world) {
   return aim ? `Nilfgaard is at war in the North. Its armies march on ${world.byId[aim].name}.` : 'Nilfgaard holds all it set out to take, and looks further north.';
 }
 
-function advance(state, world) {
+function advance(state, world, rng) {
   const k = clockOf(state);
   if (k.stage === 'watching' && state.day >= k.pressureDay) {
     k.stage = 'pressure';
@@ -84,6 +87,8 @@ function advance(state, world) {
     k.stage = 'war';
     k.since = state.day;
     south(state, 'The Emperor has declared that the North will be brought to order. Black-cloaked regiments cross the Yaruga.');
+    // The First Northern War (M33 C).
+    if (K(world).road) beginFirstWar(state, world, rng);
   }
 }
 
@@ -102,7 +107,8 @@ export function monthlyClock(state, world, rng) {
   if (!rid) return;
   state.nilfgaard ??= newClock(world, state.seed ?? 1, state.day);
   const k = state.nilfgaard;
-  advance(state, world);
+  monthlyRoad(state, world, rng);
+  advance(state, world, rng);
   if (k.stage === 'watching') {
     if (rng.chance(c.watching.chance)) south(state, WATCHING[Math.floor(rng.next() * WATCHING.length)]);
     return;

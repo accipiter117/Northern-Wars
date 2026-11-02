@@ -6,6 +6,8 @@ import { rewardLine } from '../sim/dawn.js';
 import { escapeHtml } from './format.js';
 import { section } from './card.js';
 import { pathsView, rewardText } from '../sim/paths.js';
+import { roadView } from '../sim/road.js';
+import { formatDate } from '../sim/index.js';
 
 // Where a step is done: a town card, or a tab and its sub-screen.
 export function goAttr(where) {
@@ -26,7 +28,7 @@ export function dawnHtml(app) {
   const { state, world } = app;
   const v = dawnView(state, world);
   if (!v) return '<p class="sub">No Dawn in this world.</p>';
-  if (v.skipped) return `<div data-part="dawn"><p class="sub">This reign began before the Dawn was written. Its places are in order already.</p></div>${pathsHtml(app)}`;
+  if (v.skipped) return `${roadHtml(app)}<div data-part="dawn"><p class="sub">This reign began before the Dawn was written. Its places are in order already.</p></div>${section(app.memory, 'tab:court', 'paths', 'The five paths', pathsHtml(app))}`;
   const next = dawnNext(state, world);
   const head = v.done
     ? '<p class="sub">All five places are in order. The Dawn of the reign is over.</p>'
@@ -39,7 +41,7 @@ export function dawnHtml(app) {
     `${p.done ? '' : `<p class="sub">${escapeHtml(p.line)}</p>`}<div class="build-list">${p.chains.map((c) => chainHtml(world, c)).join('')}</div>`,
     { open: next?.place === p.id })}</div>`).join('');
   // The paths in a fold: shut while the Dawn lasts, open after.
-  return `<div data-part="dawn">${head}${nextHtml}${places}</div>${section(app.memory, 'tab:court', 'paths', 'The five paths', pathsHtml(app), { open: v.done })}`;
+  return `${v.done ? roadHtml(app) : ''}<div data-part="dawn">${head}${nextHtml}${places}</div>${section(app.memory, 'tab:court', 'paths', 'The five paths', pathsHtml(app), { open: v.done })}${v.done ? '' : section(app.memory, 'tab:court', 'road', 'The Road to War', roadHtml(app))}`;
 }
 
 // The five paths (M33 B): the crown's own, step by step, then the rivals'
@@ -66,4 +68,20 @@ function chainHtml(world, c) {
     <span class="build-name">${escapeHtml(c.name)}${steps}</span>
     <span class="build-cost">${escapeHtml(c.text)}${c.progress ? ` <b>${escapeHtml(c.progress)}</b>` : ''}</span>
     <span class="build-cost">${reward ? `Pays ${escapeHtml(reward)}. ` : ''}${escapeHtml(goLabel(world, c.where))}.</span></button>`;
+}
+
+// The Road to War (M33 C): five boxes, each ticked or with what moves it;
+// once the war has begun, who has answered the Call of the North.
+function roadHtml(app) {
+  const { state, world } = app;
+  const r = roadView(state, world);
+  if (!r) return '';
+  if (r.began !== null) {
+    const calls = r.calls.map((c) => `${escapeHtml(world.geography.neighbours[c.rid]?.name ?? c.rid)}: ${c.joined !== null ? 'marching' : c.aside !== null ? 'stands aside' : 'gathering its lords'}`).join('; ');
+    return `<div data-part="road"><h3>The Road to War <small>the war began ${escapeHtml(formatDate(r.began))}</small></h3>
+      <p class="sub">The First Northern War is under way. The Call of the North: ${calls || 'sent'}.</p></div>`;
+  }
+  const rows = r.boxes.map((b) => `<div class="road-box${b.done ? ' done' : ''}" data-road-box="${b.id}"><span class="road-tick">${b.done ? '&#10003;' : '&#9675;'}</span><span><b>${escapeHtml(b.name)}</b><br><small>${escapeHtml(b.what)}</small></span></div>`).join('');
+  return `<div data-part="road"><h3>The Road to War <small>${r.ticked} of 5</small></h3>
+    <p class="sub">The war waits until all five are ticked; then it begins of itself. The longer it waits, the larger the Emperor's host.</p>${rows}</div>`;
 }

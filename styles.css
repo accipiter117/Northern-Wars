@@ -907,3 +907,8 @@ ul.orders li .chip { flex: none; }
 .dawn-chain b { font-weight: 600; }
 .dawn-chain.later { opacity: 0.7; }
 [data-part="paths"] .row-line { margin: 6px 0; }
+/* The Road to War (M33 C) */
+.road-box { display: flex; gap: 10px; align-items: flex-start; margin: 8px 0; }
+.road-box .road-tick { font-size: 1.2em; min-width: 1.2em; opacity: 0.8; }
+.road-box.done .road-tick { color: var(--good, #8fbf6a); opacity: 1; }
+.road-box small { opacity: 0.8; }

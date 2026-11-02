@@ -1,5 +1,9 @@
 # Changelog
 
+## M33 C The Road to War
+- The Dawn screen now shows the Road to War: five boxes that must all be ticked before Nilfgaard crosses the Yaruga (your path, the Emperor's path, his spies in Cintra, a pretext, and the year 1263). Your own spies in Cintra can slow his.
+- When the last is ticked the First Northern War begins: Cintra is invaded, Skellige, Sodden and Brugge are drawn in, and the Call of the North comes to your court. Join, or stand aside and be remembered for it. The other kings rally late, in time for Sodden.
+
 ## M33 B The five paths
 - Each great king now follows a path of his own. Yours, The Lion's House in Order: set the cities in order, become Prince of Sodden and Protector of Brugge and Mahakam, and come to terms with Calanthe of Cintra. Each step pays.
 - Vizimir builds his spy networks, Henselt drills the hardest army in the North, Demavend settles Dol Blathanna by grants or by the sword, and Emhyr masses his host on the Yaruga. You hear of each step where you have eyes in that court. The paths sit under the Dawn screen.

@@ -171,6 +171,16 @@
       ],
       "default": 1,
       "dawn": true
+    },
+    "call_of_the_north": {
+      "title": "The Call of the North",
+      "text": "Nilfgaard has crossed the Yaruga and fallen on Cintra. Calanthe's riders reach Vizima with mud to the saddle: the Lioness asks the North to stand with her. Redania, Kaedwen and Aedirn are summoning their lords. What does Foltest answer?",
+      "choices": [
+        { "label": "Join the coalition: Temeria marches south", "fx": { "call": "join", "love": 2, "fear": 2 } },
+        { "label": "Stand aside: this is Cintra's war", "fx": { "call": "aside", "love": -3 } }
+      ],
+      "default": 0,
+      "dawn": true
     }
   }
 }
