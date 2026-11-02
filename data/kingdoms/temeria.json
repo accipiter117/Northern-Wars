@@ -23,6 +23,7 @@
   "dilemmas": "data/dilemmas.json",
   "spies": "data/spies.json",
   "dawn": "data/dawn.json",
+  "paths": "data/paths.json",
   "northIds": "data/north-ids.json",
   "start": {
     "year": 1262,

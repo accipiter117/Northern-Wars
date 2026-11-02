@@ -12,6 +12,7 @@ import { newSpycraft, boostNet } from './spies.js';
 import { withShares } from './world.js';
 import { STATE_VERSION, newSettlement, defaultWar, createState } from './state.js';
 import { skippedDawn } from './dawn.js';
+import { newPaths, pathsForOldReign } from './paths.js';
 import { defaultLaws, defaultOpinion } from './laws.js';
 import { defaultNeighbours, resolveEnvoy } from './neighbours.js';
 import { defaultDiplomacy, makeTreaty } from './diplomacy.js';
@@ -476,6 +477,13 @@ const MIGRATIONS = {
   37(state) {
     state.dawn ??= skippedDawn(state);
     state.version = 38;
+    return state;
+  },
+  // M33 B: the five paths. A reign whose Dawn was skipped has Foltest's
+  // path behind it; the rivals start from the beginning.
+  38(state, world) {
+    state.paths ??= state.dawn?.skipped ? pathsForOldReign(state, world) : newPaths(state, world);
+    state.version = 39;
     return state;
   },
 };

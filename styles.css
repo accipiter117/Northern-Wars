@@ -905,3 +905,5 @@ ul.orders li .chip { flex: none; }
 .dawn-place.done h3 { opacity: 0.7; }
 .dawn-chain.done { opacity: 0.6; }
 .dawn-chain b { font-weight: 600; }
+.dawn-chain.later { opacity: 0.7; }
+[data-part="paths"] .row-line { margin: 6px 0; }

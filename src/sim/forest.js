@@ -86,7 +86,9 @@ export function monthlyForest(state, world) {
   }
   // Dol Blathanna, over the Aedirn border, while Aedirn stands.
   const a = state.realms?.[c.aedirn.realm];
-  if (a && !a.fallen) addRecruits(state, 'aedirn', c.aedirn.base * (atWar(state, c.aedirn.realm) ? c.aedirn.atWar : 1));
+  // How Demavend settled Dol Blathanna (M33 B) decides how many cross.
+  const settled = { forced: 2, loyal: 0.25 }[state.paths?.aedirn?.elves] ?? 1;
+  if (a && !a.fallen) addRecruits(state, 'aedirn', c.aedirn.base * settled * (atWar(state, c.aedirn.realm) ? c.aedirn.atWar : 1));
 }
 
 // This year's account, the largest cause first, in whole recruits.

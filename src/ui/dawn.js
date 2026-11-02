@@ -5,6 +5,7 @@ import { dawnView, dawnNext } from '../sim/dawn.js';
 import { rewardLine } from '../sim/dawn.js';
 import { escapeHtml } from './format.js';
 import { section } from './card.js';
+import { pathsView, rewardText } from '../sim/paths.js';
 
 // Where a step is done: a town card, or a tab and its sub-screen.
 export function goAttr(where) {
@@ -25,7 +26,7 @@ export function dawnHtml(app) {
   const { state, world } = app;
   const v = dawnView(state, world);
   if (!v) return '<p class="sub">No Dawn in this world.</p>';
-  if (v.skipped) return '<div data-part="dawn"><p class="sub">This reign began before the Dawn was written. Its places are in order already.</p></div>';
+  if (v.skipped) return `<div data-part="dawn"><p class="sub">This reign began before the Dawn was written. Its places are in order already.</p></div>${pathsHtml(app)}`;
   const next = dawnNext(state, world);
   const head = v.done
     ? '<p class="sub">All five places are in order. The Dawn of the reign is over.</p>'
@@ -37,7 +38,24 @@ export function dawnHtml(app) {
     `${world.byId[p.id].name}: ${p.teaches}${p.done ? ', in order' : `, ${p.count} of ${p.chains.length}`}`,
     `${p.done ? '' : `<p class="sub">${escapeHtml(p.line)}</p>`}<div class="build-list">${p.chains.map((c) => chainHtml(world, c)).join('')}</div>`,
     { open: next?.place === p.id })}</div>`).join('');
-  return `<div data-part="dawn">${head}${nextHtml}${places}</div>`;
+  // The paths in a fold: shut while the Dawn lasts, open after.
+  return `<div data-part="dawn">${head}${nextHtml}${places}</div>${section(app.memory, 'tab:court', 'paths', 'The five paths', pathsHtml(app), { open: v.done })}`;
+}
+
+// The five paths (M33 B): the crown's own, step by step, then the rivals'
+// as far as the crown's eyes reach.
+function pathsHtml(app) {
+  const { state, world } = app;
+  const paths = pathsView(state, world);
+  if (!paths) return '';
+  const mine = paths.find((p) => p.mine);
+  const steps = mine.steps.map((st) => st.done
+    ? `<div class="build dawn-chain done" data-path-step="${st.id}"><span class="build-name">${escapeHtml(st.name)}: done</span></div>`
+    : `<button type="button" class="build dawn-chain${st.next ? '' : ' later'}" data-path-step="${st.id}" ${st.next ? goAttr(st.where) : 'disabled'}><span class="build-name">${escapeHtml(st.name)}</span><span class="build-cost">${escapeHtml(st.text)}${st.reward ? ` Pays ${escapeHtml(rewardText(st.reward))}.` : ''}</span></button>`).join('');
+  const rivals = paths.filter((p) => !p.mine).map((p) => `<div class="row-line" data-path="${p.rid}"><b>${escapeHtml(p.ruler)}</b>, ${escapeHtml(p.name)}: ${p.seen ? `${p.step} of ${p.total} steps${p.step ? ` (${escapeHtml(p.steps.filter((s) => s.done).map((s) => s.name).join(', '))})` : ''}` : 'his court keeps its own counsel'}.${p.war ? ` <small>In war: ${escapeHtml(p.war)}</small>` : ''}</div>`).join('');
+  return `<div data-part="paths"><h3>Your path: ${escapeHtml(mine.name)} <small>${mine.step} of ${mine.total}</small></h3>
+    <div class="build-list">${steps}</div>
+    <h3>The other crowns</h3><div class="sub">${rivals}</div></div>`;
 }
 
 function chainHtml(world, c) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## M33 B The five paths
+- Each great king now follows a path of his own. Yours, The Lion's House in Order: set the cities in order, become Prince of Sodden and Protector of Brugge and Mahakam, and come to terms with Calanthe of Cintra. Each step pays.
+- Vizimir builds his spy networks, Henselt drills the hardest army in the North, Demavend settles Dol Blathanna by grants or by the sword, and Emhyr masses his host on the Yaruga. You hear of each step where you have eyes in that court. The paths sit under the Dawn screen.
+
 ## M33 A The city quests
 - A new reign starts with the Dawn: Vizima, Maribor, Gors Velen, Ellander and White Bridge are run down, and each has short quests that teach one part of the game (repairs, trade, the Book of Laws, faith, the army).
 - Finish a place's quests and it returns to full prosperity. The new Dawn screen in the Court says what to do next and takes you there.
