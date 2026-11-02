@@ -181,6 +181,29 @@ No new systems: what does nothing is fixed, what is hidden is surfaced, what is 
 - **Gold** speaks only when it changes: a mine reopened, a seam running thin (when what is left falls past the taper), or a mine lost. The flooded seams wait quietly in Needs attention and on Trade and mines.
 - **The top bar**: every symbol carries its name (shown on long press and read by screen readers): treasury, food, Love, Fear, the crown's hand, speeds and More.
 
+**Part E, the audit kept as a test.** `tools/audit.mjs` runs ten years with the steward crown; test/sim/audit.test.js fails if any kind of works that stands produces nothing (`worksLines` names the lines each kind should fill: its crafts line, grain, materials or iron, gold, silver, customs, its industry's good, rents, donations or tolls), if any resource is never made or its stock never moves, if any ledger line or group is shown at 0 in any month, if any act with a rest is missing from the crown's hand, or if any sub-screen a link or saved place names has no home. test/smoke/cards.test.js walks all fourteen sub-screens in the browser and fails if any card shows more than four figures before Details.
+- The hand gained a sixth group, **Rulers and vassals**: acts aimed at one ruler (a gift, a denunciation, a demand for tribute, a favour asked), one vassal (honours, a summons, tribute raised or eased, a hostage, a town granted) or one petty king (protection offered, pressure) are chosen on that ruler's audience or card, and rest on the hand with the days left. Laws are not acts: their rests show on the Book of Laws.
+
+**What each screen is for.**
+
+| Tab | Screen | What it is for |
+| --- | --- | --- |
+| Realm | Labour | Where the kingdom's hands work this season, and the presets that move them |
+| Realm | Overview | What needs the crown's attention now, the places in trouble, every place one fold down |
+| Court | Decisions | Every choice waiting on the crown: dilemmas, petitions, demands, envoys |
+| Court | Book of Laws | The laws in force, those that can be signed, and their rests |
+| Court | Faith | The faiths' strength, the crown's faith, their powers and the cult |
+| Court | Lords and vassals | The great houses and the vassal kings, each opening its card |
+| Treasury | Ledger | Last month's money in groups, with taxes, loans and the repair order in folds |
+| Treasury | Trade and mines | The market, goods and deals, with mines, gold and industry in a fold |
+| Military | Forces | Armies, companies and the garrisons |
+| Military | Threats | Beasts, bandits and raiders, and what stands nearest each |
+| Military | War | Wars under way, raising an army, and peace |
+| Diplomacy | Rulers | Every crown of the North: mood, power, pacts, one tap to an audience |
+| Diplomacy | Audiences and pacts | The audiences open, and the web of alliances in a fold |
+| Diplomacy | Spies | Networks, operations and the spymaster, with embassies in a fold |
+| Top bar | The crown's hand | Every act with a cost or a rest: what is ready and what is resting |
+
 ### Five more faiths (M32 A)
 - The Great Sun, Kreve, Lebioda and Freya join the Eternal Fire, Melitele and the Old Ways on the M26 model (data/devotion.json): Devotion 0 to 100 in five levels, five perks each, a power at level 3, the same acts to develop them (endow, preachers, festival, pilgrimage, church land), and the Book's Faith of the crown can name any of them.
   - **The Great Sun**, Nilfgaard's creed: order in the towns (Unrest -3), obedient taxpayers (tax +5%), cheaper garrisons, Fear, stronger garrisons. Power: Imperial order (250 crowns, every 120 days): the most troubled town's Unrest -20, Fear +2. It clashes with the Fire.

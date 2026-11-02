@@ -627,6 +627,12 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Stone ranges 346 to 839 over ten years (the reserve kept for repairs once the rest is sold); timber 409 to 1,225; iron 62 to 610.
   - Lines always 0 for the steward over ten years: embassies, gifts, interest, occupation, routes, spies, tribute (paid and received), conquests and contracts, all filled only by the crown's own choices, and now hidden until then.
 
+- **Part E, ten-year totals.** `node tools/audit.mjs 10 1` (the steward crown, seed 1), in crowns over 120 months (a month on average):
+  - Income 702,804 (5,856): Taxes 371,115 (3,093); Trade and sales 144,918 (1,208); Crafts and goods 176,237 (1,469), gold 51,992 of it; War and tribute 4,328 (36); Other 6,206 (51, deals and one loan).
+  - Expenses 551,258 (4,593): Armies 74,810 (623); Garrisons 25,058 (209); Upkeep and repairs 177,203 (1,477); Court and gifts 239,684 (1,997); repairs and decrees paid when ordered 34,503 (287).
+  - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
+  - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
+
 ### Five more faiths (M32 A)
 - At the start the realm's Devotion runs: the Fire 18, Melitele 29, the Old Ways 13, Lebioda 6, Kreve 4, the Great Sun 1, Freya 0. Five untended years later (seed 1): the Fire 19, Melitele 28, the Old Ways 12, Lebioda 5, Kreve 4, the Great Sun 2, Freya 0; the Sun's share of Vizima has grown from 1 to 3 as the Empire's network in Temeria passed 60. Abroad, Sodden (the Empire's vassal) leans 23 to the Sun, Cintra 12, Toussaint 39.
 - The new faiths start low: reaching a power at level 3 (Devotion 60) takes the crown's patronage (Faith of the crown, temples, preachers, festivals), as the old three do.

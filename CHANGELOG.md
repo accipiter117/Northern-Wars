@@ -1,5 +1,9 @@
 # Changelog
 
+## M34 E The audit kept as a test
+- The crown's hand now also shows what rests after an audience, a vassal order or an offer of protection, with the days left.
+- Behind the scenes, a ten-year reign is checked on every change: no works that does nothing, no ledger line at 0, no act with a rest missing from the hand, no card too long and no screen out of reach.
+
 ## M34 D Cards, ledger and reports
 - Cards show four figures at most, with the rest under Details, and nothing that reads 0.
 - The ledger's spending is four groups (armies, garrisons, upkeep and repairs, court and gifts), each with its total.
