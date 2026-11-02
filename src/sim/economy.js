@@ -30,6 +30,7 @@ import { nonhumanShare } from './culture.js';
 import { churchLand, faithEffect } from './faiths.js';
 import { marketLedger, noteMade, noteUsed, noteSpill, offer, isHeld, marketGoodOf } from './market.js';
 import { clockLine } from './clock.js';
+import { bankRate, bankLimit } from './peoples.js';
 
 const say = (state, text) => addDispatch(state, text, 'treasury');
 
@@ -66,7 +67,8 @@ export function realmEffect(state, world, key) {
 
 // How far the bankers will let the crown go into debt; a dwarven bank lends more.
 export function creditLimit(state, world) {
-  return world.economy.debt.creditLimit + realmEffect(state, world, 'creditLimit') + bookEffect(state, world, 'creditLimit');
+  // The Vivaldi bank is dwarven (M32 C): it lends more to a crown the dwarves trust.
+  return Math.max(0, world.economy.debt.creditLimit + realmEffect(state, world, 'creditLimit') + bookEffect(state, world, 'creditLimit') + bankLimit(state, world));
 }
 
 export function prosperityMult(world, s) {
@@ -104,7 +106,7 @@ export function foodYield(world, id, s, month, law = null) {
   const terrain = f.terrainYield[world.terrainOf[id]] ?? 1;
   const fx = buildingEffects(world, s);
   // As many hands as the fields need bring the harvest in (M20 C).
-  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield + (law?.foodYield ?? 0)) * (f.monthWeights[month - 1] / mean) * Math.max(law?.harvestFloor ?? 0, farmFactor(world, s));
+  return f.farmBase[type] * focus * terrain * prosperityMult(world, s) * (1 + fx.foodYield + (law?.foodYield ?? 0)) * (f.monthWeights[month - 1] / mean) * Math.max(law?.harvestFloor ?? 0, farmFactor(world, s)) * (1 + (s.gifts?.food ?? 0));
 }
 
 // Timber, stone or iron per day, for settlements whose trade is one of those.
@@ -112,7 +114,8 @@ export function goodsYield(world, id, s) {
   if (!GOODS.includes(s.production)) return 0;
   const g = world.economy.goods;
   const bonus = g.terrainBonus[s.production] === world.terrainOf[id] ? g.terrainBonusFactor : 1;
-  return g.base[s.production] * g.typeScale[world.byId[id].type] * bonus * prosperityMult(world, s) * (1 + buildingEffects(world, s).goodsYield);
+  // Dwarven miners (M32 C) dig more.
+  return g.base[s.production] * g.typeScale[world.byId[id].type] * bonus * prosperityMult(world, s) * (1 + buildingEffects(world, s).goodsYield) * (1 + (s.gifts?.mines ?? 0));
 }
 
 // Money in and out for one month's ledger. Construction and decrees are paid
@@ -447,7 +450,7 @@ export function monthlyLedger(state, world, rng = null) {
       if (churchLand(state, id, b)) continue;
       // A strike (M22 D: high Unrest) stops half the workshops.
       const strike = (s.strike ?? 0) > state.day ? 1 - (world.meters?.unrest.strike ?? 0) : 1;
-      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike * (1 - quiet) * lawCrafts * (nonhumanShare(s) >= 0.1 ? 1 + nonhumanCrafts : 1);
+      const c = world.buildings[b].effects.craft * crowd(b) * worksFactor(s, b) * (e.crafts.works ?? 1) * strike * (1 - quiet) * lawCrafts * (nonhumanShare(s) >= 0.1 ? 1 + nonhumanCrafts : 1) * (1 + (s.gifts?.crafts?.[b] ?? 0));
       income.crafts[b] = (income.crafts[b] ?? 0) + c * scale;
       put(id, c * scale);
       // Each place's crafts on their own, for its card and the law harness.
@@ -519,7 +522,7 @@ export function monthlyLedger(state, world, rng = null) {
   // The five goods: deals with partner realms, then home sales (M21).
   marketLedger(state, world, income, expenses);
   // A dwarven bank lends cheaper.
-  if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth * Math.max(0.25, 1 + Math.min(0, realmEffect(state, world, 'interest') + bookEffect(state, world, 'interest')));
+  if (state.treasury < 0) expenses.interest = -state.treasury * debtCfg.interestPerMonth * Math.max(0.25, 1 + Math.min(0, realmEffect(state, world, 'interest') + bookEffect(state, world, 'interest'))) * bankRate(state, world);
 
   for (const k of Object.keys(income)) {
     if (typeof income[k] === 'number') income[k] = Math.round(income[k]);

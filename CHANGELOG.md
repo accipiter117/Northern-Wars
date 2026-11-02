@@ -1,5 +1,11 @@
 # Changelog
 
+## M32 C What each people brings
+- Dwarves make the smithies and mines of their towns pay more, gnomes the workshops and the arms, halflings the harvest and the inns, and elves heal the sick. The better they think of you, the more they give; wrong them and it stops. Each town's quarter lists what they bring.
+- Dwarven axemen, the sturdiest foot in the North, can be raised where enough dwarves live and like the crown.
+- The bank is dwarven: treat the dwarves well and it lends cheaper and more.
+- At war, a people that loves the crown may send volunteers.
+
 ## M32 B The non-human quarters
 - Gnomes now live in Temeria (Vizima, Carreras and a few more), with their own view of the crown.
 - Towns with enough dwarves, elves, halflings or gnomes have a quarter on the People tab: how it regards the crown, how it gets on with its neighbours, and the chance of a pogrom this month with everything pushing it up or down.

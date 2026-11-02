@@ -17,6 +17,7 @@ import { placeMuster } from './companies.js';
 import { bookEffect } from './book.js';
 import { faithLevel } from './faiths.js';
 import { localStrength } from './military.js';
+import { peopleCompanyCheck, elvenArchers } from './peoples.js';
 
 const F = (world) => world.forces;
 const say = (state, text) => addDispatch(state, text, 'military');
@@ -86,9 +87,12 @@ export function canRecruit(state, world, id, type) {
     if (faithLevel(state, world, t.faith.faith) < t.faith.level) return { ok: false, reason: `Needs ${fa?.name ?? t.faith.faith} at level ${t.faith.level}.`, hidden: true };
     if ((s.faith?.[t.faith.faith] ?? 0) < t.faith.share) return { ok: false, reason: `Too few of ${fa?.short ?? t.faith.faith}'s faithful here.` };
   }
+  // Dwarven axemen (M32 C) need dwarves and their goodwill.
+  const folk = peopleCompanyCheck(state, world, id, t);
+  if (!folk.ok) return folk;
   const here = state.forces.companies.filter((c) => c.station === id).length;
   if (here >= companySlots(state, world, id)) return { ok: false, reason: `Room for ${companySlots(state, world, id)} compan${companySlots(state, world, id) === 1 ? 'y' : 'ies'} here; barracks allow more.` };
-  if ((s.population.human ?? 0) < t.men * 4) return { ok: false, reason: 'Too few people here to spare the men.' };
+  if (!t.people && (s.population.human ?? 0) < t.men * 4) return { ok: false, reason: 'Too few people here to spare the men.' };
   const cost = recruitCost(state, world, id, type);
   if (type === 'knights' && cost.short.horses > 0) return { ok: false, reason: `Needs ${t.horses} horses from the crown's studs (${round(state.forces.stores.horses)} in hand).` };
   if (state.treasury - cost.coin < -creditLimit(state, world)) return { ok: false, reason: 'The bankers will not lend that much.' };
@@ -112,12 +116,16 @@ export function recruit(state, world, id, type) {
   if (t.unrest) s.unrest = Math.min(100, s.unrest + t.unrest);
   state.forces.stores.arms -= cost.arms;
   state.forces.stores.horses -= cost.horses;
-  s.population.human -= t.men;
+  const folk = t.people?.people ?? 'human';
+  s.population[folk] -= t.men;
   const p = world.byId[id];
+  const bonus = type === 'archers' ? elvenArchers(state, world, id) : 0;
   const c = {
     id: state.forces.nextId++, type, name: companyName(state, world, id, type), home: id, station: id,
     men: t.men, max: t.men, wounded: 0, morale: F(world).morale.start, xp: s.buildings.includes('barracks') ? F(world).barracksXp : 0,
     order: { kind: 'station' }, task: null, x: p.x, y: p.y, node: id, way: [], army: null, wins: 0, fought: -1, routed: 0,
+    ...(folk !== 'human' ? { people: folk } : {}),
+    ...(bonus ? { bonus } : {}),
   };
   state.forces.companies.push(c);
   say(state, `${c.name} mustered at ${p.name}: ${t.men} ${t.plural}, for ${cost.coin} crowns${cost.short.arms ? ' (arms bought abroad, dear)' : ''}.`);
@@ -126,7 +134,8 @@ export function recruit(state, world, id, type) {
 
 export function disbandCompany(state, world, c) {
   const s = state.settlements[c.station];
-  if (s && !s.occupier) s.population.human += round(c.men + (c.wounded ?? 0));
+  // Each goes home to its own people (M32 C).
+  if (s && !s.occupier) s.population[c.people ?? 'human'] = (s.population[c.people ?? 'human'] ?? 0) + round(c.men + (c.wounded ?? 0));
   state.forces.companies = state.forces.companies.filter((x) => x !== c);
   say(state, `${c.name} is stood down; ${round(c.men)} men go home.`);
 }

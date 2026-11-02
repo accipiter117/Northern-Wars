@@ -229,7 +229,8 @@ export function industryLedger(state, world, income, put, season) {
     const w = i.workers[b];
     for (const id of withBuilding(state, b)) {
       const s = state.settlements[id];
-      let qty = w.amount * prosperityMult(world, s) * wf(id, b);
+      // Gnome smiths (M32 C) make finer blades, and more of them.
+      let qty = w.amount * prosperityMult(world, s) * wf(id, b) * (w.good === 'arms' ? 1 + (s.gifts?.arms ?? 0) : 1);
       for (const [k, per] of Object.entries(w.uses)) {
         const have = pool[k] ? pool[k].reduce((a, e) => a + e.qty, 0)
           : k === 'grain' ? availableGrain(state, world, season) : stockOf(state, id, k);
@@ -326,7 +327,7 @@ export function industryLedger(state, world, income, put, season) {
 
   // Silver, tolls, rents, donations and contracts.
   for (const id of withBuilding(state, 'silvermine')) {
-    const v = i.silver.amount * share(id) * wf(id, 'silvermine') * (1 + bookEffect(state, world, 'mines'));
+    const v = i.silver.amount * share(id) * wf(id, 'silvermine') * (1 + bookEffect(state, world, 'mines')) * (1 + (state.settlements[id]?.gifts?.mines ?? 0));
     income.silver += v;
     put(id, v);
   }

@@ -45,7 +45,8 @@ export function troopOf(world, type) {
 export function companyStrength(world, c, foe, ground = 'open', walls = false) {
   const f = F(world);
   const t = troopOf(world, c.type);
-  let v = c.men * t.perMan * (0.5 + c.morale / 100) * (1 + (c.xp ?? 0) * f.xp.bonus) * (f.suits[foe]?.[c.type] ?? 1);
+  // An elven-trained company (M32 C) carries its bonus.
+  let v = c.men * t.perMan * (0.5 + c.morale / 100) * (1 + (c.xp ?? 0) * f.xp.bonus) * (f.suits[foe]?.[c.type] ?? 1) * (1 + (c.bonus ?? 0));
   if (t.horses) v *= f.ground.mounted[ground] ?? 1;
   // Behind walls every company fights better (M21), crossbows best of all.
   if (walls) v *= t.walls ?? f.wallsBonus ?? 1;

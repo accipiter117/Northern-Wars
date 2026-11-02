@@ -633,6 +633,11 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### What each people brings (M32 C)
+- At the start (every people at 50) the gifts are half size: Carreras' smithing +15% and mines +10%, Vizima's smithing +7%, Old Bottoms' harvest +5%, Flotsam's plague deaths -20%.
+- The peace test's months (seeds 1 to 3, year 3): the steward clears 2,357 to 2,377 a month (2,140 to 2,216 after Part B) and the careless crown 1,511 to 1,566; the gap is back to 798 to 846, since the steward's charter and good name keep the non-humans' goodwill and with it their work, and the peace test asks for 700 again.
+- The Vivaldi bank: at dwarven opinion 80 a loan's interest (and the overdraft's) is 30% lower than at 50; at 20, 30% higher.
+
 ### The non-human quarters (M32 B)
 - Tension is now the sum of the lines on the quarter's card. The new calming lines (a garrison, prosperity, Lebioda's and Melitele's faithful) took about 10 points off the average town, so old grudges rose from 15 to 23: the average target over the first year is 25 against 23.5 before, and a calm reign stays calm.
 - Ten years, seeds 1 to 3 together, before and after:

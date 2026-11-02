@@ -3,6 +3,7 @@
 // taxes by estate, loans from the bank, and what war brings in.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { bankRate } from '../../src/sim/peoples.js';
 import {
   createState, step, applyAction, serialize, deserialize, MARKET_GOODS, marketGoodOf, partnerTrade, homePrice, exportPrice, importPrice,
   estateTaxPreview, enactment, owedOnLoans, ledgerNet, dateOf, MONTHS,
@@ -147,11 +148,13 @@ test('each estate pays as the Treasury says under its setting, and heavier taxes
 test('a loan comes at once and is repaid with interest; a missed payment costs more and costs Love', () => {
   let s = run(quiet(createState(world, 6)), 62);
   const t0 = s.treasury;
+  // The bank's rate follows the dwarves' goodwill (M32 C).
+  const rate = world.economy.loans.rate * bankRate(s, world);
   s = act(s, { type: 'loan', sum: 5000 });
   assert.equal(s.treasury, t0 + 5000);
   const loan = s.loans[0];
   const c = world.economy.loans;
-  assert.equal(loan.payment, Math.round((5000 * (1 + c.rate * c.months)) / c.months));
+  assert.equal(loan.payment, Math.round((5000 * (1 + rate * c.months)) / c.months));
   assert.ok(loan.payment * c.months > 5000, 'interest is paid');
   // The cap: more than six months of income is refused.
   assert.match(applyAction(s, world, { type: 'loan', sum: 10000 }).error ?? applyAction(act(s, { type: 'loan', sum: 10000 }), world, { type: 'loan', sum: 10000 }).error, /will not have us owe/);
@@ -165,7 +168,7 @@ test('a loan comes at once and is repaid with interest; a missed payment costs m
   const owed = owedOnLoans(s);
   s = toMonth(s);
   assert.equal(s.loans[0].missed, 1);
-  assert.ok(s.loans[0].rate > c.rate);
+  assert.ok(s.loans[0].rate > rate);
   assert.ok(owedOnLoans(s) > owed, 'the bank adds the missed payment and more');
   assert.ok(s.love < auth + 1);
   assert.ok(s.chronicle.some((d) => /misses a payment/.test(d.text)));

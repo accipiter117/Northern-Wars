@@ -58,6 +58,26 @@
       "armsCoin": 8,
       "blurb": "Mail, shield and sword. The backbone of any force; needs arms from the smithies."
     },
+    "dwarves": {
+      "name": "Dwarven axemen",
+      "plural": "dwarves",
+      "men": 80,
+      "perMan": 1.9,
+      "upkeep": 0.5,
+      "coin": 450,
+      "speed": 0.85,
+      "places": [
+        "village",
+        "town",
+        "city",
+        "castle"
+      ],
+      "arms": 10,
+      "armsCoin": 8,
+      "walls": 1.3,
+      "people": { "people": "dwarf", "min": 200, "opinion": 60, "mahakamOpinion": 45 },
+      "blurb": "Short, broad and stubborn: dwarves of the crown's own towns in mail and with axes, the sturdiest foot in the North. Only where enough dwarves live and think well of the crown (or Mahakam stands with us)."
+    },
     "crossbows": {
       "name": "Crossbowmen",
       "plural": "crossbowmen",
@@ -115,6 +135,7 @@
   },
   "suits": {
     "bandits": {
+      "dwarves": 1.15,
       "militia": 0.9,
       "archers": 1.0,
       "menatarms": 1.1,
@@ -123,9 +144,10 @@
       "knights": 1.1,
       "garrison": 1
     },
-    "monsters": { "militia": 1.0, "archers": 1.2, "menatarms": 1.1, "crossbows": 1.1, "lightcav": 0.9, "knights": 0.9, "garrison": 1.0 },
-    "supernatural": { "zealots": 0.1, "militia": 0.04, "archers": 0.06, "menatarms": 0.3, "crossbows": 0.08, "lightcav": 0.05, "knights": 0.3, "garrison": 0.04 },
+    "monsters": { "dwarves": 1.2, "militia": 1.0, "archers": 1.2, "menatarms": 1.1, "crossbows": 1.1, "lightcav": 0.9, "knights": 0.9, "garrison": 1.0 },
+    "supernatural": { "dwarves": 0.35, "zealots": 0.1, "militia": 0.04, "archers": 0.06, "menatarms": 0.3, "crossbows": 0.08, "lightcav": 0.05, "knights": 0.3, "garrison": 0.04 },
     "scoiatael": {
+      "dwarves": 1.05,
       "militia": 0.8,
       "archers": 1.15,
       "menatarms": 1.0,
@@ -134,7 +156,7 @@
       "knights": 0.7,
       "garrison": 0.9
     },
-    "soldiers": { "zealots": 0.9,
+    "soldiers": { "dwarves": 1.2, "zealots": 0.9,
       "militia": 1.1,
       "archers": 0.95,
       "menatarms": 1.15,

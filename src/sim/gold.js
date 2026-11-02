@@ -67,7 +67,7 @@ export function goldLedger(state, world, income, put = () => {}) {
     const thin = G(world).deposits[id].gold * G(world).taper;
     if (before >= thin && state.gold.deposits[id].remaining < thin) say(state, `${G(world).deposits[id].name} at ${world.byId[settlement].name} is running thin: the miners chase narrower veins, and it pays less each month now.`);
     // Royal mines (M26): the crown's overseers take more of what is dug.
-    const take = y * crownShare(state, world, state.settlements[settlement]) * (1 + bookEffect(state, world, 'mines'));
+    const take = y * crownShare(state, world, state.settlements[settlement]) * (1 + bookEffect(state, world, 'mines')) * (1 + (state.settlements[settlement]?.gifts?.mines ?? 0));
     income.gold += take;
     put(settlement, take);
     if (state.gold.deposits[id].remaining < 1) {

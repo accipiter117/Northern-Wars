@@ -4,7 +4,7 @@
 // settings with what each would yield, and loans from the bank.
 import {
   MARKET_GOODS, partnerTrade, canTrade, dealPreview, homePrice, homeSalePrice, exportPrice, balanceLine,
-  estateTaxPreview, enactment, canDecree, loanTerms, canBorrow, canPayOff, payOffCost, owedOnLoans, loanCap, sideName, hostile, TEMERIA,
+  estateTaxPreview, enactment, canDecree, loanTerms, canBorrow, canPayOff, payOffCost, owedOnLoans, loanCap, sideName, hostile, TEMERIA, bankRate,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { orderAttr, button } from './card.js';
@@ -165,6 +165,16 @@ export function taxesHtml(app) {
     ${loansHtml(app)}`;
 }
 
+// The bank is dwarven (M32 C): its terms follow how the dwarves are treated.
+function bankLine(state, world) {
+  const r = bankRate(state, world);
+  const op = Math.round(state.opinion?.dwarf ?? 50);
+  if (Math.abs(r - 1) < 0.05) return `The bank's owners are dwarves; their kin think neither well nor ill of the crown (${op}), so its terms are the usual ones.`;
+  return r < 1
+    ? `The bank's owners are dwarves, and their kin think well of the crown (${op}): interest ${Math.round((1 - r) * 100)}% lower, and more to lend.`
+    : `The bank's owners are dwarves, and their kin resent the crown (${op}): interest ${Math.round((r - 1) * 100)}% higher, and less to lend.`;
+}
+
 function loansHtml(app) {
   const { world, state } = app;
   const c = world.economy.loans;
@@ -185,6 +195,7 @@ function loansHtml(app) {
   }).join('');
   return `<div data-part="loans"><h3>Loans from ${escapeHtml(c.lender)}</h3>
     <p class="sub">Owed on loans: ${number(owed)} of the ${number(cap)} the bank allows (six months of income). A missed payment raises the rate and costs the folk's Love.</p>
+    <p class="sub" data-part="bank-dwarves">${escapeHtml(bankLine(state, world))}</p>
     ${loans}<div class="actions">${offers}</div></div>`;
 }
 
