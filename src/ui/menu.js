@@ -49,7 +49,9 @@ export const EXPENSES = [
   ['interest', 'Interest to the bankers'],
   ['loans', 'Loan payments'],
 ];
-const ALWAYS = new Set(['taxes', 'trade', 'garrisons', 'upkeep', 'court', 'interest']);
+// Lines shown even at 0: the realm's own taxes and its standing costs (M34 A
+// hides interest, trade and the rest until they are earned or owed).
+const ALWAYS = new Set(['taxes', 'garrisons', 'upkeep', 'court']);
 
 // The one ledger (M21, regrouped in M24 C): every money line folded into
 // five groups, Taxes, Trade and sales, Crafts and goods, War and Other, so

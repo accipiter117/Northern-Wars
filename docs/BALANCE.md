@@ -620,6 +620,13 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
 | Peace | war.json `peace.acceptMargin`, `prizeAt`, `cityPrizeAt` | 10; a prize at 45, a city only at 90 | Wars end sooner, and cost less land |
 | Armies' pay | war.json `raise.fieldPayPerSoldier`, `companyCoin`, `companyMonthly` | 0.15 a man a month; 250 and 60 a company | War drains the treasury faster |
 
+### The great tidying (M34)
+- **Part A.** `node tools/audit.mjs 1 1` and `10 1` (the steward crown):
+  - Before: in a year repairs held 489 hands and levies 811 with nothing to do while the fields were 41 short; now those 1,300 hands are on call and the fields, fishing and mines are fully manned in the first months (fields 7,719 of 7,719, fishing 702 of 702, mines 1,193 of 1,193 in month two of seed 1).
+  - Gold over ten years once reopened: 51,992 crowns (117 months of the 120 earning); two seams worked out, three nearly so. An untended crown still earns nothing until it reopens one, but the card now says so.
+  - Stone ranges 346 to 839 over ten years (the reserve kept for repairs once the rest is sold); timber 409 to 1,225; iron 62 to 610.
+  - Lines always 0 for the steward over ten years: embassies, gifts, interest, occupation, routes, spies, tribute (paid and received), conquests and contracts, all filled only by the crown's own choices, and now hidden until then.
+
 ### Five more faiths (M32 A)
 - At the start the realm's Devotion runs: the Fire 18, Melitele 29, the Old Ways 13, Lebioda 6, Kreve 4, the Great Sun 1, Freya 0. Five untended years later (seed 1): the Fire 19, Melitele 28, the Old Ways 12, Lebioda 5, Kreve 4, the Great Sun 2, Freya 0; the Sun's share of Vizima has grown from 1 to 3 as the Empire's network in Temeria passed 60. Abroad, Sodden (the Empire's vassal) leans 23 to the Sun, Cintra 12, Toussaint 39.
 - The new faiths start low: reaching a power at level 3 (Devotion 60) takes the crown's patronage (Faith of the crown, temples, preachers, festivals), as the old three do.

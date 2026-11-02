@@ -8,7 +8,7 @@ import { distanceToPolygon } from './geometry.js';
 import { crownShare } from './houses.js';
 import { creditLimit } from './economy.js';
 import { bookEffect } from './book.js';
-import { worksFactor } from './works.js';
+import { worksFactor, condOf, repairOptions } from './works.js';
 
 const G = (world) => world.gold;
 const say = (state, text) => addDispatch(state, text, 'treasury');
@@ -172,4 +172,23 @@ export function stepGoldDay(state, world, rng) {
       say(state, `The prospectors above ${name} found nothing but fool's gold and frostbite.`);
     }
   }
+}
+
+// Old workings the crown knows of that lie flooded or ruined (M34 A): what
+// reopening each would cost, how long it takes, and about what it would pay
+// a month once working.
+export function closedSeams(state, world) {
+  const out = [];
+  for (const [id, d] of Object.entries(G(world)?.deposits ?? {})) {
+    const s = state.settlements[d.settlement];
+    const left = state.gold?.deposits[id];
+    if (!s || s.occupier || !s.buildings.includes('goldmine') || !left?.known || left.remaining <= 0) continue;
+    if (s.repair?.goldmine || condOf(s, 'goldmine') >= 50) continue;
+    const o = repairOptions(state, world, d.settlement, 'goldmine').rebuild;
+    const g = G(world);
+    const frac = left.remaining / g.deposits[id].gold;
+    const monthly = g.yield * Math.max(g.minShare, Math.min(1, frac / g.taper)) * crownShare(state, world, s) * (1 + bookEffect(state, world, 'mines'));
+    out.push({ id, name: d.name, settlement: d.settlement, coin: o.coin, days: o.days, monthly: Math.round(monthly / 10) * 10 });
+  }
+  return out;
 }

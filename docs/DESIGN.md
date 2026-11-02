@@ -151,6 +151,16 @@ Code in src/sim/blocs.js; numbers in data/diplomacy.json (`blocs`).
 - Scoia'tael sympathy: 20 + 1.2 per point the elves' opinion falls below 50, plus 15 per pogrom. Above 60, ambushes near forests and Brokilon.
 - Petitions (data/petitions.json) reuse the envoy card: a preacher, a hospice, a grove, a walled quarter, elf youths, a pilgrim escort, a dwarven forge.
 
+### The great tidying (M34)
+No new systems: what does nothing is fixed, what is hidden is surfaced, what is duplicated is merged.
+
+**Part A, dead and broken mechanics.**
+- **Gold.** The known seams start as flooded workings (condition 0), so nothing yields until the crown reopens them. `closedSeams` (gold.js) lists each known seam with its cost, time and about what it would pay a month. The Realm tab's Needs attention names the two richest ("Old workings at Carreras could be reopened: about 1,050 crowns, two months, then about 220 crowns a month") with one tap to reopen, and counts the rest; the standing repair order puts flooded seams on the month's card of dear repairs; the Mines and industry screen (and each town card's Gold) lists every known seam as working, being reopened, flooded with the same one-tap order, or worked out. A reopened mine is manned from the mines share and yields as `goldYield` says; prospecting is unchanged.
+- **Hands on call.** The repairs share beyond the crews now mending (160 hands a repair), and the levies while the crown is at peace, work where hands are short (fields, fishing, mines, crafts, in that order) until they are wanted. The repair crews and the garrisons still count them as theirs. The Labour screen shows them as on call, a band of their own on the hands bar, and each slider says what they are doing.
+- **Stone** is not dead: quarries make it, repairs use it, and the steward sells what is spare as timber and stone. What looked like stone stuck at 750 is the reserve kept for repairs (50 in each of 15 towns) once the surplus is sold.
+- **Lines always at 0** over ten years of the steward (embassies, gifts, interest, occupation, spies, tribute paid and received, conquests, contracts, routes) are all lines the crown's own choices fill; the ledger shows only taxes, garrisons, upkeep and the court at 0 and hides the rest until they are earned or owed (interest and trade among them).
+- `node tools/audit.mjs [years] [seed]` runs a reign with the steward and prints every income and expense line, output, stock and labour kind with how often it changed anything.
+
 ### Five more faiths (M32 A)
 - The Great Sun, Kreve, Lebioda and Freya join the Eternal Fire, Melitele and the Old Ways on the M26 model (data/devotion.json): Devotion 0 to 100 in five levels, five perks each, a power at level 3, the same acts to develop them (endow, preachers, festival, pilgrimage, church land), and the Book's Faith of the crown can name any of them.
   - **The Great Sun**, Nilfgaard's creed: order in the towns (Unrest -3), obedient taxpayers (tax +5%), cheaper garrisons, Fear, stronger garrisons. Power: Imperial order (250 crowns, every 120 days): the most troubled town's Unrest -20, Fear +2. It clashes with the Fire.

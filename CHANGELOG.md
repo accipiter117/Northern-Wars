@@ -1,5 +1,10 @@
 # Changelog
 
+## M34 A The great tidying: what did nothing
+- The old gold workings now show up under Needs attention with their cost and what they would earn: one tap reopens them. The Mines screen lists every seam and what it is doing.
+- Masons and levies with nothing to do now help in the fields, the fishing boats and the mines until they are wanted. The Labour screen shows them as on call.
+- The ledger hides lines that are 0 until they earn or cost something.
+
 ## M32 A Five more faiths
 - The Great Sun, Kreve, Lebioda and Freya join the realm's faiths, each with its own perks and a power: imperial order, an oath of arms, alms for the poor, Freya's blessing. Any of them can be the crown's faith.
 - The Great Sun creeps north with the Empire's agents and armies. Lebioda's faithful turn away from a crown at war.

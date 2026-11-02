@@ -879,3 +879,6 @@ ul.orders li .chip { flex: none; }
 .spy-key li b { display: inline-block; min-width: 2em; color: var(--gold); }
 .spy-key summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
 .spy-net[data-go] { cursor: pointer; }
+.hands-bar .seg.oncall { background: repeating-linear-gradient(90deg, rgba(216, 180, 90, 0.55) 0 3px, rgba(216, 180, 90, 0.25) 3px 6px); }
+.sw.oncall { background: repeating-linear-gradient(90deg, rgba(216, 180, 90, 0.7) 0 2px, rgba(216, 180, 90, 0.3) 2px 4px); border: 1px solid var(--line); }
+.oncall-t { color: #d8b45a; }
