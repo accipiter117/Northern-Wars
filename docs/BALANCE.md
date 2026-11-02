@@ -643,6 +643,8 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
 | Steward | 0 (was 0) | 0 (was 0) | 31 (was 43) |
 | Tyrant | 70 (was 48) | 282 (was 186) | 99 (was 97) |
 
+- The peace test's months (seeds 1 to 3, year 3): the steward clears 2,140 to 2,216 a month (was 2,337 to 2,355) and the careless crown 1,438 to 1,492 (was 1,361 to 1,520). The quarters' five dilemmas all come up within three years and crowd out some the steward answers well (lords' loyalty averages 74 rather than 78), so the gap between them narrowed from 840 to 980 to 650 to 780; the test now asks for 500.
+- A terrain cache that leaked between reigns in one process (groundAt kept the first point's answer for its whole cell) is fixed; with it the careless crown's months no longer depend on what ran before.
 - The harsh crown pays more, as the brief asks: the inquisition (+6), the Scoia'tael strikes its harshness provokes (+12 in the towns near each) and the refugees of its wars now stir the towns, and the risk starts at 60 rather than a flat half chance past 72. Each pogrom now empties most of a quarter, so the same towns rarely burn twice in a row. Part E's thirty-year runs set the final numbers.
 
 ### Five more faiths (M32 A)
