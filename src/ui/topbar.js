@@ -1,3 +1,4 @@
+import { readyCount } from './hand.js';
 import {
   formatDate, seasonOf, SEASON_NAMES, realmStock, foodNeed, foodYield, foodCapacity, pressureLine, dateOf, MONTHS, ORDERS_A_MONTH, ledgerNet, authority,
 } from '../sim/index.js';
@@ -54,6 +55,9 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
   let board = false;
   const speedButtons = [...document.querySelectorAll('[data-speed]')];
   for (const b of speedButtons) b.addEventListener('click', () => onSpeed(Number(b.dataset.speed)));
+  // The Crown's hand (M34 B): its sceptre, and how many acts are ready.
+  const hand = $('hand-button');
+  if (hand) hand.querySelector('.hb-ico').innerHTML = icon('sceptre');
   const more = $('more-button');
   more.innerHTML = icon('more');
   more.addEventListener('click', onMore);
@@ -68,7 +72,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
   let swallow = false;
   let tipTimer = 0;
   const hideTip = () => { tip.hidden = true; };
-  for (const b of document.querySelectorAll('#topbar .good, #topbar .meter')) {
+  for (const b of document.querySelectorAll('#topbar .good, #topbar .meter, #topbar .hand-button')) {
     b.title = b.dataset.name;
     b.addEventListener('pointerdown', () => {
       clearTimeout(held);
@@ -115,6 +119,14 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
       const key = `${state.day}|${state.treasury}|${Math.round(food)}|${meterKey}|${board}|${orders}|${split}|${net}`;
       if (key === last) return;
       last = key;
+      // How many of the crown's acts are ready (M34 B).
+      const count = $('hand-count');
+      if (count) {
+        const n = readyCount({ state, world });
+        count.hidden = n === 0;
+        count.textContent = String(n);
+        $('hand-button')?.classList.toggle('has-ready', n > 0);
+      }
       const d = dateOf(state.day);
       $('topbar')?.classList.toggle('on-board', board);
       el.pressure?.classList.toggle('on-board', board);

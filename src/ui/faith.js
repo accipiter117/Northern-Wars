@@ -116,7 +116,7 @@ function oneFaith(app, id) {
 // The town an act would be done in: where the faith is strongest (a temple,
 // a power), or second strongest (preachers, to spread it), or where the
 // trouble is (a purge, a druids' circle, a healers' march).
-function townFor(app, kind, id) {
+export function townFor(app, kind, id) {
   const { world, state } = app;
   const towns = Object.keys(state.settlements).filter((x) => !state.settlements[x].occupier);
   if (['purge', 'circle', 'healers'].includes(kind)) return towns.find((x) => canFaithAct(state, world, kind, id, x).ok) ?? null;
