@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M33 Dawn of the Reign | A: the city quests; B: the five paths; C: the Road to War and the trigger; D: balance and the opening | In progress (A to C done) |
+| M33 Dawn of the Reign | A: the city quests; B: the five paths; C: the Road to War and the trigger; D: balance and the opening | Done |
 | M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | Done |
 | M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | Done |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
@@ -71,6 +71,11 @@ Part B, the five paths:
 Part C, the Road to War:
 - A Road to War tracker in the Court tab with five boxes (Foltest's path, Emhyr's path, the Empire's network in Cintra, a pretext, the year 1263), each with its status and what moves it; the war cannot begin until all five are ticked.
 - Then the First Northern War begins of itself: the Empire invades Cintra, Skellige stands with her, Sodden and Brugge are drawn in, the Call of the North goes out (the crown decides; the other crowns rally late or stand aside at a cost), and the Nilfgaard clock takes over. The chronicle and the Call mark the end of the Dawn.
+
+Part D, balance and the opening:
+- The opening months are an introduction: small, safe early quests, no new threats near Vizima in the first year, and the Dawn screen and Needs attention always saying what to do next.
+- The Dawn lasts one to three years for a steady player; the war never starts before 1263. Thirty-year runs at three path speeds (`tools/dawn.mjs`): the war starts only after all boxes, a slow crown faces a larger imperial host, and the coalition forms in most runs.
+- An existing reign skips the Dawn with every box but Emhyr's path and the pretext ticked. Tests cover each quest chain, path step, box, the trigger and its wars and calls.
 
 ## M32 acceptance criteria
 Part A, five more faiths:

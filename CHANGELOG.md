@@ -1,5 +1,10 @@
 # Changelog
 
+## M33 D Balance and the opening
+- A new reign is gentler: no new bandit camps or lairs spring up near Vizima in the first year, and the Realm's overview always names the Dawn's next step.
+- The longer the war is held back after the Emperor is ready, the larger his host on the Yaruga. The North's kings now rally to the Call as they should once the war has begun.
+- Your current reign moves straight to the Road to War: only the Emperor's path and a pretext stand between it and the war.
+
 ## M33 C The Road to War
 - The Dawn screen now shows the Road to War: five boxes that must all be ticked before Nilfgaard crosses the Yaruga (your path, the Emperor's path, his spies in Cintra, a pretext, and the year 1263). Your own spies in Cintra can slow his.
 - When the last is ticked the First Northern War begins: Cintra is invaded, Skellige, Sodden and Brugge are drawn in, and the Call of the North comes to your court. Join, or stand aside and be remembered for it. The other kings rally late, in time for Sodden.
