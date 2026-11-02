@@ -633,6 +633,27 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### The Road to War and the opening (M33 C and D)
+- From `node tools/dawn.mjs 30 1,2,3`: Foltest's path finished at month 12 (fast), 24 (middling) or 48 (slow), then thirty years untended.
+
+| Speed | Seed | War begins (month, year) | Imperial host at war's start | Crowns rallied/aside | Temeria |
+| --- | --- | --- | --- | --- | --- |
+| Fast | 1 | 29, 1264 | 17,620 | 3/0 | joined |
+| Fast | 2 | 26, 1264 | 20,100 | 3/0 | joined |
+| Fast | 3 | 38, 1265 | 15,340 | 3/0 | joined |
+| Middling | 1 | 35, 1265 | 21,402 | 3/0 | joined |
+| Middling | 2 | 38, 1265 | 22,051 | 2/1 | joined |
+| Middling | 3 | 25, 1264 | 16,803 | 3/0 | joined |
+| Slow | 1 | 49, 1266 | 15,220 | 1/2 | joined |
+| Slow | 2 | 49, 1266 | 15,389 | 2/1 | joined |
+| Slow | 3 | 49, 1266 | 15,992 | 3/0 | joined |
+
+  - The war never starts before 1263, nor before all five boxes are ticked. A fast crown is held by Emhyr's own path and the pretext (two to three years in); a slow crown is the last box, and the war follows within a month of it.
+  - The coalition forms in most runs (23 of 27 calls answered; 4 crowns stood aside and paid for it in trust).
+  - **An honest note on the slow crown.** The Emperor's host gains 300 men a month once his path is done and the war is held back (`road.massed`). By the war's first day a slow crown has let him mass 3,600 to 8,700 men (seeds 2, 1, 3) against 300 to 1,800 for a fast one and 600 to 1,500 for a middling one. The count in the table (his standing army plus field armies that day) does not show it: while he waits he spends men in his other wars, and the masses bleed away there. So far the real cost of dawdling is the smaller prizes the Empire takes while it waits, and the crowns that tire of waiting (3 of 9 slow calls went unanswered, against 1 of 18 otherwise), not a bigger first wave. If play shows the slow road is too easy, keep the massed men out of other wars or raise `hostPerMonth`.
+  - The opening shelter: in the Dawn's first `opening.days` (365) no threat spawns within `opening.reach` (220) of the capital, so the first year is for the Dawn's own work.
+  - **Dials** (`war.json` `clock.road`): `agents` (70), `year` (1263), `slowFrom` (30) and `slowPer` (0.05, how much the crown's own Cintra network slows the Empire's each month), `pretext` (0.25 a month), `hostPerMonth` (300), `rally` (days late: Redania 150, Kaedwen 180, Aedirn 120), `rallyChance` (0.85), `asideTrust` (25) and `asideFear` (15).
+
 ### The five paths (M33 B)
 - In a plain run of seed 1 the rivals had taken one or two steps each after two years (Redania 1 of 4, Kaedwen 2 of 4, Aedirn 2 of 3, the Empire 2 of 4). Emhyr's four steps take about two and a half years on average (four to six months' wait each, then 25 to 30% a month); Part D tunes the pace against the Road to War.
 - What the steps add is large on purpose: Kaedwen's army +8,000 in all, the Empire's host +8,000 and its treasury +12,000, Redania's networks +25 everywhere. A crown that dawdles meets them stronger.

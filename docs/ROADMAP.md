@@ -74,7 +74,7 @@ Part C, the Road to War:
 
 Part D, balance and the opening:
 - The opening months are an introduction: small, safe early quests, no new threats near Vizima in the first year, and the Dawn screen and Needs attention always saying what to do next.
-- The Dawn lasts one to three years for a steady player; the war never starts before 1263. Thirty-year runs at three path speeds (`tools/dawn.mjs`): the war starts only after all boxes, a slow crown faces a larger imperial host, and the coalition forms in most runs.
+- The Dawn lasts one to three years for a steady player; the war never starts before 1263. Thirty-year runs at three path speeds (`tools/dawn.mjs`): the war starts only after all boxes, a slow crown lets the Emperor mass more men (though he spends many in other wars before the day; see BALANCE), and the coalition forms in most runs.
 - An existing reign skips the Dawn with every box but Emhyr's path and the pretext ticked. Tests cover each quest chain, path step, box, the trigger and its wars and calls.
 
 ## M32 acceptance criteria

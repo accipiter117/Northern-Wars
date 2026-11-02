@@ -26,7 +26,7 @@ const host = (s) => Math.round((s.realms.nilfgaard?.army ?? 0) + (s.armies ?? []
 
 export function run(world, at, years, seed) {
   let s = createState(world, seed);
-  const out = { warMonth: null, warYear: null, host: null, boxesAtWar: null, rallied: 0, aside: 0, temeria: null };
+  const out = { warMonth: null, warYear: null, host: null, massed: null, boxesAtWar: null, rallied: 0, aside: 0, temeria: null };
   for (let m = 0; m < years * 12; m++) {
     if (m >= at) finishPath(s);
     s = crowns.steward(s, m, true);
@@ -35,6 +35,7 @@ export function run(world, at, years, seed) {
       out.warMonth = m + 1;
       out.warYear = dateOf(s.road.began).year;
       out.host = host(s);
+      out.massed = s.road.massed ?? 0;
     }
   }
   const calls = Object.entries(s.road?.calls ?? {}).filter(([r]) => r !== 'temeria');
@@ -48,11 +49,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const years = Number(process.argv[2] ?? 30);
   const seeds = Number(process.argv[3] ?? 3);
   console.log(`${years} years, seeds 1 to ${seeds}. Path finished at month: fast 12, middling 24, slow 48.`);
-  console.log('speed     seed  war (month, year)  imperial host  crowns rallied/aside  Temeria');
+  console.log('speed     seed  war (month, year)  imperial host  massed  crowns rallied/aside  Temeria');
   for (const [name, at] of Object.entries(SPEEDS)) {
     for (let seed = 1; seed <= seeds; seed++) {
       const r = run(world, at, years, seed);
-      console.log(`${name.padEnd(9)} ${String(seed).padStart(4)}  ${r.warMonth === null ? 'none'.padEnd(17) : `${r.warMonth}, ${r.warYear}`.padEnd(17)}  ${String(r.host ?? '-').padStart(13)}  ${`${r.rallied}/${r.aside}`.padStart(20)}  ${r.temeria ?? '-'}`);
+      console.log(`${name.padEnd(9)} ${String(seed).padStart(4)}  ${r.warMonth === null ? 'none'.padEnd(17) : `${r.warMonth}, ${r.warYear}`.padEnd(17)}  ${String(r.host ?? '-').padStart(13)}  ${String(r.massed ?? '-').padStart(6)}  ${`${r.rallied}/${r.aside}`.padStart(20)}  ${r.temeria ?? '-'}`);
     }
   }
 }
