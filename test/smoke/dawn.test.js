@@ -45,6 +45,7 @@ test('the Dawn screen: places, quests, the next step and a tap through', async (
   await page.screenshot({ path: join(OUT, 'portrait-dawn.png') });
   // A quest in progress: the lake marshes, with its drowners still there.
   const marsh = page.locator('[data-dawn-place="vizima"] [data-dawn-chain="marsh"]');
+  assert.equal(await page.locator('[data-dawn-place="maribor"] details[open]').count(), 0, 'only the next step\'s place is open');
   assert.match(await marsh.textContent(), /Drowners[\s\S]*Still there[\s\S]*Pays 250 crowns[\s\S]*Go to Threats/);
   await marsh.scrollIntoViewIfNeeded();
   await page.waitForTimeout(150);

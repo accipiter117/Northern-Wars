@@ -45,6 +45,11 @@ async function open(prefs = {}) {
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
   // The map's tiles fill in over the first moments; then it rests.
   await page.waitForFunction(() => !window.northernWars.renderer.unfinished(), null, { timeout: 20000 });
+  // The Dawn's court quests (M33 A) wait until after these measurements,
+  // so no decision pauses the realm mid-test.
+  await page.evaluate(() => {
+    for (const p of Object.values(window.northernWars.state.dawn?.places ?? {})) for (const c of Object.values(p.chains)) if (c.wait !== undefined) c.wait += 1000;
+  });
   await page.waitForTimeout(500);
   return { context, page, errors };
 }

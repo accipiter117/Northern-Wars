@@ -29,7 +29,8 @@ function place(s, fields) {
 }
 
 test('threats appear and grow where the country is poor, restless and wild, and not where it is quiet', () => {
-  let rough = quiet(createState(world, 4));
+  // Plain reigns: the Dawn's quest camps (M33 A) are placed, not grown.
+  let rough = quiet(createState(world, 4, { dawn: false }));
   for (const id of ['anchor', 'dorian', 'tegmond', 'acorn_bay', 'napeys', 'vorune']) {
     rough.settlements[id].prosperity = 10;
     rough.settlements[id].unrest = 80;
@@ -51,7 +52,7 @@ test('threats appear and grow where the country is poor, restless and wild, and 
   const later = rough.threats.list.find((x) => x.id === t.id);
   assert.ok(!later || later.men + (later.band?.men ?? 0) > men, 'the camp grew');
   // A quiet, prosperous realm breeds no bandits.
-  let calm = quiet(createState(world, 4));
+  let calm = quiet(createState(world, 4, { dawn: false }));
   for (const st of Object.values(calm.settlements)) {
     st.prosperity = 95;
     st.unrest = 0;
@@ -204,7 +205,8 @@ test('sight and rumour follow the crown\'s eyes', () => {
 });
 
 test('a company standing ready answers a threat sighted near its station, then comes home', () => {
-  let s = quiet(createState(world, 5));
+  // A plain reign: the Dawn's quests (M33 A) send it elsewhere.
+  let s = quiet(createState(world, 5, { dawn: false }));
   s.threats.list = [];
   s = act(s, { type: 'recruit', settlement: 'gors_velen', kind: 'menatarms' });
   s = act(s, { type: 'company', id: 1, order: { kind: 'respond', radius: 150 } });

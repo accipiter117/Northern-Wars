@@ -44,7 +44,8 @@ test('under the standing order the flooded seams wait on the month\'s card of de
 });
 
 test('repair and levy hands with nothing to do are on call where hands are short', () => {
-  let s = createState(world, 1);
+  // Without the Dawn's run-down works (M33 A), which want masons at once.
+  let s = createState(world, 1, { dawn: false });
   s = step(s, 60, world, { ambient: false });
   const r = s.labour.report;
   assert.equal(r.repairs.onCall, r.repairs.hands, 'no masons wanted yet');

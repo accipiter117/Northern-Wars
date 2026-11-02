@@ -4,6 +4,7 @@
 import { dawnView, dawnNext } from '../sim/dawn.js';
 import { rewardLine } from '../sim/dawn.js';
 import { escapeHtml } from './format.js';
+import { section } from './card.js';
 
 // Where a step is done: a town card, or a tab and its sub-screen.
 export function goAttr(where) {
@@ -30,10 +31,12 @@ export function dawnHtml(app) {
     ? '<p class="sub">All five places are in order. The Dawn of the reign is over.</p>'
     : `<p class="sub">${v.finished} of 5 places in order. Set each in order and it returns to full prosperity; all five end the Dawn.</p>`;
   const nextHtml = next ? `<button type="button" class="act primary wide" data-part="dawn-next" ${goAttr(next.where)}><span class="act-label">Next: ${escapeHtml(next.name)} (${escapeHtml(world.byId[next.place].name)})</span><span class="act-sub">${escapeHtml(next.text)}</span></button>` : '';
-  const places = v.places.map((p) => `<div class="dawn-place${p.done ? ' done' : ''}" data-dawn-place="${p.id}">
-      <h3>${escapeHtml(world.byId[p.id].name)} <small>${escapeHtml(p.teaches)}${p.done ? ', in order' : `, ${p.count} of ${p.chains.length}`}</small></h3>
-      ${p.done ? '' : `<p class="sub">${escapeHtml(p.line)}</p>`}
-      <div class="build-list">${p.chains.map((c) => chainHtml(world, c)).join('')}</div></div>`).join('');
+  // Each place in a fold, the one with the next step open, so the screen
+  // stays short.
+  const places = v.places.map((p) => `<div class="dawn-place${p.done ? ' done' : ''}" data-dawn-place="${p.id}">${section(app.memory, 'tab:court', `dawn-${p.id}`,
+    `${world.byId[p.id].name}: ${p.teaches}${p.done ? ', in order' : `, ${p.count} of ${p.chains.length}`}`,
+    `${p.done ? '' : `<p class="sub">${escapeHtml(p.line)}</p>`}<div class="build-list">${p.chains.map((c) => chainHtml(world, c)).join('')}</div>`,
+    { open: next?.place === p.id })}</div>`).join('');
   return `<div data-part="dawn">${head}${nextHtml}${places}</div>`;
 }
 
