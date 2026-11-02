@@ -60,12 +60,14 @@ export const INCOME_GROUPS = [
   ['taxes', 'Taxes', ['taxes', 'trade', 'tithe', 'nobles']],
   ['trade', 'Trade and sales', ['exports', 'foreign', 'routes', 'sales', 'customs', 'tolls']],
   ['crafts', 'Crafts and goods', ['crafts', 'goods', 'gold', 'silver', 'homework', 'rents', 'donations', 'contracts']],
-  ['war', 'War', ['conquests', 'tribute', 'loot', 'ransom', 'reparations', 'requisition', 'payments', 'purses', 'raids']],
+  ['war', 'War and tribute', ['conquests', 'tribute', 'loot', 'ransom', 'reparations', 'requisition', 'payments', 'purses', 'raids']],
 ];
+// Four groups of costs (M34 D); what none claims falls under Other.
 export const EXPENSE_GROUPS = [
-  ['war', 'War', ['garrisons', 'companies', 'patrols', 'armies', 'occupation', 'tribute', 'witchers']],
-  ['crafts', 'Crafts and goods', ['upkeep']],
-  ['trade', 'Trade and sales', ['imports', 'routes']],
+  ['armies', 'Armies', ['armies', 'companies', 'patrols', 'occupation', 'witchers']],
+  ['garrisons', 'Garrisons', ['garrisons']],
+  ['upkeep', 'Upkeep and repairs', ['upkeep', 'routes', 'imports']],
+  ['court', 'Court and gifts', ['court', 'edicts', 'gifts', 'embassies', 'spies', 'tribute', 'interest', 'loans', 'deals']],
 ];
 const EXTRA = {
   exports: 'Sold to partners abroad', routes: 'Crown trade routes', crafts: 'Crafts', goods: 'Goods from the chains',
@@ -84,7 +86,8 @@ export function groupedLines(from, groups, labels, last = null) {
     keys.forEach((k) => seen.add(k));
     const lines = keys.map(lineOf).filter(([, , v]) => Math.round(v));
     const v = lines.reduce((a, [, , x]) => a + x, 0);
-    if (!Math.round(v) && id !== 'taxes' && id !== 'war') continue;
+    // A group at 0 is hidden (M34 D), but for the realm's own taxes.
+    if (!Math.round(v) && id !== 'taxes') continue;
     let sub = '';
     // Taxes by estate, when the month's accounts carry them.
     if (id === 'taxes' && last?.estates) {
@@ -196,6 +199,31 @@ const CHRONICLE_KINDS = {
 // grouped by year and filtered by subject.
 const CHRONICLE_ALL = 14;
 
+// Reports of the same kind in the same month fold into one (M34 D): the
+// newest stands, the rest one tap down. Two reports are alike when they
+// differ only in names and numbers ("Bandit camp sighted near X: about N
+// men"). The newest first, as the chronicle is shown.
+export function reportShape(text) {
+  return text.replace(/\d[\d,.]*/g, 'N').replace(/\b[A-Z][a-z'’-]+(?:\s+(?:an|of|the|and)?\s*[A-Z][a-z'’-]+)*/g, 'X');
+}
+
+export function mergeReports(list) {
+  const out = [];
+  const open = new Map();
+  for (const d of list) {
+    const { year, month } = dateOf(d.day);
+    const key = `${year}-${month}|${d.kind ?? 'realm'}|${reportShape(d.text)}`;
+    const at = open.get(key);
+    if (at) at.like.push(d);
+    else {
+      const item = { d, like: [] };
+      open.set(key, item);
+      out.push(item);
+    }
+  }
+  return out;
+}
+
 export function chronicleHtml(state, filter = 'all') {
   const r = state.reign;
   let pop = 0;
@@ -221,17 +249,18 @@ export function chronicleHtml(state, filter = 'all') {
   let shown = 0;
   let more = 0;
   const first = state.chronicle[0];
-  for (const d of state.chronicle.slice().reverse()) {
-    if (filter !== 'all' && (d.kind ?? 'realm') !== filter) continue;
+  const wanted = state.chronicle.slice().reverse().filter((d) => filter === 'all' || (d.kind ?? 'realm') === filter);
+  for (const { d, like } of mergeReports(wanted)) {
     // The reign's opening words always stay, at the foot.
-    if (filter === 'all' && shown >= CHRONICLE_ALL && d !== first) { more++; continue; }
+    if (filter === 'all' && shown >= CHRONICLE_ALL && d !== first) { more += 1 + like.length; continue; }
     shown++;
     const y = dateOf(d.day).year;
     if (y !== year) {
       year = y;
       items.push(`<li class="year">${y}</li>`);
     }
-    items.push(`<li><time>${formatDate(d.day)}</time>${escapeHtml(d.text)}</li>`);
+    const also = like.length ? `<details class="like" data-merged="${like.length + 1}"><summary>and ${like.length} more like it that month</summary><ul>${like.map((x) => `<li>${escapeHtml(x.text)}</li>`).join('')}</ul></details>` : '';
+    items.push(`<li><time>${formatDate(d.day)}</time>${escapeHtml(d.text)}${also}</li>`);
   }
   return `
     <div data-part="summary">${summary}</div>

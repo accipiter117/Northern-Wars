@@ -72,7 +72,7 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
   let swallow = false;
   let tipTimer = 0;
   const hideTip = () => { tip.hidden = true; };
-  for (const b of document.querySelectorAll('#topbar .good, #topbar .meter, #topbar .hand-button')) {
+  for (const b of document.querySelectorAll('#topbar [data-name]')) {
     b.title = b.dataset.name;
     b.addEventListener('pointerdown', () => {
       clearTimeout(held);

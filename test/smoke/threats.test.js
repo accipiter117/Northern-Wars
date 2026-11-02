@@ -55,9 +55,10 @@ test('a threat against the nearest force, the Treasury ledger, and a decluttered
   await page.click('[data-tab="treasury"]');
   await page.click('.segs [data-sub="ledger"]');
   const ledger = await page.textContent('[data-part="ledger"]');
-  assert.match(ledger, /Income[\s\S]*Taxes[\s\S]*Towns [\d,]+[\s\S]*Total income[\s\S]*Expenses[\s\S]*War[\s\S]*Other[\s\S]*Total expenses/);
-  // The groups add up to the totals (M24 C: Taxes, Trade and sales, Crafts
-  // and goods, War, Other), and each group's lines add up to the group.
+  assert.match(ledger, /Income[\s\S]*Taxes[\s\S]*Towns [\d,]+[\s\S]*Total income[\s\S]*Expenses[\s\S]*Garrisons[\s\S]*Upkeep and repairs[\s\S]*Court and gifts[\s\S]*Total expenses/);
+  // The groups add up to the totals (income in five groups, expenses in four
+  // since M34 D, Other for what none claims), and each group's lines add up
+  // to the group.
   const sums = await page.evaluate(() => [...document.querySelectorAll('[data-part="ledger"] .lgroups')].map((side) => {
     const v = (el) => Number(el.textContent.replace(/[^\d−-]/g, '').replace('−', '-'));
     const groups = [...side.querySelectorAll('.lgroup')];
