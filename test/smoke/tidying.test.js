@@ -50,7 +50,8 @@ test('a flooded seam in Needs attention, reopened, and hands on call', async () 
   await page.waitForFunction((t) => !!window.northernWars.state.settlements[t].repair?.goldmine, town);
   // The Mines screen shows it being reopened, and the rest waiting.
   await page.click('[data-tab="treasury"]');
-  await page.click('.segs [data-sub="industry"]');
+  await page.click('.segs [data-sub="trade"]');
+  await page.evaluate(() => { const d = document.querySelector('[data-sec="mines"]'); if (d && !d.open) d.open = true; });
   await page.waitForSelector('[data-part="gold"]');
   assert.match(await page.textContent(`[data-part="gold"] [data-seam="${town}"]`), /Being reopened/);
   assert.ok(await page.locator('[data-part="gold"] button[data-seam]').count() >= 1, 'the others can be reopened from here');

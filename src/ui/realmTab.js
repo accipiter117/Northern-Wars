@@ -100,7 +100,7 @@ export function alertsOf(app) {
   // each one tap away.
   const seams = closedSeams(state, world).sort((a, b) => b.monthly - a.monthly);
   for (const m of seams.slice(0, 2)) out.push(seamAlert(world, m));
-  if (seams.length > 2) out.push({ text: `${seams.length - 2} more old workings could be reopened`, tab: 'treasury:industry', ic: 'coin' });
+  if (seams.length > 2) out.push({ text: `${seams.length - 2} more old workings could be reopened`, tab: 'treasury:trade', ic: 'coin' });
   return out;
 }
 
@@ -216,12 +216,13 @@ function placesHtml(app) {
       ${ids.length > limit ? `<button type="button" class="act wide" data-form="places" data-set="all:true">Show all ${ids.length} places</button>` : ''}</div>`;
 }
 
+// Overview (with the places as a list below it) and Labour (M34 C).
 export function realmTab(app) {
-  const sub = app.memory.sub.realm;
-  const body = sub === 'places' ? placesHtml(app) : sub === 'overview' ? overviewHtml(app) : labourHtml(app);
+  const sub = app.memory.sub.realm === 'overview' ? 'overview' : 'labour';
+  const body = sub === 'overview' ? `${overviewHtml(app)}${section(app.memory, 'tab:realm', 'places', 'Every place of the realm', placesHtml(app), { count: Object.keys(app.state.settlements).length })}` : labourHtml(app);
   return {
     title: `The Realm of ${escapeHtml(app.world.kingdom.name)}`,
-    html: `${segs([['labour', 'Labour'], ['overview', 'Overview'], ['places', 'Places']], sub)}${body}`,
+    html: `${segs([['labour', 'Labour'], ['overview', 'Overview']], sub)}${body}`,
   };
 }
 

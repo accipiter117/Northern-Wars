@@ -85,7 +85,8 @@ test('the court in the Treasury and bounties in Military are quick settings that
   s.settlements[town].unrest = 50;
   const { context, page, errors } = await open(serialize(s));
   await page.click('[data-tab="treasury"]');
-  await page.click('.segs [data-sub="taxes"]');
+  await page.click('.segs [data-sub="ledger"]');
+  await page.evaluate(() => { const d = document.querySelector('[data-sec="taxes"]'); if (d && !d.open) d.open = true; });
   await page.click('[data-setting="court:frugal"]');
   await page.waitForFunction(() => window.northernWars.state.laws.court.option === 'frugal');
   assert.match(await page.textContent('[data-part="setting-court"]'), /Can be changed again in 30 days/);

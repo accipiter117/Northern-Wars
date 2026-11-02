@@ -345,7 +345,8 @@ test('military screen, companies, garrisons and events', async () => {
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
 
   await page.click('[data-tab="military"]');
-  await page.click('[data-sub="garrisons"]');
+  await page.click('[data-sub="forces"]');
+  await page.evaluate(() => { const d = document.querySelector('[data-sec="garrisons"]'); if (d && !d.open) d.open = true; });
   assert.match(await page.textContent('#sheet-body'), /Garrison soldiers[\s\S]*Where danger lies/);
   await page.screenshot({ path: join(OUT, 'military.png') });
   await page.click('#sheet-close');

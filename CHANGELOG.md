@@ -1,5 +1,9 @@
 # Changelog
 
+## M34 C Fewer, clearer screens
+- Fourteen screens where there were twenty. Taxes and loans now sit under the Ledger, mines and gold under Trade, garrisons under Forces, pacts under Audiences, and both spy screens are one, under Diplomacy.
+- What a screen gathers from another sits in a fold you can open or shut; the game remembers which.
+
 ## M34 B The crown's hand
 - A sceptre on the top bar opens the crown's hand: every act with a cost or a rest in one list (feasts and the rope, faith powers, the Book's acts, spy work, the royal calls, old mines to reopen). The gold number on it says how many are ready.
 - Ready acts come first; resting ones show a ring and the days left.

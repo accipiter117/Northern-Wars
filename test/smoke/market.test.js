@@ -64,7 +64,8 @@ test('the Treasury: five goods, a deal with a partner, taxes by estate and a loa
 
   // Taxes by estate, with what each setting would yield.
   await page.click('[data-tab="treasury"]');
-  await page.click('.segs [data-sub="taxes"]');
+  await page.click('.segs [data-sub="ledger"]');
+  await page.evaluate(() => { const d = document.querySelector('[data-sec="taxes"]'); if (d && !d.open) d.open = true; });
   const taxes = await page.textContent('[data-part="taxes"]');
   assert.match(taxes, /Taxes on the towns[\s\S]*Light[\s\S]*\d+ a month[\s\S]*Fair[\s\S]*Heavy[\s\S]*Taxes on the villages[\s\S]*Taxes on the lords/);
   const before = await page.evaluate(() => window.northernWars.state.laws.tax_towns.option);
