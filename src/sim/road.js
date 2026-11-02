@@ -48,22 +48,36 @@ const PRETEXTS = [
 // Emperor is ready, a pretext comes.
 export function monthlyRoad(state, world, rng) {
   const r = R(world);
-  if (!r || state.nilfgaard?.stage === 'war') return;
+  if (!r) return;
   const road = roadOf(state);
+  // Once the war has begun, only the Call of the North is left to answer.
+  if (state.nilfgaard?.stage === 'war') {
+    rally(state, world, road);
+    return;
+  }
   const nets = state.spycraft?.nets;
   if (nets?.[r.empire]?.[r.cintra] !== undefined) {
     const ours = nets[TEMERIA]?.[r.cintra] ?? 0;
     if (ours > r.slowFrom) nets[r.empire][r.cintra] = clamp(nets[r.empire][r.cintra] - (ours - r.slowFrom) * r.slowPer, 0, 100);
   }
   const boxes = roadBoxes(state, world);
+  // Once his path is done, the Emperor's host masses on the Yaruga for as
+  // long as the war is held back (M33 D): a slow crown meets a larger one.
+  if (boxes.find((b) => b.id === 'emhyr').done && state.realms?.[r.empire] && !state.realms[r.empire].fallen) {
+    state.realms[r.empire].army = (state.realms[r.empire].army ?? 0) + r.hostPerMonth;
+    road.massed = (road.massed ?? 0) + r.hostPerMonth;
+  }
   const ready = boxes.find((b) => b.id === 'emhyr').done && boxes.find((b) => b.id === 'agents').done;
   if (!road.pretext && ready && rng.chance(r.pretext)) {
     road.pretext = { day: state.day, text: PRETEXTS[Math.floor(rng.next() * PRETEXTS.length)] };
     addDispatch(state, `From the south: ${road.pretext.text} Nilfgaard has its pretext.`, 'abroad');
   }
-  // The other crowns answer the Call late, in time for Sodden.
+}
+
+// The other crowns answer the Call late, in time for Sodden.
+function rally(state, world, road) {
   for (const [rid, c] of Object.entries(road.calls)) {
-    if (c.joined || c.aside || state.day < c.day) continue;
+    if (c.joined || c.aside || c.day === undefined || state.day < c.day) continue;
     joinCoalition(state, world, rid);
   }
 }

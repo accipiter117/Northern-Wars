@@ -50,8 +50,14 @@ test('the Steward reports from the south', async () => {
 });
 
 test('an imperial army crosses the Yaruga, fresh regiments behind it', async () => {
-  // Run a reign until the Empire's army is on the march into Cintra.
+  // Run a reign until the Empire's army is on the march into Cintra. Since
+  // M33 C the war waits on the Road to War: here every box but the year is
+  // ticked, so it comes once 1263 does.
   let s = createState(world, 1);
+  s.paths.temeria.step = world.paths.temeria.steps.length;
+  s.paths.nilfgaard.step = world.paths.nilfgaard.steps.length;
+  s.spycraft.nets.nilfgaard.cintra = 80;
+  s.road = { pretext: { day: s.day, text: 'A spurned envoy.' }, began: null, calls: {} };
   let army = null;
   for (let m = 0; m < 30 && !army; m++) {
     s = step(s, 30, world, { ambient: false });

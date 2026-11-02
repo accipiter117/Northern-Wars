@@ -4,6 +4,7 @@
   "fullBonus": 10,
   "fullCap": 90,
   "repairedAt": 90,
+  "opening": { "note": "M33 D: for the first `days` of a reign begun in the Dawn, no new camp or lair springs up within `reach` of the capital (the Dawn's own small quest threats aside).", "days": 365, "reach": 220 },
   "places": {
     "vizima": {
       "teaches": "Repairs and labour",

@@ -37,22 +37,23 @@ test('the clock moves through its stages, and its gate holds the war back', () =
   monthlyClock(s, world, never);
   assert.equal(s.nilfgaard.stage, 'pressure');
   assert.ok(!mayStartWar(s, 'nilfgaard'), 'nor while it presses');
-  // Held by its gate (as M33 will), the war does not come.
-  s.nilfgaard.warDay = Infinity;
+  // Held by the Road to War (M33 C), the war does not come.
   s.day += 2000;
   monthlyClock(s, world, never);
   assert.equal(s.nilfgaard.stage, 'pressure');
   assert.ok(!gateOpen(s, world));
-  // The gate opens: war, and the Empire musters against Cintra first.
-  s.nilfgaard.warDay = s.day;
+  // Every box ticked: war, and the Empire falls on Cintra first.
+  s.paths.temeria.step = world.paths.temeria.steps.length;
+  s.paths.nilfgaard.step = world.paths.nilfgaard.steps.length;
+  s.spycraft.nets.nilfgaard.cintra = 80;
+  s.road = { pretext: { day: s.day, text: 'A spurned envoy.' }, began: null, calls: {} };
+  assert.ok(gateOpen(s, world));
   monthlyClock(s, world, never);
   assert.equal(s.nilfgaard.stage, 'war');
   assert.ok(mayStartWar(s, 'nilfgaard'));
   assert.equal(nextAim(s, world), 'cintra_city');
-  const muster = (s.musters ?? []).find((m) => m.realm === 'nilfgaard');
-  assert.ok(muster, 'an army gathers');
-  assert.equal(muster.against, 'cintra');
-  assert.equal(muster.aim, 'cintra_city');
+  const war = s.wars.find((w) => w.sides[0].includes('nilfgaard'));
+  assert.ok(war && war.sides[1].includes('cintra'), 'the Empire at war with Cintra');
 });
 
 test('the aims come in order: Cintra, then Sodden and Brugge, then the road to the Pontar', () => {

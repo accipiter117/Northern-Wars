@@ -82,6 +82,7 @@ function roadHtml(app) {
       <p class="sub">The First Northern War is under way. The Call of the North: ${calls || 'sent'}.</p></div>`;
   }
   const rows = r.boxes.map((b) => `<div class="road-box${b.done ? ' done' : ''}" data-road-box="${b.id}"><span class="road-tick">${b.done ? '&#10003;' : '&#9675;'}</span><span><b>${escapeHtml(b.name)}</b><br><small>${escapeHtml(b.what)}</small></span></div>`).join('');
+  const massed = state.road?.massed ? ` ${state.road.massed.toLocaleString('en-GB')} more of his soldiers have come up to the Yaruga while it waits.` : '';
   return `<div data-part="road"><h3>The Road to War <small>${r.ticked} of 5</small></h3>
-    <p class="sub">The war waits until all five are ticked; then it begins of itself. The longer it waits, the larger the Emperor's host.</p>${rows}</div>`;
+    <p class="sub">The war waits until all five are ticked; then it begins of itself. The longer it waits, the larger the Emperor's host.${massed}</p>${rows}</div>`;
 }

@@ -10,6 +10,7 @@ import {
 import { number, escapeHtml, describeLevel } from './format.js';
 import { closedSeams } from '../sim/gold.js';
 import { quarters } from '../sim/quarters.js';
+import { dawnNext } from '../sim/dawn.js';
 import { handRows } from './hand.js';
 import { icon } from './icons.js';
 import { chips, segs, section, cardHead, orderAttr } from './card.js';
@@ -102,6 +103,9 @@ export function alertsOf(app) {
   const seams = closedSeams(state, world).sort((a, b) => b.monthly - a.monthly);
   for (const m of seams.slice(0, 2)) out.push(seamAlert(world, m));
   if (seams.length > 2) out.push({ text: `${seams.length - 2} more old workings could be reopened`, tab: 'treasury:trade', ic: 'coin' });
+  // The Dawn's next step (M33 D), until it is over.
+  const next = dawnNext(state, world);
+  if (next) out.unshift({ text: `The Dawn: ${next.name} (${world.byId[next.place].name})`, go: next.where.startsWith('town:') ? `town:${next.where.split(':')[1]}` : null, tab: next.where.startsWith('town:') ? null : next.where, ic: 'crown' });
   // Quarters in fear of a pogrom (M32 B), the worst first.
   const feared = quarters(state, world).filter((q) => q.warn);
   for (const q of feared.slice(0, 2)) out.push({ text: `Pogrom feared in ${world.byId[q.id].name}: ${Math.round(q.risk * 100)}% a month`, go: `town:${q.id}`, ic: 'flame', bad: true });

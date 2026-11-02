@@ -90,6 +90,7 @@ test('the other crowns rally late, in time for Sodden', () => {
   beginFirstWar(s, sure, makeRng(1));
   const w = s.wars.find((x) => x.cause === 'invasion');
   assert.ok(!w.sides[1].includes('redania'), 'not at once');
+  s.nilfgaard.stage = 'war';
   s.day += 200;
   monthlyRoad(s, sure, makeRng(1));
   for (const r of ['redania', 'kaedwen', 'aedirn']) assert.ok(w.sides[1].includes(r) || s.realms[r]?.fallen, r);
@@ -106,4 +107,13 @@ test('an older reign gets the road; one already at war keeps it', () => {
   const up = deserialize(JSON.stringify(old), world);
   assert.equal(up.version, STATE_VERSION);
   assert.equal(up.road.began, up.nilfgaard.since);
+});
+
+test('once Emhyr is ready, his host grows every month the war is held back', () => {
+  const s = fresh();
+  s.paths.nilfgaard.step = world.paths.nilfgaard.steps.length;
+  const army = s.realms.nilfgaard.army ?? 0;
+  for (let i = 0; i < 12; i++) { s.day += 30; monthlyRoad(s, world, makeRng(i)); }
+  assert.equal(s.realms.nilfgaard.army, army + 12 * world.war.clock.road.hostPerMonth);
+  assert.equal(s.road.massed, 12 * world.war.clock.road.hostPerMonth);
 });

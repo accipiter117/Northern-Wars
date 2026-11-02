@@ -57,7 +57,7 @@
     "watching": { "chance": 0.4 },
     "league": { "at": 25, "member": 35, "join": 0.2 },
     "road": {
-      "note": "M33 C: the Road to War. The war waits on five boxes (Foltest's path, Emhyr's path, the Empire's network in Cintra at agents or more, a pretext, the year at year or later) instead of the gate's drawn day. The crown's own network in Cintra above slowFrom takes slowPer a point a month off the Empire's there. Once Emhyr's path is done and his agents are in place, a pretext comes with chance pretext a month. The war: the Empire falls on Cintra; the realms in `with` stand with Cintra, those in `drawn` join the side of their suzerain; each crown in `rally` answers the Call of the North with chance rallyChance, that many days late, or stands aside (asideTrust off every northern crown's trust in it, asideFear on its fear of the Empire). The crown answers by a decision.",
+      "note": "M33 C: the Road to War. The war waits on five boxes (Foltest's path, Emhyr's path, the Empire's network in Cintra at agents or more, a pretext, the year at year or later) instead of the gate's drawn day. The crown's own network in Cintra above slowFrom takes slowPer a point a month off the Empire's there. Once Emhyr's path is done and his agents are in place, a pretext comes with chance pretext a month. The war: the Empire falls on Cintra; the realms in `with` stand with Cintra, those in `drawn` join the side of their suzerain; each crown in `rally` answers the Call of the North with chance rallyChance, that many days late, or stands aside (asideTrust off every northern crown's trust in it, asideFear on its fear of the Empire). The crown answers by a decision. Once Emhyr's path is done, hostPerMonth soldiers join his standing army each month the war is still held back.",
       "empire": "nilfgaard",
       "cintra": "cintra",
       "agents": 70,
@@ -65,6 +65,7 @@
       "slowFrom": 30,
       "slowPer": 0.05,
       "pretext": 0.25,
+      "hostPerMonth": 300,
       "with": ["skellige"],
       "drawn": ["sodden", "brugge"],
       "rally": { "redania": 150, "kaedwen": 180, "aedirn": 120 },

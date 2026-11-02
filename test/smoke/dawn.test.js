@@ -36,6 +36,10 @@ test('the Dawn screen: places, quests, the next step and a tap through', async (
   await page.addInitScript((sv) => localStorage.setItem('northern-wars.save', sv), serialize(s));
   await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
+  // The Realm's overview names the Dawn's next step (M33 D).
+  await page.click('#tabbar [data-tab="realm"]');
+  await page.click('[data-sub="overview"]');
+  assert.match(await page.textContent('#sheet-body'), /The Dawn: The Old Manor \(Vizima\)/);
   await page.click('#tabbar [data-tab="court"]');
   await page.click('[data-sub="dawn"]');
   await page.waitForSelector('[data-part="dawn"]');
