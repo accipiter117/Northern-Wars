@@ -32,6 +32,10 @@ function busyRealm() {
   let s = step(createState(world, 1262), 62, world);
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.treasury = 8000;
+  // One dilemma at court, however busy the seed's first months were.
+  if (s.dilemmas) s.dilemmas.open = s.dilemmas.open.slice(0, 1);
+  // Friendly enough to trade with, whatever the first months brought.
+  s.neighbours.redania.relation = Math.max(s.neighbours.redania.relation, 30);
   const marsh = wildSites(world, 'anchor').find((x) => x.terrain === 'marsh');
   s.threats.list = [{ id: 1, kind: 'bandits', terrain: 'marsh', x: marsh.x, y: marsh.y, near: 'anchor', men: 40, morale: 70, born: s.day, band: null, sighted: true, campSeen: true, alerted: true, rumour: null }];
   s.threats.nextId = 2;

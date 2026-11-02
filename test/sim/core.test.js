@@ -41,8 +41,7 @@ test('every settlement can be reached by road from Vizima', () => {
 test('the start state covers every settlement with sane values', () => {
   const state = createState(world, 1);
   assert.equal(Object.keys(state.settlements).length, world.geography.settlements.length);
-  assert.equal(state.settlements.vizima.population.human + state.settlements.vizima.population.dwarf
-    + state.settlements.vizima.population.elf + state.settlements.vizima.population.halfling, 18000);
+  assert.equal(Object.values(state.settlements.vizima.population).reduce((a, b) => a + b, 0), 18000);
   for (const m of ['love', 'fear', 'unrest']) assert.ok(state[m] >= 0 && state[m] < 100, m);
 });
 
@@ -105,4 +104,16 @@ test('bad saves are refused with a plain reason', () => {
   s.version = 1;
   s.state.kingdom = 'redania';
   assert.throws(() => deserialize(JSON.stringify(s), world), /another kingdom/);
+});
+
+test('the ground under a point never depends on what was asked before', async () => {
+  // groundAt caches by ten-unit cell; it once kept whatever the first point
+  // asked in a cell found, so one reign's lookups changed the next one's.
+  const { groundAt } = await import('../../src/sim/combat.js');
+  const w1 = await nodeWorld();
+  const w2 = await nodeWorld();
+  const pts = [];
+  for (let x = 0; x < 1000; x += 37) for (let y = 0; y < 1000; y += 41) pts.push([x, y]);
+  for (const [x, y] of pts) groundAt(w1, x + 4, y + 4);
+  for (const [x, y] of pts.reverse()) assert.equal(groundAt(w2, x - 4, y - 4), groundAt(w1, x - 4, y - 4), `${x},${y}`);
 });

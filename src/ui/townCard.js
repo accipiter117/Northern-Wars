@@ -15,6 +15,7 @@ import { number, escapeHtml, describeLevel } from './format.js';
 import { icon } from './icons.js';
 import { cardHead, segs, section } from './card.js';
 import { townActsHtml } from './realmTab.js';
+import { quarterHtml } from './quarters.js';
 import { worksTabHtml, worksPipsHtml, landTags } from './works.js';
 
 const TYPE_NAMES = { city: 'City', town: 'Town', village: 'Village', castle: 'Castle', temple: 'Temple' };
@@ -130,7 +131,8 @@ function peopleHtml(app, id, data) {
       ${gaugeHtml('Prosperity', s.prosperity, describeLevel(s.prosperity, PROSPERITY_WORDS), false)}
       ${gaugeHtml('Unrest', s.unrest, describeLevel(s.unrest, UNREST_WORDS), true)}
       ${tensionWeight(world, s) > 0 ? gaugeHtml('Tension between peoples', s.tension, describeLevel(s.tension, TENSION_WORDS), true) : ''}
-    </div>`;
+    </div>
+    ${quarterHtml(app, id)}`;
 }
 
 const cap1 = (w) => w[0].toUpperCase() + w.slice(1);

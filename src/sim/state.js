@@ -34,7 +34,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 36;
+export const STATE_VERSION = 37;
 
 export function createState(world, seed = 1) {
   const k = world.kingdom;
@@ -145,7 +145,7 @@ export function giveWorks(s, w) {
 
 export function newSettlement(world, d, season) {
   const s = {
-    population: { ...d.population },
+    population: { ...d.population, gnome: d.population.gnome ?? 0 },
     faith: { ...d.faith },
     prosperity: d.prosperity,
     unrest: d.unrest,

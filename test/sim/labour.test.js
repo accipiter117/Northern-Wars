@@ -96,7 +96,8 @@ test('the crown splits its hands by kind of work, and the works go short or full
   assert.ok(applyAction(s, world, { type: 'labour', split: { ...s.labour.split, crafts: 90 } }).error);
   // A works pinned is manned first.
   const pinned = act(bare, { type: 'pin', settlement: 'vizima', building: 'harbour' });
-  pinned.labour.split = { fields: 50, woods: 5, mines: 5, pastures: 2, fishing: 1, crafts: 30, repairs: 4, levies: 3 };
+  // No masons or levies to come on call (M34 A), so the fishing is short.
+  pinned.labour.split = { fields: 57, woods: 5, mines: 5, pastures: 2, fishing: 1, crafts: 30, repairs: 0, levies: 0 };
   const loose = structuredClone(pinned);
   loose.labour.pins = {};
   stepLabourDay(pinned, world);

@@ -457,6 +457,20 @@ const MIGRATIONS = {
     state.version = 36;
     return state;
   },
+  // M32 B: gnomes join the peoples. The towns where the lore puts them take
+  // them from their dwarves (the same people, now told apart); everywhere
+  // else has none. They start as the dwarves feel about the crown.
+  36(state, world) {
+    for (const [id, s] of Object.entries(state.settlements)) {
+      if (!s.population || s.population.gnome !== undefined) continue;
+      const g = Math.min(s.population.dwarf ?? 0, world.base?.settlementData?.[id]?.population?.gnome ?? world.settlementData?.[id]?.population?.gnome ?? 0);
+      s.population.dwarf = (s.population.dwarf ?? 0) - g;
+      s.population.gnome = g;
+    }
+    if (state.opinion && state.opinion.gnome === undefined) state.opinion.gnome = state.opinion.dwarf ?? 50;
+    state.version = 37;
+    return state;
+  },
 };
 
 // Realms the world has and the save does not: taken from a fresh reign.

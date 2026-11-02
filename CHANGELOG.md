@@ -1,5 +1,11 @@
 # Changelog
 
+## M32 B The non-human quarters
+- Gnomes now live in Temeria (Vizima, Carreras and a few more), with their own view of the crown.
+- Towns with enough dwarves, elves, halflings or gnomes have a quarter on the People tab: how it regards the crown, how it gets on with its neighbours, and the chance of a pogrom this month with everything pushing it up or down.
+- When a quarter starts to fear for its life, Needs attention tells you. A pogrom now empties the quarter, burns its works, sends its young to the Scoia'tael, and the town is remembered for it.
+- Five new dilemmas from the quarters: a burned shop, a called-in debt, a ploughed grove, an inn licence and a gnome's patent.
+
 ## M34 E The audit kept as a test
 - The crown's hand now also shows what rests after an audience, a vassal order or an offer of protection, with the days left.
 - Behind the scenes, a ten-year reign is checked on every change: no works that does nothing, no ledger line at 0, no act with a rest missing from the hand, no card too long and no screen out of reach.

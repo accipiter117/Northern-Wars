@@ -12,7 +12,8 @@ export { canDecree, reactions, enactment, lawEffects, opinionTargets } from './l
 export { relationTarget, foreignTrade, tradeFactor, canSetStance, envoyText } from './neighbours.js';
 export { ledgerNet, taxProsperity, debtLove, stewardReport } from './economy.js';
 export { authority, realmUnrest, unrestPressures, nudge, canAct, actRest, ACT_NAMES, taxCollected, musterAnswer, onProgress, threatUnrest, canRiot, sabotage, crownCalm } from './meters.js';
-export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget } from './culture.js';
+export { realmFaith, nonhumanShare, tensionTarget, tensionWeight, faithTarget, tensionFactors, pogromRisk, pogrom, NONHUMAN } from './culture.js';
+export { quarterOf, quarters, hasQuarter, quarterRegard } from './quarters.js';
 export { petitionText } from './petitions.js';
 export { dilemmaText, promiseOn, dilemmasOf, effectLine } from './dilemmas.js';
 export { loyaltyTarget, housePower, holdingsOf, crownShare, canHouseAction, demandText } from './houses.js';

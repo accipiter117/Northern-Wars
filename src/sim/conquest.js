@@ -24,7 +24,7 @@ import { damageWorks, worksSummary } from './works.js';
 const C = (world) => world.conquest;
 const say = (state, text) => addDispatch(state, text, 'military');
 const abroad = (state, text) => addDispatch(state, text, 'abroad');
-const PEOPLES = ['human', 'dwarf', 'elf', 'halfling'];
+const PEOPLES = ['human', 'dwarf', 'elf', 'halfling', 'gnome'];
 
 export function defaultConquest() {
   return { decisions: [], nextId: 1, revolts: [], nextRevolt: 1, exodus: [], league: null, fear: {} };

@@ -11,7 +11,7 @@ import { dateOf } from './calendar.js';
 import { bookEffect, crownFaith, signed } from './book.js';
 import { creditLimit } from './economy.js';
 import { destroyThreat, threatName } from './threats.js';
-import { nonhumanShare, realmFaith } from './culture.js';
+import { nonhumanShare, realmFaith, NONHUMAN } from './culture.js';
 import { atWar, TEMERIA } from './conflict.js';
 
 const D = (world) => world.devotion;
@@ -108,7 +108,7 @@ export function monthlyFaiths(state, world, rng) {
   }
   // As the Fire rises, the non-humans and the mages' friends feel it.
   const fire = F.devotion.eternal_fire ?? 0;
-  if (fire > 40) for (const g of ['elf', 'dwarf', 'halfling']) if (state.opinion?.[g] !== undefined) state.opinion[g] = clamp(state.opinion[g] - (fire - 40) / 40, 0, 100);
+  if (fire > 40) for (const g of NONHUMAN) if (state.opinion?.[g] !== undefined) state.opinion[g] = clamp(state.opinion[g] - (fire - 40) / 40, 0, 100);
   realmsMonth(state, world);
   clashes(state, world, rng);
 }
@@ -215,7 +215,7 @@ function clash(state, world, rng, id, pair, inquisition) {
   if (F.devotion[win] !== undefined) F.devotion[win] = clamp(F.devotion[win] + c.winner, 0, 100);
   if (F.devotion[lose] !== undefined) F.devotion[lose] = clamp(F.devotion[lose] + c.loser, 0, 100);
   if (inquisition && aWins) {
-    const losers = lose === 'nonhumans' ? ['elf', 'dwarf', 'halfling'] : [lose];
+    const losers = lose === 'nonhumans' ? NONHUMAN : [lose];
     for (const g of losers) if (state.opinion?.[g] !== undefined) state.opinion[g] = clamp(state.opinion[g] - c.inquisitionAnger, 0, 100);
     s.unrest = clamp(s.unrest + c.inquisitionAnger / 2, 0, 100);
   }

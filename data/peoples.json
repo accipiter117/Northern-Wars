@@ -2,5 +2,6 @@
   "human": { "name": "Humans", "plural": "humans" },
   "dwarf": { "name": "Dwarves", "plural": "dwarves" },
   "elf": { "name": "Elves", "plural": "elves" },
-  "halfling": { "name": "Halflings", "plural": "halflings" }
+  "halfling": { "name": "Halflings", "plural": "halflings" },
+  "gnome": { "name": "Gnomes", "plural": "gnomes" }
 }

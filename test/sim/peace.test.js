@@ -145,5 +145,9 @@ test('the steward makes about 1,500 a month at peace; the careless crown a littl
   // hovers either side of nothing, so the test asks for the slide itself.
   assert.ok(year(idle, 5) < year(idle, 1) - 1000, `idle year 1 ${year(idle, 1)}, year 5 ${year(idle, 5)}`);
   assert.ok(year(idle, 5) < 250, `idle year 5 ${year(idle, 5)}`);
-  assert.ok(year(steward, 3) > year(careless, 3) + 700);
+  // Since M32 B the quarters' dilemmas take their turn at court (all five
+  // within three years), so fewer of the dilemmas a steward answers well
+  // come up, and the careless crown's unanswered defaults cost it little:
+  // the gap is about 650 to 780 a month (seeds 1 to 3), from 840 to 980.
+  assert.ok(year(steward, 3) > year(careless, 3) + 500, `steward ${year(steward, 3)}, careless ${year(careless, 3)}`);
 });
