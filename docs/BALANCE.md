@@ -633,6 +633,21 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### Faiths and peoples over thirty years (M32 E)
+`node tools/peoples.mjs 30 3`: thirty years, seeds 1 to 3, averaged. The tolerant crown is the steward along the Book's path of tolerance (freedom of worship, the non-human charter, licensed mages); the middle crown the plain steward; the harsh crown the tyrant (the Fire as the crown's faith, restrictions, the inquisition).
+
+| Crown | Crafts a month | Fear | Pogroms | Riots | Scoia'tael recruits | Commandos | Cult (hard months / easy) | Great Sun share (start to end) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Tolerant | 504 | 2.5 | 0 | 0 | 1,148 | 0 | 7 / 2 | 1.0% to 3.2% |
+| Middle | 453 | 2.4 | 0 | 0 | 2,052 | 2.3 | 6 / 1 | 1.0% to 2.7% |
+| Harsh | 162 | 94.1 | 35.3 | 133.7 | 1,315 | 63 | 2 / 0 | 1.0% to 1.2% |
+
+- **The tolerant crown has the richest crafts and no commandos**: the charter's quarter more for the crafts where non-humans live, the peoples' gifts at their warmest, and half the young who would go to the woods kept at home.
+- **The harsh crown rules by Fear** (94 against 2), **burns its quarters** (35 pogroms and 134 riots in thirty years) and **breeds a far larger Scoia'tael** (63 commandos). Its crafts fall to a third, since the pogroms empty the quarters whose people did the work. It counts fewer recruits than the middle crown in all only because its quarters are emptied early and its inquisition keeps the foreign networks shallow; what it does recruit strikes.
+- **The cult surfaces in hard times**: its strength summed over the towns runs three to seven times higher in months of famine or plague than in easy ones, and the harsh crown's inquisition keeps it lowest.
+- **The Great Sun spreads with Nilfgaard**: in every run the clock reached war, and the Sun's share of the realm roughly tripled under the tolerant and middle crowns; the harsh crown's Fire and inquisition hold it near where it began.
+- `test/sim/peoples-long.test.js` guards the direction over five years (tolerant crafts at least a quarter richer than harsh, Fear 40 higher under the harsh crown, more pogroms, riots and commandos).
+
 ### The Scoia'tael and the laws (M32 D)
 Ten years, seeds 1 to 3, a reign on average (recruits by where they came from):
 

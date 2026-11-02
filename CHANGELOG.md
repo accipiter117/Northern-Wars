@@ -1,5 +1,8 @@
 # Changelog
 
+## M32 E Faiths and peoples: the long view
+- Thirty-year test reigns confirm the shape of it: a tolerant king grows rich on crafts with quiet woods; a harsh one rules by fear, burns his quarters and fights the Scoia'tael for decades.
+
 ## M32 D The Scoia'tael and the laws
 - The Scoia'tael now recruit from your own young elves and dwarves: harsh laws, hunger and pogroms send more to the woods; tolerance and good times keep them at home.
 - The Empire's spies and the elves of Aedirn's Dol Blathanna feed them too.

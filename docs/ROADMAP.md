@@ -27,7 +27,7 @@
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
 | M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | Done |
-| M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A to D done) |
+| M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | Done |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
 | M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | Done |
 | M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | Done |
@@ -78,6 +78,10 @@ Part D, the Scoia'tael and the laws:
 - The Scoia'tael recruit from the crown's own young non-humans: more with persecution, pogroms and hunger in the quarters, fewer with tolerance and prosperity.
 - Foreign spies stir them, and elves from Aedirn's Dol Blathanna feed them across the border.
 - The Scoia'tael card says where its recruits came from this year.
+
+Part E, balance:
+- Thirty-year runs with tolerant, middle and harsh crowns (`node tools/peoples.mjs 30 3`): the tolerant crown has richer crafts and few commandos; the harsh crown more Fear, more pogroms and a larger Scoia'tael; the cult surfaces in famines and plagues; the Great Sun spreads with Nilfgaard.
+- Tests cover each faith's perks and powers, the cult's spread and suppression, quarter mood and pogrom risk, each people's gifts, the Vivaldi bank and Scoia'tael recruitment.
 
 ## M31 acceptance criteria
 Part A, networks and the spymaster:
