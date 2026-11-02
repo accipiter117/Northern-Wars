@@ -212,6 +212,9 @@ No new systems: what does nothing is fixed, what is hidden is surfaced, what is 
 - **A pogrom** is a disaster: half to four-fifths of every non-human people there gone (three in ten of them dead, the rest fled), two of the town's works burned (30 to 60 condition), the elves' and dwarves' opinion -10 (halflings -5, gnomes -8), Mahakam and Brokilon -10, Scoia'tael sympathy +15, and fifteen in a hundred of the elven and dwarven young gone to the woods (`state.scoiatael.recruits`, which Part D draws on). The town is remembered for it: the card names the pogrom with its dead and fled, and the quarter's regard for the crown is 20 lower, fading over five years.
 - **Quarter dilemmas** through the M28 machinery, each in a town with a quarter of that people (a place may now ask for `quarter`, and an answer may move the quarter's `tension`): a dwarf's shop burned (hang the arsonists, pay for it, or call it an accident), a dwarf's debt called in, an elven grove ploughed, a halfling inn's licence, a gnome smith's patent, and the dwarves' guild seat under the charter.
 
+### Faiths and peoples, the long view (M32 E)
+- `node tools/peoples.mjs [years] [seeds]` plays the tolerant crown (the steward along the path of tolerance, `crowns.tolerant`), the middle crown (the steward) and the harsh crown (the tyrant) side by side, and prints each one's crafts, Fear, pogroms, riots, Scoia'tael recruits and commandos, the cult in hard and easy months, and the Great Sun's share from start to end. The thirty-year numbers are in BALANCE.md.
+
 ### The Scoia'tael and the laws (M32 D)
 - The Scoia'tael recruit from the crown's own young non-humans (src/sim/forest.js, `scoiatael` in data/culture.json). Each month every town sends 1.2 recruits for each thousand of its young (elves count fully, dwarves 0.3, gnomes 0.2, halflings 0.1), and more for each of:
   - **the laws against them**: restrictions +100%, the inquisition +50%, the Fire as the crown's faith +30%;
