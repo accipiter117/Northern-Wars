@@ -8,6 +8,7 @@ import {
   repairOrder,
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
+import { closedSeams } from '../sim/gold.js';
 import { icon } from './icons.js';
 import { chips, segs, section, cardHead, orderAttr } from './card.js';
 import { form } from './memory.js';
@@ -94,14 +95,34 @@ export function alertsOf(app) {
   const hunted = new Set(freeCompanies(state).map((c) => c.task?.threat).filter(Boolean));
   const loose = (state.threats?.list ?? []).filter((t) => !t.abroad && (t.sighted || t.campSeen) && !hunted.has(t.id) && !state.threats.contracts.some((c) => c.threat === t.id));
   if (loose.length) out.push({ text: `${loose.length} threat${loose.length === 1 ? '' : 's'} sighted, nobody sent`, tab: 'military:threats', ic: 'target' });
+  // Old gold workings that could be reopened (M34 A), the richest first,
+  // each one tap away.
+  const seams = closedSeams(state, world).sort((a, b) => b.monthly - a.monthly);
+  for (const m of seams.slice(0, 2)) out.push(seamAlert(world, m));
+  if (seams.length > 2) out.push({ text: `${seams.length - 2} more old workings could be reopened`, tab: 'treasury:industry', ic: 'coin' });
   return out;
+}
+
+// One flooded seam as a line in Needs attention, with the order to reopen it.
+export function seamAlert(world, m) {
+  const months = Math.max(1, Math.round(m.days / 30));
+  const when = months === 1 ? 'a month' : `${['', 'one', 'two', 'three', 'four', 'five', 'six'][months] ?? months} months`;
+  return {
+    text: `Old workings at ${world.byId[m.settlement].name} could be reopened: about ${number(m.coin)} crowns, ${when}, then about ${number(m.monthly)} crowns a month`,
+    name: `Old workings at ${world.byId[m.settlement].name} could be reopened`,
+    sub: `About ${number(m.coin)} crowns, ${when}, then about ${number(m.monthly)} crowns a month. Tap to reopen.`,
+    order: { type: 'repair', settlement: m.settlement, building: 'goldmine', kind: 'rebuild' },
+    confirm: `Reopen ${m.name} for about ${number(m.coin)} crowns?`,
+    seam: m.settlement,
+    ic: 'coin',
+  };
 }
 
 function alertsHtml(app) {
   const list = alertsOf(app);
   if (!list.length) return '<p class="sub">Nothing pressing. The realm goes about its business.</p>';
-  return `<div class="rows">${list.map((a) => `<button type="button" class="row" ${a.go ? `data-go="${a.go}"` : `data-tab-go="${a.tab}"`}>
-    ${icon(a.ic)}<span class="row-main"><span class="row-name${a.bad ? ' mood-bad' : ''}">${escapeHtml(a.text)}</span></span></button>`).join('')}</div>`;
+  return `<div class="rows">${list.map((a) => `<button type="button" class="row" ${a.order ? `data-seam="${a.seam}" ${orderAttr(a.order, a.confirm)}` : a.go ? `data-go="${a.go}"` : `data-tab-go="${a.tab}"`}>
+    ${icon(a.ic)}<span class="row-main"><span class="row-name${a.bad ? ' mood-bad' : ''}">${escapeHtml(a.name ?? a.text)}</span>${a.sub ? `<span class="row-sub">${escapeHtml(a.sub)}</span>` : ''}</span></button>`).join('')}</div>`;
 }
 
 // How badly a place is doing, and why in a few words.

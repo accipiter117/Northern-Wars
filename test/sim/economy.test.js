@@ -29,7 +29,9 @@ test('a starving town goes hungry, grows restless and loses people', () => {
   const before = pop(s);
   const unrestBefore = s.settlements.vizima.unrest;
   s = run(s, 35);
-  assert.ok(s.settlements.vizima.hunger > 0.3, `hunger ${s.settlements.vizima.hunger}`);
+  // Since M34 A masons and levies on call help in the fields, so hunger
+  // bites a little less deep in the first month.
+  assert.ok(s.settlements.vizima.hunger > 0.25, `hunger ${s.settlements.vizima.hunger}`);
   // Its walls and shrines (M20) steady it a little, but hunger still tells.
   assert.ok(s.settlements.vizima.unrest > unrestBefore + 3);
   assert.ok(pop(s) < before);
@@ -92,7 +94,10 @@ test('the monthly ledger balances', () => {
   const l = s.ledger.history.at(-1);
   const { net } = ledgerNet(l);
   assert.ok(l.income.foreign > 0);
-  assert.ok(Math.abs(s.treasury - (before + net)) < 1e-6);
+  // Repairs and decrees are paid on the day (M34 A: an unanswered card of
+  // dear repairs reopens a flooded seam mid-month), and listed in the
+  // month's accounts outside the net.
+  assert.ok(Math.abs(s.treasury - (before + net - (l.expenses.construction ?? 0) - (l.expenses.decrees ?? 0))) < 1e-6);
 });
 
 test('a version 1 save is brought up to date', () => {

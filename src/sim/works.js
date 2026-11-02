@@ -6,6 +6,7 @@
 // with use, faster when the crown cannot pay its upkeep. A works yields by
 // the lower of its condition and its staffing, so the crown's levers are
 // repairs (rebuild, patch, or leave it) and, from Part C, where its hands go.
+import { closedSeams } from './gold.js';
 import { noteUsed, underPrice } from './market.js';
 import { addDispatch, clamp } from './realm.js';
 import { dateOf, MONTHS } from './calendar.js';
@@ -572,6 +573,9 @@ export function monthlyWorks(state, world, rng) {
     }
   }
   abroadRepairs(state, world);
+  // Flooded gold workings the crown knows of wait among the repairs (M34 A),
+  // as dear ones on the month's card under a standing order.
+  for (const seam of closedSeams(state, world)) askAbout(state, world, seam.settlement, 'goldmine');
   runRepairOrder(state, world);
 }
 

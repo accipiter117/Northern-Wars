@@ -120,6 +120,8 @@ test('bands holding the road rob a route on dangerous roads', () => {
 test('a gold mine pays each month and its seam runs out, slowly at first', () => {
   let s = quiet(createState(world, 5));
   s.treasury = 10000;
+  // Only this seam: the crown asks before the others are reopened (M34 A).
+  s.works.order = { mode: 'ask', limit: 400 };
   // Since M20 the old workings stand flooded: the crown reopens them.
   assert.equal(goldYield(s, world, 'zavada_spur'), 0);
   s = act(s, { type: 'repair', settlement: 'zavada', building: 'goldmine', kind: 'rebuild' });

@@ -91,16 +91,25 @@ function callsHtml(world, state) {
 // idle hands a hatched gap at the end.
 function handsBar(world, state) {
   const r = state.labour.report ?? {};
-  const parts = LABOUR_KINDS.map((k) => ({ k, n: r[k]?.staffed ?? 0 })).filter((x) => x.n > 0);
+  // Hands on call (M34 A) are counted once, as on call, not again in the
+  // work they help with.
+  const parts = LABOUR_KINDS.map((k) => ({ k, n: Math.max(0, (r[k]?.staffed ?? 0) - (r[k]?.helped ?? 0)) })).filter((x) => x.n > 0);
   const idle = LABOUR_KINDS.reduce((a, k) => a + (r[k]?.idle ?? 0), 0);
-  const total = parts.reduce((a, x) => a + x.n, 0) + idle || 1;
+  const call = onCall(r);
+  const total = parts.reduce((a, x) => a + x.n, 0) + idle + call || 1;
   const pct = (n) => Math.round((100 * n) / total);
   const segs = parts.map((x) => `<span class="seg k-${x.k}" style="flex:${x.n}" title="${escapeHtml(world.labour.kinds[x.k].name)}: ${number(x.n)} at work"></span>`).join('');
+  const oncall = call > 0 ? `<span class="seg oncall" style="flex:${call}" title="${number(call)} on call"></span>` : '';
   const gap = idle > 0 ? `<span class="seg idle" style="flex:${idle}" title="${number(idle)} idle"></span>` : '';
   const key = parts.sort((a, b) => b.n - a.n)
     .slice(0, 3).map((x) => `<span><i class="sw k-${x.k}"></i>${escapeHtml(world.labour.kinds[x.k].name)} ${pct(x.n)}%</span>`).join('');
-  return `<div data-part="hands-bar"><div class="hands-bar" role="img" aria-label="The kingdom's ${number(total)} hands at work by kind, ${number(idle)} idle">${segs}${gap}</div>
-    <div class="hands-key">${key}${idle > 0 ? `<span><i class="sw idle"></i>Idle ${pct(idle)}%</span>` : ''}</div></div>`;
+  return `<div data-part="hands-bar"><div class="hands-bar" role="img" aria-label="The kingdom's ${number(total)} hands at work by kind, ${number(call)} on call, ${number(idle)} idle">${segs}${oncall}${gap}</div>
+    <div class="hands-key">${key}${call > 0 ? `<span data-oncall><i class="sw oncall"></i>On call ${pct(call)}%</span>` : ''}${idle > 0 ? `<span><i class="sw idle"></i>Idle ${pct(idle)}%</span>` : ''}</div></div>`;
+}
+
+// Masons and levies with nothing to do, lending a hand where it is short.
+function onCall(r) {
+  return (r.repairs?.onCall ?? 0) + (r.levies?.onCall ?? 0);
 }
 
 // The five settings at a stroke, and Custom when the hands stand at none.
@@ -147,6 +156,8 @@ function sliderRow(world, state, kind, split) {
   let warn = '';
   if (r.need > 0 && r.staffed < r.need * 0.8) warn = ` <span class="down">${Math.round((100 * r.staffed) / r.need)}% manned</span>`;
   else if (r.need === 0 && r.hands > 0 && kind !== 'repairs' && kind !== 'levies') warn = ' <span class="warn-t">idle this season</span>';
+  // On call (M34 A): helping where hands are short until they are wanted.
+  if (r.onCall) warn = `, <span class="oncall-t" data-oncall="${kind}">${number(r.onCall)} on call, at work where hands are short until ${kind === 'repairs' ? 'masons are wanted' : 'war comes'}</span>`;
   return `<label class="slide-row" data-kind="${kind}">
     <span class="sr-top"><span class="sr-name"><i class="sw k-${kind}"></i>${escapeHtml(def.name)}</span><output>${base}</output></span>
     <input type="range" min="0" max="${world.labour.maxShare}" step="1" value="${base}" data-slide="${kind}" aria-label="${escapeHtml(def.name)}, hands in a hundred">

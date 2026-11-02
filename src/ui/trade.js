@@ -1,7 +1,7 @@
 // The Trade screen, and the trade and gold sections of a settlement card.
 import {
   TEMERIA, routeValue, routeLimit, routeCost, routeEndOk, canOpenRoute, routeKey, sideName, ownerOf,
-  depositsOf, depositAt, activeMines, goldYield, canProspect, slotsOf, formatDate,
+  depositsOf, depositAt, activeMines, goldYield, canProspect, slotsOf, formatDate, canRepairWorks, closedSeams,
 } from '../sim/index.js';
 import { number, escapeHtml } from './format.js';
 import { icon } from './icons.js';
@@ -89,19 +89,44 @@ export function routesHtml(app) {
 
 export function industryHtml(app) {
   const { world, state } = app;
-  const mines = activeMines(state, world).map(({ id, settlement }) => {
-    const left = state.gold.deposits[id].remaining;
-    return `<li>${escapeHtml(world.gold.deposits[id].name)} at ${escapeHtml(world.byId[settlement].name)}: about ${number(goldYield(state, world, id))} crowns a month, ${Math.round((left / world.gold.deposits[id].gold) * 100)}% of the seam left</li>`;
-  }).join('');
-  const known = Object.entries(world.gold.deposits).filter(([id]) => state.gold.deposits[id].known && state.gold.deposits[id].remaining > 0
-    && !state.settlements[world.gold.deposits[id].settlement]?.buildings.includes('goldmine'))
-    .map(([id, d]) => `<button type="button" class="chip" data-go="town:${d.settlement}">${escapeHtml(d.name)} (${escapeHtml(world.byId[d.settlement].name)})</button>`).join(' ');
+  const rows = Object.keys(world.gold.deposits).filter((id) => state.gold.deposits[id].known).map((id) => seamRow(world, state, id)).join('');
   return `
     ${goodsHtml(world, state)}
     <div data-part="gold"><h3>Gold ${info('Other hills may hide gold. Prospect from the card of a place near hills or mountains: open its Overview.', 'gold')}</h3>
-      ${mines ? `<ul class="cares">${mines}</ul>` : '<p class="sub">No gold mine is working.</p>'}
-      ${known ? `<p class="sub">Known seams waiting for a mine:</p><div class="chips">${known}</div>` : ''}</div>
+      ${rows ? `<div class="build-list">${rows}</div>` : '<p class="sub">No seam of gold is known.</p>'}</div>
   `;
+}
+
+const monthsWord = (days) => {
+  const n = Math.max(1, Math.round(days / 30));
+  return n === 1 ? 'a month' : `${['', 'one', 'two', 'three', 'four', 'five', 'six'][n] ?? n} months`;
+};
+
+// One known seam (M34 A): working, being reopened, flooded (with the order to
+// reopen it) or worked out.
+export function seamRow(world, state, id) {
+  const g = world.gold.deposits[id];
+  const left = state.gold.deposits[id].remaining;
+  const s = state.settlements[g.settlement];
+  const where = `${escapeHtml(g.name)} at ${escapeHtml(world.byId[g.settlement].name)}`;
+  const inLine = `${escapeHtml(g.name.replace(/^The /, 'the '))} at ${escapeHtml(world.byId[g.settlement].name)}`;
+  const pct = Math.round((left / g.gold) * 100);
+  let line;
+  if (left <= 0) line = 'Worked out.';
+  else if (!s || s.occupier) line = 'Beyond the crown\'s reach.';
+  else if (s.repair?.goldmine) line = `Being reopened: the miners go down on ${formatDate(state.day + (s.repair.goldmine.daysLeft ?? 0))}. ${pct}% of the seam left.`;
+  else if (activeMines(state, world).some((m) => m.id === id)) line = `Working: about ${number(goldYield(state, world, id))} crowns a month, ${pct}% of the seam left.`;
+  else {
+    const m = closedSeams(state, world).find((x) => x.id === id);
+    if (m) {
+      const check = canRepairWorks(state, world, g.settlement, 'goldmine', 'rebuild');
+      return `<button type="button" class="build" data-seam="${g.settlement}" ${orderAttr({ type: 'repair', settlement: g.settlement, building: 'goldmine', kind: 'rebuild' }, `Reopen ${g.name} for about ${number(m.coin)} crowns?`)} ${check.ok ? '' : 'disabled'}>
+        <span class="build-name">Reopen ${inLine}</span>
+        <span class="build-cost">${check.ok ? `The old workings lie flooded. About ${number(m.coin)} crowns and ${monthsWord(m.days)}, then about ${number(m.monthly)} crowns a month.` : escapeHtml(check.reason)}</span></button>`;
+    }
+    line = s.buildings.includes('goldmine') ? `The mine is worn and yields little. ${pct}% of the seam left.` : 'No mine stands over it.';
+  }
+  return `<div class="row realm-row short" data-seam="${g.settlement}" data-go="town:${g.settlement}"><span class="row-main"><span class="row-name">${where}</span><span class="row-sub">${line}</span></span></div>`;
 }
 
 // The realm's goods last month: how much each chain made and what it sold for.
@@ -127,18 +152,11 @@ export function settlementTradeHtml(world, state, id) {
       <span class="act-sub">${state.routes.length} of ${routeLimit(state, world)} crown routes in use. Pick the far end on the map.</span></button>`);
   }
   const deps = depositsOf(world, id).filter((d) => state.gold.deposits[d].known);
-  const gold = deps.map((d) => {
-    const left = state.gold.deposits[d].remaining;
-    const g = world.gold.deposits[d];
-    if (left <= 0) return `<li>${escapeHtml(g.name)}: worked out.</li>`;
-    const working = s.buildings.includes('goldmine') && (s.cond?.goldmine ?? 100) > 0;
-    const idle = s.buildings.includes('goldmine') ? 'the old workings lie flooded: rebuild the mine (Works) to reopen them; ' : 'a known seam, waiting for a gold mine; ';
-    return `<li>${escapeHtml(g.name)}: ${working ? `yielding about ${number(goldYield(state, world, d))} crowns a month, ` : idle}${Math.round((left / g.gold) * 100)}% left.</li>`;
-  }).join('');
+  const gold = deps.map((d) => seamRow(world, state, d)).join('');
   const pc = canProspect(state, world, id);
   const prospecting = state.gold.prospects.find((p) => p.settlement === id);
   if (gold || !pc.hidden || prospecting) {
-    parts.push(`<h3>Gold</h3>${gold ? `<ul class="cares">${gold}</ul>` : ''}
+    parts.push(`<h3>Gold</h3>${gold ? `<div class="build-list">${gold}</div>` : ''}
       ${prospecting ? `<p class="sub">Prospectors are in the hills; they report back on ${formatDate(prospecting.until)}.</p>`
         : !pc.hidden ? `<button type="button" class="act" data-prospect ${orderAttr({ type: 'prospect', settlement: id })} ${pc.ok ? '' : 'disabled'}><span class="act-label">Send prospectors</span>
         <span class="act-sub">${pc.ok ? `${world.gold.prospect.coin} crowns and ${world.gold.prospect.days} days. They may find nothing.` : escapeHtml(pc.reason)}</span></button>` : ''}`);

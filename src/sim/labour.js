@@ -13,7 +13,7 @@
 import { addDispatch, clamp } from './realm.js';
 import { dateOf, MONTHS } from './calendar.js';
 import { totalPopulation } from './state.js';
-import { leviedMap } from './conflict.js';
+import { leviedMap, atWar, TEMERIA } from './conflict.js';
 import { bookEffect } from './book.js';
 import { faithEffect } from './faiths.js';
 import { condOf } from './works.js';
@@ -21,6 +21,8 @@ import { condOf } from './works.js';
 const L = (world) => world.labour;
 // Works can take up to half as many hands again as they need (M21 C).
 const MAX_STAFF = 1.5;
+// Where hands on call go first (M34 A).
+const ON_CALL_TO = ['fields', 'fishing', 'mines', 'crafts'];
 const say = (state, text) => addDispatch(state, text, 'realm');
 export const KINDS = ['fields', 'woods', 'mines', 'pastures', 'fishing', 'crafts', 'repairs', 'levies'];
 
@@ -220,6 +222,33 @@ export function stepLabourDay(state, world) {
     });
     report[kind].idle = Math.max(0, spare / l.spread - used / l.spread - extra);
   }
+  // Hands on call (M34 A): the repairs share beyond the crews now mending,
+  // and the levies while the crown is at peace, work where hands are short
+  // (fields, fishing, mines, crafts, in that order) until they are wanted.
+  // The repair crews and the garrisons still count them as theirs.
+  const mending = Object.values(state.settlements).reduce((a, t) => a + Object.keys(t.repair ?? {}).length, 0);
+  const onCall = {
+    repairs: Math.max(0, report.repairs.hands - mending * l.crew),
+    // Called up (the levy call) or at war, the levies stand to.
+    levies: atWar(state, TEMERIA) || (state.labour.calls.levy?.until ?? 0) > state.day ? 0 : report.levies.hands,
+  };
+  let free = (onCall.repairs + onCall.levies) * l.spread;
+  for (const kind of ON_CALL_TO) {
+    if (free <= 0) break;
+    const short = districts.reduce((a, d) => a + Math.max(0, d.need[kind] - d.got[kind]), 0);
+    if (short <= 0) continue;
+    const f = Math.min(1, free / short);
+    let given = 0;
+    for (const d of districts) {
+      const gap = Math.max(0, d.need[kind] - d.got[kind]);
+      d.got[kind] += gap * f;
+      given += gap * f;
+    }
+    free -= given;
+    report[kind].helped = given;
+  }
+  report.repairs.onCall = onCall.repairs;
+  report.levies.onCall = onCall.levies;
   // Each works takes its share of what its district has: pinned works first.
   for (const d of districts) {
     for (const kind of KINDS) {
@@ -258,7 +287,12 @@ export function stepLabourDay(state, world) {
       report[k].idle = 0;
     }
   }
-  state.labour.report = Object.fromEntries(Object.entries(report).map(([k, v]) => [k, { hands: Math.round(v.hands), need: Math.round(v.need), staffed: Math.round(v.staffed), idle: Math.round(v.idle ?? 0), ...(v.home ? { home: Math.round(v.home) } : {}) }]));
+  state.labour.report = Object.fromEntries(Object.entries(report).map(([k, v]) => [k, {
+    hands: Math.round(v.hands), need: Math.round(v.need), staffed: Math.round(v.staffed), idle: Math.round(v.idle ?? 0),
+    ...(v.home ? { home: Math.round(v.home) } : {}),
+    ...(v.onCall ? { onCall: Math.round(v.onCall) } : {}),
+    ...(v.helped ? { helped: Math.round(v.helped) } : {}),
+  }]));
 }
 
 // How a place's harvest stands to its hands: a floor from the old and the
