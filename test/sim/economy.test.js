@@ -81,7 +81,8 @@ test('past the limit, soldiers go unpaid and desert', () => {
 });
 
 test('out of debt, Love slowly returns toward its rest', () => {
-  let s = createState(world, 1);
+  // Without the Dawn's run-down towns (M33 A), which weigh on Love.
+  let s = createState(world, 1, { dawn: false });
   s.love = 10;
   s = run(s, 31);
   assert.ok(s.love > 10 && s.love <= 60, `love ${s.love}`);

@@ -193,6 +193,7 @@ No new systems: what does nothing is fixed, what is hidden is surfaced, what is 
 | Court | Decisions | Every choice waiting on the crown: dilemmas, petitions, demands, envoys |
 | Court | Book of Laws | The laws in force, those that can be signed, and their rests |
 | Court | Faith | The faiths' strength, the crown's faith, their powers and the cult |
+| Court | The Dawn | The five places to set in order at the start of the reign, quest by quest (M33 A) |
 | Court | Lords and vassals | The great houses and the vassal kings, each opening its card |
 | Treasury | Ledger | Last month's money in groups, with taxes, loans and the repair order in folds |
 | Treasury | Trade and mines | The market, goods and deals, with mines, gold and industry in a fold |
@@ -390,6 +391,19 @@ Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
 ### Terrain art
 - Forests as massed trees with darker edges, ranges as shaded peaks sized by the range (snow on the great ones), hills as mounds, marsh as reeds and pools, rivers that taper from source to mouth with their names set along the curve, lakes with a shoreline and a highlight. Scatter is seeded, so the same tree stands in the same place every time. Terrain stays visible under the fog of war.
 - Level of detail by zoom: far out only the ranges, great forests and main rivers are named; marks thin out. The painted map is cut into 256-pixel tiles at six resolutions, painted a few per frame with a coarser tile standing in until the fine one is ready, and kept in a cache that grows to twice what one view needs. Panning across the whole North on a slowed CPU takes about a millisecond a frame.
+
+## Dawn of the Reign (M33)
+
+### The city quests (M33 A)
+- A new reign starts in the Dawn (src/sim/dawn.js, data/dawn.json). Five places start run down (prosperity 15 lower) and each has two or three short chains of quests, each teaching a system the game already has:
+  - **Vizima**, repairs and labour: the Old Manor (send masons to the merchants' quarter, let go since the striga); the lake marshes (clear three drowners, then man the harbour so the boats go out); the Temple Quarter (the town's tension at 25 or below for a month, unbroken).
+  - **Maribor**, trade: the Mahakam road (a trade deal with Mahakam); the quarrel over the mint (a court dilemma, from day 20); the eastern road (clear 14 bandits).
+  - **Gors Velen**, the Book of Laws: the mages of Thanedd (a court dilemma, from day 45); the coast road (clear 12 smugglers); the town's charter (sign the Charter of the commons or merchant charters).
+  - **Ellander**, faith: Melitele's temple (endow it from the Faith screen); the pilgrims' road (station a company there); the Fire's preachers (a court dilemma, from day 70).
+  - **White Bridge**, the military: the bridge and its toll (mend the toll bridge, let go to condition 25); the Pontar crossing (300 men there, garrison and companies together).
+- Each chain pays when done (coin as a quest windfall, Love, Fear or prosperity); a place whose chains are all done returns to full prosperity (its founding prosperity plus 10, at most 90); all five end the Dawn, which Part B counts as the first step of Foltest's path. The quest threats are small and already sighted; the court's three quest dilemmas come one at a time.
+- **The Dawn screen** (Court › The Dawn) shows how many places are in order and what to do next, then each place with its chains: what the step asks, how far it has got (a works' condition, the town's tension and calm days, the men at the crossing, whether the beasts are still there), what it pays and a tap through to where it is done (a town card, Threats, Forces, Decisions, the Book of Laws, Faith, Trade or Labour). Fifteen sub-screens now, with the Dawn in the Court.
+- A reign begun before M33 skips the Dawn (save version 38).
 
 ## Spies (M31)
 Every great power keeps spy networks in the other courts; the crown has a spymaster. Numbers live in data/spies.json; the rules in src/sim/spies.js.

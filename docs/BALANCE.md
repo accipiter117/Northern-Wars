@@ -633,6 +633,11 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### The city quests (M33 A)
+- The Dawn's five places start 15 prosperity down. Without trying, two years in (seeds 1 to 3, the same each time): the idle crown sets one place in order (Vizima: the standing repair order mends the Old Manor, the garrison clears the drowners, the town stays calm), the steward two. Neither strikes a deal with Mahakam, stations a company at Ellander or puts 300 men at White Bridge: those wait for the player, as the quests mean them to.
+- The quest threats are small (three drowners, 14 and 12 bandits) and sighted from the first day; the three court quests come at days 20, 45 and 70.
+- Tests about other systems start plain reigns (`createState(world, seed, { dawn: false })`) where the Dawn's run-down towns and quest camps would change what they measure: Love's return from debt, the masons on call, a company answering a threat and how threats grow.
+
 ### Faiths and peoples over thirty years (M32 E)
 `node tools/peoples.mjs 30 3`: thirty years, seeds 1 to 3, averaged. The tolerant crown is the steward along the Book's path of tolerance (freedom of worship, the non-human charter, licensed mages); the middle crown the plain steward; the harsh crown the tyrant (the Fire as the crown's faith, restrictions, the inquisition).
 

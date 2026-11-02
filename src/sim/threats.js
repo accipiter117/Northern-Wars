@@ -166,6 +166,20 @@ function spawnCamp(state, world, rng, id, kind, level) {
   return newThreat(state, kind, { terrain: site.terrain, species: sp.id, x: p.x, y: p.y, near: id, count: sp.count[0] + rng.int(sp.count[1] - sp.count[0] + 1), level });
 }
 
+// A quest's own threat (M33 A): a small band or a few beasts in the wilds
+// by a town, already sighted, and weak enough for a first company.
+export function questThreat(state, world, rng, id, spec) {
+  if (!state.threats || !world.byId[id]) return null;
+  const terr = spec.terrain ?? (spec.kind === 'bandits' ? T(world).bandits.terrain : null);
+  const sites = wildSites(world, id).filter((s) => !terr || terr.includes(s.terrain));
+  const all = sites.length ? sites : wildSites(world, id);
+  const st = world.byId[id];
+  const site = all.length ? all.reduce((a, b) => (Math.hypot(a.x - st.x, a.y - st.y) <= Math.hypot(b.x - st.x, b.y - st.y) ? a : b)) : { x: st.x + 25, y: st.y + 25, terrain: 'open' };
+  const base = { terrain: site.terrain, x: site.x + (rng.next() - 0.5) * 10, y: site.y + (rng.next() - 0.5) * 10, near: id, level: 1, sighted: true, campSeen: true, quest: true };
+  if (spec.kind === 'bandits') return newThreat(state, 'bandits', { ...base, men: spec.men ?? 12 });
+  return newThreat(state, 'monsters', { ...base, species: spec.species, count: spec.count ?? 2 });
+}
+
 // ---- The month ----
 
 export function monthlyThreatsSpawn(state, world, rng) {

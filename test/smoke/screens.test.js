@@ -22,7 +22,7 @@ test.after(async () => {
   server.close();
 });
 
-test('fourteen sub-screens, merged screens in folds, old links in their new homes', async () => {
+test('fifteen sub-screens (the Dawn since M33 A), merged screens in folds, old links in their new homes', async () => {
   const s = step(createState(world, 1), 60, world, { ambient: false });
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
@@ -40,7 +40,7 @@ test('fourteen sub-screens, merged screens in folds, old links in their new home
     await page.waitForSelector('.segs');
     counts[tab] = await page.locator('.segs [data-sub]').count();
   }
-  assert.deepEqual(counts, { realm: 2, court: 4, treasury: 2, military: 3, diplomacy: 3 });
+  assert.deepEqual(counts, { realm: 2, court: 5, treasury: 2, military: 3, diplomacy: 3 });
   await page.click('[data-sub="spies"]');
   await page.waitForSelector('[data-part="networks"]');
   await page.waitForTimeout(300);

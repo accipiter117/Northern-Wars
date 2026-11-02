@@ -1,5 +1,9 @@
 # Changelog
 
+## M33 A The city quests
+- A new reign starts with the Dawn: Vizima, Maribor, Gors Velen, Ellander and White Bridge are run down, and each has short quests that teach one part of the game (repairs, trade, the Book of Laws, faith, the army).
+- Finish a place's quests and it returns to full prosperity. The new Dawn screen in the Court says what to do next and takes you there.
+
 ## M32 E Faiths and peoples: the long view
 - Thirty-year test reigns confirm the shape of it: a tolerant king grows rich on crafts with quiet woods; a harsh one rules by fear, burns his quarters and fights the Scoia'tael for decades.
 

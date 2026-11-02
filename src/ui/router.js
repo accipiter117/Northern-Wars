@@ -21,6 +21,7 @@ import { garrisonsHtml } from './military.js';
 import { warHtml, armyCard } from './war.js';
 import { neighboursHtml, intelListHtml, envoysHtml, realmCard, foreignCardHtml, pactsHtml } from './neighbours.js';
 import { townCard } from './townCard.js';
+import { dawnHtml } from './dawn.js';
 import { helpHtml } from './hints.js';
 import { boardCard, boardTitle, ordersHtml } from './board.js';
 
@@ -28,7 +29,7 @@ import { boardCard, boardTitle, ordersHtml } from './board.js';
 export const SUBS = {
   // Labour stays first, as M23 B set it: the realm's most-used screen.
   realm: [['labour', 'Labour'], ['overview', 'Overview']],
-  court: [['inbox', 'Decisions'], ['laws', 'Book of Laws'], ['faith', 'Faith'], ['houses', 'Lords and vassals']],
+  court: [['inbox', 'Decisions'], ['dawn', 'The Dawn'], ['laws', 'Book of Laws'], ['faith', 'Faith'], ['houses', 'Lords and vassals']],
   treasury: [['ledger', 'Ledger'], ['trade', 'Trade and mines']],
   military: [['forces', 'Forces'], ['threats', 'Threats'], ['war', 'War']],
   diplomacy: [['realms', 'Rulers'], ['envoys', 'Audiences and pacts'], ['spies', 'Spies']],
@@ -105,6 +106,7 @@ function tabScreen(app, tab) {
   let html = '';
   if (tab === 'court') {
     if (sub === 'laws') html = lawsHtml(app);
+    else if (sub === 'dawn') html = dawnHtml(app);
     else if (sub === 'houses') html = noblesHtml(app) + fold('vassals', 'Vassal kings', vassalsHtml(app), ourVassals(app.state).length || null);
     else if (sub === 'faith') {
       html = faithHtml(app);

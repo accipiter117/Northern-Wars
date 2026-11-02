@@ -299,6 +299,8 @@ export function doFaithAct(state, world, kind, f, town = null, works = null) {
   if (kind === 'endow') {
     fervour(a.fervour);
     shiftTown(state, town, f, a.share);
+    // Remembered by town and faith (M33 A: the Dawn's temple at Ellander).
+    ((F.endowed ??= {})[town] ??= {})[f] = state.day;
     say(state, `The crown endows a temple of ${fa.name} at ${name}. The faithful fill it on the first day.`);
   } else if (kind === 'land') {
     F.lands.push({ town, works, faith: f, since: state.day });

@@ -129,6 +129,8 @@ export function monthlyDilemmas(state, world, rng) {
   }
 }
 
+export const openDilemma = (state, world, id, place, house = null) => open(state, world, id, place, house);
+
 function open(state, world, id, place, house) {
   const d = dilemmasOf(state);
   // A dilemma brought by a foreign court (an imperial envoy, M30 D) moves

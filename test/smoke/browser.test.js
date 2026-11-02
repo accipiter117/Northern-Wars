@@ -53,16 +53,25 @@ for (const vp of VIEWPORTS) {
     for (let i = 0; i < 8; i++) {
       const pending = await page.evaluate(() => {
         const st = window.northernWars.state;
-        return st.envoys.length + st.petitions.length + st.demands.length + st.events.length + (st.diplomacy?.requests.length ?? 0);
+        // The Dawn's court quests (M33 A) come among them.
+        return st.envoys.length + st.petitions.length + st.demands.length + st.events.length + (st.diplomacy?.requests.length ?? 0) + (st.dilemmas?.open.length ?? 0);
       });
       if (!pending) break;
-      seen.push(...await page.$$eval('#sheet-body .envoy-from', (els) => els.map((e) => e.textContent)));
+      seen.push(...await page.$$eval('#sheet-body .envoy-from, #sheet-body .dilemma-title, #sheet-body h3', (els) => els.map((e) => e.textContent)));
       await page.click('#sheet-body [data-choice="1"]');
     }
     assert.ok(seen.length >= 1, `decisions seen: ${seen}`);
     await page.click('#sheet-close');
-    await page.click('[data-speed="4"]');
-    await page.waitForFunction((d) => window.northernWars.state.day >= d + 40, startDay, { timeout: 20000 });
+    // Forty days on; the Dawn's court quests (M33 A) may pause it on the
+    // way, and are answered as they come.
+    for (let i = 0; i < 6; i++) {
+      await page.click('[data-speed="4"]');
+      await page.waitForFunction((d) => window.northernWars.state.day >= d + 40 || window.northernWars.speed === 0, startDay, { timeout: 20000 });
+      if (await page.evaluate((d) => window.northernWars.state.day >= d + 40, startDay)) break;
+      await page.click('[data-tab="court"]');
+      if (await page.locator('#sheet-body [data-choice="1"]').count()) await page.click('#sheet-body [data-choice="1"]');
+      await page.click('#sheet-close');
+    }
     await page.click('[data-speed="0"]');
     const paused = await page.evaluate(() => window.northernWars.state.day);
     await page.waitForTimeout(400);

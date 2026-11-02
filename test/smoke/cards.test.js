@@ -40,7 +40,7 @@ test('card heads at four figures, the grouped ledger and a merged report', async
     const n = await page.$$eval('#sheet-body [data-part="head"] > .figs', (els) => els.map((e) => e.querySelectorAll(':scope > .fig').length));
     for (const x of n) assert.ok(x <= 4, `${where}: ${x} figures before Details`);
   };
-  const subs = { realm: ['labour', 'overview'], court: ['inbox', 'laws', 'faith', 'houses'], treasury: ['ledger', 'trade'], military: ['forces', 'threats', 'war'], diplomacy: ['realms', 'envoys', 'spies'] };
+  const subs = { realm: ['labour', 'overview'], court: ['inbox', 'dawn', 'laws', 'faith', 'houses'], treasury: ['ledger', 'trade'], military: ['forces', 'threats', 'war'], diplomacy: ['realms', 'envoys', 'spies'] };
   for (const [tab, list] of Object.entries(subs)) {
     await page.click(`[data-tab="${tab}"]`);
     for (const sub of list) {
