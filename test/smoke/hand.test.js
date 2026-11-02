@@ -31,6 +31,8 @@ test('the crown\'s hand: ready acts first, resting ones with their rings', async
   signLaws(s, world, 'royal_feasts', 'pardons');
   // A feast held a fortnight ago rests; a progress is ready.
   s = applyAction(s, world, { type: 'act', kind: 'feast' }).state;
+  // A gift to Redania rests on the hand under Rulers and vassals (M34 E).
+  s = applyAction(s, world, { type: 'gift', realm: 'redania', size: 100 }).state;
   s = step(s, 14, world, { ambient: false });
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   // Lebioda strong enough for her power (set after the days pass, which
@@ -58,6 +60,10 @@ test('the crown\'s hand: ready acts first, resting ones with their rings', async
   assert.deepEqual(people, [...people].sort((a, b) => Number(b) - Number(a)));
   await page.waitForTimeout(300);
   await page.screenshot({ path: join(OUT, 'portrait-hand.png') });
+  assert.match(await page.textContent('[data-part="hand-rulers"]'), /Gifts: Redania[\s\S]*Ready in \d+ days/);
+  await page.locator('[data-part="hand-rulers"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: join(OUT, 'portrait-hand-rulers.png') });
   await page.evaluate(() => document.querySelector('[data-hand="act:feast"]').scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(300);
   await page.screenshot({ path: join(OUT, 'portrait-hand-resting.png') });

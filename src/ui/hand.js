@@ -5,7 +5,7 @@
 // most; a town's own card still offers that town's acts.
 import {
   canAct, actRest, ACT_NAMES, threatUnrest, canFaithAct, faithRest, faithLevel, crownFaith,
-  canCall, OPERATIONS, opTargets, exposureOf, canOperate, closedSeams, sideName,
+  canCall, OPERATIONS, opTargets, exposureOf, canOperate, closedSeams, sideName, ourVassals,
 } from '../sim/index.js';
 import { orderAttr } from './card.js';
 import { cooling } from './cooldown.js';
@@ -17,6 +17,7 @@ export const HAND_GROUPS = [
   ['faith', 'Faith'],
   ['book', 'The Book'],
   ['spies', 'Spies'],
+  ['rulers', 'Rulers and vassals'],
   ['realm', 'The realm'],
 ];
 
@@ -26,6 +27,13 @@ export const HAND_KINDS = {
   people: ['feast', 'progress', 'hang', 'gibbets', 'pardon'],
   book: ['granaries', 'mage', 'witchhunt'],
   calls: ['harvest', 'levy'],
+  // Acts aimed at one ruler or vassal: chosen on that ruler's audience or
+  // card, so the hand lists them while they rest.
+  rulers: {
+    audience: { gift: 'Gifts', denounce: 'Denounce', tribute: 'Demand tribute', ask: 'Ask a favour' },
+    vassal: { honours: 'Honours', summon: 'Summon to court', tribute: 'Raise tribute', ease: 'Ease tribute', hostage: 'Take a hostage', town: 'Grant a town' },
+    suzerain: { offer: 'Offer protection', press: 'Press into vassalage' },
+  },
 };
 
 const live = (state) => Object.keys(state.settlements).filter((id) => !state.settlements[id].occupier);
@@ -118,6 +126,33 @@ export function handRows(app) {
         action: { type: 'spyOp', realm: rid, kind, target: t.id },
       });
     }
+  }
+  // Rulers and vassals: what rests after an audience, a vassal order or an
+  // offer of protection, with the days left.
+  const R = HAND_KINDS.rulers;
+  const rest = (name, left, total, where) => push({
+    group: 'rulers', key: `rest:${name}`, name, line: `Chosen ${where}.`, ready: false, left, total, reason: '', action: { type: 'none' },
+  });
+  for (const [pid, keys] of Object.entries(state.diplomacy?.cooldowns ?? {})) {
+    for (const [key, until] of Object.entries(keys)) {
+      const kind = key.split(':')[0];
+      const left = until - state.day;
+      if (!R.audience[kind] || left <= 0) continue;
+      const c = world.diplomacy?.actions?.[kind];
+      rest(`${R.audience[kind]}: ${sideName(world, pid)}`, left, c?.cooldown ?? left, 'in an audience with that ruler');
+    }
+  }
+  const V = world.diplomacy?.vassals;
+  for (const rid of ourVassals(state)) {
+    for (const [kind, last] of Object.entries(state.realms[rid]?.vassal?.acted ?? {})) {
+      const total = V?.actions?.[kind]?.cooldown ?? V?.cooldown ?? 0;
+      if (R.vassal[kind] && total - (state.day - last) > 0) rest(`${R.vassal[kind]}: ${sideName(world, rid)}`, total - (state.day - last), total, "on that vassal's card");
+    }
+  }
+  for (const [key, until] of Object.entries(state.suzerainty?.cooldowns ?? {})) {
+    const [kind, rid] = key.split(':');
+    const total = world.diplomacy?.suzerainty?.[kind === 'press' ? 'pressure' : kind]?.cooldown ?? 0;
+    if (R.suzerain[kind] && until > state.day) rest(`${R.suzerain[kind]}: ${sideName(world, rid)}`, until - state.day, total || until - state.day, "on that ruler's card");
   }
   // The realm: the royal calls, and old gold workings to reopen.
   for (const call of HAND_KINDS.calls) {

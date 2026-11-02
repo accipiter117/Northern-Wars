@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | In progress (A to D done) |
+| M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | Done |
 | M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A done) |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
 | M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | Done |
@@ -53,6 +53,10 @@ Part D, cards, ledger and reports:
 - The ledger shows five income groups and four expense groups (armies, garrisons, upkeep and repairs, court and gifts), each with its total; crafts are one line; no line at 0 shows.
 - Reports of the same kind and shape in the same month merge into one with "and N more like it" to open.
 - Gold is mentioned only when a mine opens, runs thin or is lost; every top-bar symbol is named on long press.
+
+Part E, the audit kept as a test:
+- `tools/audit.mjs` runs a ten-year steward reign; tests fail if any works or resource produces nothing while its works stand, any income line shows 0, any act with a rest is missing from the crown's hand, any card shows more than four figures before Details, or any sub-screen is unreachable.
+- DESIGN.md records what each screen is for; BALANCE.md the ten-year totals.
 
 ## M32 acceptance criteria
 Part A, five more faiths:

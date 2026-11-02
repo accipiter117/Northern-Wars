@@ -36,7 +36,7 @@ export const SUBS = {
 
 // The old sub-screens and where they live now, for deep links and saved
 // navigation (M34 C). The Court's Spies moved to Diplomacy.
-const MOVED = {
+export const MOVED = {
   'realm:places': 'realm:overview',
   'court:spies': 'diplomacy:spies',
   'treasury:taxes': 'treasury:ledger',
