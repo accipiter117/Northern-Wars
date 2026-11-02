@@ -45,7 +45,8 @@ test('a town\'s companies and muster, and an army of companies with another join
   // (An army stands at Maribor, and a tap there picks the army: open the
   // town from the Places list.)
   await page.click('[data-tab="realm"]');
-  await page.click('.segs [data-sub="places"]');
+  await page.click('.segs [data-sub="overview"]');
+  await page.evaluate(() => { const d = document.querySelector('[data-sec="places"]'); if (d && !d.open) d.open = true; });
   await page.fill('[data-form="places"] input[data-field="q"]', 'Maribor');
   await page.click('[data-go="town:maribor"]');
   await page.waitForSelector('.segs [data-tsub="military"]');

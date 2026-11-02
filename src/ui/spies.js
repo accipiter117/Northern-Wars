@@ -83,9 +83,11 @@ function networksHtml(world, state, ours) {
       const word = goal > d + 1 ? `growing towards ${goal}` : goal < d - 1 ? `fading towards ${goal}` : 'holding';
       const sub = `${open.length ? `Opens: ${open.map((u) => u.short).join(', ')}. ` : ''}${next ? `At ${next.at}: ${next.short}.` : ''}`;
       return `<div class="spy-net" data-net="${rid}" data-go="realm:${rid}" role="button" tabindex="0">${gaugeHtml(escapeHtml(sideName(world, rid)), d, `${Math.round(d)}, ${word}`, false)}<p class="sub" title="${escapeHtml(open.map((u) => u.text).join('. '))}">${escapeHtml(sub)}</p></div>`;
-    }).join('');
+    });
+  // The five deepest; the other courts one tap down (M34 C).
+  const more = rows.length > 5 ? `<details class="spy-key" data-part="nets-more"><summary>The other ${rows.length - 5} courts</summary>${rows.slice(5).join('')}</details>` : '';
   const key = world.spies.unlocks.map((u) => `<li><b>${u.at}</b> ${escapeHtml(u.text)}</li>`).join('');
-  return `<div data-part="networks"><h3>Our networks abroad</h3><p class="sub">Tap a realm to set our agents to work there.</p>${rows}
+  return `<div data-part="networks"><h3>Our networks abroad</h3><p class="sub">Tap a realm to set our agents to work there.</p>${rows.slice(0, 5).join('')}${more}
     <details class="spy-key" data-part="spy-key"><summary>What each depth opens</summary><ul>${key}</ul></details></div>`;
 }
 

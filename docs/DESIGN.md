@@ -166,6 +166,14 @@ No new systems: what does nothing is fixed, what is hidden is surfaced, what is 
 - Each row: the act, one line of what it does and costs, and its state. Ready ones come first in their group with the ring's gold dot; resting ones wear their ring and say how many days are left. Acts not yet possible (a law unsigned, nothing to strike, out of season) stay off it. Acts aimed at a town go where they matter most (the rope and the pardon to the most restless town, the granaries to the hungriest, the gibbets to the worst roads).
 - The Love and Fear cards no longer carry their own act buttons: they say how many are ready and open the hand. Context buttons stay where they belong: a town's card offers its own acts, the Faith screen its faith's, a realm's card the work our network can do there.
 
+**Part C, fewer, clearer screens.** Fourteen sub-screens where there were twenty; what a merged screen gathers below its own sits in a fold of its own, remembered open or shut:
+- **Realm:** Labour (first, as M23 B set it) and Overview (needs attention, places in trouble, every place in a fold below).
+- **Court:** Decisions, Book of Laws, Faith, and Lords and vassals (the great houses, and the vassal kings in a fold, each opening its card).
+- **Treasury:** Ledger (with taxes and loans, and the standing order for repairs, in folds below) and Trade and mines (the market and deals, with mines, gold and industry in a fold).
+- **Military:** Forces (with the garrisons in a fold), Threats and War.
+- **Diplomacy:** Rulers, Audiences and pacts (the pacts and the web of alliances in a fold), and Spies (the Court's Spies screen moved here, its five deepest networks shown and the other courts one tap down, with embassies and agents abroad in a fold).
+- Old sub-screen ids (in saved navigation and in links the game gives) lead to their new homes and open the fold they mean (`canonicalTab`, `goWhere`, `mendSubs` in router.js).
+
 ### Five more faiths (M32 A)
 - The Great Sun, Kreve, Lebioda and Freya join the Eternal Fire, Melitele and the Old Ways on the M26 model (data/devotion.json): Devotion 0 to 100 in five levels, five perks each, a power at level 3, the same acts to develop them (endow, preachers, festival, pilgrimage, church land), and the Book's Faith of the crown can name any of them.
   - **The Great Sun**, Nilfgaard's creed: order in the towns (Unrest -3), obedient taxpayers (tax +5%), cheaper garrisons, Fear, stronger garrisons. Power: Imperial order (250 crowns, every 120 days): the most troubled town's Unrest -20, Fear +2. It clashes with the Fire.

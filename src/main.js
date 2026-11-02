@@ -8,7 +8,7 @@ import { createPanel } from './ui/panel.js';
 import { createNav } from './ui/nav.js';
 import { attachPanelInput } from './ui/clicks.js';
 import { createPick } from './ui/pick.js';
-import { renderRoute } from './ui/router.js';
+import { renderRoute, goWhere } from './ui/router.js';
 import { pendingDecisions, urgentItems } from './ui/inbox.js';
 import { freshPowers } from './ui/faith.js';
 import { loadMemory, saveMemory, TABS } from './ui/memory.js';
@@ -451,7 +451,8 @@ async function boot() {
   // "military:war" opens the Military tab on its War sub-tab.
   // An explicit jump goes to the tab's own screen, not a card left open on it.
   function goTab(where) {
-    const [t, sub] = where.split(':');
+    // Old sub-screens lead to their new homes (M34 C).
+    const [t, sub] = (where.includes(':') ? goWhere(memory, where) : where).split(':');
     nav.rememberScroll();
     if (sub) memory.sub[t] = sub;
     memory.stacks[t] = [`tab:${t}`];

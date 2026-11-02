@@ -115,7 +115,8 @@ test('treaties, gifts and terms in an audience; the web of pacts', async () => {
   assert.match(await page.textContent('.aud-bottom'), /Terms before war[\s\S]*A border claim[\s\S]*No reason given/);
   await page.click('[data-aud-close]');
   // The web of pacts across the North.
-  await page.click('[data-sub="pacts"]');
+  await page.click('[data-sub="envoys"]');
+  await page.evaluate(() => { const d = document.querySelector('[data-sec="pacts"]'); if (d && !d.open) d.open = true; });
   await page.waitForSelector('svg.web line');
   assert.ok(await page.locator('svg.web line').count() >= 1);
   assert.ok(await page.locator('svg.web image').count() >= 10);
@@ -181,7 +182,8 @@ test('screenshots: an audience, the deal table and the web of pacts', async () =
   for (const vp of [{ name: 'portrait', width: 390, height: 844 }, { name: 'landscape', width: 844, height: 390 }]) {
     const { context, page, errors } = await open(serialize(s), vp);
     await page.click('[data-tab="diplomacy"]');
-    await page.click('[data-sub="pacts"]');
+    await page.click('[data-sub="envoys"]');
+  await page.evaluate(() => { const d = document.querySelector('[data-sec="pacts"]'); if (d && !d.open) d.open = true; });
     await page.waitForSelector('svg.web');
     if (vp.name === 'portrait') {
       // The sheet raised to its full height, to show the whole web.

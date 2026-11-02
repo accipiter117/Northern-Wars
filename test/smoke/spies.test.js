@@ -37,7 +37,8 @@ test('the Spies screen: budget, spymaster and networks', async () => {
   await page.addInitScript((sv) => localStorage.setItem('northern-wars.save', sv), serialize(s));
   await page.goto(`${base}?paused&nohints`);
   await page.waitForFunction(() => window.northernWars && document.getElementById('loading').hidden);
-  await page.click('[data-tab="court"]');
+  // Since M34 C the Spies screen is under Diplomacy.
+  await page.click('[data-tab="diplomacy"]');
   await page.click('[data-sub="spies"]');
   await page.waitForSelector('[data-part="networks"]');
   // No spymaster yet: candidates offered; of the foreign agents only
@@ -121,6 +122,7 @@ test('a caught agent before the crown, and troubles without a name', async () =>
   await dec.locator('[data-choice="3"]').click();
   await page.waitForFunction(() => !window.northernWars.state.dilemmas.open.some((o) => o.agent));
   assert.ok(await page.evaluate(() => window.northernWars.state.spycraft.known.nilfgaard > window.northernWars.state.day));
+  await page.click('[data-tab="diplomacy"]');
   await page.click('[data-sub="spies"]');
   await page.waitForSelector('[data-part="clues"]');
   assert.equal(await page.locator('[data-clue]').count(), 2);

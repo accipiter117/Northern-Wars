@@ -163,7 +163,6 @@ export function intelListHtml(app) {
   }).join('');
   return `${cardHead({
     status: '<span>Embassies watch a capital and bring its news; spies show a whole realm for a time, at the risk of being caught. Open a realm to send either. The networks and the spymaster are kept under the Court.</span>',
-    actions: '<button type="button" class="act" data-tab-go="court:spies"><span class="act-label">Spies and the spymaster</span></button>',
     chips: [{ icon: 'castle', label: 'Embassies', value: embassies }, { icon: 'target', label: 'Spies abroad', value: spies }, { icon: 'coin', label: 'Embassy', value: `${c.embassy.monthly} a month` }],
   })}<div data-part="intel"><div class="rows">${rows}</div></div>`;
 }

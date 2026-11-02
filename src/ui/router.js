@@ -2,7 +2,8 @@
 // sub-tabs) and the cards opened from them or from the map.
 import { escapeHtml } from './format.js';
 import { battleCard, battleTitle } from './battle.js';
-import { segs } from './card.js';
+import { segs, section } from './card.js';
+import { setOpen } from './memory.js';
 import { realmTab, meterCard, repairOrderHtml } from './realmTab.js';
 import { pendingDecisions, inboxHtml } from './inbox.js';
 import { stewardHtml } from './steward.js';
@@ -11,7 +12,7 @@ import { noblesHtml, houseCard, swatch, depositionHtml, vassalCard } from './nob
 import { faithHtml, freshPowers } from './faith.js';
 import { spiesHtml } from './spies.js';
 import { handHtml } from './hand.js';
-import { crownStyle, suzerainOf } from '../sim/index.js';
+import { crownStyle, suzerainOf, ourVassals, sideName, vassalOf } from '../sim/index.js';
 import { ledgerHtml, chronicleHtml } from './menu.js';
 import { industryHtml } from './trade.js';
 import { marketHtml, taxesHtml } from './market.js';
@@ -23,13 +24,64 @@ import { townCard } from './townCard.js';
 import { helpHtml } from './hints.js';
 import { boardCard, boardTitle, ordersHtml } from './board.js';
 
+// Fourteen sub-screens (M34 C), where there were twenty.
 export const SUBS = {
-  realm: [['labour', 'Labour'], ['overview', 'Overview'], ['places', 'Places']],
-  court: [['inbox', 'Decisions'], ['laws', 'Laws'], ['houses', 'Great houses'], ['faith', 'Faith'], ['spies', 'Spies']],
-  treasury: [['ledger', 'Ledger'], ['taxes', 'Taxes and loans'], ['trade', 'Trade'], ['industry', 'Mines and industry']],
-  military: [['forces', 'Forces'], ['threats', 'Threats'], ['garrisons', 'Garrisons'], ['war', 'War']],
-  diplomacy: [['realms', 'Rulers'], ['pacts', 'Pacts'], ['envoys', 'Audiences'], ['intel', 'Spies and embassies']],
+  // Labour stays first, as M23 B set it: the realm's most-used screen.
+  realm: [['labour', 'Labour'], ['overview', 'Overview']],
+  court: [['inbox', 'Decisions'], ['laws', 'Book of Laws'], ['faith', 'Faith'], ['houses', 'Lords and vassals']],
+  treasury: [['ledger', 'Ledger'], ['trade', 'Trade and mines']],
+  military: [['forces', 'Forces'], ['threats', 'Threats'], ['war', 'War']],
+  diplomacy: [['realms', 'Rulers'], ['envoys', 'Audiences and pacts'], ['spies', 'Spies']],
 };
+
+// The old sub-screens and where they live now, for deep links and saved
+// navigation (M34 C). The Court's Spies moved to Diplomacy.
+const MOVED = {
+  'realm:places': 'realm:overview',
+  'court:spies': 'diplomacy:spies',
+  'treasury:taxes': 'treasury:ledger',
+  'treasury:industry': 'treasury:trade',
+  'treasury:routes': 'treasury:trade',
+  'military:garrisons': 'military:forces',
+  'diplomacy:pacts': 'diplomacy:envoys',
+  'diplomacy:intel': 'diplomacy:spies',
+};
+
+// Where a tab and sub-screen live now: "treasury:taxes" gives
+// "treasury:ledger"; an unknown sub-screen gives the tab's first.
+export function canonicalTab(where) {
+  const moved = MOVED[where] ?? where;
+  const [tab, sub] = moved.split(':');
+  if (!SUBS[tab]) return moved;
+  return `${tab}:${SUBS[tab].some(([id]) => id === sub) ? sub : SUBS[tab][0][0]}`;
+}
+
+// The fold an old link means, opened when it is followed.
+const FOLDS = {
+  'treasury:taxes': 'taxes',
+  'treasury:industry': 'mines',
+  'treasury:routes': 'mines',
+  'military:garrisons': 'garrisons',
+  'diplomacy:pacts': 'pacts',
+  'diplomacy:intel': 'embassies',
+};
+export function goWhere(memory, where) {
+  const to = canonicalTab(where);
+  const fold = FOLDS[where];
+  if (fold) setOpen(memory, `tab:${to.split(':')[0]}`, fold, true);
+  return to;
+}
+
+// Old ids in saved navigation, mapped to their new homes (M34 C).
+export function mendSubs(memory) {
+  for (const tab of Object.keys(SUBS)) {
+    const at = memory.sub?.[tab];
+    if (!at) continue;
+    const [t, s] = canonicalTab(`${tab}:${at}`).split(':');
+    if (t === tab) memory.sub[tab] = s;
+    else memory.sub[tab] = SUBS[tab][0][0];
+  }
+}
 
 const TAB_TITLES = { court: 'The Court', treasury: 'Treasury', military: 'Military', diplomacy: 'Diplomacy' };
 
@@ -43,15 +95,17 @@ function subBadges(app, tab) {
 }
 
 function tabScreen(app, tab) {
+  mendSubs(app.memory);
   if (tab === 'realm') return realmTab(app);
   const sub = app.memory.sub[tab];
+  // What a merged screen gathers below its own, each in a fold of its own.
+  const fold = (id, title, html, count = null) => section(app.memory, `tab:${tab}`, id, title, html, { count });
   const badges = subBadges(app, tab);
   const list = SUBS[tab].map(([id, label]) => [id, label, badges[id] || 0]);
   let html = '';
   if (tab === 'court') {
     if (sub === 'laws') html = lawsHtml(app);
-    else if (sub === 'houses') html = noblesHtml(app);
-    else if (sub === 'spies') html = spiesHtml(app);
+    else if (sub === 'houses') html = noblesHtml(app) + fold('vassals', 'Vassal kings', vassalsHtml(app), ourVassals(app.state).length || null);
     else if (sub === 'faith') {
       html = faithHtml(app);
       if (app.memory.faithSeen !== app.state.day) {
@@ -61,24 +115,32 @@ function tabScreen(app, tab) {
     }
     else html = stewardHtml(app) + inboxHtml(pendingDecisions(app.state, app.world, app.acked()));
   } else if (tab === 'treasury') {
-    if (sub === 'trade' || sub === 'routes') html = marketHtml(app);
-    else if (sub === 'taxes') html = taxesHtml(app);
-    else if (sub === 'industry') html = industryHtml(app);
-    else html = stewardHtml(app) + ledgerHtml(app) + repairOrderHtml(app.state);
+    if (sub === 'trade') html = marketHtml(app) + fold('mines', 'Mines, gold and industry', industryHtml(app));
+    else html = stewardHtml(app) + ledgerHtml(app) + fold('taxes', 'Taxes and loans', taxesHtml(app)) + fold('repairs', 'The standing order for repairs', repairOrderHtml(app.state));
   } else if (tab === 'military') {
     if (sub === 'threats') html = threatsHtml(app);
-    else if (sub === 'garrisons') html = garrisonsHtml(app);
     else if (sub === 'war') html = warHtml(app);
-    else html = forcesHtml(app);
+    else html = forcesHtml(app) + fold('garrisons', 'Garrisons', garrisonsHtml(app));
   } else if (tab === 'diplomacy') {
-    if (sub === 'intel') html = intelListHtml(app);
-    else if (sub === 'envoys') html = envoysHtml(app);
-    else if (sub === 'pacts') html = pactsHtml(app);
+    if (sub === 'spies') html = spiesHtml(app) + fold('embassies', 'Embassies and agents abroad', intelListHtml(app));
+    else if (sub === 'envoys') html = envoysHtml(app) + fold('pacts', 'Pacts and the web of alliances', pactsHtml(app));
     else html = neighboursHtml(app);
   }
   // Foltest's style heads the Court, growing with each title won (M29 A).
   const style = tab === 'court' ? `<p class="crown-style" data-part="style">${escapeHtml(crownStyle(app.state, app.world))}</p>` : '';
   return { title: TAB_TITLES[tab], html: `${style}${segs(list, sub)}${html}` };
+}
+
+// The vassal kings, beside the great houses (M34 C): each opens its card.
+function vassalsHtml(app) {
+  const { state, world } = app;
+  const list = ourVassals(state);
+  if (!list.length) return '';
+  return `<div class="rows" data-part="vassal-kings">${list.map((rid) => {
+    const v = vassalOf(state, world, rid);
+    return `<button type="button" class="row realm-row" data-vassal="${rid}" data-go="vassal:${rid}"><span class="row-main"><span class="row-name">${escapeHtml(sideName(world, rid))}</span>
+      <span class="row-sub">Loyalty ${Math.round(v?.loyalty ?? 0)}</span></span></button>`;
+  }).join('')}</div>`;
 }
 
 const gone = (title, what) => ({ title, html: `<div data-part="head"><p class="sub">${what}</p></div>` });

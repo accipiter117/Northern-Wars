@@ -26,7 +26,7 @@
 | M22 A lighter, livelier, fairer realm | A: frames only when something needs drawing, gentle and capped frame rates, Battery saver; B: every traveller stands for something real, life at the works, witchers on the road; C: one military of companies from levies, standing troops, retinues and hired swords, tuned against domestic threats; D: Trust, Unrest and Dread in place of Authority and Stability | Done (A to E) |
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
-| M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | In progress (A and B done) |
+| M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | In progress (A to C done) |
 | M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A done) |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
 | M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | Done |
@@ -43,6 +43,10 @@ Part A, dead and broken mechanics:
 Part B, one place for the crown's acts:
 - A Crown's hand sheet, from a top-bar button with the count of acts ready, lists every act with a cost or a rest in groups (the people, faith, the Book, spies, the realm), each with its effect, cost and state (ready with a gold dot, or a ring with days left); ready ones float to the top.
 - Duplicate entry points are removed where the act now lives on the sheet; context buttons stay.
+
+Part C, fewer, clearer screens:
+- Fourteen sub-screens: Realm (Overview, Labour); Court (Decisions, Book of Laws, Faith, Lords and vassals); Treasury (Ledger, Trade and mines); Military (Forces, Threats, War); Diplomacy (Rulers, Audiences and pacts, Spies).
+- Deep links and badges keep working; old sub-screen ids in saved navigation map to their new homes.
 
 ## M32 acceptance criteria
 Part A, five more faiths:
