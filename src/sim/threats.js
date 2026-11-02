@@ -345,12 +345,18 @@ function pickVillage(state, world, t, body) {
   return best?.id ?? null;
 }
 
-function spawnScoiatael(state, world, rng) {
+export function spawnScoiatael(state, world, rng) {
   const cfg = T(world).scoiatael;
-  if (state.sympathy <= cfg.above) return;
+  // Recruits in the woods (M32 D) need less sympathy to strike, strike more
+  // often and swell the bands.
+  const sp = world.culture?.scoiatael?.spawn;
+  const pool = state.scoiatael?.recruits ?? 0;
+  const above = cfg.above - (sp ? Math.min(sp.threshold, pool * 0.2) : 0);
+  if (state.sympathy <= above) return;
   if (state.threats.list.filter((t) => t.kind === 'scoiatael').length >= cfg.max) return;
+  const boost = sp ? Math.min(sp.maxChance, 1 + pool * sp.perRecruitChance) : 1;
   // The Old Ways (M26 C) make the dryads and their allies less hostile.
-  if (!rng.chance(cfg.chance * Math.max(0, 1 + faithEffect(state, world, 'scoiatael')) * (state.sympathy - cfg.above) / (100 - cfg.above))) return;
+  if (!rng.chance(cfg.chance * boost * Math.max(0, 1 + faithEffect(state, world, 'scoiatael')) * (state.sympathy - above) / (100 - above))) return;
   // The woods near Brokilon, or near the elves of the realm.
   const places = world.geography.settlements.filter((st) => world.forestNear[st.id] && !state.settlements[st.id].occupier);
   if (!places.length) return;
@@ -358,7 +364,9 @@ function spawnScoiatael(state, world, rng) {
   const st = places.find((p) => (roll -= 1 + (state.settlements[p.id].population.elf ?? 0) / 20) < 0) ?? places[0];
   const site = wildSites(world, st.id).find((s) => s.terrain === 'forest') ?? { x: st.x + 30, y: st.y + 30, terrain: 'forest' };
   const [lo, hi] = cfg.men;
-  const men = Math.min(threatCap(state, world, 'scoiatael'), (lo + rng.int(hi - lo + 1)) * threatScale(state, world));
+  const join = sp ? Math.floor(pool * sp.share) : 0;
+  const men = Math.min(threatCap(state, world, 'scoiatael'), (lo + rng.int(hi - lo + 1)) * threatScale(state, world) + join);
+  if (join && state.scoiatael) state.scoiatael.recruits = Math.max(0, pool - join);
   const t = newThreat(state, 'scoiatael', { terrain: 'forest', x: site.x, y: site.y, near: st.id, men, morale: 85 });
   const seg = pickRoad(state, world, rng, t, 140);
   if (!seg) {

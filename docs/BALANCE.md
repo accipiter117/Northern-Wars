@@ -633,6 +633,19 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### The Scoia'tael and the laws (M32 D)
+Ten years, seeds 1 to 3, a reign on average (recruits by where they came from):
+
+| Crown | Commandos | Recruits |
+| --- | --- | --- |
+| Idle | 0 (was 0) | restless young 214, Dol Blathanna 185, foreign silver 146, hunger 7 |
+| Steward | 2.3 (was 0) | restless young 263, Dol Blathanna 183, foreign silver 152, hunger 7 |
+| Tyrant | 28 (was 17.7) | pogroms 239, the laws against them 162, Dol Blathanna 189, restless young 97, grievance 95, foreign silver 17, hunger 2 |
+
+- The peace test's months (seeds 1 to 3, year 3): the steward 2,289 to 2,363, the careless crown 1,501 to 1,658 (its non-humans give half their gifts even to a careless crown), a gap of 658 to 788; the test asks for under 1,800 and a gap of 600.
+- A calm crown's woods fill slowly (about 60 recruits a year, most fading again) and rarely strike: the sympathy they need still matters most. The steward's two commandos come where the Empire's network runs deep.
+- The tyrant's pogroms and laws more than double its recruits and bring half as many commandos again. Its inquisition keeps foreign networks shallow (foreign silver 17), and its emptied quarters send fewer of the restless young.
+
 ### What each people brings (M32 C)
 - At the start (every people at 50) the gifts are half size: Carreras' smithing +15% and mines +10%, Vizima's smithing +7%, Old Bottoms' harvest +5%, Flotsam's plague deaths -20%.
 - The peace test's months (seeds 1 to 3, year 3): the steward clears 2,357 to 2,377 a month (2,140 to 2,216 after Part B) and the careless crown 1,511 to 1,566; the gap is back to 798 to 846, since the steward's charter and good name keep the non-humans' goodwill and with it their work, and the peace test asks for 700 again.

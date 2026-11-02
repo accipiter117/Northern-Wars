@@ -10,6 +10,7 @@ import { lawStands, crownFaith } from './book.js';
 import { faithEffect } from './faiths.js';
 import { canRiot } from './meters.js';
 import { damagePlace } from './works.js';
+import { addRecruits } from './forest.js';
 
 const say = (state, text) => addDispatch(state, text, 'faith');
 
@@ -170,11 +171,7 @@ export function pogrom(state, world, rng, id, s = state.settlements[id], name = 
   state.sympathy = clamp(state.sympathy + p.sympathy, 0, 100);
   // The young who survive go to the forests (M32 D draws on them).
   const recruits = Math.round(young * (p.recruitShare ?? 0));
-  if (recruits) {
-    const sc = (state.scoiatael ??= { recruits: 0, from: {} });
-    sc.recruits += recruits;
-    sc.from.pogroms = (sc.from.pogroms ?? 0) + recruits;
-  }
+  addRecruits(state, 'pogroms', recruits);
   s.tension = clamp(s.tension + p.tensionAfter, 0, 100);
   s.unrest = clamp(s.unrest + world.culture.riot.unrest, 0, 100);
   s.troubled = world.culture.riot.troubledDays * 2;

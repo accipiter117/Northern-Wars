@@ -77,6 +77,20 @@
     "ambushChance": 0.35,
     "ambushProsperity": 4
   },
+  "scoiatael": {
+    "note": "M32 D: where the Scoia'tael's recruits come from. Each month every crown town sends perThousand recruits for each thousand of its young non-humans (weighted by people), more with persecution laws, hunger and grievance (the elves' opinion below grievanceBelow), fewer with tolerance and prosperity. Foreign networks in Temeria deeper than spies.from (the Empire's, or any hostile court's) send spies.per a point a month; Aedirn's Dol Blathanna sends aedirn.base a month (times atWar while Aedirn fights). Pogroms send theirs at once. The pool fades by decay a month; it makes commandos likelier (perRecruitChance each, up to maxChance), lowers the sympathy they need (by up to threshold) and swells their bands (share of the pool joins each).",
+    "perThousand": 1.2,
+    "weights": { "elf": 1, "dwarf": 0.3, "gnome": 0.2, "halfling": 0.1 },
+    "laws": { "book:restrictions": 1.0, "book:inquisition": 0.5, "faith:eternal_fire": 0.3, "book:nonhuman_charter": -0.5, "book:freedom_of_worship": -0.3 },
+    "hunger": 2,
+    "grievanceBelow": 45,
+    "grievance": 1.5,
+    "prosperity": 0.01,
+    "spies": { "from": 40, "per": 0.08, "owners": ["nilfgaard"] },
+    "aedirn": { "realm": "aedirn", "base": 1.5, "atWar": 2 },
+    "decay": 0.02,
+    "spawn": { "perRecruitChance": 0.01, "maxChance": 2.5, "threshold": 15, "share": 0.4 }
+  },
   "gifts": {
     "note": "M32 C: what each people brings to the towns it lives in. A people's weight in a town is min(1, its share / fullShare) times its mood (opinion - moodFrom) / moodSpan, from 0 to moodMost; each gift below is its full size, scaled by that weight. Crafts name the works whose takings rise; mines raise iron and stone output, gold and silver; arms raise the weaponsmiths' output; food the harvest; plague cuts plague deaths; prosperity is points a month, up to prosperityCap.",
     "fullShare": 0.1,
