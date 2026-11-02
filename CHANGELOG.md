@@ -1,5 +1,9 @@
 # Changelog
 
+## M34 B The crown's hand
+- A sceptre on the top bar opens the crown's hand: every act with a cost or a rest in one list (feasts and the rope, faith powers, the Book's acts, spy work, the royal calls, old mines to reopen). The gold number on it says how many are ready.
+- Ready acts come first; resting ones show a ring and the days left.
+
 ## M34 A The great tidying: what did nothing
 - The old gold workings now show up under Needs attention with their cost and what they would earn: one tap reopens them. The Mines screen lists every seam and what it is doing.
 - Masons and levies with nothing to do now help in the fields, the fishing boats and the mines until they are wanted. The Labour screen shows them as on call.

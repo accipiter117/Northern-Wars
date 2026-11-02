@@ -75,17 +75,21 @@ test('Love, Fear, Authority and Unrest, each with its reasons; Authority\'s bar 
     assert.match(await page.textContent('#sheet-title'), new RegExp(title));
     const lines = await page.$$eval('[data-part="why"] [data-part="reasons"] > div', (els) => els.length);
     assert.ok(lines >= 1 && lines <= 5, `${key}: ${lines} lines`);
-    if (key === 'love' || key === 'fear') assert.ok(await page.locator('[data-part="acts"] [data-act]').count() >= 2, `${key} offers the crown's acts`);
+    // Since M34 B the acts live on the crown's hand; the card opens it.
+    if (key === 'love' || key === 'fear') assert.equal(await page.locator('[data-part="acts"] [data-go="hand"]').count(), 1, `${key} leads to the crown's acts`);
     await page.evaluate(() => document.querySelector('[data-part="why"]').scrollIntoView({ block: 'start' }));
     await page.waitForTimeout(150);
     await page.screenshot({ path: join(OUT, `portrait-crown-${key}.png`) });
     await page.click('#sheet-close');
   }
-  // A feast from the Love card: Love rises, with Undo on offer.
+  // A feast from the Love card, by way of the crown's hand: Love rises,
+  // with Undo on offer.
   const love = await page.evaluate(() => window.northernWars.state.love);
   await page.click('#topbar [data-go="meter:love"]');
-  await page.evaluate(() => document.querySelector('[data-act="feast"]').scrollIntoView({ block: 'center' }));
-  await page.click('[data-act="feast"]');
+  await page.click('[data-part="acts"] [data-go="hand"]');
+  await page.waitForSelector('[data-hand="act:feast"]');
+  await page.evaluate(() => document.querySelector('[data-hand="act:feast"]').scrollIntoView({ block: 'center' }));
+  await page.click('[data-hand="act:feast"]');
   assert.ok(await page.evaluate(() => window.northernWars.state.love) > love);
   assert.equal(await page.isVisible('#undo'), true);
   assert.deepEqual(errors, []);

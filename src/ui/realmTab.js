@@ -9,6 +9,7 @@ import {
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { closedSeams } from '../sim/gold.js';
+import { handRows } from './hand.js';
 import { icon } from './icons.js';
 import { chips, segs, section, cardHead, orderAttr } from './card.js';
 import { form } from './memory.js';
@@ -398,28 +399,16 @@ export function townActsHtml(app, id) {
   return rows ? `<h3>Acts of the crown</h3><div class="build-list">${rows}</div>` : '';
 }
 
+// The acts that win Love or Fear live on the Crown's hand (M34 B): the card
+// says how many are ready and opens it.
 function actsHtml(app, key) {
-  const { state, world } = app;
-  const a = world.meters?.acts;
-  if (!a) return '';
-  if (key === 'love') {
-    return `<div data-part="acts"><h3>To win their love</h3><div class="build-list">
-      ${actButton(app, 'feast', null, `${number(a.feast.coin)} crowns. Love +${a.feast.love}, and the lords pleased.`)}
-      ${actButton(app, 'progress', null, `${number(a.progress.coin)} crowns, a month away from court (no decrees). Love and calm in the ${a.progress.towns} greatest towns.`)}
-    </div></div>`;
-  }
-  if (key === 'fear') {
-    // The most restless town of ours, for the rope; the one most troubled by
-    // bandits and beasts, for the gibbets.
-    const live = Object.keys(state.settlements).filter((id) => !state.settlements[id].occupier);
-    const angry = live.sort((x, y) => state.settlements[y].unrest - state.settlements[x].unrest)[0];
-    const roads = [...live].sort((x, y) => threatUnrest(state, world, y) - threatUnrest(state, world, x))[0];
-    return `<div data-part="acts"><h3>To make them fear the crown</h3><div class="build-list">
-      ${angry ? actButton(app, 'hang', angry, `Fear +${a.hang.fear}, the town quiet, Love ${a.hang.love}.`) : ''}
-      ${roads ? actButton(app, 'gibbets', roads, `${number(a.gibbets.coin)} crowns. Fear +${a.gibbets.fear} and more each month they stand; the roads calmer.`) : ''}
-    </div><p class="sub">The rope and the king's riders are laws of the Iron Hand in the Book of Laws; hostages are taken from a house's card.</p></div>`;
-  }
-  return '';
+  if (key !== 'love' && key !== 'fear') return '';
+  const kinds = key === 'love' ? ['feast', 'progress', 'pardon'] : ['hang', 'gibbets'];
+  const rows = handRows(app).filter((r) => r.group === 'people' && kinds.some((k) => r.key === `act:${k}`));
+  const ready = rows.filter((r) => r.ready).length;
+  const what = key === 'love' ? 'Feasts, a royal progress, pardons' : 'The rope and the gibbets';
+  return `<div data-part="acts"><button type="button" class="act wide" data-go="hand"><span class="act-label">${what}: on the crown's hand</span>
+    <span class="act-sub">${ready ? `${ready} ready now.` : rows.length ? 'All resting for now.' : 'None open yet: the Book of Laws opens more.'}</span></button>${key === 'fear' ? '<p class="sub">The king\'s riders are a law of the Iron Hand in the Book of Laws; hostages are taken from a house\'s card.</p>' : ''}</div>`;
 }
 function meterOf(app, key, good, low) {
   const { state, world } = app;

@@ -91,7 +91,10 @@ test('the Steward\'s report on Decisions and the Treasury: in, out, net, and a f
 
 test('work under half manned is the first thing the pressure strip says, and the report says it too', async () => {
   const s = realm();
-  s.labour.split = { ...s.labour.split, mines: 1, crafts: s.labour.split.crafts + s.labour.split.mines - 1 };
+  // The masons and levies to the workshops too, or on call (M34 A) they
+  // would fill the mines' gap.
+  const sp = s.labour.split;
+  s.labour.split = { ...sp, mines: 1, repairs: 0, levies: 0, crafts: sp.crafts + sp.mines - 1 + sp.repairs + sp.levies };
   s.labour.report = null;
   const { context, page, errors } = await open(serialize(step(s, 1, world, { ambient: false })));
   await page.waitForFunction(() => /under half manned/.test(document.getElementById('pressure').textContent));

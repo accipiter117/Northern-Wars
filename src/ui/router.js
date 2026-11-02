@@ -10,6 +10,7 @@ import { lawsHtml } from './laws.js';
 import { noblesHtml, houseCard, swatch, depositionHtml, vassalCard } from './nobles.js';
 import { faithHtml, freshPowers } from './faith.js';
 import { spiesHtml } from './spies.js';
+import { handHtml } from './hand.js';
 import { crownStyle, suzerainOf } from '../sim/index.js';
 import { ledgerHtml, chronicleHtml } from './menu.js';
 import { industryHtml } from './trade.js';
@@ -116,6 +117,8 @@ export function renderRoute(app, route) {
     case 'meter': return meterCard(app, arg);
     case 'chronicle': return { title: 'Chronicle', html: chronicleHtml(state, app.memory.forms.chronicle?.filter ?? 'all') };
     case 'help': return { title: 'Help', html: helpHtml(app) };
+    // Every act with a cost or a rest, in one list (M34 B).
+    case 'hand': return { title: 'The crown\'s hand', html: handHtml(app) };
     case 'deposition': {
       const d = state.depositions.at(-1);
       return d ? { title: 'The crown is deposed', html: `<div data-part="head">${depositionHtml(d)}</div>` } : gone('Deposition', 'The crown has never been deposed.');
