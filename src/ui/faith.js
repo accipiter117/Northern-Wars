@@ -7,7 +7,7 @@ import { cooling } from './cooldown.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 
 export const FAITH_COLOURS = { eternal_fire: '#c0582c', melitele: '#d9c27a', old_ways: '#5f7d4c', great_sun: '#e8b84a', kreve: '#7d8aa0', lebioda: '#c9b8e0', freya: '#4f9db0' };
-export const PEOPLE_COLOURS = { human: '#c9b48a', dwarf: '#9a6a3a', elf: '#6f9a5a', halfling: '#d28c4a' };
+export const PEOPLE_COLOURS = { human: '#c9b48a', dwarf: '#9a6a3a', elf: '#6f9a5a', halfling: '#d28c4a', gnome: '#8a7fb0' };
 export const TENSION_WORDS = ['Calm', 'Uneasy', 'Strained', 'Bitter', 'Boiling'];
 const SYMPATHY_WORDS = ['Scarcely a whisper', 'Muttering', 'Open sympathy', 'Many in the woods', 'A rising'];
 
@@ -40,11 +40,11 @@ export function gaugeHtml(label, value, word, bad) {
 export function faithHtml(app) {
   const { world, state, lookups } = app;
   const faith = realmFaith(state);
-  const peoples = { human: 0, dwarf: 0, elf: 0, halfling: 0 };
+  const peoples = { human: 0, dwarf: 0, elf: 0, halfling: 0, gnome: 0 };
   let pop = 0;
   for (const s of Object.values(state.settlements)) {
     pop += totalPopulation(s);
-    for (const p of Object.keys(peoples)) peoples[p] += s.population[p];
+    for (const p of Object.keys(peoples)) peoples[p] += s.population[p] ?? 0;
   }
   const tense = Object.entries(state.settlements)
     .filter(([, s]) => tensionWeight(world, s) > 0)

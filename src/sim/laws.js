@@ -9,6 +9,7 @@ import { creditLimit } from './economy.js';
 import { addDispatch, clamp } from './realm.js';
 import { faithEffects } from './faiths.js';
 import { bookEffects, bookOpinion } from './book.js';
+import { NONHUMAN } from './culture.js';
 
 const say = (state, text) => addDispatch(state, text, 'realm');
 
@@ -171,7 +172,7 @@ export function opinionUnrest(state, world, id, s) {
   let pop = 0;
   for (const n of Object.values(s.population)) pop += n;
   if (pop > 0) {
-    for (const p of ['dwarf', 'elf', 'halfling']) u += (50 - o[p]) * fx.peopleUnrest * (s.population[p] / pop);
+    for (const p of NONHUMAN) u += (50 - (o[p] ?? 50)) * fx.peopleUnrest * ((s.population[p] ?? 0) / pop);
   }
   return u;
 }

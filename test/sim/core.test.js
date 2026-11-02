@@ -41,8 +41,7 @@ test('every settlement can be reached by road from Vizima', () => {
 test('the start state covers every settlement with sane values', () => {
   const state = createState(world, 1);
   assert.equal(Object.keys(state.settlements).length, world.geography.settlements.length);
-  assert.equal(state.settlements.vizima.population.human + state.settlements.vizima.population.dwarf
-    + state.settlements.vizima.population.elf + state.settlements.vizima.population.halfling, 18000);
+  assert.equal(Object.values(state.settlements.vizima.population).reduce((a, b) => a + b, 0), 18000);
   for (const m of ['love', 'fear', 'unrest']) assert.ok(state[m] >= 0 && state[m] < 100, m);
 });
 

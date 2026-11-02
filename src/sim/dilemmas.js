@@ -14,6 +14,7 @@ import { houseDef } from './lords.js';
 import { changeTrust, rulerShort } from './diplomacy.js';
 import { caughtText, resolveCaught } from './counter.js';
 import { cultText, resolveCult } from './cult.js';
+import { hasQuarter } from './quarters.js';
 import { sideName } from './conflict.js';
 
 const D = (world) => world.dilemmas;
@@ -66,6 +67,8 @@ function placeFits(state, world, p, id) {
   for (const [f, v] of Object.entries(p.minFaith ?? {})) if ((s.faith?.[f] ?? 0) < v) return false;
   for (const [g, v] of Object.entries(p.minPeople ?? {})) if ((s.population?.[g] ?? 0) < v) return false;
   if (p.minNonhuman !== undefined && nonhumanShare(s) < p.minNonhuman) return false;
+  // A non-human quarter (M32 B).
+  if (p.quarter && !hasQuarter(world, s)) return false;
   return true;
 }
 
@@ -169,6 +172,7 @@ export function effectLine(fx = {}, { lord = null, realm = null } = {}) {
   if (fx.unrest) out.push(`Unrest ${sign(fx.unrest)}`);
   if (fx.townUnrest) out.push(`unrest there ${sign(fx.townUnrest)}`);
   if (fx.prosperity) out.push(`prosperity there ${sign(fx.prosperity)}`);
+  if (fx.tension) out.push(fx.tension > 0 ? 'the quarter more afraid' : 'the quarter calmer');
   if (fx.loyalty) out.push(`${lord ?? 'the lord'}'s loyalty ${sign(fx.loyalty)}`);
   for (const [f, v] of Object.entries(fx.devotion ?? {})) if (v) out.push(`${FAITH_NAMES[f] ?? f} ${sign(v)}`);
   for (const [g, v] of Object.entries(fx.opinion ?? {})) if (v) out.push(`${GROUP_NAMES[g] ?? g} ${v > 0 ? 'pleased' : 'angered'}`);
@@ -249,6 +253,7 @@ function apply(state, world, fx, o, why) {
   if (s) {
     if (fx.townUnrest) s.unrest = clamp(s.unrest + fx.townUnrest, 0, 100);
     if (fx.prosperity) s.prosperity = clamp(s.prosperity + fx.prosperity, 0, 100);
+    if (fx.tension) s.tension = clamp(s.tension + fx.tension, 0, 100);
     if (fx.faith) shiftFaith(s, fx.faith);
   }
   if (state.opinion) for (const [g, v] of Object.entries(fx.opinion ?? {})) if (state.opinion[g] !== undefined) state.opinion[g] = clamp(state.opinion[g] + v, 0, 100);

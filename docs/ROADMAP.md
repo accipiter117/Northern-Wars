@@ -27,7 +27,7 @@
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
 | M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | Done |
-| M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A done) |
+| M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | In progress (A and B done) |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
 | M30 The wider North | A: the map south of the Yaruga; B: four northern realms; C: the Empire and Toussaint; D: the Nilfgaard clock; E: Skellige at sea; F: balance and performance | Done |
 | M29 Crowns and vassals | A: tiers and one relations screen; B: suzerainty; C: vassal kings as lords abroad; D: blocs and the petty-king AI | Done |
@@ -63,6 +63,11 @@ Part A, five more faiths:
 - The Great Sun, Kreve, Lebioda and Freya on the M26 model (Devotion, five levels, perks, a power at level 3, development acts, clashes), each with followers by place from the lore and in the Book's Faith of the crown; foreign realms carry their own mix.
 - The Great Sun spreads north with the Empire's agents and armies; Lebioda dislikes war and the Fire's burnings.
 - Coram Agh Tera is a cult, never a faith the crown can grow: it spreads where hunger, plague and despair are high, gives rise to dark dilemmas, and can be rooted out by force, by the inquisition, or by easing the misery that feeds it.
+
+Part B, the non-human quarters:
+- Gnomes are a people where the lore puts them. Every town with a meaningful share of dwarves, elves, halflings or gnomes has a quarter on its town card: how it regards the crown and its neighbours, and a pogrom risk with what drives it.
+- The risk rises with persecution laws, hunger, the Fire's preaching, Scoia'tael attacks nearby and refugees, and falls with the charter, garrisons, prosperity and Lebioda's or Melitele's Devotion. A pogrom brings deaths, ruined works, the quarter emptied, Scoia'tael recruits and a stain on the town.
+- Quarter dilemmas through the M28 machinery: a guild seat, a shop burned, a debt called in, a grove ploughed, a halfling inn's licence, a gnome smith's patent.
 
 ## M31 acceptance criteria
 Part A, networks and the spymaster:

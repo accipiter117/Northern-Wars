@@ -545,6 +545,16 @@ function raidVillage(state, world, rng, t, id) {
     damagePlace(state, world, rng, id, { count: 1, amount: hurt, why, pick: outside });
   }
   if (t.kind === 'bandits') b.men += b.men * l.loot * 0.2;
+  // A Scoia'tael strike turns the towns around against their own
+  // non-humans for a season (M32 B).
+  if (t.kind === 'scoiatael') {
+    const reach = world.culture?.tension?.scoiataelReach ?? 0;
+    const at = world.byId[id];
+    for (const [oid, o] of Object.entries(state.settlements)) {
+      const p = world.byId[oid];
+      if (p && at && Math.hypot(p.x - at.x, p.y - at.y) <= reach) o.scoiaNear = state.day;
+    }
+  }
   tally(state).raids += 1;
   tally(state).dead += dead;
   const text = {

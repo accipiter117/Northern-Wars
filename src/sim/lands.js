@@ -148,6 +148,7 @@ function foreignToHome(state, world, id, rid, how) {
   const total = rec.population ?? 0;
   const population = rec.peoples && Math.abs(Object.values(rec.peoples).reduce((a, b) => a + b, 0) - total) < total * 0.5 + 10
     ? scale(rec.peoples, total) : splitPeople(world, origin, total);
+  population.gnome ??= 0;
   const wasHome = origin === TEMERIA && world.base?.settlementData[id];
   const base = wasHome ? null : {
     population: { ...population },

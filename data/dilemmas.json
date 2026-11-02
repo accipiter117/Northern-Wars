@@ -1,5 +1,5 @@
 {
- "note": "M28: dilemmas that follow from the crown's laws, faiths, lords and seasons, and the realm's demands for change. A dilemma fires when its `when` holds (laws signed, paths, faith levels, meters, season, war) and a fitting `place` is found; laws signed in the last half year weigh triple. Effects (fx): coin, love, fear, unrest (realm), townUnrest and prosperity (the place), opinion by group, devotion by faith, faith (shift in the place, points), loyalty (the lord named), sympathy (Scoia'tael). `next` raises a follow-up after some days. A demand asks for a law to be signed (or repealed) by a deadline: promise, refuse, or crush the agitators.",
+ "note": "M28: dilemmas that follow from the crown's laws, faiths, lords and seasons, and the realm's demands for change. A dilemma fires when its `when` holds (laws signed, paths, faith levels, meters, season, war) and a fitting `place` is found (`quarter`: a town with a non-human quarter); laws signed in the last half year weigh triple. Effects (fx): coin, love, fear, unrest (realm), townUnrest, prosperity and tension (the place; M32 B), opinion by group, devotion by faith, faith (shift in the place, points), loyalty (the lord named), sympathy (Scoia'tael). `next` raises a follow-up after some days. A demand asks for a law to be signed (or repealed) by a deadline: promise, refuse, or crush the agitators.",
  "chance": 0.8,
  "gapDays": 20,
  "defaultDays": 30,
@@ -1565,7 +1565,8 @@
     ],
     "minPeople": {
      "dwarf": 20
-    }
+    },
+    "quarter": true
    },
    "choices": [
     {
@@ -2533,124 +2534,339 @@
    "default": 1
   },
   "imperial_envoy": {
-    "title": "An envoy from the south",
-    "text": "A Nilfgaardian envoy in black and gold asks for a private hearing. The Emperor, he says, has no quarrel with Temeria. He would pay well to know that Vizima will not meddle in the affairs of Cintra.",
-    "realm": "nilfgaard",
-    "when": {
-      "clock": [
-        "watching",
-        "pressure"
-      ]
+   "title": "An envoy from the south",
+   "text": "A Nilfgaardian envoy in black and gold asks for a private hearing. The Emperor, he says, has no quarrel with Temeria. He would pay well to know that Vizima will not meddle in the affairs of Cintra.",
+   "realm": "nilfgaard",
+   "when": {
+    "clock": [
+     "watching",
+     "pressure"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Take the gold and promise nothing",
+     "fx": {
+      "coin": 1200,
+      "relation": 5,
+      "love": -2
+     }
     },
-    "choices": [
-      {
-        "label": "Take the gold and promise nothing",
-        "fx": {
-          "coin": 1200,
-          "relation": 5,
-          "love": -2
-        }
-      },
-      {
-        "label": "Hear him out, give him wine, send him home",
-        "fx": {
-          "relation": 2
-        }
-      },
-      {
-        "label": "Tell him Cintra's friends are Temeria's friends",
-        "fx": {
-          "relation": -15,
-          "trust": -5,
-          "love": 3
-        }
-      }
-    ],
-    "default": 1
+    {
+     "label": "Hear him out, give him wine, send him home",
+     "fx": {
+      "relation": 2
+     }
+    },
+    {
+     "label": "Tell him Cintra's friends are Temeria's friends",
+     "fx": {
+      "relation": -15,
+      "trust": -5,
+      "love": 3
+     }
+    }
+   ],
+   "default": 1
   },
   "imperial_merchants": {
-    "title": "Merchants who ask too much",
-    "text": "Nilfgaardian merchants have taken rooms at {place} and buy everything at a good price. They also buy maps, and ask where the fords are, and how deep the Yaruga runs in August.",
-    "place": {
-      "types": [
-        "town",
-        "city"
-      ]
+   "title": "Merchants who ask too much",
+   "text": "Nilfgaardian merchants have taken rooms at {place} and buy everything at a good price. They also buy maps, and ask where the fords are, and how deep the Yaruga runs in August.",
+   "place": {
+    "types": [
+     "town",
+     "city"
+    ]
+   },
+   "realm": "nilfgaard",
+   "when": {
+    "clock": [
+     "watching",
+     "pressure"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Trade is trade. Leave them be",
+     "fx": {
+      "coin": 400,
+      "prosperity": 2
+     }
     },
-    "realm": "nilfgaard",
-    "when": {
-      "clock": [
-        "watching",
-        "pressure"
-      ]
+    {
+     "label": "Have them watched",
+     "fx": {
+      "coin": -150
+     }
     },
-    "choices": [
-      {
-        "label": "Trade is trade. Leave them be",
-        "fx": {
-          "coin": 400,
-          "prosperity": 2
-        }
-      },
-      {
-        "label": "Have them watched",
-        "fx": {
-          "coin": -150
-        }
-      },
-      {
-        "label": "Expel them and burn their maps",
-        "fx": {
-          "relation": -10,
-          "fear": 2,
-          "prosperity": -2
-        }
-      }
-    ],
-    "default": 0
+    {
+     "label": "Expel them and burn their maps",
+     "fx": {
+      "relation": -10,
+      "fear": 2,
+      "prosperity": -2
+     }
+    }
+   ],
+   "default": 0
   },
   "imperial_spy": {
-    "title": "A spy in the castle",
-    "text": "The watch at {place} has taken a clerk copying the garrison rolls for a man paid in imperial gold. He weeps and names three others.",
-    "place": {
-      "types": [
-        "castle",
-        "town",
-        "city"
-      ]
+   "title": "A spy in the castle",
+   "text": "The watch at {place} has taken a clerk copying the garrison rolls for a man paid in imperial gold. He weeps and names three others.",
+   "place": {
+    "types": [
+     "castle",
+     "town",
+     "city"
+    ]
+   },
+   "realm": "nilfgaard",
+   "when": {
+    "clock": [
+     "watching",
+     "pressure"
+    ]
+   },
+   "choices": [
+    {
+     "label": "Hang all four",
+     "fx": {
+      "fear": 4,
+      "love": -2,
+      "relation": -5
+     }
     },
-    "realm": "nilfgaard",
-    "when": {
-      "clock": [
-        "watching",
-        "pressure"
-      ]
+    {
+     "label": "Feed them false rolls and let them run",
+     "fx": {
+      "coin": -200,
+      "relation": -2
+     }
     },
-    "choices": [
-      {
-        "label": "Hang all four",
-        "fx": {
-          "fear": 4,
-          "love": -2,
-          "relation": -5
-        }
-      },
-      {
-        "label": "Feed them false rolls and let them run",
-        "fx": {
-          "coin": -200,
-          "relation": -2
-        }
-      },
-      {
-        "label": "Quietly send them south with a warning",
-        "fx": {
-          "relation": 3,
-          "fear": -2
-        }
-      }
+    {
+     "label": "Quietly send them south with a warning",
+     "fx": {
+      "relation": 3,
+      "fear": -2
+     }
+    }
+   ],
+   "default": 0
+  },
+  "quarter_shop_burned": {
+   "title": "A dwarf's shop burned",
+   "weight": 0.7,
+   "text": "Someone fired a dwarven cutler's shop in the quarter of {place} last night. The watch saw nothing; the quarter says the watch saw everything.",
+   "place": {
+    "types": [
+     "city",
+     "town"
     ],
-    "default": 0
+    "quarter": true,
+    "minPeople": {
+     "dwarf": 40
+    }
+   },
+   "choices": [
+    {
+     "label": "Find the arsonists and hang them",
+     "fx": {
+      "fear": 2,
+      "tension": -8,
+      "opinion": {
+       "dwarf": 8,
+       "gnome": 4,
+       "eternal_fire": -4
+      }
+     }
+    },
+    {
+     "label": "Pay for the shop from the treasury",
+     "fx": {
+      "coin": -150,
+      "tension": -4,
+      "opinion": {
+       "dwarf": 6
+      }
+     }
+    },
+    {
+     "label": "An accident. Nothing more to be done",
+     "fx": {
+      "tension": 6,
+      "sympathy": 3,
+      "opinion": {
+       "dwarf": -8,
+       "gnome": -4
+      }
+     }
+    }
+   ],
+   "default": 2
+  },
+  "quarter_debt_called": {
+   "title": "A dwarf's debt called in",
+   "weight": 0.6,
+   "text": "A dwarven moneylender of {place} has called in what the town's chandlers owe him. They cannot pay, and they are telling the taverns whose fault that is.",
+   "place": {
+    "types": [
+     "city",
+     "town"
+    ],
+    "quarter": true,
+    "minPeople": {
+     "dwarf": 60
+    }
+   },
+   "choices": [
+    {
+     "label": "A debt is a debt. Uphold it",
+     "fx": {
+      "tension": 5,
+      "opinion": {
+       "dwarf": 8,
+       "burghers": -5
+      }
+     }
+    },
+    {
+     "label": "Cancel it by royal decree",
+     "fx": {
+      "tension": -3,
+      "opinion": {
+       "dwarf": -12,
+       "gnome": -4,
+       "burghers": 6
+      }
+     }
+    },
+    {
+     "label": "The crown pays half, the chandlers the rest",
+     "fx": {
+      "coin": -200,
+      "tension": -2,
+      "opinion": {
+       "dwarf": 4,
+       "burghers": 2
+      }
+     }
+    }
+   ],
+   "default": 0
+  },
+  "quarter_grove_ploughed": {
+   "title": "An elven grove ploughed",
+   "weight": 0.6,
+   "text": "Elves of {place} found the grove where they bury their dead ploughed under for barley. The farmer holds a deed with a royal seal on it.",
+   "place": {
+    "quarter": true,
+    "minPeople": {
+     "elf": 20
+    }
+   },
+   "choices": [
+    {
+     "label": "Make him replant it, and pay him for the barley",
+     "fx": {
+      "coin": -80,
+      "sympathy": -4,
+      "opinion": {
+       "elf": 8,
+       "peasants": -3
+      }
+     }
+    },
+    {
+     "label": "The deed stands",
+     "fx": {
+      "tension": 3,
+      "sympathy": 6,
+      "opinion": {
+       "elf": -10
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "quarter_inn_licence": {
+   "title": "A halfling inn's licence",
+   "weight": 0.6,
+   "text": "The innkeepers' guild of {place} refuses a licence to a halfling widow who keeps the best table in town. She asks the crown for one.",
+   "place": {
+    "quarter": true,
+    "minPeople": {
+     "halfling": 50
+    }
+   },
+   "choices": [
+    {
+     "label": "Grant her a royal licence",
+     "fx": {
+      "prosperity": 2,
+      "tension": -2,
+      "opinion": {
+       "halfling": 8,
+       "burghers": -4
+      }
+     }
+    },
+    {
+     "label": "Leave it to the guild",
+     "fx": {
+      "tension": 3,
+      "opinion": {
+       "halfling": -6,
+       "burghers": 2
+      }
+     }
+    }
+   ],
+   "default": 1
+  },
+  "quarter_gnome_patent": {
+   "title": "A gnome smith's patent",
+   "weight": 0.6,
+   "text": "A gnome smith of {place} says a human master stole her crossbow lock and sells it as his own. She wants a royal patent; he wants her out of the guild.",
+   "place": {
+    "quarter": true,
+    "minPeople": {
+     "gnome": 20
+    }
+   },
+   "choices": [
+    {
+     "label": "Grant her the patent",
+     "fx": {
+      "prosperity": 2,
+      "opinion": {
+       "gnome": 10,
+       "dwarf": 3,
+       "burghers": -4
+      }
+     }
+    },
+    {
+     "label": "Side with the master",
+     "fx": {
+      "tension": 2,
+      "opinion": {
+       "gnome": -10,
+       "burghers": 3
+      }
+     }
+    },
+    {
+     "label": "Buy the design for the royal armoury",
+     "fx": {
+      "coin": -200,
+      "opinion": {
+       "gnome": 6
+      }
+     }
+    }
+   ],
+   "default": 1
   }
  }
 }

@@ -59,9 +59,10 @@
       "adjective": "Mahakam",
       "mix": {
         "human": 0.1,
-        "dwarf": 0.82,
+        "dwarf": 0.76,
         "elf": 0,
-        "halfling": 0.08
+        "halfling": 0.08,
+        "gnome": 0.06
       },
       "faith": {
         "eternal_fire": 0,

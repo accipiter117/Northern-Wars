@@ -9,6 +9,7 @@ import {
 } from '../sim/index.js';
 import { number, escapeHtml, describeLevel } from './format.js';
 import { closedSeams } from '../sim/gold.js';
+import { quarters } from '../sim/quarters.js';
 import { handRows } from './hand.js';
 import { icon } from './icons.js';
 import { chips, segs, section, cardHead, orderAttr } from './card.js';
@@ -101,6 +102,10 @@ export function alertsOf(app) {
   const seams = closedSeams(state, world).sort((a, b) => b.monthly - a.monthly);
   for (const m of seams.slice(0, 2)) out.push(seamAlert(world, m));
   if (seams.length > 2) out.push({ text: `${seams.length - 2} more old workings could be reopened`, tab: 'treasury:trade', ic: 'coin' });
+  // Quarters in fear of a pogrom (M32 B), the worst first.
+  const feared = quarters(state, world).filter((q) => q.warn);
+  for (const q of feared.slice(0, 2)) out.push({ text: `Pogrom feared in ${world.byId[q.id].name}: ${Math.round(q.risk * 100)}% a month`, go: `town:${q.id}`, ic: 'flame', bad: true });
+  if (feared.length > 2) out.push({ text: `${feared.length - 2} more quarters fear a pogrom`, tab: 'court:faith', ic: 'flame', bad: true });
   return out;
 }
 

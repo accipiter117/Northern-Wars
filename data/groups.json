@@ -36,6 +36,10 @@
     "halfling": {
       "name": "Halflings",
       "about": "Farmers of the southern fields."
+    },
+    "gnome": {
+      "name": "Gnomes",
+      "about": "Fine smiths and tinkers, few and clannish, kin to Mahakam."
     }
   },
   "effects": {
