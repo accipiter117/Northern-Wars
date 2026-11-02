@@ -633,6 +633,18 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### The non-human quarters (M32 B)
+- Tension is now the sum of the lines on the quarter's card. The new calming lines (a garrison, prosperity, Lebioda's and Melitele's faithful) took about 10 points off the average town, so old grudges rose from 15 to 23: the average target over the first year is 25 against 23.5 before, and a calm reign stays calm.
+- Ten years, seeds 1 to 3 together, before and after:
+
+| Crown | Pogroms | Riots | Highest tension |
+| --- | --- | --- | --- |
+| Idle | 0 (was 0) | 0 (was 0) | 55 (was 52) |
+| Steward | 0 (was 0) | 0 (was 0) | 31 (was 43) |
+| Tyrant | 70 (was 48) | 282 (was 186) | 99 (was 97) |
+
+- The harsh crown pays more, as the brief asks: the inquisition (+6), the Scoia'tael strikes its harshness provokes (+12 in the towns near each) and the refugees of its wars now stir the towns, and the risk starts at 60 rather than a flat half chance past 72. Each pogrom now empties most of a quarter, so the same towns rarely burn twice in a row. Part E's thirty-year runs set the final numbers.
+
 ### Five more faiths (M32 A)
 - At the start the realm's Devotion runs: the Fire 18, Melitele 29, the Old Ways 13, Lebioda 6, Kreve 4, the Great Sun 1, Freya 0. Five untended years later (seed 1): the Fire 19, Melitele 28, the Old Ways 12, Lebioda 5, Kreve 4, the Great Sun 2, Freya 0; the Sun's share of Vizima has grown from 1 to 3 as the Empire's network in Temeria passed 60. Abroad, Sodden (the Empire's vassal) leans 23 to the Sun, Cintra 12, Toussaint 39.
 - The new faiths start low: reaching a power at level 3 (Devotion 60) takes the crown's patronage (Faith of the crown, temples, preachers, festivals), as the old three do.
