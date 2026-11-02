@@ -198,13 +198,20 @@ export function monthlyThreatsSpawn(state, world, rng) {
   const riders = Math.max(0, 1 + bookEffect(state, world, 'banditRoads') + faithEffect(state, world, 'banditRoads'));
   // The Old Ways (M26 C) calm the beasts.
   const calmBeasts = Math.max(0, 1 + faithEffect(state, world, 'beasts'));
+  // The opening (M33 D): in the Dawn's first year no new camp or lair
+  // springs up near the capital, so a new reign is an introduction, not a
+  // test.
+  const g = world.dawn?.opening;
+  const capital = world.byId[world.kingdom?.capital ?? 'vizima'];
+  const sheltered = (id) => g && state.dawn && !state.dawn.skipped && state.day - state.dawn.start < g.days && capital
+    && Math.hypot(world.byId[id].x - capital.x, world.byId[id].y - capital.y) <= g.reach;
   for (const kind of ['bandits', 'monsters']) {
     const cfg = T(world)[kind];
     const max = kind === 'bandits' ? Math.max(1, Math.round(cfg.max * riders)) : cfg.max;
     for (const [id, lv] of Object.entries(levels)) {
       if (state.threats.list.filter((t) => t.kind === kind && !t.abroad).length >= max) break;
       const level = lv[kind];
-      if (level < cfg.spawnAt) continue;
+      if (level < cfg.spawnAt || sheltered(id)) continue;
       if (!rng.chance(cfg.spawnChance * (kind === 'bandits' ? riders : calmBeasts) * (level - cfg.spawnAt + 10) / 50)) continue;
       const t = spawnCamp(state, world, rng, id, kind, level);
       if (t) t.level = level;

@@ -15,6 +15,7 @@ import { changeTrust, rulerShort } from './diplomacy.js';
 import { caughtText, resolveCaught } from './counter.js';
 import { cultText, resolveCult } from './cult.js';
 import { hasQuarter } from './quarters.js';
+import { answerCall } from './road.js';
 import { sideName } from './conflict.js';
 
 const D = (world) => world.dilemmas;
@@ -262,6 +263,8 @@ function apply(state, world, fx, o, why) {
   if (state.faiths?.devotion) for (const [f, v] of Object.entries(fx.devotion ?? {})) if (state.faiths.devotion[f] !== undefined) state.faiths.devotion[f] = clamp(state.faiths.devotion[f] + v, 0, 100);
   if (fx.sympathy && state.sympathy !== undefined) state.sympathy = clamp(state.sympathy + fx.sympathy, 0, 100);
   if (fx.loyalty && o.house && state.houses?.[o.house]) state.houses[o.house].loyalty = clamp(state.houses[o.house].loyalty + fx.loyalty, 0, 100);
+  // The crown's answer to the Call of the North (M33 C).
+  if (fx.call) answerCall(state, world, fx.call);
   if (o.realm && state.neighbours?.[o.realm]) {
     if (fx.relation) state.neighbours[o.realm].relation = clamp(state.neighbours[o.realm].relation + fx.relation, -100, 100);
     if (fx.trust) changeTrust(state, world, o.realm, TEMERIA, fx.trust);

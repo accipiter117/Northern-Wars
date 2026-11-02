@@ -34,6 +34,9 @@ test('a month of the North stays cheap with fifteen realms', () => {
 
 test('six years: Kovir keeps out, Skellige raids each season, Angren is a sore, the Empire marches, no one swallows the rest', () => {
   let s = createState(world, 2);
+  // Foltest's path behind him (M33 C): the war comes on the Emperor's own
+  // path, his agents and a pretext.
+  s.paths.temeria.step = world.paths.temeria.steps.length;
   const fought = new Set();
   let raidsByYear = [];
   let angren = new Set();

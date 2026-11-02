@@ -416,6 +416,19 @@ Code in src/sim/newhouses.js; numbers in data/houses.json (newHouses).
 - **The news** of each step reaches the chronicle in full where the crown has eyes in that court (an embassy, a network 20 deep, a friend or trade), as a rumour elsewhere; the paths' fold names a rival's steps only as far as those eyes reach. Part C waits on Foltest's and Emhyr's paths.
 - A reign from before M33 has Foltest's path behind it; the rivals start from the beginning (save version 39).
 
+### The Road to War (M33 C)
+- The First Northern War waits on five boxes (src/sim/road.js, `road` in war.json's clock), shown as the Road to War on the Dawn screen (at the top once the Dawn is over): Foltest's path complete; Emhyr's path complete; the Empire's network in Cintra 70 deep (the crown's own network in Cintra slows it, by 0.05 a month for each point it runs above 30); a pretext (once Emhyr's path is done and his agents are in place, 25% a month: Calanthe spurns an imperial envoy, or a border incident on the Yaruga boils over); and the year 1263 or later. Each box says what moves it.
+- This replaces the clock's drawn gate (`gateOpen`): Pressure still begins as before, but War waits for all five. While it waits the rivals' paths run on and the Empire's host keeps growing (M30 C reinforcements), so delay costs.
+- When all five are ticked the war begins of itself: the Empire falls on Cintra; Skellige stands with her; Sodden and Brugge are drawn in on their suzerain's side; the chronicle marks the end of the Dawn. **The Call of the North** reaches Vizima as a decision (join the coalition: Temeria enters the war on Cintra's side, Love +2, Fear +2; stand aside: Love -3, and the North remembers); Redania, Kaedwen and Aedirn each answer with an 85% chance, 120 to 180 days late, in time for Sodden, or stand aside (25 off every northern crown's trust in them, 15 on their fear of the Empire). The Nilfgaard clock's War stage (M30 D) takes it from there.
+- A reign whose clock had already reached War keeps its war (save version 40).
+- Once Emhyr's path is done, 300 soldiers a month join his standing army for as long as the war is held back; the Road to War says how many have come up to the Yaruga.
+
+### Balance and the opening (M33 D)
+- **The opening is an introduction**: in the Dawn's first year no new camp or lair springs up within 220 of Vizima (the Dawn's own small quest threats aside); the quest threats are small; the court's quests come weeks apart; and both the Dawn screen and the Realm's Needs attention (first, "The Dawn: The Old Manor (Vizima)") always say what to do next, a tap from where it is done.
+- **The war never starts before 1263** (the Road's year box), and only once all five boxes are ticked.
+- `node tools/dawn.mjs [years] [seeds]` plays a steward crown that finishes Foltest's path at month 12, 24 or 48, and reports when the war begins, the Emperor's host by then, and how many crowns rally or stand aside (BALANCE.md).
+- **An older reign moves straight to the Road to War**: the Dawn skipped and Foltest's path behind it (Parts A and B), and the Empire's agents in Cintra already 70 deep; only Emhyr's path and the pretext wait.
+
 ## Spies (M31)
 Every great power keeps spy networks in the other courts; the crown has a spymaster. Numbers live in data/spies.json; the rules in src/sim/spies.js.
 

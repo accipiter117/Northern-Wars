@@ -486,6 +486,18 @@ const MIGRATIONS = {
     state.version = 39;
     return state;
   },
+  // M33 C: the Road to War. A reign whose clock already reached War keeps
+  // its war, begun the day the clock turned.
+  39(state, world) {
+    state.road ??= { pretext: null, began: state.nilfgaard?.stage === 'war' ? state.nilfgaard.since : null, calls: {} };
+    // A reign from before the Dawn moves straight to the Road to War (M33 D):
+    // the Emperor's agents are already in Cintra; his path and a pretext wait.
+    const r = world.war?.clock?.road;
+    const nets = state.spycraft?.nets?.[r?.empire];
+    if (state.dawn?.skipped && r && nets && (nets[r.cintra] ?? 0) < r.agents) nets[r.cintra] = r.agents;
+    state.version = 40;
+    return state;
+  },
 };
 
 // Realms the world has and the save does not: taken from a fresh reign.
