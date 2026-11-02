@@ -90,14 +90,17 @@ export function createTopbar(world, { onSpeed, onMore, onMeter, onPressure }) {
     });
     for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => clearTimeout(held));
     b.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Capture, so the tap that ends a long press never reaches the speed or
+    // More buttons' own handlers either.
     b.addEventListener('click', (e) => {
       if (swallow) {
         swallow = false;
         e.preventDefault();
+        e.stopImmediatePropagation();
         return;
       }
-      onMeter(b.dataset.go);
-    });
+      if (b.dataset.go) onMeter(b.dataset.go);
+    }, { capture: true });
   }
 
   let last = '';
