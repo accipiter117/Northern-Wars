@@ -33,7 +33,9 @@ const act = (s, a) => {
 // Two armies of ours (one on the march to Maribor), a third that will
 // march to join, and a lord riding to court.
 function realm() {
-  let s = step(createState(world, 8), 30, world, { ambient: false });
+  // A plain reign: the Dawn's drowners by Vizima (M33 A) would sit among
+  // the armies these tests long-press.
+  let s = step(createState(world, 8, { dawn: false }), 30, world, { ambient: false });
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
   s.treasury = 30000;
