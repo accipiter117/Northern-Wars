@@ -88,9 +88,18 @@ test('out of debt, Love slowly returns toward its rest', () => {
 });
 
 test('the monthly ledger balances', () => {
-  let s = run(createState(world, 4), 31);
-  const before = s.treasury;
-  s = run(s, 30);
+  // From the day one month's books close to the day the next month's do.
+  const toClose = (st) => {
+    const n = st.ledger.history.length;
+    while (st.ledger.history.length === n) st = run(st, 1);
+    return st;
+  };
+  let s = toClose(run(createState(world, 4), 20));
+  // The standing repair order runs on the closing day, after the books
+  // close, so what it spent then is already gone and already in the new
+  // month's accounts.
+  const before = s.treasury + (s.ledger.construction ?? 0) + (s.ledger.decrees ?? 0);
+  s = toClose(s);
   const l = s.ledger.history.at(-1);
   const { net } = ledgerNet(l);
   assert.ok(l.income.foreign > 0);

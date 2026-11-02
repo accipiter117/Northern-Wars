@@ -605,6 +605,8 @@ test('trade deals and gold from the Trade screen and the town cards', async () =
   const s = step(createState(world, 1262), 62, world, { ambient: false });
   for (const k of ['envoys', 'petitions', 'demands', 'events', 'warDecisions']) s[k] = [];
   s.diplomacy.requests = [];
+  // Friendly enough to trade with, whatever the first months brought.
+  for (const r of Object.values(s.neighbours)) r.relation = Math.max(r.relation, 30);
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   const page = await context.newPage();
   const errors = [];

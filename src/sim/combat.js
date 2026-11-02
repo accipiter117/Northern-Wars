@@ -15,12 +15,16 @@ const terrainCache = new WeakMap();
 export function groundAt(world, x, y) {
   let cache = terrainCache.get(world);
   if (!cache) terrainCache.set(world, (cache = new Map()));
-  const key = `${Math.round(x / 10)},${Math.round(y / 10)}`;
+  const cx = Math.round(x / 10);
+  const cy = Math.round(y / 10);
+  const key = `${cx},${cy}`;
   let g = cache.get(key);
   if (!g) {
+    // Read at the cell's centre, not at whichever point asked first, so the
+    // answer never depends on what an earlier reign (or test) looked up.
     g = 'open';
     for (const [kind, zones] of Object.entries(world.geography.terrain)) {
-      if (zones.some((z) => pointInPolygon(x, y, z.shape))) { g = kind; break; }
+      if (zones.some((z) => pointInPolygon(cx * 10, cy * 10, z.shape))) { g = kind; break; }
     }
     cache.set(key, g);
   }
