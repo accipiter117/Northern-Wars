@@ -70,7 +70,7 @@ test('the board: every realm standing, with its land, a marker, its men where se
 test('three orders a month: march, trade and envoy, shown as set and refused past three', () => {
   let s = quiet(createState(world, 4));
   s = act(s, { type: 'order', order: { kind: 'envoy', realm: 'redania' } });
-  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', sell: { good: 'materials', qty: 30 }, buy: { good: 'cloth', qty: 10 } } });
+  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', sell: { good: 'materials', qty: 30 }, buy: { good: 'grain', qty: 10 } } });
   assert.match(applyAction(s, world, { type: 'order', order: { kind: 'envoy', realm: 'redania' } }).error, /Already ordered/);
   assert.match(applyAction(s, world, { type: 'order', order: { kind: 'march', realm: 'redania', army: 1 } }).error, /Raise an army/);
   s = act(s, { type: 'order', order: { kind: 'envoy', realm: 'cintra' } });
@@ -90,7 +90,7 @@ test('at the turn of the month the crown\'s orders and the rulers\' moves resolv
   const army = s.armies.find((a) => a.side === 'temeria');
   s = act(s, { type: 'order', order: { kind: 'march', realm: 'cidaris', army: army.id } });
   s = act(s, { type: 'order', order: { kind: 'envoy', realm: 'redania' } });
-  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', sell: { good: 'materials', qty: 30 }, buy: { good: 'cloth', qty: 10 } } });
+  s = act(s, { type: 'order', order: { kind: 'trade', realm: 'redania', sell: { good: 'materials', qty: 30 }, buy: { good: 'grain', qty: 10 } } });
   // Nothing goes out before the turn.
   const before = run(s, 1);
   assert.equal(before.orders.list.length, 3);

@@ -50,13 +50,16 @@ test('every good the realm makes rolls up into one of the five, and each has a b
     assert.ok(r && Number.isFinite(r.balance) && r.price > 0, `${g}: ${JSON.stringify(r)}`);
     assert.equal(r.balance, r.made - r.used);
   }
-  // Temeria starts with timber and stone to spare and too little cloth.
+  // Temeria starts with timber and stone to spare, and since M35 enough cloth.
   assert.ok(s.market.report.materials.balance > 0);
-  assert.ok(s.market.report.cloth.balance < 0);
+  assert.ok(s.market.report.cloth.balance > 0);
 });
 
 test('a shortage raises the price at home, a glut lowers it, and a deal cut by war makes its good dearer', () => {
-  const s = run(quiet(createState(world, 2)), 150);
+  // Without its sheep and looms the realm runs short of cloth.
+  const bare = quiet(createState(world, 2));
+  for (const t of Object.values(bare.settlements)) t.buildings = t.buildings.filter((x) => x !== 'pasture' && x !== 'weavers');
+  const s = run(bare, 150);
   const base = (g) => world.market.goods[g].base;
   assert.ok(homePrice(s, world, 'cloth') > base('cloth'), 'cloth, short, is dear');
   assert.ok(homePrice(s, world, 'materials') < base('materials'), 'timber and stone, in glut, are cheap');
