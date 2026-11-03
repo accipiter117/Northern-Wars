@@ -55,7 +55,10 @@ test('a threatened realm arms, a rich and safe one grows, an ambitious one with 
 test('a posture holds its minimum months unless threat jumps', () => {
   const s = quiet(step(createState(world, 4), 40, world, { ambient: false }));
   const realm = s.realms.cidaris;
-  const calm = assess(s, world, 'cidaris').threat.value;
+  // The posture is chosen at a calm moment: a reading set here rather than
+  // taken from the map, so the test checks the rule, not how strong Kerack
+  // happens to be (M35 gave every realm more works).
+  const calm = Math.min(assess(s, world, 'cidaris').threat.value, 25);
   realm.posture = { kind: 'grow', since: s.day, threat: calm, opportunity: 0, purse: 60, reasons: [] };
   realm.treasury = -100;
   // Debt forces Consolidate at once.

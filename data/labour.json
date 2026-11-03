@@ -111,7 +111,7 @@
     "mine": 80,
     "silvermine": 80,
     "goldmine": 100,
-    "pasture": 160,
+    "pasture": 90,
     "stud": 120,
     "fishery": 125,
     "harbour": 140,
@@ -134,12 +134,12 @@
     "temple": 0.6
   },
   "split": {
-    "fields": 47,
+    "fields": 46,
     "woods": 5,
     "mines": 8,
-    "pastures": 3,
+    "pastures": 5,
     "fishing": 4,
-    "crafts": 25,
+    "crafts": 24,
     "repairs": 3,
     "levies": 5
   },
@@ -279,7 +279,7 @@
         "levies": 4
       }
     },
-    "balanced": { "name": "Balanced", "blurb": "The kingdom's usual round: the fields first, the crafts next, a little of everything.", "split": { "fields": 47, "woods": 5, "mines": 8, "pastures": 3, "fishing": 4, "crafts": 25, "repairs": 3, "levies": 5 } }
+    "balanced": { "name": "Balanced", "blurb": "The kingdom's usual round: the fields first, the crafts next, a little of everything.", "split": { "fields": 46, "woods": 5, "mines": 8, "pastures": 5, "fishing": 4, "crafts": 24, "repairs": 3, "levies": 5 } }
   },
   "prompts": {
     "note": "The seasonal prompt in the pressure strip and on the Labour sheet (M23 B): in these months, unless the hands already stand at `preset` (or, with `from`, only while they stand at that preset), suggest it.",

@@ -2,7 +2,7 @@
 // Every game file is kept in a versioned cache. Pages load from the cache
 // first, so the game starts at once and plays offline; a new version
 // installs beside the old and waits until the player chooses to restart.
-const VERSION = '43e5c447e762';
+const VERSION = '2dfb8b14521d';
 const CACHE = `northern-wars-${VERSION}`;
 const FILES = [
   "./",

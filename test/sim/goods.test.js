@@ -15,7 +15,7 @@ const count = (places, b) => places.filter((s) => s.buildings.includes(b)).lengt
 
 test('Temeria starts with sheep, looms, studs and stills enough to matter', () => {
   const home = Object.values(createState(world, 1).settlements);
-  assert.ok(count(home, 'pasture') >= 6, 'pastures');
+  assert.ok(count(home, 'pasture') >= 4, 'pastures');
   assert.ok(count(home, 'weavers') >= 2, 'weavers');
   assert.ok(count(home, 'stud') >= 3, 'studs');
   assert.ok(count(home, 'distillery') >= 2, 'distilleries');

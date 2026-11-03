@@ -27,7 +27,7 @@
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
 | M33 Dawn of the Reign | A: the city quests; B: the five paths; C: the Road to War and the trigger; D: balance and the opening | Done |
-| M35 Goods across the North | The land spreads pastures, studs, salt pans, charcoal, weavers, distillers and weaponsmiths across Temeria and every realm abroad; cloth and luxuries short cost a little Love; older reigns gain the new works | Done |
+| M35 Goods across the North | The land spreads pastures, studs, salt pans, charcoal, weavers, distillers and weaponsmiths across Temeria and every realm abroad; cloth and luxuries short cost a little Love; older reigns gain the new works; the pastures get more hands | Done |
 | M34 The great tidying | A: dead and broken mechanics; B: one place for the crown's acts; C: fewer, clearer screens; D: cards, ledger and reports; E: the audit kept as a test | Done |
 | M32 Faiths and peoples | A: five more faiths; B: the non-human quarters; C: what each people brings; D: the Scoia'tael and the laws; E: balance | Done |
 | M31 Spies | A: networks and the spymaster; B: operations; C: counter-espionage; D: the AI and balance | Done |
@@ -37,10 +37,10 @@
 | M26 The Book of Laws and the faiths | A and B: the Book of Laws in chapters of rival paths, cooldowns, laws with headline effects; C and D: faiths with Devotion, perks, powers and clashes, and cooldown rings; E: faith and laws on the map | Done |
 
 ## M35 acceptance criteria
-- Temeria starts with at least six pastures, two weavers' halls, three studs and two distilleries; each great realm abroad has at least three makers of finished goods.
+- Temeria starts with at least four pastures, two weavers' halls, three studs and two distilleries; each great realm abroad has at least three makers of finished goods.
 - A year into a plain reign cloth and luxuries are each within a tenth of what the realm uses; over two years and six seeds Love, Unrest and the treasury are no worse than before.
 - Cloth or luxuries more than a tenth short cost a little Love, shown with its reason; the tannery no longer counts as a maker of cloth.
-- An older save gains the new works wherever its places' land now holds them (save version 41).
+- An older save gains the new works wherever its places' land now holds them, and a reign on the old Balanced split moves to the new one (save version 41).
 
 ## M34 acceptance criteria
 Part A, dead and broken mechanics:

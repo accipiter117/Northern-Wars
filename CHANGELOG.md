@@ -1,9 +1,10 @@
 # Changelog
 
 ## M35 Goods across the North
-- Sheep, looms, studs and stills are spread across the North: half of all open-ground villages keep sheep, some castles breed horses, and more towns and cities weave, distil or forge arms. Temeria now makes about the cloth it uses, and has luxuries to spare.
+- Sheep, looms, studs and stills are spread across the North: one open-ground village in three keeps sheep, some castles breed horses, and more towns and cities weave, distil or forge arms. Temeria now makes more cloth than it uses, and luxuries to spare to sell.
 - Towns abroad have the same, so taking a town now brings its pastures, looms and studs into your goods, not just its taxes.
 - Running more than a tenth short of cloth or luxuries now costs a little Love each month, with the reason shown. The cure is trade, more hands at the pastures, or conquest.
+- The kingdom's usual round sends a few more hands to the pastures, and sheep need fewer hands than before.
 - Your current reign gains the new works where its land holds them.
 
 ## M33 D Balance and the opening

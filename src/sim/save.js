@@ -511,6 +511,11 @@ const MIGRATIONS = {
         for (const b of startingWorks(world, id).buildings) if (NEW.includes(b) && !s.buildings.includes(b)) s.buildings.push(b);
       }
     }
+    // The kingdom's usual round gives the pastures a little more (M35); a
+    // reign still on the old Balanced split moves to the new one.
+    const sp = state.labour?.split;
+    const was = { fields: 47, woods: 5, mines: 8, pastures: 3, fishing: 4, crafts: 25, repairs: 3, levies: 5 };
+    if (sp && world.labour?.presets?.balanced && Object.entries(was).every(([k, v]) => sp[k] === v)) state.labour.split = { ...sp, ...world.labour.presets.balanced.split };
     state.version = 41;
     return state;
   },
