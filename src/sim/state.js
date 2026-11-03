@@ -37,7 +37,7 @@ export function defaultWar() {
   };
 }
 
-export const STATE_VERSION = 40;
+export const STATE_VERSION = 41;
 
 // `dawn: false` starts a reign without the Dawn's quests (M33 A), for
 // tests and tools about other things.

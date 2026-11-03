@@ -25,7 +25,8 @@
     "levies": 25,
     "lowBelow": 20,
     "lowDrift": 0.0005,
-    "lowAnger": 0.2
+    "lowAnger": 0.2,
+    "scarce": { "note": "M35: Love lost a month when a good is more than `from` short of what the realm uses: (share short - from) x per, at most max, good by good.", "from": 0.1, "goods": { "cloth": { "why": "Cloth is scarce and dear", "per": 3, "max": 1 }, "luxuries": { "why": "Salt, spirit and horses are scarce", "per": 1.5, "max": 0.5 } } }
   },
   "fear": {
     "fade": 0.12,

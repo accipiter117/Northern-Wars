@@ -1,5 +1,11 @@
 # Changelog
 
+## M35 Goods across the North
+- Sheep, looms, studs and stills are spread across the North: half of all open-ground villages keep sheep, some castles breed horses, and more towns and cities weave, distil or forge arms. Temeria now makes about the cloth it uses, and has luxuries to spare.
+- Towns abroad have the same, so taking a town now brings its pastures, looms and studs into your goods, not just its taxes.
+- Running more than a tenth short of cloth or luxuries now costs a little Love each month, with the reason shown. The cure is trade, more hands at the pastures, or conquest.
+- Your current reign gains the new works where its land holds them.
+
 ## M33 D Balance and the opening
 - A new reign is gentler: no new bandit camps or lairs spring up near Vizima in the first year, and the Realm's overview always names the Dawn's next step.
 - The longer the war is held back after the Emperor is ready, the larger his host on the Yaruga. The North's kings now rally to the Call as they should once the war has begun.

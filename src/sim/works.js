@@ -19,6 +19,12 @@ const round = Math.round;
 
 // ---- The spaces of the land ----
 
+function hashId(id) {
+  let h = 5381;
+  for (let i = 0; i < id.length; i++) h = ((h * 33) ^ id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
 // Each settlement's spaces as the data gives them, with the works each holds
 // at the start. Built once per world from data/spaces.json.
 export function buildSpaces(spacesData, settlements, foreign, borderland) {
@@ -31,6 +37,10 @@ export function buildSpaces(spacesData, settlements, foreign, borderland) {
     out[st.id] = list.map((sp) => {
       const def = rules.defaults?.[sp.kind] ?? {};
       let works = o[sp.kind] !== undefined ? o[sp.kind] : def[st.type] ?? def.any ?? [];
+      // A `cycle` spreads works across places of a kind by a stable hash of
+      // the place's id, so one village in four keeps sheep beside its fields
+      // and every realm, ours and abroad, has some of each good (M35).
+      if (works && !Array.isArray(works) && typeof works === 'object' && works.cycle) works = works.cycle[hashId(st.id) % works.cycle.length];
       works = Array.isArray(works) ? [...works] : works ? [works] : [];
       if (sp.kind === 'square' && o.squareAdd) for (const b of o.squareAdd) if (!works.includes(b)) works.push(b);
       if (sp.kind === 'defences' && o.defences === undefined && borderland?.[st.id] && !works.includes('watchtower')) works.push('watchtower');
