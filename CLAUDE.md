@@ -21,6 +21,8 @@ A mobile-first browser kingdom simulator set in the Witcher world. Player is the
 ## Testing (run before every push)
 - npm test runs: simulation unit tests; a headless 10-year simulation for several seeds asserting no NaN or Infinity, all meters in range, populations non-negative, determinism (same seed gives the same state); and Playwright smoke tests loading the page at 390x844 portrait and 844x390 landscape, checking no console errors and taking screenshots into test-results/.
 - Never push with failing tests.
+- Keep it quick (owner's standing instruction): while working, run only the test files that touch what changed; run the full sim and smoke suites once, just before opening the PR.
+- Balance checks are one two-year stretch (a plain reign, a handful of seeds, before and after). No 10 or 30-year runs, wider-North runs or repeated tuning loops unless the owner asks. Settle the numbers in one or two runs.
 
 ## Conventions
 - Player-facing text: British English, no em dashes (use commas, brackets or full stops), plain natural language, grim and grounded tone.
