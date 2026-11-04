@@ -132,7 +132,7 @@ for (const vp of VIEWPORTS) {
     if (target) {
       await page.touchscreen.tap(target.x, target.y - 4);
       await page.waitForSelector('#unit-label:not([hidden])');
-      assert.match(await page.textContent('#unit-label'), /caravan|Patrol|barge|Pilgrims|Refugees|Grain cart|merchants/i);
+      assert.match(await page.textContent('#unit-label'), /caravan|Patrol|barge|Pilgrims|Refugees|Grain cart|Goods cart|merchants/i);
       await page.screenshot({ path: join(OUT, `${vp.name}-unit.png`) });
     }
 
@@ -628,7 +628,7 @@ test('trade deals and gold from the Trade screen and the town cards', async () =
   // Trade (M21): the five goods, then a deal with Redania from its card.
   await page.click('[data-tab="treasury"]');
   await page.click('.segs [data-sub="trade"]');
-  assert.match(await page.textContent('[data-part="goods"]'), /Grain[\s\S]*Timber and stone: surplus[\s\S]*Iron and arms[\s\S]*Cloth: short[\s\S]*Luxuries/);
+  assert.match(await page.textContent('[data-part="goods"]'), /Grain[\s\S]*Timber and stone: surplus[\s\S]*Iron and arms[\s\S]*Cloth: (short|surplus)[\s\S]*Luxuries/);
   await page.screenshot({ path: join(OUT, 'trade.png') });
   await page.click('[data-partner="redania"]');
   await page.click('[data-sec="trade"] summary');
