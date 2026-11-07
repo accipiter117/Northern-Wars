@@ -25,7 +25,7 @@ import { seasonOf } from './calendar.js';
 import { defaultGold } from './gold.js';
 import { syncWorld, settleOwnership } from './lands.js';
 import { upgradeConquest } from './conquest.js';
-import { upgradeWorks } from './works.js';
+import { upgradeWorks, startingWorks } from './works.js';
 import { upgradeLabour } from './labour.js';
 import { upgradeMarket } from './market.js';
 import { defaultFaiths } from './faiths.js';
@@ -496,6 +496,27 @@ const MIGRATIONS = {
     const nets = state.spycraft?.nets?.[r?.empire];
     if (state.dawn?.skipped && r && nets && (nets[r.cintra] ?? 0) < r.agents) nets[r.cintra] = r.agents;
     state.version = 40;
+    return state;
+  },
+  // M35: the land gives more of the goods chain (pastures, studs, saltpans,
+  // charcoal, weavers, distillers, weaponsmiths). Each place, ours or
+  // abroad, gains whichever of these its layout now holds, whole.
+  40(state, world) {
+    if (world.spaces) {
+      const NEW = ['pasture', 'stud', 'saltpans', 'charcoal', 'weavers', 'distillery', 'weaponsmith'];
+      const places = [...Object.entries(state.settlements).map(([id, s]) => [id, s, world.realmOf?.[id] ?? 'temeria'])];
+      for (const [rid, realm] of Object.entries(state.realms ?? {})) for (const [id, s] of Object.entries(realm.settlements ?? {})) places.push([id, s, rid]);
+      for (const [id, s] of places) {
+        if (!Array.isArray(s.buildings)) continue;
+        for (const b of startingWorks(world, id).buildings) if (NEW.includes(b) && !s.buildings.includes(b)) s.buildings.push(b);
+      }
+    }
+    // The kingdom's usual round gives the pastures a little more (M35); a
+    // reign still on the old Balanced split moves to the new one.
+    const sp = state.labour?.split;
+    const was = { fields: 47, woods: 5, mines: 8, pastures: 3, fishing: 4, crafts: 25, repairs: 3, levies: 5 };
+    if (sp && world.labour?.presets?.balanced && Object.entries(was).every(([k, v]) => sp[k] === v)) state.labour.split = { ...sp, ...world.labour.presets.balanced.split };
+    state.version = 41;
     return state;
   },
 };

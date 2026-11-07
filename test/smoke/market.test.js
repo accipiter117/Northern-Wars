@@ -43,7 +43,8 @@ test('the Treasury: five goods, a deal with a partner, taxes by estate and a loa
   const goods = await page.textContent('[data-part="goods"]');
   assert.match(goods, /Grain[\s\S]*Timber and stone[\s\S]*Iron and arms[\s\S]*Cloth[\s\S]*Luxuries/);
   assert.match(goods, /surplus \d+ a month/);
-  assert.match(goods, /short \d+ a month/);
+  // Since M35 every good may be in surplus at the start: each shows a balance.
+  assert.match(goods, /Luxuries: (short|surplus) \d+ a month/);
   await page.screenshot({ path: join(OUT, 'portrait-goods.png') });
   // Holding a good back is one tap.
   await page.click('[data-hold="iron"]');
@@ -54,13 +55,13 @@ test('the Treasury: five goods, a deal with a partner, taxes by estate and a loa
   await page.click('[data-sec="trade"] summary');
   await page.click('[data-form="deal:redania"] [data-set="sell:materials"]');
   await page.click('[data-form="deal:redania"] [data-set="sellQty:50"]');
-  await page.click('[data-form="deal:redania"] [data-set="buy:iron"]');
+  await page.click('[data-form="deal:redania"] [data-set="buy:grain"]');
   await page.click('[data-form="deal:redania"] [data-set="buyQty:10"]');
   assert.match(await page.textContent('[data-part="deal-preview"]'), /Sell 50 loads[\s\S]*Buy 10 loads/);
   await page.evaluate(() => document.querySelector('[data-part="sec-trade"]').scrollIntoView({ block: 'start' }));
   await page.screenshot({ path: join(OUT, 'portrait-deal.png') });
   await page.click('[data-deal-go="redania"]');
-  assert.deepEqual(await page.evaluate(() => window.northernWars.state.market.deals.redania), { sell: { good: 'materials', qty: 50 }, buy: { good: 'iron', qty: 10 }, since: s.day });
+  assert.deepEqual(await page.evaluate(() => window.northernWars.state.market.deals.redania), { sell: { good: 'materials', qty: 50 }, buy: { good: 'grain', qty: 10 }, since: s.day });
 
   // Taxes by estate, with what each setting would yield.
   await page.click('[data-tab="treasury"]');

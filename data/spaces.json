@@ -1,5 +1,5 @@
 {
-  "note": "Every settlement's spaces (M20): the land it stands on and what each space holds at the start. `settlements` is written by tools/spaces.mjs from data/geography.json; edit `kinds`, `defaults` and `overrides` by hand and re-run the tool. Each space holds one works (the town square and the defences hold several), chosen at the start and fixed: the crown repairs, it does not build.",
+  "note": "Every settlement's spaces (M20): the land it stands on and what each space holds at the start. `settlements` is written by tools/spaces.mjs from data/geography.json; edit `kinds`, `defaults` and `overrides` by hand and re-run the tool. A default may be a `cycle` of choices (M35), spread across places of that kind by a stable hash of the id, so every realm has some pastures, studs, saltpans, weavers and distillers. Each space holds one works (the town square and the defences hold several), chosen at the start and fixed: the crown repairs, it does not build.",
   "kinds": {
     "plain": {
       "name": "Open ground",
@@ -103,6 +103,31 @@
   },
   "defaults": {
     "plain": {
+      "village": {
+        "cycle": [
+          [
+            "fields"
+          ],
+          [
+            "fields"
+          ],
+          [
+            "fields",
+            "pasture"
+          ]
+        ]
+      },
+      "castle": {
+        "cycle": [
+          [
+            "fields"
+          ],
+          [
+            "fields",
+            "stud"
+          ]
+        ]
+      },
       "any": "fields"
     },
     "river": {
@@ -114,13 +139,46 @@
     "coast": {
       "village": "fishery",
       "castle": "fishery",
+      "town": {
+        "cycle": [
+          [
+            "harbour"
+          ],
+          [
+            "harbour",
+            "saltpans"
+          ]
+        ]
+      },
       "any": "harbour"
     },
     "forest": {
+      "town": {
+        "cycle": [
+          [
+            "lumber"
+          ],
+          [
+            "lumber",
+            "charcoal"
+          ]
+        ]
+      },
       "any": "lumber"
     },
     "hills": {
       "village": "pasture",
+      "town": {
+        "cycle": [
+          [
+            "quarry"
+          ],
+          [
+            "quarry",
+            "pasture"
+          ]
+        ]
+      },
       "any": "quarry"
     },
     "mountain": {
@@ -133,24 +191,82 @@
       "any": "goldmine"
     },
     "square": {
-      "town": [
-        "market",
-        "workshop",
-        "smithy",
-        "granary",
-        "shrine"
-      ],
-      "city": [
-        "market",
-        "workshop",
-        "smithy",
-        "granary",
-        "brewery",
-        "guildhall",
-        "bathhouse",
-        "paving",
-        "inn"
-      ],
+      "town": {
+        "cycle": [
+          [
+            "market",
+            "workshop",
+            "smithy",
+            "granary",
+            "shrine",
+            "distillery"
+          ],
+          [
+            "market",
+            "workshop",
+            "smithy",
+            "granary",
+            "shrine",
+            "weavers"
+          ],
+          [
+            "market",
+            "workshop",
+            "smithy",
+            "granary",
+            "shrine"
+          ],
+          [
+            "market",
+            "workshop",
+            "smithy",
+            "granary",
+            "shrine",
+            "distillery"
+          ]
+        ]
+      },
+      "city": {
+        "cycle": [
+          [
+            "market",
+            "workshop",
+            "smithy",
+            "granary",
+            "brewery",
+            "guildhall",
+            "bathhouse",
+            "paving",
+            "inn",
+            "weavers"
+          ],
+          [
+            "market",
+            "workshop",
+            "smithy",
+            "granary",
+            "brewery",
+            "guildhall",
+            "bathhouse",
+            "paving",
+            "inn",
+            "weaponsmith"
+          ],
+          [
+            "market",
+            "workshop",
+            "smithy",
+            "granary",
+            "brewery",
+            "guildhall",
+            "bathhouse",
+            "paving",
+            "inn",
+            "weavers",
+            "distillery"
+          ]
+        ]
+      },
       "temple": [
         "hospice",
         "hostel"
@@ -2347,7 +2463,7 @@
       "perMonth": 35,
       "costShare": 0.6
     },
-    "upkeepScale": 2.0,
+    "upkeepScale": 2,
     "askAgain": 25
   }
 }

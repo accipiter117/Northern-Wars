@@ -15,6 +15,8 @@ const quiet = (s) => {
 };
 const last = (s) => s.ledger.history.at(-1);
 // A month of accounts, from the first of the next month.
+// Since M35 a place may already hold a works from its land: add it once.
+const add = (place, ...works) => { for (const b of works) if (!place.buildings.includes(b)) place.buildings.push(b); };
 const month = (mutate, seed = 3) => {
   const s = quiet(createState(world, seed));
   mutate(s);
@@ -56,14 +58,15 @@ test('industries stand only where the land gives them (M20)', () => {
 });
 
 test('each chain\'s goods flow and sell', () => {
-  const plain = month(() => {});
+  // Ellander may hold a distillery from its land (M35): the plain month has none.
+  const plain = month((x) => { x.settlements.ellander.buildings = x.settlements.ellander.buildings.filter((b) => b !== 'distillery'); });
   const s = month((x) => {
-    x.settlements.white_orchard.buildings.push('pasture');
-    x.settlements.white_bridge.buildings.push('weavers', 'smithy', 'weaponsmith');
-    x.settlements.findetann.buildings.push('charcoal');
-    x.settlements.ellander.buildings.push('distillery');
-    x.settlements.anchor.buildings.push('saltpans');
-    x.settlements.cleves.buildings.push('stud');
+    add(x.settlements.white_orchard, 'pasture');
+    add(x.settlements.white_bridge, 'weavers', 'smithy', 'weaponsmith');
+    add(x.settlements.findetann, 'charcoal');
+    add(x.settlements.ellander, 'distillery');
+    add(x.settlements.anchor, 'saltpans');
+    add(x.settlements.cleves, 'stud');
     // With the crown's stables and armouries full, everything goes to market.
     x.forces.stores = { arms: 60, horses: 60 };
   });
@@ -87,8 +90,8 @@ test('each chain\'s goods flow and sell', () => {
 test('crown routes carry finished goods at a premium, dearest abroad', () => {
   const routeTo = (to) => month((x) => {
     x.neighbours.redania.relation = 45;
-    x.settlements.white_orchard.buildings.push('pasture');
-    x.settlements.white_bridge.buildings.push('weavers');
+    add(x.settlements.white_orchard, 'pasture');
+    add(x.settlements.white_bridge, 'weavers');
     x.routes = [{ id: 1, from: 'vizima', to, since: x.day, last: 0, raided: false, closed: null }];
     x.nextRouteId = 2;
   });
@@ -105,10 +108,10 @@ test('toll bridges earn from real crossings', () => {
   assert.ok(crossings.white_bridge.size > 0);
   // A bridge earns from Redania's trade and local carts; a crown route over
   // the river adds its own caravans.
-  const bare = month((x) => { x.settlements.la_valette.buildings.push('tollbridge'); });
+  const bare = month((x) => { add(x.settlements.la_valette, 'tollbridge'); });
   assert.ok(last(bare).income.tolls > 20);
   const busy = month((x) => {
-    x.settlements.la_valette.buildings.push('tollbridge');
+    add(x.settlements.la_valette, 'tollbridge');
     x.neighbours.redania.relation = 45;
     x.routes = [{ id: 1, from: 'vizima', to: 'rinde', since: x.day, last: 0, raided: false, closed: null }];
   });
@@ -117,7 +120,7 @@ test('toll bridges earn from real crossings', () => {
   assert.ok(last(busy).income.tolls > last(bare).income.tolls + 5);
   // A route that never crosses the Pontar pays the bridge nothing.
   const dry = month((x) => {
-    x.settlements.la_valette.buildings.push('tollbridge');
+    add(x.settlements.la_valette, 'tollbridge');
     x.routes = [{ id: 1, from: 'vizima', to: 'maribor', since: x.day, last: 0, raided: false, closed: null }];
   });
   assert.equal(tollsAt(dry, world, 'la_valette').routes, 0);
@@ -129,12 +132,12 @@ test('toll bridges earn from real crossings', () => {
 
 test('the direct earners pay their own lines', () => {
   const s = month((x) => {
-    x.settlements.vorune.buildings.push('silvermine');
-    x.settlements.vizima.buildings.push('quarter');
-    x.settlements.temple_melitele.buildings.push('hostel');
-    x.settlements.gors_velen.buildings.push('shipyard');
-    x.settlements.white_bridge.buildings.push('alchemist');
-    x.settlements.burdorff.buildings.push('lodge');
+    add(x.settlements.vorune, 'silvermine');
+    add(x.settlements.vizima, 'quarter');
+    add(x.settlements.temple_melitele, 'hostel');
+    add(x.settlements.gors_velen, 'shipyard');
+    add(x.settlements.white_bridge, 'alchemist');
+    add(x.settlements.burdorff, 'lodge');
   });
   const i = last(s).income;
   for (const k of ['silver', 'rents', 'donations', 'contracts']) assert.ok(i[k] > 20, `${k} ${i[k]}`);
@@ -153,9 +156,9 @@ test('a fully developed Vizima alone earns 500 or more a month', () => {
 
 test('studs and weaponsmiths stock the crown\'s stables and armouries before the market', () => {
   const s = month((x) => {
-    x.settlements.cleves.buildings.push('stud');
-    x.settlements.white_bridge.buildings.push('smithy', 'weaponsmith');
-    x.settlements.findetann.buildings.push('charcoal');
+    add(x.settlements.cleves, 'stud');
+    add(x.settlements.white_bridge, 'smithy', 'weaponsmith');
+    add(x.settlements.findetann, 'charcoal');
     x.forces.stores = { arms: 0, horses: 0 };
   });
   assert.ok(s.forces.stores.horses > 5, `horses ${s.forces.stores.horses}`);
@@ -171,17 +174,18 @@ test('debt costs about one per cent a month', () => {
 
 test('every line of the ledger adds up, and every place keeps its account', () => {
   const s = month((x) => {
-    x.settlements.white_orchard.buildings.push('pasture');
-    x.settlements.white_bridge.buildings.push('weavers', 'brewery');
-    x.settlements.la_valette.buildings.push('tollbridge');
+    add(x.settlements.white_orchard, 'pasture');
+    add(x.settlements.white_bridge, 'weavers', 'brewery');
+    add(x.settlements.la_valette, 'tollbridge');
   });
   const h = last(s);
   const { in: i, out: o } = ledgerNet(h);
   const places = Object.values(s.ledger.places);
   const placeIn = places.reduce((a, p) => a + p.in, 0);
-  // Places earn all but the realm-wide lines (foreign trade, conquests and
-  // tribute); rounding aside, the books agree.
-  assert.ok(Math.abs(placeIn - (i - h.income.foreign - h.income.conquests - h.income.tribute)) < places.length, `${placeIn} vs ${i}`);
+  // Places earn all but the realm-wide lines (foreign trade, conquests,
+  // tribute, and the surplus the market sells at home from the realm's
+  // pooled goods); rounding aside, the books agree.
+  assert.ok(Math.abs(placeIn - (i - h.income.foreign - h.income.conquests - h.income.tribute - (h.income.sales ?? 0))) < places.length, `${placeIn} vs ${i}`);
   assert.ok(o > 0);
   assert.ok(s.ledger.places.vizima.in > s.ledger.places.windley.in);
 });

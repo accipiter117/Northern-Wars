@@ -633,6 +633,21 @@ A crown trade route between two of the cities costs about 700 crowns and earns 3
   - Treasury after ten years: 83,252. All 30 kinds of producing works standing in the crown's towns (of 42 kinds standing) produced; every resource was made and its stock moved; no ledger line showed 0 in any month.
   - The court is the largest single cost (a full treasury draws hangers-on), which is what holds a peaceful crown's hoard in check.
 
+### Goods across the North (M35)
+- Before M35 only Vidort kept sheep and only Maribor wove: a plain reign made about 70 loads of cloth against about 120 used, with no way to mend it (the crown repairs, it does not build). Luxuries ran about 30 short.
+- Six seeds, 24 months, a plain reign (mean at month 24, monthly balance):
+
+| | Love | Unrest | Treasury | Grain | Cloth | Luxuries | Iron |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Before M35 | 42 | 34 | 41,444 | +18 | -63 | -30 | +38 |
+| M35 | 52 | 26 | 47,380 | +30 | +69 | +100 | +33 |
+
+  - Temeria now starts with 4 pastures, 2 weavers' halls, 4 studs and 3 distilleries; every great realm abroad has at least three makers of finished goods, so a town taken brings them into the realm's goods.
+  - The first try (pastures in half the villages, the old labour split) left the pastures a fifth manned: wool rose only to about 110 and the studs lost their hands, so luxuries fell short and cost Love. Fewer pastures, a lower hand need (90) and 5 in 100 hands to the pastures fixed both.
+  - The surplus sells at home and abroad at falling prices (a glut lowers the price), which is most of the treasury gain. Demand grows with the people, so a growing or conquering realm closes the gap again.
+  - The wider North over ten years (`node tools/widernorth.mjs 10 1,2`) is unchanged in shape: the Empire holds 14 towns at years 5 and 10 in both seeds, as before; its army is within 300 men of before; Kovir, Angren, the wars started and the spheres shift as before.
+  - **Dials**: the `cycle` defaults in `spaces.json`; `need.pasture` (90) and the pastures share of `split` and the Balanced preset (5) in `labour.json`; `love.scarce` in `meters.json` (from 0.1; cloth per 3, at most 1 a month; luxuries per 1.5, at most 0.5).
+
 ### The Road to War and the opening (M33 C and D)
 - From `node tools/dawn.mjs 30 1,2,3`: Foltest's path finished at month 12 (fast), 24 (middling) or 48 (slow), then thirty years untended.
 

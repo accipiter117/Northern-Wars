@@ -370,6 +370,16 @@ export function monthlyMeters(state, world, rng) {
   const hungry = live.reduce((a, [, s]) => a + totalPopulation(s) * (s.hunger ?? 0), 0) / people;
   if (hungry > 0.01) nudge(state, world, 'love', -hungry * t.hunger, 'Hunger');
   if ((state.labour?.short ?? 0) > 0.05) nudge(state, world, 'love', -state.labour.short * t.cold, 'Cold hearths');
+  // Cloth and luxuries the people want and cannot get (M35): a small cost
+  // past a tenth short, so the shortage on the top bar means something, and
+  // a town with pastures or looms is worth taking. Iron's shortage already
+  // costs the crown (arms bought dear abroad).
+  for (const [g, k] of Object.entries(t.scarce?.goods ?? {})) {
+    const r = state.market?.report?.[g];
+    if (!r || !(r.used > 0)) continue;
+    const short = -r.balance / r.used;
+    if (short > t.scarce.from) nudge(state, world, 'love', -Math.min(k.max, (short - t.scarce.from) * k.per), k.why);
+  }
   if (season === 'winter') {
     const need = live.reduce((a, [, s]) => a + foodNeed(world, s, season), 0) || 1;
     if (realmStock(state).food / need >= t.winterStoresDays) nudge(state, world, 'love', t.winterStores, 'Full granaries through the winter');
