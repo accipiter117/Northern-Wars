@@ -1,5 +1,12 @@
 # Changelog
 
+## M36 and M37 Northern Wars v2: the turn engine and the war table
+- A first playable piece of the turn-based Northern Wars, at /v2/ beside the real-time game: one turn a month from March 1262, on a war table of 78 provinces drawn from the traced map.
+- Drag one of your carved pieces to march: every place it can reach this month lights up. Roads are quick, open country slower, winter halves the march, and the Pontar and the Yaruga can be crossed only at their bridges.
+- Borders are closed in peace; declare war to march in. An enemy army stops you and must be fought; armies deep in enemy land waste; towns fall at once and walled places after a siege.
+- Tap a place for its food, production, crowns, faith and renown, its works and its crossings, and raise companies there. Set taxes in Realm; read the months' news in Reports; answer dilemmas at court.
+- Battles and the AI are simple stand-ins for now: the battle screen, goals, the smaller kingdoms, diplomacy and the wars' story come in the next steps.
+
 ## M35 Goods across the North
 - Sheep, looms, studs and stills are spread across the North: one open-ground village in three keeps sheep, some castles breed horses, and more towns and cities weave, distil or forge arms. Temeria now makes more cloth than it uses, and luxuries to spare to sell.
 - Towns abroad have the same, so taking a town now brings its pastures, looms and studs into your goods, not just its taxes.

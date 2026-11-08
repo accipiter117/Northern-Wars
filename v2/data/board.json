@@ -1,0 +1,12 @@
+{
+  "note": "The v2 war table (step 2). Regions are the provinces: every city, town and castle is the heart of one, and villages and temples join the nearest heart of their own realm. Regions are linked by the traced roads, and by open country between near neighbours on the same land. `barriers` are the great rivers: a link across one is closed unless a road crosses it (a bridge) or `crossings` names a ford or ferry. Lesser rivers only slow a march off the road. Movement points are spent per link: `road` along a road, `open` across country, plus `stream` to cross a lesser river off the road; winter months halve the points.",
+  "barriers": ["Pontar", "Yaruga"],
+  "openLinks": { "near": 4, "maxDist": 190 },
+  "crossings": {
+    "fords": [],
+    "ferries": []
+  },
+  "moves": { "points": 3, "road": 1, "open": 2, "stream": 1, "winterMonths": [12, 1, 2] },
+  "supply": { "heal": 5, "attrition": 8 },
+  "siege": { "walledTurns": 2 }
+}
