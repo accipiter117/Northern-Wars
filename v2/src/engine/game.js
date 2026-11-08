@@ -10,6 +10,7 @@
 //   Step 7 (diplomacy.js, spies.js): opinions, treaties, peace, spies; the AI's board play.
 //   Step 8 (story.js): chapters and requirement-driven lore events.
 //   Step 9 (endings.js): domination, faith and the lore's endings.
+//   forces.js: fleets on the sea lanes, and the commanders who lead armies.
 import { makeRng } from '../../../src/sim/rng.js';
 import { startingWorks } from '../../../src/sim/works.js';
 import { buildBoard, other, TEMERIA } from './board.js';
@@ -22,11 +23,12 @@ import { newDiplomacy, onWar, addScore, mayCross, allied, tradeCrowns, monthlyDi
 import { newSpies, monthlySpies, aiSpies } from './spies.js';
 import { newStory, storyChapter, monthlyStory, answerStory } from './story.js';
 import { suddenEnding, loreEnding } from './endings.js';
+import { buildSea, newFleets, fleetPoints, seaReach, seaBattle, fleetsAt, newCommanders, monthlyCommanders, woundCommanders, armyBonus } from './forces.js';
 
 export { nameOf, atWar, controller, authority };
 
 export const SAVE_FORMAT = 'northern-wars-v2';
-export const VERSION = 5;
+export const VERSION = 6;
 
 // ---- The world as the game sees it ----
 
@@ -42,7 +44,8 @@ export function makeTable(world, data) {
   const tiers = { [TEMERIA]: 'great' };
   for (const [rid, r] of Object.entries(world.realms?.realms ?? {})) tiers[rid] = r.tier ?? 'petty';
   const colours = { ...Object.fromEntries(Object.entries(world.realms?.realms ?? {}).map(([k, v]) => [k, v.colours])), ...data.game.colours };
-  return { world, data, board, works, tiers, colours };
+  const sea = data.forces ? buildSea(world, board, data.forces) : { coastal: new Set(), lanes: {} };
+  return { world, data, board, works, tiers, colours, sea };
 }
 
 // ---- Dates ----
@@ -59,6 +62,8 @@ export const monthName = (m) => MONTHS[m - 1];
 export const chapterNow = (state, table) => (state.story ? storyChapter(state, table) : chapterOf(table, dateOf(table, state.turn)));
 
 // ---- A new game ----
+
+const data_has_forces = (table) => !!table.data.forces;
 
 export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   const g = table.data.game;
@@ -78,6 +83,8 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   state.diplomacy = newDiplomacy(state, table);
   state.spies = newSpies(table);
   state.story = newStory();
+  state.fleets = data_has_forces(table) ? newFleets(state, table) : [];
+  state.commanders = data_has_forces(table) ? newCommanders(table) : {};
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
     const plan = g.start_armies[table.tiers[rid] ?? 'petty'] ?? [];
@@ -160,6 +167,7 @@ export function realmYields(state, table, rid) {
   const bonus = realmBonus(state, table, rid);
   for (const k of ['production', 'crowns', 'faith', 'renown']) out[k] += bonus[k] ?? 0;
   for (const a of state.armies) if (a.owner === rid) for (const co of a.companies) out.upkeep += companyDef(table, co.type).upkeep;
+  out.upkeep += (state.fleets ?? []).filter((f) => f.owner === rid).length * (table.data.forces?.fleet.upkeep ?? 0);
   for (const k of Object.keys(out)) out[k] = Math.round(out[k]);
   return out;
 }
@@ -183,6 +191,7 @@ export function armyPoints(state, table, a) {
 
 function resetPoints(state, table) {
   for (const a of state.armies) a.points = armyPoints(state, table, a);
+  for (const f of state.fleets ?? []) f.points = fleetPoints(table, winter(table, state));
 }
 
 const enemyArmyAt = (state, region, rid) => state.armies.find((a) => a.region === region && atWar(state, a.owner, rid));
@@ -293,10 +302,68 @@ export function marchOdds(state, table, armyId, dest) {
   return battleOdds(state, table, battleSides(state, table, army, dest));
 }
 
+// ---- At sea ----
+
+// Sail a fleet, carrying an army if one is given, to a port it can reach.
+// A fleet of the enemy's in that port is fought first; then the army lands:
+// into an enemy army that is a battle (fought weaker, from the boats), into
+// a town a siege or a fall, as by land.
+export function sail(state, table, fleetId, armyId, dest, { interactive = false } = {}) {
+  const fleet = (state.fleets ?? []).find((f) => f.id === fleetId);
+  if (!fleet) return { error: 'No such fleet.' };
+  if (state.battle) return { error: 'A battle is still to be fought.' };
+  const reach = seaReach(table, fleet);
+  if (reach[dest] === undefined) return { error: 'The fleet cannot reach there this month.' };
+  const army = armyId ? state.armies.find((a) => a.id === armyId) : null;
+  if (armyId && (!army || army.region !== fleet.region || army.owner !== fleet.owner)) return { error: 'The army must be in the same port.' };
+  if (army && army.points <= 0) return { error: 'That army has marched its fill this month.' };
+  if (army && !mayEnter(state, table, army, dest)) return { error: 'We may not land there: we are not at war with them.' };
+  fleet.points -= reach[dest];
+  if (!seaBattle(state, table, fleet, dest)) return { sunk: true };
+  fleet.region = dest;
+  if (!army) return { sailed: true };
+  army.points = 0;
+  if (enemyArmyAt(state, dest, army.owner)) {
+    const b = setupBattle(state, table, { ...battleSides(state, table, army, dest), landing: true });
+    if (interactive) {
+      state.battle = b;
+      return { battle: 'pending' };
+    }
+    const rng = makeRng(state.rng);
+    runToEnd(table, b, rng);
+    state.rng = rng.seed;
+    return { battle: true, won: finishBattle(state, table, b) };
+  }
+  army.region = dest;
+  say(state, `${nameOf(table, army.owner)} lands an army at ${table.board.regions[dest].name}.`);
+  return { landed: true };
+}
+
+export const fleetReach = (state, table, fleetId) => {
+  const f = (state.fleets ?? []).find((x) => x.id === fleetId);
+  return f ? seaReach(table, f) : {};
+};
+
+// The AI's fleets: at war, carry an army from their port to the nearest
+// enemy coast they would not be foolish to land on (Skellige's raids).
+function aiFleets(state, table, rid) {
+  const foes = Object.keys(state.realms).filter((o) => atWar(state, rid, o));
+  if (!foes.length) return;
+  for (const f of (state.fleets ?? []).filter((x) => x.owner === rid)) {
+    const army = state.armies.find((a) => a.owner === rid && a.region === f.region && a.points > 0);
+    if (!army) continue;
+    const target = Object.entries(seaReach(table, f)).filter(([id]) => foes.includes(controller(state, id)))
+      .filter(([id]) => { const e = enemyArmyAt(state, id, rid); return !e || strength(table, e, state, id) < strength(table, army) * 0.9; })
+      .sort((x, y) => x[1] - y[1])[0];
+    if (target) sail(state, table, f.id, army.id, target[0]);
+  }
+}
+
 // A finished battle: losses written back, the beaten defenders fall back,
 // victorious attackers take the field, and a stormed city falls.
 export function finishBattle(state, table, b) {
   const won = applyBattle(state, table, b);
+  woundCommanders(state, table, b.sides[won ? 1 : 0].armies);
   damage(state, table, b.region, table.data.game.cities.damage.battle, 1);
   addScore(state, table, b.sides[won ? 0 : 1].owner, b.sides[won ? 1 : 0].owner, 'battle');
   const att = b.sides[0];
@@ -530,6 +597,7 @@ function aiTurn(state, table, rid) {
     recruit(state, table, rid, homes[0], best, { crowns });
   }
   aiSpies(state, table, rid);
+  aiFleets(state, table, rid);
   const plan = aiDiplomacy(state, table, rid);
   if (plan.war) declareWar(state, table, rid, plan.war);
   mergeArmies(state, table, rid);
@@ -698,13 +766,19 @@ export function endTurn(state, table) {
     aiTurn(state, table, rid);
     finishSide(state, table, rid);
   }
-  for (const rid of Object.keys(state.realms)) if (!isPower(table, rid)) finishSide(state, table, rid);
+  for (const rid of Object.keys(state.realms)) {
+    if (isPower(table, rid)) continue;
+    // The smaller crowns hold, but their fleets may raid (Skellige).
+    aiFleets(state, table, rid);
+    finishSide(state, table, rid);
+  }
   month(state, table);
   checkGoals(state, table, chapterNow(state, table), goalCtx(state));
   monthlyMinors(state, table);
   monthlyDiplomacy(state, table);
   monthlySpies(state, table, (a, b) => opinionOf(state, a, b));
   monthlyStory(state, table, dateOf(table, state.turn), storyHooks(state, table));
+  if (table.data.forces) monthlyCommanders(state, table, chapterNow(state, table).index, (id) => table.data.goals.chapters.findIndex((c) => c.id === id));
   state.turn += 1;
   const d = dateOf(table, state.turn);
   const sudden = suddenEnding(state, table);
@@ -779,6 +853,12 @@ export function deserialize(text, table = null) {
     s.story ??= newStory();
     s.story.chapter = chapterOf(table, dateOf(table, s.turn)).id;
     s.version = 5;
+  }
+  // Version 5 gains fleets and commanders.
+  if ((data.version ?? 1) < 6 && table) {
+    s.fleets ??= newFleets(s, table);
+    s.commanders ??= newCommanders(table);
+    s.version = 6;
   }
   return s;
 }

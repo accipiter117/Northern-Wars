@@ -3,7 +3,7 @@
 // first, so the game starts at once and plays offline; a new version
 // takes over as soon as it has installed, and the page switches to it at
 // the next opening (or at once if it has only just opened).
-const VERSION = '4413f653b0aa';
+const VERSION = '5455768482cd';
 const CACHE = `northern-wars-${VERSION}`;
 const FILES = [
   "./",
@@ -203,6 +203,7 @@ const FILES = [
   "v2/data/board.json",
   "v2/data/diplomacy.json",
   "v2/data/endings.json",
+  "v2/data/forces.json",
   "v2/data/game.json",
   "v2/data/goals.json",
   "v2/data/minors.json",
@@ -215,6 +216,7 @@ const FILES = [
   "v2/src/engine/core.js",
   "v2/src/engine/diplomacy.js",
   "v2/src/engine/endings.js",
+  "v2/src/engine/forces.js",
   "v2/src/engine/game.js",
   "v2/src/engine/goals.js",
   "v2/src/engine/load.js",

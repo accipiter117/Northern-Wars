@@ -13,6 +13,7 @@ Built at `/v2/` alongside the real-time game until it is playable end to end. De
 | 7 | M42 Diplomacy and AI | Opinions moved by each ruler's lore agenda, grievances and treaties (alliance, open borders, trade, peace); war scores; spies and their operations; an AI that defends, heals, merges, makes war and peace and offers treaties | Done |
 | 8 | M43 Chapters and lore events | Chapters moved by the story; the Road to War, the fall of Cintra, Sodden Hill, Thanedd, the Peace of Cintra, the Kingslayers, Radovid and the Third War, each when its driver earns it; player choices; plots seen coming and foiled | Done |
 | 9 | M44 Endings | Domination and faith at once; the Empire triumphant, one king rules the North or the North holds at the end of 1272; the player's own fate | Done |
+| 11 | M46 Fleets and commanders | Sea lanes, fleets built at our ports and our vassals', armies carried and landed, battles at sea, Skellige's raids; kings and marshals leading armies with a skill each, wounded when beaten, new ones by chapter | Done |
 | 10 | M45 Polish and the swap | Balance from whole reigns (`tools/v2play.mjs`), crowns that matter, How to play, painted pieces with strength bars, more names on the table; the swap waits on the owner's word | In progress |
 
 ## M36 and M37 acceptance criteria

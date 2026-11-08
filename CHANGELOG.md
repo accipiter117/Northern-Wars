@@ -1,5 +1,10 @@
 # Changelog
 
+## M46 Northern Wars v2: fleets and commanders
+- Fleets: build one at a port you hold, or at a vassal's (Temeria has no coast of its own, so Cidaris and Kerack matter now). Tap the ship to sail: every port in reach lights up. Embark an army from its card and land it on an enemy coast; fleets meeting in a port fight it out.
+- Skellige takes to the sea: at war, its longships carry raiders to the nearest enemy coast. Redania, Kovir, Cidaris and Kerack have fleets of their own.
+- Commanders: Foltest and Constable Jan Natalis for Temeria, and the other crowns' kings and marshals, with the Empire's Coehoorn and Voorhis arriving in later wars. Give one an army from its card: a crown or a star on the piece shows who leads it. Each brings a skill (a harder attack, steadier morale, a better storm); a beaten commander is wounded and out of the field a while.
+
 ## M45 (part three) Northern Wars v2: ready for the swap
 - The painted map now follows the war: take a province and its towns are painted in your colours, with your banners and borders.
 - Save your reign to a file and carry on from one (Menu, Export and Import), to keep a reign safe or move it to another device.

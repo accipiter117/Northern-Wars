@@ -5,6 +5,7 @@
 // finger on the table, pinch or wheel to zoom.
 import { realmShapes } from '../engine/board.js';
 import { controller, reachable } from '../engine/game.js';
+import { commanderOf, commanderDef } from '../engine/forces.js';
 import { clampCamera } from '../../../src/render/camera.js';
 
 const RASTER = 4; // map units per pixel of the province layer
@@ -153,7 +154,7 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
       ctx.drawImage(layer.canvas, ox, oy, layer.w * RASTER * view.z, layer.h * RASTER * view.z);
       drawLinks();
       if (drag?.reach) drawReach(drag.reach);
-      else if (app.selected?.army) drawReach(app.selected.reach);
+      else if (app.selected?.army || app.selected?.fleet) drawReach(app.selected.reach);
       drawRegions();
       drawArmies();
       return;
@@ -179,7 +180,7 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
     drawRivers();
     drawLinks();
     if (drag?.reach) drawReach(drag.reach);
-    else if (app.selected?.army) drawReach(app.selected.reach);
+    else if (app.selected?.army || app.selected?.fleet) drawReach(app.selected.reach);
     drawRegions();
     drawArmies();
   }
@@ -359,7 +360,74 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
     return out;
   }
 
+  // Fleets: a ship beside each port, stacked when several lie there.
+  function fleetPositions() {
+    const by = {};
+    for (const f of app.state.fleets ?? []) (by[f.region] ??= []).push(f);
+    const out = [];
+    for (const [id, list] of Object.entries(by)) {
+      const r = table.board.regions[id];
+      list.forEach((f, i) => {
+        const [sx, sy] = toScreen(r.x, r.y);
+        out.push({ f, x: sx + 20 + i * 8, y: sy + 10 - i * 3 });
+      });
+    }
+    return out;
+  }
+
+  function ship(x, y, f, lit) {
+    const [main, trim] = table.colours[f.owner] ?? ['#777777', '#efe6cf'];
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(x + 1, y + 7, 12, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = lit ? '#fff4c8' : '#1a120a';
+    ctx.lineWidth = lit ? 2.2 : 1.2;
+    // The hull, then a square sail in the realm's colours.
+    ctx.fillStyle = '#6b4a2a';
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y);
+    ctx.lineTo(x + 12, y);
+    ctx.lineTo(x + 8, y + 6);
+    ctx.lineTo(x - 8, y + 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y - 16);
+    ctx.stroke();
+    ctx.fillStyle = main;
+    ctx.fillRect(x - 7, y - 15, 14, 11);
+    ctx.strokeRect(x - 7, y - 15, 14, 11);
+    ctx.fillStyle = trim;
+    ctx.fillRect(x - 7, y - 11, 14, 3);
+  }
+
+  function drawFleets() {
+    for (const p of fleetPositions()) ship(p.x, p.y, p.f, app.selected?.fleet === p.f.id);
+    // Sailing: the lanes to every port the fleet can reach.
+    const sel = app.selected?.fleet && (app.state.fleets ?? []).find((f) => f.id === app.selected.fleet);
+    if (sel) {
+      const from = table.board.regions[sel.region];
+      const [fx, fy] = toScreen(from.x, from.y);
+      ctx.strokeStyle = 'rgba(120, 180, 230, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      for (const id of Object.keys(app.selected.reach ?? {})) {
+        const r = table.board.regions[id];
+        const [tx, ty] = toScreen(r.x, r.y);
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+  }
+
   function drawArmies() {
+    drawFleets();
     for (const p of armyPositions()) {
       if (drag?.army === p.a) continue;
       piece(p.x, p.y, p.a, app.selected?.army === p.a.id);
@@ -426,6 +494,27 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
       ctx.stroke();
       ctx.setLineDash([]);
     }
+    // A commander rides with it: a crown for a king, a star for a marshal.
+    const cid = commanderOf(app.state, a.id);
+    if (cid) {
+      const king = commanderDef(table, cid)?.king;
+      ctx.fillStyle = '#f3d27a';
+      ctx.strokeStyle = '#1a120a';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (king) {
+        ctx.moveTo(x - 6, y - 15); ctx.lineTo(x - 6, y - 21); ctx.lineTo(x - 3, y - 18); ctx.lineTo(x, y - 22); ctx.lineTo(x + 3, y - 18); ctx.lineTo(x + 6, y - 21); ctx.lineTo(x + 6, y - 15);
+      } else {
+        for (let k = 0; k < 10; k++) {
+          const rr = k % 2 ? 2.5 : 6;
+          const an = -Math.PI / 2 + (k * Math.PI) / 5;
+          ctx[k ? 'lineTo' : 'moveTo'](x + 11 + rr * Math.cos(an), y - 14 + rr * Math.sin(an));
+        }
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
     // Spent for the month: the head is dimmed.
     if (a.owner === app.state.player && a.points <= 0) {
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -445,6 +534,10 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
     const b = canvas.getBoundingClientRect();
     return [e.clientX - b.left, e.clientY - b.top];
   };
+
+  function fleetAt(sx, sy) {
+    return fleetPositions().reverse().find((p) => Math.abs(p.x - sx) < 14 && sy > p.y - 18 && sy < p.y + 8)?.f ?? null;
+  }
 
   function pieceAt(sx, sy) {
     const list = armyPositions().reverse();
@@ -526,7 +619,10 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
       // A tap: a piece, a lit region for the chosen army, or a region.
       const hit = pan.hit;
       const r = regionAt(sx, sy);
-      if (app.selected?.army && r && app.selected.reach?.[r.id]) app.march(app.selected.army, r.id);
+      const boat = !hit && fleetAt(sx, sy);
+      if (app.selected?.fleet && r && app.selected.reach?.[r.id] !== undefined) app.sail(app.selected.fleet, app.selected.carry ?? null, r.id);
+      else if (app.selected?.army && r && app.selected.reach?.[r.id]) app.march(app.selected.army, r.id);
+      else if (boat) app.select({ fleet: boat.id });
       else if (hit) app.select({ army: hit.id });
       else if (r) app.select({ region: r.id });
       else app.select(null);
@@ -566,7 +662,13 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
   };
 
   fit();
-  return { draw, fit, screenOf, pieceOf, centreOn };
+  const fleetOf = (fleetId) => {
+    const p = fleetPositions().find((q) => q.f.id === fleetId);
+    const b = canvas.getBoundingClientRect();
+    return p ? { x: p.x + b.left, y: p.y + b.top } : null;
+  };
+
+  return { draw, fit, screenOf, pieceOf, fleetOf, centreOn };
 }
 
 function OffscreenCanvasOr(w, h) {

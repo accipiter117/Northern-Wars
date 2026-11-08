@@ -1,0 +1,32 @@
+{
+  "note": "Fleets and commanders (v2, after step 10). Sea lanes join every coastal province to every other within `sea.lane` map units; a lane costs a point for each `sea.perPoint` units, and a fleet has `sea.points` a month (halved in winter storms). A fleet is built at a coastal city we hold, or at a vassal's (`fleet.cost` production); it carries one army from its port to another and lands it there: into an enemy army that is a battle (the landing fights at `fleet.landing` of its strength), into an enemy town a siege or a fall, as by land. Fleets meeting in a port fight at sea: odds by numbers, the loser's fleet sunk. Starting fleets by realm in `fleet.start`. Skellige raids: at war, its fleets carry its armies to the nearest enemy coast. Commanders: each great power's kings and marshals, by chapter (`from`), each with a skill: `power` (a share more strength in battle), `morale` (a head start in morale) or `siege` (a share more when storming). One commander leads an army; a commander whose army is beaten is wounded and out of the field for `wounded` months, then returns to court. A commander at court may be sent to any army of ours on our own land.",
+  "sea": { "lane": 650, "perPoint": 260, "points": 3 },
+  "fleet": {
+    "cost": 60, "upkeep": 4, "landing": 0.8,
+    "start": { "skellige": 3, "redania": 1, "kovir": 1, "cidaris": 1, "kerack": 1 }
+  },
+  "wounded": 4,
+  "commanders": {
+    "temeria": [
+      { "id": "foltest", "name": "King Foltest", "king": true, "skill": { "morale": 15 }, "text": "The men fight harder with the king among them." },
+      { "id": "natalis", "name": "Constable Jan Natalis", "skill": { "power": 0.15 }, "text": "Temeria's constable: a steady hand on the attack." }
+    ],
+    "redania": [
+      { "id": "vizimir", "name": "King Vizimir II", "king": true, "skill": { "morale": 10 }, "text": "A king who would rather know than fight." },
+      { "id": "redanian_marshal", "name": "The Marshal of Redania", "skill": { "power": 0.15 }, "text": "Tretogor's field marshal." }
+    ],
+    "kaedwen": [
+      { "id": "henselt", "name": "King Henselt", "king": true, "skill": { "power": 0.15, "morale": 10 }, "text": "Henselt leads from the front, and his men know it." },
+      { "id": "kaedweni_marshal", "name": "The Marshal of Kaedwen", "skill": { "siege": 0.3 }, "text": "A master of the siege train." }
+    ],
+    "aedirn": [
+      { "id": "demavend", "name": "King Demavend III", "king": true, "skill": { "morale": 15 }, "text": "The valley stands behind its king." },
+      { "id": "aedirnian_constable", "name": "The Constable of Vengerberg", "skill": { "power": 0.12 }, "text": "Keeper of Vengerberg's walls." }
+    ],
+    "nilfgaard": [
+      { "id": "imperial_marshal", "name": "The Emperor's Field Marshal", "skill": { "power": 0.15 }, "text": "The Empire's First War commander." },
+      { "id": "coehoorn", "name": "Field Marshal Menno Coehoorn", "from": "second", "skill": { "power": 0.2, "morale": 10 }, "text": "The best soldier in the Empire, they say." },
+      { "id": "voorhis", "name": "General Morvran Voorhis", "from": "third", "skill": { "power": 0.15, "siege": 0.3 }, "text": "The Empire's general in the Third War." }
+    ]
+  }
+}

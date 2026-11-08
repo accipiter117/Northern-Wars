@@ -4,7 +4,7 @@ import { loadTable } from '../engine/load.js';
 import {
   createGame, endTurn, moveArmy, recruit, declareWar, atWar, reachable, controller, cityYields, realmYields,
   authority, riots, dateOf, monthName, nameOf, strength, dilemmaView, answerDilemma, serialize, deserialize, movePoints,
-  companyCost, chapterNow, goalContext, realmBonus, finishBattle, battleRound, battleAuto, battleRetreat,
+  companyCost, chapterNow, goalContext, realmBonus, sail, fleetReach, finishBattle, battleRound, battleAuto, battleRetreat,
   termsOpen, offerTerms, storm, stormOdds, answerStoryCard,
 } from '../engine/game.js';
 import { placeCompany, oddsNow } from '../engine/battle.js';
@@ -15,6 +15,7 @@ import { repair, repairCost, setFocus, annex, worksOf, condOf } from '../engine/
 import { goalsOf, goalStatus, unlockName, companyTypes, companyDef, buildable, raise } from '../engine/goals.js';
 import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge, vassalsOf } from '../engine/minors.js';
 import { createTable } from './table.js';
+import { mayBuildFleet, buildFleet, fleetsAt, commanderOf, commanderDef, assignCommander, recallCommander, isCoastal } from '../engine/forces.js';
 import { createBackdrop } from './backdrop.js';
 import { createCamera } from '../../../src/render/camera.js';
 import { createAudio } from '../../../src/ui/audio.js';
@@ -47,6 +48,11 @@ const app = {
       const a = app.state.armies.find((x) => x.id === sel.army);
       app.selected = { army: sel.army, region: a?.region, reach: a && a.owner === app.state.player ? reachable(app.state, table, a) : {} };
       showArmy(a);
+    } else if (sel?.fleet) {
+      const f = (app.state.fleets ?? []).find((x) => x.id === sel.fleet);
+      const ours = f && f.owner === app.state.player;
+      app.selected = { fleet: sel.fleet, carry: sel.carry ?? null, region: f?.region, reach: ours ? fleetReach(app.state, table, sel.fleet) : {} };
+      showFleet(f);
     } else if (sel?.region) {
       app.selected = { region: sel.region };
       showRegion(sel.region);
@@ -55,6 +61,21 @@ const app = {
       closeSheet();
     }
     view.draw();
+  },
+  sail(fleetId, armyId, region) {
+    const r = sail(app.state, table, fleetId, armyId, region, { interactive: true });
+    if (r.error) toast(r.error);
+    else if (r.sunk) toast('Our ships were sunk.');
+    if (r.battle === 'pending') {
+      sound('horn');
+      save();
+      refresh();
+      return showBattle();
+    }
+    save();
+    app.select(null);
+    refresh();
+    if (r.landed || r.sailed) toast(app.state.log.at(-1)?.text ?? 'The fleet sails.');
   },
   march(armyId, region) {
     const r = moveArmy(app.state, table, armyId, region, { interactive: true });
@@ -192,10 +213,18 @@ function showRegion(id) {
     for (const b of buildable(s, table, s.player).filter((x) => x.def.at === id)) {
       acts += `<div class="row"><span>${b.wonder ? 'Wonder' : 'Raise'}: <b>${esc(b.def.name)}</b>, ${price(b.def.cost)}. ${esc(b.def.blurb)}</span><button type="button" class="act" data-raise="${b.id}" ${can(b.def.cost) ? '' : 'disabled'}>Raise</button></div>`;
     }
+    if (mayBuildFleet(s, table, s.player, id)) {
+      const fc = table.data.forces.fleet.cost;
+      acts += `<div class="row"><span>A port: build a fleet for ${price(fc)}. Fleets carry armies by sea.</span><button type="button" class="act" data-fleet ${can(fc) ? '' : 'disabled'}>Build</button></div>`;
+    }
     acts += `<h3>Raise a company</h3><div class="seg wrap">${companyTypes(s, table, s.player).map((k) => {
       const cost2 = companyCost(s, table, s.player, k);
       return `<button type="button" class="act" data-recruit="${k}" ${can(cost2) ? '' : 'disabled'}>${esc(companyDef(table, k).name)} (${crowns ? cost2 * rate : cost2})</button>`;
     }).join('')}</div>`;
+  }
+  if (!ours && mayBuildFleet(s, table, s.player, id)) {
+    const fc = table.data.forces.fleet.cost;
+    acts += `<div class="row"><span>Our vassal's port: build a fleet here for ${fc} production. Fleets carry armies by sea.</span><button type="button" class="act" data-fleet ${s.realms[s.player].production >= fc ? '' : 'disabled'}>Build</button></div>`;
   }
   if (c.holder === s.player) acts += `<div class="row"><span>We hold it. Keep it, and it becomes ours, sullen at first.</span><button type="button" class="act" data-annex>Keep it</button></div>`;
   if (c.siege?.by === s.player) {
@@ -217,6 +246,7 @@ function showRegion(id) {
   act('[data-repair]', () => repair(s, table, s.player, id, { crowns: !!app.payCrowns }));
   act('[data-raise]', (b) => raise(s, table, s.player, b.dataset.raise, { crowns: !!app.payCrowns }));
   act('[data-annex]', () => annex(s, table, s.player, id));
+  act('[data-fleet]', () => buildFleet(s, table, s.player, id, { crowns: !!app.payCrowns }));
   act('[data-terms]', () => offerTerms(s, table, s.player, id));
   for (const el of document.querySelectorAll('[data-storm]')) el.addEventListener('click', () => {
     const out = storm(s, table, s.player, id, { interactive: true });
@@ -236,7 +266,43 @@ function showArmy(a) {
   openSheet(`${ours ? 'Our' : nameOf(table, a.owner) + '’s'} army at ${r.name}`, `
     <p class="sub">${a.companies.length} companies, strength ${strength(table, a).toFixed(1)}.${a.hungry ? ' Out of supply: losing men.' : ''}</p>
     ${a.companies.map((c) => { const d = companyDef(table, c.type); return `<div class="row"><span>${esc(d.name)}${d.ability ? `<br><small class="sub">${esc(d.ability)}</small>` : ''}</span><span>${c.str}%</span></div>`; }).join('')}
-    ${ours ? `<p class="sub">${a.points} marches left this month. ${Object.keys(reach).length ? 'Drag the piece, or tap a lit place, to march.' : 'Nowhere it can reach this month.'}</p>` : ''}`);
+    ${ours ? `<p class="sub">${a.points} marches left this month. ${Object.keys(reach).length ? 'Drag the piece, or tap a lit place, to march.' : 'Nowhere it can reach this month.'}</p>` : ''}
+    ${commandHtml(a)}`);
+  for (const b of document.querySelectorAll('[data-command]')) b.addEventListener('click', () => { const out = assignCommander(s, table, b.dataset.command, a.id); if (out.error) toast(out.error); save(); app.select({ army: a.id }); });
+  for (const b of document.querySelectorAll('[data-recall]')) b.addEventListener('click', () => { recallCommander(s, b.dataset.recall); save(); app.select({ army: a.id }); });
+  for (const b of document.querySelectorAll('[data-embark]')) b.addEventListener('click', () => app.select({ fleet: Number(b.dataset.embark), carry: a.id }));
+}
+
+// The army's commander, those who could take it, and a ship to board.
+function commandHtml(a) {
+  const s = app.state;
+  if (!s.commanders) return '';
+  const cid = commanderOf(s, a.id);
+  let html = '';
+  if (cid) {
+    const d = commanderDef(table, cid);
+    html += `<h3>Commander</h3><div class="row"><span><b>${esc(d.name)}</b><br><small class="sub">${esc(d.text)}</small></span>${a.owner === s.player ? `<button type="button" class="act" data-recall="${cid}">To court</button>` : ''}</div>`;
+  }
+  if (a.owner !== s.player) return html;
+  const free = Object.entries(s.commanders).filter(([id, c]) => c.owner === s.player && id !== cid && !c.wounded
+    && (!c.army || s.armies.find((x) => x.id === c.army)?.region === a.region));
+  if (free.length) html += `<h3>${cid ? 'Or give command to' : 'Give command to'}</h3><div class="seg wrap">${free.map(([id]) => `<button type="button" class="act" data-command="${id}">${esc(commanderDef(table, id).name)}</button>`).join('')}</div>`;
+  const ships = fleetsAt(s, a.region, s.player);
+  if (ships.length && a.points > 0) html += `<h3>By sea</h3><div class="row"><span>Our fleet lies here. Board it and sail to a port it can reach.</span><button type="button" class="act" data-embark="${ships[0].id}">Embark</button></div>`;
+  return html;
+}
+
+function showFleet(f) {
+  if (!f) return closeSheet();
+  const s = app.state;
+  const ours = f.owner === s.player;
+  const r = table.board.regions[f.region];
+  const carry = app.selected?.carry ? s.armies.find((a) => a.id === app.selected.carry) : null;
+  const n = Object.keys(app.selected?.reach ?? {}).length;
+  openSheet(`${ours ? 'Our' : `${nameOf(table, f.owner)}\u2019s`} fleet at ${r.name}`, `
+    <p class="sub">${ours ? `${f.points} sea marches left this month. ${carry ? `Carrying our army of ${carry.companies.length} companies: tap a lit port to land it.` : n ? 'Tap a lit port to sail there.' : 'No port within reach this month.'}` : 'A fleet of another crown.'}</p>
+    ${ours && !carry ? s.armies.filter((a) => a.owner === s.player && a.region === f.region && a.points > 0).map((a) => `<div class="row"><span>Our army of ${a.companies.length} companies is in port.</span><button type="button" class="act" data-carry="${a.id}">Embark it</button></div>`).join('') : ''}`);
+  for (const b of document.querySelectorAll('[data-carry]')) b.addEventListener('click', () => app.select({ fleet: f.id, carry: Number(b.dataset.carry) }));
 }
 
 function showGoals() {
