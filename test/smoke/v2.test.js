@@ -316,6 +316,29 @@ test('the Book of Laws in the Realm sheet; a city\'s faiths and missionaries', a
   await context.close();
 });
 
+test('a new game as the Nilfgaardian Empire from the Menu', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  await page.click('[data-open="menu"]');
+  await page.click('[data-newgame="nilfgaard"]');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.player), 'nilfgaard');
+  await page.click('[data-open="realm"]');
+  assert.match(await page.textContent('#sheet'), /Emhyr var Emreis[\s\S]*Our faith is Great Sun/);
+  await page.click('#sheet-close');
+  // The map looks over the Empire's capital, and its pieces answer the drag.
+  const reach = await page.evaluate(() => {
+    const { app } = window.northernWarsV2;
+    const a = app.state.armies.find((x) => x.owner === 'nilfgaard');
+    app.select({ army: a.id });
+    return Object.keys(app.selected.reach).length;
+  });
+  assert.ok(reach > 0);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-nilfgaard.png') });
+  await page.click('#end');
+  assert.match(await page.textContent('#date'), /April 1262/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');

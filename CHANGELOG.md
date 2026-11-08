@@ -1,5 +1,10 @@
 # Changelog
 
+## M48 Northern Wars v2: play any great crown
+- Menu, A new game: start as Temeria, Redania, Kaedwen, Aedirn or the Nilfgaardian Empire. The map opens over your capital, and How to play speaks to your own king.
+- The story's choices belong to Temeria; when someone else plays, Temeria's AI makes them (and the North stands aside for Cintra, as it did).
+- Faith victory now needs 70 in every hundred cities, not 60: with Temeria left to the AI, Melitele drifted to 60 on its own.
+
 ## M47 Northern Wars v2: the Book of Laws and the faiths
 - The Book of Laws, in the Realm sheet: four chapters (Order, Coin, Faith, War), each with two rival paths. A law costs crowns and needs Authority; enacting one path closes its rival until you repeal it. The book holds two laws at the Dawn and more with each war. Repealing costs Love, and the law cannot return for six months.
 - Laws do real work: more crowns or production, cheaper or faster armies, stronger walls, conquests that settle sooner, Love, Fear or Unrest each month, cheaper missionaries.

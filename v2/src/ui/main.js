@@ -98,10 +98,15 @@ const app = {
 // plain wooden table if it cannot be drawn (or with ?plain).
 let backdrop = null;
 const cam = createCamera(table.world);
+// Where the map opens: over the player's capital.
+const homeOf = (rid) => {
+  const r = Object.values(table.board.regions).find((x) => x.realm === rid && x.capital);
+  return r ? { x: r.x, y: r.y } : null;
+};
 if (!new URLSearchParams(location.search).has('plain')) {
   try {
     const layoutCfg = await (await fetch('../data/layout.json')).json();
-    backdrop = createBackdrop($('map'), table.world, cam, layoutCfg);
+    backdrop = createBackdrop($('map'), table.world, cam, layoutCfg, homeOf(app.state.player));
   } catch (e) {
     console.warn('The painted map could not be drawn; using the plain table.', e);
     backdrop = null;
@@ -507,7 +512,8 @@ function showMenu() {
     <div class="row"><span>Save it to a file, to keep or move to another device</span><button type="button" class="act" id="menu-export">Export</button></div>
     <div class="row"><span>Carry on from a saved file</span><button type="button" class="act" id="menu-import">Import</button></div>
     <input type="file" id="menu-file" accept=".json,application/json" hidden>
-    <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act war" id="new-game">New game</button></div>
+    <h3>A new game</h3><p class="sub">Start again, as any of the five great crowns. This reign is lost unless it is saved to a file first.</p>
+    <div class="seg wrap">${table.data.game.powers.map((p) => `<button type="button" class="act${p === app.state.player ? ' war' : ''}" data-newgame="${p}">${esc(nameOf(table, p)[0].toUpperCase() + nameOf(table, p).slice(1))}</button>`).join('')}</div>
     <h3>Sound</h3>
     <div class="seg"><button type="button" class="act" id="menu-music" aria-pressed="${on('musicOn')}">Music ${on('musicOn') ? 'on' : 'off'}</button><button type="button" class="act" id="menu-sfx" aria-pressed="${on('sfxOn')}">Sounds ${on('sfxOn') ? 'on' : 'off'}</button></div>
     <h3>The real-time game</h3>
@@ -541,12 +547,14 @@ function showMenu() {
       toast(err.message || 'That file could not be read.');
     }
   });
-  $('new-game').addEventListener('click', () => {
-    app.state = createGame(table, { seed: (Date.now() & 0xffff) || 1 });
+  for (const b of document.querySelectorAll('[data-newgame]')) b.addEventListener('click', () => {
+    const player = b.dataset.newgame;
+    app.state = createGame(table, { seed: (Date.now() & 0xffff) || 1, player });
     save();
     app.select(null);
     refresh();
-    toast('A new reign begins in March 1262.');
+    if (backdrop) backdrop.home(homeOf(player));
+    toast(`A new reign begins in March 1262: ${rulerOf(app.state, table, player)} of ${nameOf(table, player)}.`);
   });
 }
 
@@ -659,12 +667,12 @@ function nextCard() {
 const GUIDE_KEY = 'northern-wars.v2.guided';
 function showGuide() {
   openSheet('How to play', `<div class="guide">
-    <p>You are Foltest, King of Temeria, from March 1262. One turn is one month; the Northern Wars come when the Empire is ready.</p>
-    <p><b>March.</b> Drag one of your blue pieces: every place it can reach this month lights up. Roads are quick, winter is slow, and the Pontar and the Yaruga can only be crossed at bridges. You may only march into a realm you are at war with (or one that lets you through).</p>
+    <p>You are ${esc(rulerOf(app.state, table, app.state.player))} of ${esc(nameOf(table, app.state.player))}, from March 1262. One turn is one month; the Northern Wars come when the Empire is ready.</p>
+    <p><b>March.</b> Drag one of your pieces (they carry your colours): every place it can reach this month lights up. Roads are quick, winter is slow, and the Pontar and the Yaruga can only be crossed at bridges. You may only march into a realm you are at war with (or one that lets you through).</p>
     <p><b>Fight.</b> Marching into an enemy army opens the battle: place your companies in the lanes, or fight it out with the odds shown. Walled cities are besieged: starve them, storm them or offer terms.</p>
-    <p><b>Rule.</b> Tap a city to set its focus, mend its works, raise companies and wonders (with production, or crowns). Realm sets taxes.</p>
-    <p><b>Grow.</b> Goals take the place of learning: meet them to unlock the Temerian crossbowmen, the royal knights, the Temple of Melitele and more. Courts: send envoys to the smaller crowns and make them your vassals. Diplomacy: treaties, war, peace and spies.</p>
-    <p><b>Win.</b> Hold most of the North's capitals, make your faith the North's, or simply see Temeria through to the end of 1272.</p>
+    <p><b>Rule.</b> Tap a city to set its focus, mend its works, raise companies and wonders (with production, or crowns). Realm sets taxes and holds the Book of Laws.</p>
+    <p><b>Grow.</b> Goals take the place of learning: meet them to unlock your crown's own companies, buildings and wonders. Courts: send envoys to the smaller crowns and make them your vassals. Diplomacy: treaties, war, peace and spies.</p>
+    <p><b>Win.</b> Hold most of the North's capitals, make your faith the North's, or simply see your crown through to the end of 1272. Any of the five great crowns can be played: start a new game from the Menu.</p>
     <button type="button" class="act" id="guide-go">To the war table</button></div>`);
   $('guide-go').addEventListener('click', () => closeSheet());
   try { localStorage.setItem(GUIDE_KEY, '1'); } catch { /* storage blocked: the guide shows again next time */ }
