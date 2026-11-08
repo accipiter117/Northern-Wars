@@ -88,7 +88,9 @@ export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
       if (over) {
         // Over the painted map: province borders as faint ink, and a wash of
         // the holder's colour only where a province is not its realm's own.
-        const taken = controller(app.state, index[o]) !== realmOf[o];
+        // The painted map itself follows the war (backdrop.follow), so only
+        // the borders are needed over it.
+        const taken = false;
         if (edge && !realmEdge) { img.data[i * 4 + 3] = 34; continue; }
         if (taken) {
           img.data[i * 4] = r;

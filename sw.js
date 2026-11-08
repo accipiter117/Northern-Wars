@@ -3,10 +3,11 @@
 // first, so the game starts at once and plays offline; a new version
 // takes over as soon as it has installed, and the page switches to it at
 // the next opening (or at once if it has only just opened).
-const VERSION = 'c80c9cfd542e';
+const VERSION = '4413f653b0aa';
 const CACHE = `northern-wars-${VERSION}`;
 const FILES = [
   "./",
+  "v2/",
   "data/ambient.json",
   "data/book.json",
   "data/buildings.json",
@@ -197,7 +198,33 @@ const FILES = [
   "src/ui/trade.js",
   "src/ui/war.js",
   "src/ui/works.js",
-  "styles.css"
+  "styles.css",
+  "v2/data/battle.json",
+  "v2/data/board.json",
+  "v2/data/diplomacy.json",
+  "v2/data/endings.json",
+  "v2/data/game.json",
+  "v2/data/goals.json",
+  "v2/data/minors.json",
+  "v2/data/story.json",
+  "v2/data/uniques.json",
+  "v2/index.html",
+  "v2/src/engine/battle.js",
+  "v2/src/engine/board.js",
+  "v2/src/engine/cities.js",
+  "v2/src/engine/core.js",
+  "v2/src/engine/diplomacy.js",
+  "v2/src/engine/endings.js",
+  "v2/src/engine/game.js",
+  "v2/src/engine/goals.js",
+  "v2/src/engine/load.js",
+  "v2/src/engine/minors.js",
+  "v2/src/engine/spies.js",
+  "v2/src/engine/story.js",
+  "v2/src/ui/backdrop.js",
+  "v2/src/ui/main.js",
+  "v2/src/ui/table.js",
+  "v2/styles.css"
 ];
 
 self.addEventListener('install', (e) => {

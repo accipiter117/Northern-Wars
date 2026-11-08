@@ -1,5 +1,11 @@
 # Changelog
 
+## M45 (part three) Northern Wars v2: ready for the swap
+- The painted map now follows the war: take a province and its towns are painted in your colours, with your banners and borders.
+- Save your reign to a file and carry on from one (Menu, Export and Import), to keep a reign safe or move it to another device.
+- The turn-based game now plays offline like the real-time one, and updates itself the same way.
+- Sound and music, with the real-time game's settings: a bell at the end of each month, a horn when battle is joined, and Music and Sounds switches in the Menu.
+
 ## M45 (part two) Northern Wars v2: the old map, alive
 - The turn-based game now plays on the real-time game's painted map: its towns, forests, hills, roads and rivers, in the season of the month.
 - Life goes on along the roads whatever the month: caravans, goods carts, barges, pilgrims and patrols travel their routes while you plan your turn. They are only for show and never change the game.
