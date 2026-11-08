@@ -2,6 +2,7 @@
 // once; otherwise the lore decides at the end of 1272, and the player's own
 // fate is told beside it.
 import { nameOf, controller } from './core.js';
+import { faithShares, patronOf } from './laws.js';
 
 const E = (table) => table.data.endings;
 
@@ -15,6 +16,18 @@ export function suddenEnding(state, table) {
     if (!state.realms[p]) continue;
     const held = caps.filter((id) => controller(state, id) === p).length;
     if (held >= Math.ceil(caps.length * e.domination.share)) return ending(state, table, 'domination', p);
+  }
+  // Faith: a patron faith rules enough of the cities; the power of that faith
+  // with the most Devotion wins.
+  if (table.data.laws) {
+    const need = table.data.laws.faiths.victory.share;
+    for (const [f, share] of Object.entries(faithShares(state))) {
+      if (share < need) continue;
+      const p = table.data.game.powers.filter((q) => state.realms[q] && patronOf(table, q) === f)
+        .sort((a, b) => state.realms[b].devotion - state.realms[a].devotion)[0];
+      if (p) return ending(state, table, 'faith', p);
+    }
+    return null;
   }
   for (const p of table.data.game.powers) {
     const d = state.realms[p]?.devotion ?? 0;

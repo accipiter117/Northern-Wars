@@ -1,5 +1,12 @@
 # Changelog
 
+## M47 Northern Wars v2: the Book of Laws and the faiths
+- The Book of Laws, in the Realm sheet: four chapters (Order, Coin, Faith, War), each with two rival paths. A law costs crowns and needs Authority; enacting one path closes its rival until you repeal it. The book holds two laws at the Dawn and more with each war. Repealing costs Love, and the law cannot return for six months.
+- Laws do real work: more crowns or production, cheaper or faster armies, stronger walls, conquests that settle sooner, Love, Fear or Unrest each month, cheaper missionaries.
+- Every city now keeps a mix of faiths (Temeria's towns from the real-time game, foreign ones from their realm's lean). Each crown's patron faith spreads in its cities, and each city's ruling faith spreads to its neighbours. A city whose faith is not its crown's is restless.
+- Missionaries: from any city's card within two marches of your land, spend Devotion to spread Melitele there. The other crowns send theirs too.
+- Faith victory is now about souls, not a number: when one patron faith rules 60 in every hundred cities of the North, its most devout crown wins.
+
 ## M46 Northern Wars v2: fleets and commanders
 - Fleets: build one at a port you hold, or at a vassal's (Temeria has no coast of its own, so Cidaris and Kerack matter now). Tap the ship to sail: every port in reach lights up. Embark an army from its card and land it on an enemy coast; fleets meeting in a port fight it out.
 - Skellige takes to the sea: at war, its longships carry raiders to the nearest enemy coast. Redania, Kovir, Cidaris and Kerack have fleets of their own.

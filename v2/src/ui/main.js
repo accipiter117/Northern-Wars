@@ -17,6 +17,7 @@ import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge
 import { createTable } from './table.js';
 import { mayBuildFleet, buildFleet, fleetsAt, commanderOf, commanderDef, assignCommander, recallCommander, isCoastal } from '../engine/forces.js';
 import { createBackdrop } from './backdrop.js';
+import { lawDef, lawBar, enact, repeal, enacted, lawSlots, patronOf, rulingFaith, faithName, missionReach, missionCost, sendMission, faithShares } from '../engine/laws.js';
 import { createCamera } from '../../../src/render/camera.js';
 import { createAudio } from '../../../src/ui/audio.js';
 import { loadPrefs, savePrefs } from '../../../src/ui/hints.js';
@@ -181,6 +182,16 @@ function yieldsHtml(y) {
   return `<div class="yields">${cell('Food', y.food)}${cell('Production', y.production)}${cell('Crowns', y.crowns)}${cell('Faith', y.faith)}${cell('Renown', y.renown)}</div>`;
 }
 
+// A city's faiths, strongest first, and whether its owner's patron rules.
+function faithLine(id) {
+  const mix = app.state.faiths?.[id];
+  if (!mix || !table.data.laws) return '';
+  const list = Object.entries(mix).sort((a, b) => b[1] - a[1]).filter(([, v]) => v >= 3).map(([f, v]) => `${faithName(table, f)} ${Math.round(v)}`).join(', ');
+  const owner = app.state.cities[id].owner;
+  const odd = rulingFaith(app.state, id) !== patronOf(table, owner) ? ` Its faith is not its crown's: restless.` : '';
+  return `<p class="sub">Faiths (in every hundred): ${esc(list)}.${esc(odd)}</p>`;
+}
+
 function showRegion(id) {
   const s = app.state;
   const r = table.board.regions[id];
@@ -226,6 +237,14 @@ function showRegion(id) {
     const fc = table.data.forces.fleet.cost;
     acts += `<div class="row"><span>Our vassal's port: build a fleet here for ${fc} production. Fleets carry armies by sea.</span><button type="button" class="act" data-fleet ${s.realms[s.player].production >= fc ? '' : 'disabled'}>Build</button></div>`;
   }
+  const mix = s.faiths?.[id];
+  if (mix && table.data.laws) {
+    const p = patronOf(table, s.player);
+    if (missionReach(s, table, s.player).has(id) && (mix[p] ?? 0) < 99) {
+      const mc = missionCost(table, realmBonus(s, table, s.player));
+      acts += `<div class="row"><span>Send missionaries of ${esc(faithName(table, p))}: ${mc} Devotion for ${table.data.laws.faiths.missions.share} more in every hundred souls.</span><button type="button" class="act" data-mission ${s.realms[s.player].devotion >= mc && c.mission !== s.turn ? '' : 'disabled'}>Send</button></div>`;
+    }
+  }
   if (c.holder === s.player) acts += `<div class="row"><span>We hold it. Keep it, and it becomes ours, sullen at first.</span><button type="button" class="act" data-annex>Keep it</button></div>`;
   if (c.siege?.by === s.player) {
     const odds = Math.round((stormOdds(s, table, s.player, id) ?? 0) * 100);
@@ -238,6 +257,7 @@ function showRegion(id) {
     ${yieldsHtml(cityYields(s, table, id))}
     <p class="sub">Works: ${esc(works || 'none')}.${built.length ? ` Raised here: ${esc(built.join(', '))}.` : ''}</p>
     ${crossings.length ? `<p class="sub">Crossing: ${esc(crossings.join(', '))}.</p>` : ''}
+    ${faithLine(id)}
     ${acts}`);
   const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b); if (out?.error) toast(out.error); save(); refresh(); showRegion(id); }); };
   act('[data-recruit]', (b) => recruit(s, table, s.player, id, b.dataset.recruit, { crowns: !!app.payCrowns }));
@@ -248,6 +268,7 @@ function showRegion(id) {
   act('[data-annex]', () => annex(s, table, s.player, id));
   act('[data-fleet]', () => buildFleet(s, table, s.player, id, { crowns: !!app.payCrowns }));
   act('[data-terms]', () => offerTerms(s, table, s.player, id));
+  act('[data-mission]', () => sendMission(s, table, s.player, id, realmBonus(s, table, s.player)));
   for (const el of document.querySelectorAll('[data-storm]')) el.addEventListener('click', () => {
     const out = storm(s, table, s.player, id, { interactive: true });
     if (out.error) return toast(out.error);
@@ -380,10 +401,45 @@ function showRealm() {
     <p class="sub">Armies cost ${y.upkeep} crowns a month. The people eat ${y.eat} food.</p>
     <h3>Taxes</h3>
     <div class="seg">${Object.keys(g.tax).map((k) => `<button type="button" class="act" data-tax="${k}" aria-pressed="${r.tax === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
-    <p class="sub">Heavy taxes fill the treasury and cost Love; light ones win it back.</p>`);
+    <p class="sub">Heavy taxes fill the treasury and cost Love; light ones win it back.</p>
+    ${lawsHtml()}`);
   for (const b of document.querySelectorAll('[data-tax]')) {
     b.addEventListener('click', () => { r.tax = b.dataset.tax; save(); refresh(); showRealm(); });
   }
+  const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b.dataset); if (out?.error) toast(out.error); save(); refresh(); showRealm(); }); };
+  act('[data-enact]', (d) => enact(s, table, s.player, d.enact, chapterNow(s, table).index));
+  act('[data-repeal]', (d) => repeal(s, table, s.player, d.repeal));
+}
+
+// The Book of Laws and the realm's faith, for the Realm sheet.
+function lawsHtml() {
+  const L = table.data.laws;
+  if (!L) return '';
+  const s = app.state;
+  const ci = chapterNow(s, table).index;
+  const mine = enacted(s, s.player);
+  const fx = { crownsPct: 'crowns', productionPct: 'production', faithPct: 'faith' };
+  const effect = (k, v) => {
+    if (fx[k]) return `${v > 0 ? '+' : ''}${Math.round(v * 100)}% ${fx[k]}`;
+    const per = { love: 'Love', fear: 'Fear', unrest: 'Unrest', renown: 'renown' }[k];
+    if (per) return `${v > 0 ? '+' : ''}${v} ${per} a month`;
+    return { companyCost: `companies cost ${Math.round(v * 100)}%`, upkeep: `upkeep ${Math.round(v * 100)}%`, defend: `walls ${Math.round(v * 100)}%`, integration: `conquests settle +${v} a month`, movePoints: `+${v} march`, missionCost: `missionaries cost ${Math.round(v * 100)}%`, faithUnrest: `unrest from other faiths ${Math.round(v * 100)}%` }[k] ?? k;
+  };
+  const chapters = Object.values(L.chapters).map((ch) => `<p class="sub"><i>${esc(ch.name)}</i></p>${Object.values(ch.paths).map((p) => p.laws.map((law) => {
+    const on = mine.includes(law.id);
+    const bar = on ? null : lawBar(s, table, s.player, law.id, ci);
+    const all = Object.entries(law.effects).map(([k, v]) => effect(k, v)).join(', ');
+    const fxs = all[0].toUpperCase() + all.slice(1);
+    return `<div class="row"><span>${on ? '✓' : '○'} <b>${esc(law.name)}</b> <small class="sub">(${esc(p.name)})</small><br><small class="sub">${esc(law.text)} ${esc(fxs)}. ${on ? '' : `${law.cost} crowns, ${law.authority} Authority.${bar ? ` ${bar}` : ''}`}</small></span>${on ? `<button type="button" class="act" data-repeal="${law.id}">Repeal</button>` : `<button type="button" class="act" data-enact="${law.id}" ${bar ? 'disabled' : ''}>Enact</button>`}</div>`;
+  }).join('')).join('')}`).join('');
+  const p = patronOf(table, s.player);
+  const ours = Object.keys(s.cities).filter((id) => s.cities[id].owner === s.player);
+  const keep = ours.filter((id) => rulingFaith(s, id) === p).length;
+  const share = Math.round((faithShares(s)[p] ?? 0) * 100);
+  return `<h3>The Book of Laws (${mine.length} of ${lawSlots(table, ci)})</h3>
+    <p class="sub">Each chapter has two rival paths; a law on one closes the other until it is repealed. The book holds more laws as the story goes on. Repealing costs ${L.repeal.love} Love, and the law cannot return for ${L.repeal.cooldown} months.</p>${chapters}
+    <h3>Faith</h3>
+    <p class="sub">Our faith is ${esc(faithName(table, p))}. It rules ${keep} of our ${ours.length} cities and ${share} in every hundred cities of the North; at ${Math.round(L.faiths.victory.share * 100)} its most devout crown wins. Cities of another faith add unrest. Send missionaries from a city's card to any place within ${L.faiths.missions.reach} marches of our land.</p>`;
 }
 
 function showWar() {

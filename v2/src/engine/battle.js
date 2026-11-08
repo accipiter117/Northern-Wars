@@ -6,6 +6,7 @@ import { makeRng } from '../../../src/sim/rng.js';
 import { say, nameOf, controller } from './core.js';
 import { companyDef, goalBonus } from './goals.js';
 import { armyBonus } from './forces.js';
+import { lawBonus } from './laws.js';
 
 const B = (table) => table.data.battle;
 export const LANES = ['left', 'centre', 'right'];
@@ -33,7 +34,7 @@ export function setupBattle(state, table, { attackers, defenders, region, month,
     region, terrain: r.terrain in B(table).terrain ? r.terrain : 'open', weather: weatherOf(table, month), round: 0, over: null, storm,
     sides: [side(attackers[0].owner, attackers), storm ? side(defOwner, [], B(table).garrison[r.type] ?? ['foot']) : side(defOwner, defenders)],
     // Defending a walled place: its realm's walls, more when stormed.
-    fort: walled ? (storm ? B(table).walls : 1.2) * (goalBonus(state, table, defOwner).defend ?? 1) : 1,
+    fort: walled ? (storm ? B(table).walls : 1.2) * (goalBonus(state, table, defOwner).defend ?? 1) * (lawBonus(state, table, defOwner).defend ?? 1) : 1,
     log: [],
     landing,
   };
