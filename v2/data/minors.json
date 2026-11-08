@@ -1,0 +1,36 @@
+{
+  "note": "The smaller crowns as city-states (v2 step 5). Each has a type, and its suzerain gains that type's `bonus` every month. Great powers spend renown on envoys (`envoyCost`); a power with at least `sealMin` envoys at a court and more than any rival there has the right to seal suzerainty, by one of three routes: protection (the crown is at war or an enemy army stands on its land), pressure (it fears us: our companies number `pressure.ratio` times its own, and a gift of `pressure.gift` crowns), or peace terms (we hold its capital: the war ends and the capital is returned). A suzerain's armies may cross its vassal's land, and the vassal joins its suzerain's wars. A rival with `courtAway` more envoys than the suzerain courts the vassal away. A suzerain whose Authority falls below `rebel.below` may see a vassal rebel (`rebel.chance` a month): it goes to war, and when its capital is taken the suzerain judges it. Each court asks a favour (`quests`) now and then; the first power to do it gains `questEnvoys` envoys there. Having any envoy at a court opens its borders to that power's armies.",
+  "types": {
+    "trade": { "name": "Trading city", "bonus": { "crowns": 8 } },
+    "martial": { "name": "Martial crown", "bonus": { "production": 5 } },
+    "seafaring": { "name": "Seafarers", "bonus": { "crowns": 5, "renown": 2 } },
+    "industrial": { "name": "Industrious", "bonus": { "production": 7 } },
+    "courtly": { "name": "Courtly", "bonus": { "renown": 4, "love": 0.3 } },
+    "frontier": { "name": "Frontier march", "bonus": { "production": 3, "crowns": 3 } }
+  },
+  "crowns": {
+    "kerack": "trade", "cidaris": "trade", "kovir": "trade",
+    "lyria_rivia": "martial", "hengfors": "martial",
+    "skellige": "seafaring", "mahakam": "industrial", "toussaint": "courtly",
+    "sodden": "frontier", "brugge": "frontier", "verden": "frontier",
+    "cintra": "courtly", "angren": "frontier"
+  },
+  "envoyCost": 30,
+  "sealMin": 3,
+  "courtAway": 3,
+  "pressure": { "ratio": 3, "gift": 150 },
+  "questEnvoys": 2,
+  "questChance": 0.12,
+  "quests": {
+    "gift": { "text": "asks for {n} crowns to mend its walls", "n": 120 },
+    "garrison": { "text": "asks for an army at {place} for a month, against brigands" }
+  },
+  "rebel": { "below": 30, "chance": 0.06 },
+  "judgements": {
+    "depose": { "name": "Depose the king", "text": "A new king, our creature, on the old throne.", "fear": 2, "envoys": 4 },
+    "annex": { "name": "Annex the crown", "text": "Its lands become ours, sullen and unsettled.", "fear": 5, "love": -3 },
+    "pardon": { "name": "Pardon him", "text": "Mercy, and a king who owes us his head.", "love": 3, "renown": 20 },
+    "execute": { "name": "Execute him", "text": "A head on the gate, and a lesson to every small crown.", "fear": 8, "love": -4 }
+  },
+  "ai": { "envoyEvery": 2 }
+}

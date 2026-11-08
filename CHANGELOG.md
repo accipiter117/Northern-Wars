@@ -1,5 +1,10 @@
 # Changelog
 
+## M38 to M40 Northern Wars v2: cities, goals and the smaller crowns
+- Cities: give each city a focus each month (food, production, crowns or faith), mend works worn by war with production, and keep the cities you take: they yield little at first and more as they settle.
+- Goals take the place of learning: two trees a chapter for each of the five great powers. Meet them to unlock unique units (Temerian crossbowmen, the royal knights of Vizima, the Blue Stripes and their rivals' own), the Royal Court and the Temple of Melitele, and yields a month. The other powers chase their own goals too.
+- The smaller crowns: send envoys with renown, do them favours, and seal them as vassals by protection, pressure or peace terms. Vassals pay their way, open their roads and follow you to war; rivals can court them away, and a vassal that rebels faces your judgement.
+
 ## M36 and M37 Northern Wars v2: the turn engine and the war table
 - A first playable piece of the turn-based Northern Wars, at /v2/ beside the real-time game: one turn a month from March 1262, on a war table of 78 provinces drawn from the traced map.
 - Drag one of your carved pieces to march: every place it can reach this month lights up. Roads are quick, open country slower, winter halves the march, and the Pontar and the Yaruga can be crossed only at their bridges.

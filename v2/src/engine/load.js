@@ -7,6 +7,7 @@ import { makeTable } from './game.js';
 
 export async function loadTable(readJson) {
   const world = await loadWorld(readJson);
-  const [board, game] = await Promise.all([readJson('v2/data/board.json'), readJson('v2/data/game.json')]);
-  return makeTable(world, { board, game });
+  const names = ['board', 'game', 'uniques', 'goals', 'minors'];
+  const files = await Promise.all(names.map((n) => readJson(`v2/data/${n}.json`)));
+  return makeTable(world, Object.fromEntries(names.map((n, i) => [n, files[i]])));
 }

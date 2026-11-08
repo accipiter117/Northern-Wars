@@ -75,6 +75,32 @@ test('the war table: drag a piece to march, tap a place, end the turn (portrait)
   await context.close();
 });
 
+test('goals, the smaller crowns and a city\'s focus (portrait)', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  await page.evaluate(() => localStorage.removeItem('northern-wars.v2.save'));
+  await page.reload();
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  await page.click('[data-open="goals"]');
+  assert.match(await page.textContent('#sheet'), /The Dawn of the Reign[\s\S]*Muster the crown's host[\s\S]*Unlocks Temerian crossbowmen/);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-goals.png') });
+  await page.click('#sheet-close');
+  // Renown for envoys: three to Brugge, and the seal by pressure.
+  await page.evaluate(() => { window.northernWarsV2.state.realms.temeria.renown = 120; });
+  await page.click('[data-open="courts"]');
+  for (let i = 0; i < 3; i++) await page.click('[data-envoy="brugge"]');
+  assert.match(await page.textContent('#sheet'), /Seal: pressure/);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-courts.png') });
+  await page.click('[data-seal="brugge:pressure"]');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.minors.brugge.suzerain), 'temeria');
+  await page.click('#sheet-close');
+  // A city's focus.
+  await page.evaluate(() => window.northernWarsV2.app.select({ region: 'maribor' }));
+  await page.click('[data-focus="production"]');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.cities.maribor.focus), 'production');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');

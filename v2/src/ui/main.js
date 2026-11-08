@@ -4,7 +4,11 @@ import { loadTable } from '../engine/load.js';
 import {
   createGame, endTurn, moveArmy, recruit, declareWar, atWar, reachable, controller, cityYields, realmYields,
   authority, riots, dateOf, monthName, nameOf, strength, dilemmaView, answerDilemma, serialize, deserialize, movePoints,
+  companyCost, chapterNow, goalContext, realmBonus,
 } from '../engine/game.js';
+import { repair, repairCost, setFocus, annex, worksOf, condOf } from '../engine/cities.js';
+import { goalsOf, goalStatus, unlockName, companyTypes, companyDef, buildable, raise } from '../engine/goals.js';
+import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge, vassalsOf } from '../engine/minors.js';
 import { createTable } from './table.js';
 
 const SAVE_KEY = 'northern-wars.v2.save';
@@ -20,7 +24,7 @@ const table = await loadTable(async (p) => {
 function load() {
   try {
     const text = localStorage.getItem(SAVE_KEY);
-    if (text) return deserialize(text);
+    if (text) return deserialize(text, table);
   } catch { /* a missing or unreadable save starts a new game */ }
   return createGame(table, { seed: (Date.now() & 0xffff) || 1 });
 }
@@ -107,42 +111,118 @@ function showRegion(id) {
   const ctl = controller(s, id);
   const ours = c.owner === s.player && !c.holder;
   const kind = r.capital ? `capital of ${nameOf(table, r.realm)}` : `${r.type} of ${nameOf(table, r.realm)}`;
+  const owner = c.owner !== r.realm ? ` Now ${nameOf(table, c.owner)}'s.` : '';
   const held = c.holder ? `<p class="sub">Held by ${esc(nameOf(table, c.holder))}.</p>` : '';
   const siege = c.siege ? `<p class="sub">Besieged by ${esc(nameOf(table, c.siege.by))}, ${c.siege.turns} month${c.siege.turns > 1 ? 's' : ''}.</p>` : '';
+  const settling = c.integration !== undefined ? `<p class="sub">Settling under its new crown: ${Math.round(c.integration)} of 100. It yields more as it settles.</p>` : '';
   const crossings = table.board.adj[id].filter((l) => l.crossing).map((l) => `the ${l.rivers.join(' and ')} (${l.crossing})`);
-  const works = [...new Set(table.works[id])].map((b) => table.world.buildings[b]?.name ?? b).join(', ');
-  const comps = table.data.game.companies;
-  const recruitRow = ours ? `<h3>Raise a company</h3><div class="seg">${Object.entries(comps).map(([k, v]) =>
-    `<button type="button" class="act" data-recruit="${k}" ${s.realms[s.player].production < v.cost ? 'disabled' : ''}>${esc(v.name)} (${v.cost})</button>`).join('')}</div>` : '';
-  openSheet(r.name, `
-    <p class="sub">${esc(kind[0].toUpperCase() + kind.slice(1))}. ${Math.round(c.pop).toLocaleString('en-GB')} people.${ctl !== s.player && atWar(s, s.player, ctl) ? ' At war with us.' : ''}</p>
-    ${held}${siege}
-    ${yieldsHtml(cityYields(s, table, id))}
-    <p class="sub">Works: ${esc(works || 'none')}.</p>
-    ${crossings.length ? `<p class="sub">Crossing: ${esc(crossings.join(', '))}.</p>` : ''}
-    ${recruitRow}`);
-  for (const b of document.querySelectorAll('[data-recruit]')) {
-    b.addEventListener('click', () => {
-      const out = recruit(s, table, s.player, id, b.dataset.recruit);
-      if (out.error) toast(out.error);
-      save();
-      refresh();
-      showRegion(id);
-    });
+  const works = worksOf(table, id).map((b) => {
+    const cond = condOf(s, id, b);
+    return `${table.world.buildings[b]?.name ?? b}${cond < 100 ? ` (${Math.round(cond)}%)` : ''}`;
+  }).join(', ');
+  const built = Object.entries(s.built).filter(([, b]) => b.region === id).map(([bid]) => (table.data.uniques.buildings[bid] ?? table.data.uniques.wonders[bid]).name);
+  const g = table.data.game;
+  let acts = '';
+  if (ours) {
+    acts += `<h3>This month's focus</h3><div class="seg wrap">${g.cities.focus.kinds.map((k) => `<button type="button" class="act" data-focus="${k}" aria-pressed="${(c.focus ?? 'balanced') === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>`;
+    const cost = repairCost(s, table, id);
+    if (cost) acts += `<div class="row"><span>War has worn its works. Mend them all for ${cost} production.</span><button type="button" class="act" data-repair ${s.realms[s.player].production < cost ? 'disabled' : ''}>Repair</button></div>`;
+    for (const b of buildable(s, table, s.player).filter((x) => x.def.at === id)) {
+      acts += `<div class="row"><span>${b.wonder ? 'Wonder' : 'Raise'}: <b>${esc(b.def.name)}</b>, ${b.def.cost} production. ${esc(b.def.blurb)}</span><button type="button" class="act" data-raise="${b.id}" ${s.realms[s.player].production < b.def.cost ? 'disabled' : ''}>Raise</button></div>`;
+    }
+    acts += `<h3>Raise a company</h3><div class="seg wrap">${companyTypes(s, table, s.player).map((k) => {
+      const cost2 = companyCost(s, table, s.player, k);
+      return `<button type="button" class="act" data-recruit="${k}" ${s.realms[s.player].production < cost2 ? 'disabled' : ''}>${esc(companyDef(table, k).name)} (${cost2})</button>`;
+    }).join('')}</div>`;
   }
+  if (c.holder === s.player) acts += `<div class="row"><span>We hold it. Keep it, and it becomes ours, sullen at first.</span><button type="button" class="act" data-annex>Keep it</button></div>`;
+  openSheet(r.name, `
+    <p class="sub">${esc(kind[0].toUpperCase() + kind.slice(1))}.${esc(owner)} ${Math.round(c.pop).toLocaleString('en-GB')} people.${ctl !== s.player && atWar(s, s.player, ctl) ? ' At war with us.' : ''}</p>
+    ${held}${siege}${settling}
+    ${yieldsHtml(cityYields(s, table, id))}
+    <p class="sub">Works: ${esc(works || 'none')}.${built.length ? ` Raised here: ${esc(built.join(', '))}.` : ''}</p>
+    ${crossings.length ? `<p class="sub">Crossing: ${esc(crossings.join(', '))}.</p>` : ''}
+    ${acts}`);
+  const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b); if (out?.error) toast(out.error); save(); refresh(); showRegion(id); }); };
+  act('[data-recruit]', (b) => recruit(s, table, s.player, id, b.dataset.recruit));
+  act('[data-focus]', (b) => setFocus(s, table, s.player, id, b.dataset.focus));
+  act('[data-repair]', () => repair(s, table, s.player, id));
+  act('[data-raise]', (b) => raise(s, table, s.player, b.dataset.raise));
+  act('[data-annex]', () => annex(s, table, s.player, id));
 }
 
 function showArmy(a) {
   if (!a) return closeSheet();
   const s = app.state;
-  const comps = table.data.game.companies;
   const ours = a.owner === s.player;
   const r = table.board.regions[a.region];
   const reach = app.selected?.reach ?? {};
   openSheet(`${ours ? 'Our' : nameOf(table, a.owner) + '’s'} army at ${r.name}`, `
     <p class="sub">${a.companies.length} companies, strength ${strength(table, a).toFixed(1)}.${a.hungry ? ' Out of supply: losing men.' : ''}</p>
-    ${a.companies.map((c) => `<div class="row"><span>${esc(comps[c.type].name)}</span><span>${c.str}%</span></div>`).join('')}
-    ${ours ? `<p class="sub">${a.points} of ${movePoints(table, s)} marches left this month. ${Object.keys(reach).length ? 'Drag the piece, or tap a lit place, to march.' : 'Nowhere it can reach this month.'}</p>` : ''}`);
+    ${a.companies.map((c) => { const d = companyDef(table, c.type); return `<div class="row"><span>${esc(d.name)}${d.ability ? `<br><small class="sub">${esc(d.ability)}</small>` : ''}</span><span>${c.str}%</span></div>`; }).join('')}
+    ${ours ? `<p class="sub">${a.points} marches left this month. ${Object.keys(reach).length ? 'Drag the piece, or tap a lit place, to march.' : 'Nowhere it can reach this month.'}</p>` : ''}`);
+}
+
+function showGoals() {
+  const s = app.state;
+  const ch = chapterNow(s, table);
+  const realm = s.realms[s.player];
+  const ctx = goalContext(s);
+  const chapters = table.data.goals.chapters;
+  const trees = table.data.goals.trees;
+  const label = { companies: 'companies', unit: 'companies of that kind', treasury: 'crowns', devotion: 'Devotion', renown: 'renown', love: 'Love', authority: 'Authority', control: 'places held', garrison: 'places garrisoned', regions: 'regions', pop: 'people', vassals: 'vassals', envoys: 'envoys', built: 'raised', capitals: 'capitals' };
+  const html = chapters.slice(0, ch.index + 1).reverse().map((chap) => {
+    const goals = goalsOf(table, s.player).filter((g) => g.chapter === chap.id);
+    return `<h3>${esc(chap.name)}${chap.id === ch.id ? ' (now)' : ''}</h3>${Object.entries(trees).map(([tree, name]) => {
+      const list = goals.filter((g) => g.tree === tree).map((g) => {
+        const done = realm.goals.includes(g.id);
+        const st = done ? null : goalStatus(s, table, s.player, g, ctx);
+        const prog = st ? st.needs.map((n) => `${n.have} of ${n.want} ${label[n.key] ?? n.key}`).join('; ') : 'Done';
+        return `<div class="row"><span>${done ? '✓' : '○'} <b>${esc(g.name)}</b><br><small class="sub">${esc(g.text)} ${esc(prog)}. ${esc(unlockName(table, g.unlock))}</small></span></div>`;
+      }).join('');
+      return list ? `<p class="sub"><i>${esc(name)}</i></p>${list}` : '';
+    }).join('')}`;
+  }).join('');
+  const b = realmBonus(s, table, s.player);
+  const extras = ['crowns', 'production', 'faith', 'renown'].filter((k) => b[k]).map((k) => `+${b[k]} ${k}`).join(', ');
+  openSheet('Goals', `<p class="sub">Goals take the place of learning: meet them to unlock units, buildings, wonders and yields. Earlier chapters' goals stay open.${extras ? ` Goals, wonders and vassals give us ${esc(extras)} a month.` : ''}</p>${html}`);
+}
+
+function showCourts() {
+  const s = app.state;
+  const cfg = table.data.minors;
+  const rows = Object.entries(s.minors).filter(([m]) => s.realms[m]).map(([m, x]) => {
+    const t = typeOf(table, m);
+    const mine = x.envoys[s.player] ?? 0;
+    const lead = leader(s, m);
+    const others = Object.entries(x.envoys).filter(([p, n]) => p !== s.player && n > 0).map(([p, n]) => `${nameOf(table, p)} ${n}`).join(', ');
+    const routes = sealRoutes(s, table, s.player, m);
+    const q = questText(table, m, x.quest);
+    const bonus = Object.entries(t.bonus).map(([k, v]) => `+${v} ${k}`).join(', ');
+    return `<div class="court">
+      <div class="row"><span><b>${esc(nameOf(table, m))}</b>, ${esc(t.name.toLowerCase())} (suzerain gains ${esc(bonus)} a month)<br>
+      <small class="sub">${x.suzerain ? `Vassal of ${esc(nameOf(table, x.suzerain))}. ` : ''}${x.rebel ? 'In revolt. ' : ''}Our envoys ${mine}${others ? `; ${esc(others)}` : ''}.${lead === s.player ? ' We lead here.' : ''}</small></span>
+      <button type="button" class="act" data-envoy="${m}" ${s.realms[s.player].renown < cfg.envoyCost ? 'disabled' : ''}>Envoy (${cfg.envoyCost})</button></div>
+      ${q ? `<div class="row"><small class="sub">It ${esc(q)}.</small>${x.quest.kind === 'gift' ? `<button type="button" class="act" data-favour="${m}">Pay</button>` : ''}</div>` : ''}
+      ${routes.length ? `<div class="seg wrap">${routes.map((rt) => `<button type="button" class="act" data-seal="${m}:${rt}">Seal: ${{ protection: 'protection', pressure: `pressure (${cfg.pressure.gift} crowns)`, terms: 'peace terms' }[rt]}</button>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+  openSheet('The smaller crowns', `<p class="sub">Envoys cost renown. With ${cfg.sealMin} or more at a court, and more than any rival, we may seal it as a vassal: by protection when it is threatened, by pressure when our companies outnumber its own three to one (with a gift), or by peace terms when we hold its capital. Any envoy opens its roads to our armies. Vassals: ${esc(vassalsOf(s, s.player).map((v) => nameOf(table, v)).join(', ') || 'none yet')}.</p>${rows}`);
+  const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b.dataset); if (out?.error) toast(out.error); save(); refresh(); showCourts(); }); };
+  act('[data-envoy]', (d) => sendEnvoy(s, table, s.player, d.envoy));
+  act('[data-favour]', (d) => doFavour(s, table, s.player, d.favour));
+  act('[data-seal]', (d) => { const [m, rt] = d.seal.split(':'); return seal(s, table, s.player, m, rt); });
+}
+
+function showJudgement() {
+  const s = app.state;
+  const j = s.judgement;
+  if (!j) return;
+  const list = table.data.minors.judgements;
+  openSheet(`Judgement on ${nameOf(table, j.minor)}`, `<div class="dilemma"><p>The rebel king of ${esc(nameOf(table, j.minor))} kneels before us, his capital taken. What is his fate?</p>${Object.entries(list).map(([k, v]) => `<button type="button" class="act" data-judge="${k}"><b>${esc(v.name)}</b>. ${esc(v.text)}</button>`).join('')}</div>`);
+  for (const b of document.querySelectorAll('[data-judge]')) {
+    b.addEventListener('click', () => { judge(s, table, j.by, j.minor, b.dataset.judge); save(); closeSheet(); refresh(); });
+  }
 }
 
 function showRealm() {
@@ -185,7 +265,7 @@ function showLog() {
 
 function showMenu() {
   openSheet('Menu', `
-    <p class="sub">This is the turn-based Northern Wars, being built in steps. The board and turns are in; battles, goals, the smaller kingdoms, diplomacy and the wars' story come next.</p>
+    <p class="sub">This is the turn-based Northern Wars, being built in steps. The board, turns, cities, goals and the smaller crowns are in; the battle screen, diplomacy and the wars' story come next.</p>
     <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act" id="new-game">New game</button></div>
     <div class="row"><span>The real-time game</span><a class="act" style="display:inline-grid;place-items:center;text-decoration:none" href="../">Open</a></div>`);
   $('new-game').addEventListener('click', () => {
@@ -207,7 +287,7 @@ function showDilemma() {
 }
 
 for (const b of document.querySelectorAll('[data-open]')) {
-  b.addEventListener('click', () => ({ realm: showRealm, war: showWar, log: showLog, menu: showMenu })[b.dataset.open]());
+  b.addEventListener('click', () => ({ realm: showRealm, goals: showGoals, courts: showCourts, war: showWar, log: showLog, menu: showMenu })[b.dataset.open]());
 }
 
 let toastTimer = null;
@@ -227,10 +307,12 @@ $('end').addEventListener('click', () => {
   app.select(null);
   refresh();
   const news = app.state.log.filter((l) => l.turn === turn).slice(-Math.max(0, app.state.log.length - before));
-  if (app.state.dilemma) showDilemma();
+  if (app.state.judgement) showJudgement();
+  else if (app.state.dilemma) showDilemma();
   else if (news.length) toast(news.slice(-2).map((l) => l.text).join(' '));
 });
 
 refresh();
 $('loading').hidden = true;
-if (app.state.dilemma) showDilemma();
+if (app.state.judgement) showJudgement();
+else if (app.state.dilemma) showDilemma();

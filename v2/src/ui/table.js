@@ -223,6 +223,9 @@ export function createTable(canvas, app) {
         else ctx.arc(sx, sy, r.type === 'city' ? 5 : 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
+      // A vassal's capital flies its suzerain's flag beside its own pin.
+      const suz = r.capital && app.state.minors?.[r.realm]?.suzerain;
+      if (suz) flag(sx - 14, sy - 4, colourOf(suz));
       // An occupied region flies its holder's flag.
       if (ctl !== r.realm) flag(sx + 8, sy - 6, colourOf(ctl));
       if (app.state.cities[r.id].siege) {

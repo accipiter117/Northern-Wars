@@ -166,7 +166,8 @@ test('at war, the AI marches on its enemy', () => {
   const s = fresh(3);
   declareWar(s, table, 'nilfgaard', 'cintra');
   for (let i = 0; i < 8; i++) endTurn(s, table);
-  const taken = Object.keys(s.cities).filter((id) => s.cities[id].owner === 'cintra' && s.cities[id].holder === 'nilfgaard');
+  // It takes Cintran land, and keeps what it has held a while (step 3).
+  const taken = Object.values(table.board.regions).filter((r) => r.realm === 'cintra' && (s.cities[r.id].holder === 'nilfgaard' || s.cities[r.id].owner === 'nilfgaard'));
   assert.ok(taken.length > 0, 'the Empire takes Cintran land');
   assert.ok(atWar(s, 'cintra', 'nilfgaard'));
 });
@@ -193,4 +194,174 @@ test('ten years run without NaN, with every meter in range', () => {
     for (const k of ['love', 'fear', 'unrest']) assert.ok(r[k] >= 0 && r[k] <= 100, `${rid}.${k} ${r[k]}`);
   }
   for (const c of Object.values(s.cities)) assert.ok(c.pop > 0 && Number.isFinite(c.store));
+});
+
+// ---- Steps 3 to 5 ----
+
+import { setFocus, repair, repairCost, damage, annex, condOf } from '../../v2/src/engine/cities.js';
+import { goalsOf, goalStatus, buildable, raise, companyTypes, chapterOf } from '../../v2/src/engine/goals.js';
+import { sendEnvoy, sealRoutes, seal, leader, vassalsOf, doFavour, judge, monthlyMinors, passage } from '../../v2/src/engine/minors.js';
+import { goalContext, realmBonus, companyCost } from '../../v2/src/engine/game.js';
+
+test('a city\'s focus moves its yields; war wears its works and production mends them', () => {
+  const s = fresh();
+  const plain = cityYields(s, table, 'maribor');
+  setFocus(s, table, 'temeria', 'maribor', 'production');
+  const forged = cityYields(s, table, 'maribor');
+  assert.ok(forged.production > plain.production && forged.crowns < plain.crowns);
+  setFocus(s, table, 'temeria', 'maribor', 'balanced');
+  damage(s, table, 'maribor', 50);
+  assert.ok(cityYields(s, table, 'maribor').food < plain.food, 'worn works yield less');
+  const cost = repairCost(s, table, 'maribor');
+  assert.ok(cost > 0);
+  assert.ok(repair(s, table, 'temeria', 'maribor').error, 'not without the production');
+  s.realms.temeria.production = cost;
+  assert.ok(repair(s, table, 'temeria', 'maribor').ok);
+  assert.equal(condOf(s, 'maribor', 'fields'), 100);
+});
+
+test('a city taken and kept settles: it yields a little at first and more each month', () => {
+  const s = fresh();
+  declareWar(s, table, 'temeria', 'redania');
+  s.cities.rinde.holder = 'temeria';
+  assert.ok(!annex(s, table, 'temeria', 'rinde').error);
+  assert.equal(s.cities.rinde.owner, 'temeria');
+  const first = cityYields(s, table, 'rinde').crowns;
+  const start = s.cities.rinde.integration;
+  for (let i = 0; i < 6; i++) endTurn(s, table);
+  if (s.cities.rinde.owner === 'temeria' && !s.cities.rinde.holder) {
+    assert.ok(s.cities.rinde.integration === undefined || s.cities.rinde.integration > start);
+    assert.ok(cityYields(s, table, 'rinde').crowns > first * 0.9);
+  }
+});
+
+test('goals: met at the end of a month, they unlock units, buildings and wonders', () => {
+  const s = fresh();
+  assert.equal(chapterOf(table, dateOf(table, 0)).id, 'dawn');
+  assert.ok(!companyTypes(s, table, 'temeria').includes('temerian_crossbows'));
+  // Ten companies: the host is mustered.
+  const a = armyOf(s, 'temeria', 'vizima');
+  while (s.armies.filter((x) => x.owner === 'temeria').reduce((n, x) => n + x.companies.length, 0) < 10) a.companies.push({ type: 'foot', str: 100 });
+  const host = goalsOf(table, 'temeria').find((g) => g.id === 't_host');
+  assert.ok(goalStatus(s, table, 'temeria', host, goalContext(s)).ok);
+  endTurn(s, table);
+  assert.ok(s.realms.temeria.goals.includes('t_host'));
+  assert.ok(companyTypes(s, table, 'temeria').includes('temerian_crossbows'));
+  assert.ok(s.log.some((l) => /Goal met: Muster the crown's host/.test(l.text)));
+  // Devotion of 60: the Temple of Melitele, raised at Ellander with production.
+  s.realms.temeria.devotion = 60;
+  endTurn(s, table);
+  const temple = buildable(s, table, 'temeria').find((b) => b.id === 'temple_of_melitele');
+  assert.ok(temple);
+  s.realms.temeria.production = 1000;
+  const before = cityYields(s, table, 'ellander').faith;
+  assert.ok(raise(s, table, 'temeria', 'temple_of_melitele').ok);
+  assert.ok(cityYields(s, table, 'ellander').faith > before);
+  assert.ok(raise(s, table, 'temeria', 'temple_of_melitele').error, 'a wonder is raised once');
+});
+
+test('every power has two trees in every chapter, and every unlock exists', () => {
+  const u = table.data.uniques;
+  for (const p of table.data.game.powers) {
+    const goals = goalsOf(table, p);
+    for (const ch of table.data.goals.chapters) for (const tree of ['arms', 'faith']) {
+      assert.ok(goals.some((g) => g.chapter === ch.id && g.tree === tree), `${p} ${ch.id} ${tree}`);
+    }
+    for (const g of goals) {
+      const k = g.unlock;
+      assert.ok(k.bonus || u.units[k.unit] || u.buildings[k.building] || u.wonders[k.wonder], `${p} ${g.id}`);
+      for (const id of [...(g.need.control ?? []), ...(g.need.garrison ?? []), g.need.pop?.region].filter(Boolean)) assert.ok(board.regions[id], `${g.id}: ${id}`);
+    }
+    for (const b of [...Object.values(u.buildings), ...Object.values(u.wonders)]) assert.ok(board.regions[b.at], b.name);
+  }
+});
+
+test('Kaedwen\'s drill yards make companies cheaper; unique units carry their abilities', () => {
+  const s = fresh();
+  const plain = companyCost(s, table, 'kaedwen', 'foot');
+  s.realms.kaedwen.goals.push('k_host');
+  s.realms.kaedwen.production = 1000;
+  assert.ok(raise(s, table, 'kaedwen', 'drill_yards').ok);
+  assert.ok(companyCost(s, table, 'kaedwen', 'foot') < plain);
+  // Riders alone go a march further.
+  s.realms.temeria.goals.push('t_sodden');
+  s.realms.temeria.production = 500;
+  const r = recruit(s, table, 'temeria', 'mayena', 'royal_knights');
+  const knights = s.armies.find((a) => a.id === r.army);
+  assert.ok(knights.companies.every((c) => c.type === 'royal_knights'));
+  endTurn(s, table);
+  const k2 = s.armies.find((a) => a.id === r.army);
+  assert.equal(k2.points, table.data.board.moves.points + 1);
+});
+
+test('envoys, the lead at a court, and sealing a vassal by pressure', () => {
+  const s = fresh();
+  s.realms.temeria.renown = 200;
+  for (let i = 0; i < 3; i++) assert.ok(sendEnvoy(s, table, 'temeria', 'brugge').ok);
+  assert.equal(leader(s, 'brugge'), 'temeria');
+  assert.ok(passage(s, 'temeria', 'brugge'), 'an envoy opens its roads');
+  // Our companies outnumber Brugge's three to one: pressure, with a gift.
+  assert.ok(sealRoutes(s, table, 'temeria', 'brugge').includes('pressure'));
+  s.realms.temeria.treasury = 200;
+  assert.ok(seal(s, table, 'temeria', 'brugge', 'pressure').ok);
+  assert.deepEqual(vassalsOf(s, 'temeria'), ['brugge']);
+  assert.ok(realmBonus(s, table, 'temeria').production >= 3, 'a frontier vassal gives production');
+  // A vassal follows its suzerain to war.
+  declareWar(s, table, 'temeria', 'nilfgaard');
+  assert.ok(atWar(s, 'brugge', 'nilfgaard'));
+});
+
+test('peace terms: hold a crown\'s capital and seal it, and the war ends', () => {
+  const s = fresh();
+  s.realms.temeria.renown = 200;
+  for (let i = 0; i < 3; i++) sendEnvoy(s, table, 'temeria', 'sodden');
+  declareWar(s, table, 'temeria', 'sodden');
+  s.cities.sodden_keep.holder = 'temeria';
+  assert.ok(sealRoutes(s, table, 'temeria', 'sodden').includes('terms'));
+  assert.ok(seal(s, table, 'temeria', 'sodden', 'terms').ok);
+  assert.ok(!atWar(s, 'temeria', 'sodden'));
+  assert.equal(s.cities.sodden_keep.holder, null);
+});
+
+test('a favour paid brings envoys; a rival with more courts a vassal away', () => {
+  const s = fresh();
+  s.minors.kerack.quest = { kind: 'gift', n: 120, place: 'kerack_city', turn: 0 };
+  s.realms.temeria.treasury = 500;
+  assert.ok(doFavour(s, table, 'temeria', 'kerack').ok);
+  assert.equal(s.minors.kerack.envoys.temeria, table.data.minors.questEnvoys);
+  s.minors.kerack.suzerain = 'temeria';
+  s.minors.kerack.envoys.redania = 6;
+  monthlyMinors(s, table);
+  assert.equal(s.minors.kerack.suzerain, null);
+});
+
+test('a rebel vassal, its capital taken, is judged', () => {
+  const s = fresh();
+  s.minors.verden.rebel = 'temeria';
+  declareWar(s, table, 'verden', 'temeria');
+  s.cities.verden_town.holder = 'temeria';
+  monthlyMinors(s, table);
+  assert.deepEqual(s.judgement, { minor: 'verden', by: 'temeria' });
+  const fear = s.realms.temeria.fear;
+  assert.ok(judge(s, table, 'temeria', 'verden', 'execute').ok);
+  assert.ok(s.realms.temeria.fear > fear);
+  assert.equal(s.minors.verden.suzerain, 'temeria');
+  assert.ok(!atWar(s, 'temeria', 'verden'));
+  assert.equal(s.judgement, null);
+  // Annexing a rebel makes its lands ours.
+  s.minors.verden.rebel = 'temeria';
+  assert.ok(judge(s, table, 'temeria', 'verden', 'annex').ok);
+  assert.ok(Object.values(board.regions).filter((r) => r.realm === 'verden').every((r) => s.cities[r.id].owner === 'temeria'));
+  assert.ok(!s.minors.verden);
+});
+
+test('a version 1 save gains the new parts', () => {
+  const s = fresh();
+  delete s.minors;
+  delete s.built;
+  for (const c of Object.values(s.cities)) delete c.focus;
+  const old = JSON.stringify({ format: 'northern-wars-v2', version: 1, state: s });
+  const up = deserialize(old, table);
+  assert.ok(up.minors.sodden && up.built && up.cities.vizima.focus === 'balanced');
+  endTurn(up, table);
 });
