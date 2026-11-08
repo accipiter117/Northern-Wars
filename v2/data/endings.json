@@ -1,11 +1,11 @@
 {
-  "note": "Endings and victories (v2 step 9). Checked at the end of every month: domination (a power holds `domination.share` of the North's capitals, its own included) and faith (a power's Devotion at least `faith.devotion` and `faith.lead` times every other's) end the game at once. Otherwise, at the end of December 1272 the lore decides: the Empire triumphant (it holds `empire.capitals` or more of the four northern great capitals), one king rules the North (one northern power holds `oneKing.capitals` or more of them), or the North holds. The player's own fate is told beside it.",
+  "note": "Endings and victories (v2 step 9). Checked at the end of every month: domination (a power holds `domination.share` of the North's capitals, its own included) and faith (a patron faith rules the share of all cities set in laws.json; the power of that faith with the most Devotion wins; `faith.devotion` and `faith.lead` are the old rule, kept for a game without laws.json) end the game at once. Otherwise, at the end of December 1272 the lore decides: the Empire triumphant (it holds `empire.capitals` or more of the four northern great capitals), one king rules the North (one northern power holds `oneKing.capitals` or more of them), or the North holds. The player's own fate is told beside it.",
   "domination": { "share": 0.6 },
   "faith": { "devotion": 1500, "lead": 2 },
   "northCapitals": ["vizima", "tretogor", "ard_carraigh", "vengerberg"],
   "empire": { "capitals": 2 },
   "oneKing": { "capitals": 3 },
-  "faiths": { "temeria": "Melitele's North", "redania": "the Eternal Fire's North", "kaedwen": "the Eternal Fire's North", "aedirn": "the old gods' North", "nilfgaard": "the Great Sun over the North" },
+  "faiths": { "temeria": "Melitele's North", "redania": "the Eternal Fire's North", "kaedwen": "Kreve's North", "aedirn": "Melitele's North", "nilfgaard": "the Great Sun over the North" },
   "texts": {
     "domination": { "title": "{name} rules the North", "text": "{name} holds the capitals of the North. Every crown that still stands, stands by its leave." },
     "faith": { "title": "{faith}", "text": "{name}'s faith has won what its armies could not: temples rise in every city, and kings kneel to its priests." },

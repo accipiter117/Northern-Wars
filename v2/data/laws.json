@@ -1,0 +1,73 @@
+{
+  "note": "The Book of Laws and the faiths (v2). Laws: four chapters, each with two rival paths of two laws; a law enacted on one path closes its rival in that chapter until every law of the path is repealed. A crown may hold `slots[chapter index]` laws, needs the law's Authority and pays its crowns; a repealed law costs `repeal.love` Love and cannot return for `repeal.cooldown` months. Effects: crownsPct, productionPct, faithPct (shares more of the realm's yields), renown (a month), love, fear and unrest (a month), companyCost and upkeep (multipliers), defend (walls), integration (conquered cities settle faster), movePoints (marches), missionCost (a multiplier), faithUnrest (a multiplier on unrest from towns of another faith). Faiths: each city keeps a mix of faiths (Temerian towns from the real-time game's data, foreign ones from their realm's lean). Each month its owner's patron faith gains `spread.patron` plus `spread.perFaith` for each point of the city's faith yield, and the faith ruling each neighbour gains `spread.neighbour`; missionaries (`missions.cost` Devotion) add `missions.share` of our patron faith in a city within `missions.reach` links of our land. A city whose ruling faith is not its owner's patron adds `unrest` a month (at most `unrestCap`). Faith victory: a patron faith ruling `victory.share` of all cities wins for the power of that faith with the most Devotion.",
+  "slots": [2, 3, 4, 5],
+  "repeal": { "love": 2, "cooldown": 6 },
+  "chapters": {
+    "order": {
+      "name": "Order",
+      "paths": {
+        "justice": { "name": "The King's Justice", "laws": [
+          { "id": "assizes", "name": "Assizes", "cost": 150, "authority": 20, "text": "Travelling judges hear the commons in the king's name.", "effects": { "unrest": -0.6, "love": 0.3 } },
+          { "id": "charter", "name": "Charter of the commons", "cost": 250, "authority": 35, "text": "The crown swears to tax by custom and consent.", "effects": { "love": 0.6, "crownsPct": -0.05 } }
+        ] },
+        "iron": { "name": "The Iron Hand", "laws": [
+          { "id": "gallows", "name": "Gallows in every town", "cost": 120, "authority": 20, "text": "Justice is quick, and seen to be.", "effects": { "fear": 0.8, "unrest": -0.6, "love": -0.3 } },
+          { "id": "martial_law", "name": "Martial law in conquered towns", "cost": 200, "authority": 35, "text": "Soldiers keep the peace where the crown is new.", "effects": { "integration": 3, "fear": 0.3 } }
+        ] }
+      }
+    },
+    "coin": {
+      "name": "Coin",
+      "paths": {
+        "free": { "name": "Free Trade", "laws": [
+          { "id": "free_markets", "name": "Free markets", "cost": 150, "authority": 15, "text": "Tolls lifted, guild monopolies broken.", "effects": { "crownsPct": 0.1, "renown": 2 } },
+          { "id": "guild_charters", "name": "Guild charters", "cost": 250, "authority": 30, "text": "The guilds train and organise the towns' crafts.", "effects": { "productionPct": 0.1 } }
+        ] },
+        "crown": { "name": "The Crown's Purse", "laws": [
+          { "id": "monopolies", "name": "Royal monopolies", "cost": 150, "authority": 20, "text": "Salt, iron and wine pay the crown first.", "effects": { "crownsPct": 0.15, "love": -0.2 } },
+          { "id": "debasement", "name": "Debase the coin", "cost": 100, "authority": 30, "text": "Less silver in every crown, and more crowns.", "effects": { "crownsPct": 0.25, "unrest": 0.5 } }
+        ] }
+      }
+    },
+    "faith": {
+      "name": "Faith",
+      "paths": {
+        "temple": { "name": "Altar and Throne", "laws": [
+          { "id": "patronage", "name": "Patronage of the temples", "cost": 150, "authority": 15, "text": "The crown endows the temples of its faith.", "effects": { "faithPct": 0.25, "love": 0.2 } },
+          { "id": "missions", "name": "Missions abroad", "cost": 200, "authority": 30, "text": "Priests go out with every envoy.", "effects": { "missionCost": 0.5 } }
+        ] },
+        "secular": { "name": "The Secular Crown", "laws": [
+          { "id": "secular", "name": "A secular crown", "cost": 150, "authority": 20, "text": "Temple lands taxed like any other.", "effects": { "crownsPct": 0.08, "faithPct": -0.25 } },
+          { "id": "tolerance", "name": "Tolerance of all faiths", "cost": 200, "authority": 30, "text": "No town is punished for its gods.", "effects": { "faithUnrest": 0.4, "love": 0.2 } }
+        ] }
+      }
+    },
+    "war": {
+      "name": "War",
+      "paths": {
+        "levy": { "name": "The Levy", "laws": [
+          { "id": "seasonal_levies", "name": "Seasonal levies", "cost": 120, "authority": 20, "text": "Every village sends its sons when called.", "effects": { "companyCost": 0.85, "love": -0.2 } },
+          { "id": "forced_marches", "name": "Forced marches", "cost": 200, "authority": 35, "text": "The army marches at dawn and halts at dusk.", "effects": { "movePoints": 1, "unrest": 0.3 } }
+        ] },
+        "standing": { "name": "The Standing Army", "laws": [
+          { "id": "professional_army", "name": "A professional army", "cost": 200, "authority": 25, "text": "Paid soldiers, drilled all year.", "effects": { "upkeep": 0.85 } },
+          { "id": "fortify", "name": "Fortify the realm", "cost": 250, "authority": 30, "text": "Walls mended and garrisons doubled.", "effects": { "defend": 1.15 } }
+        ] }
+      }
+    }
+  },
+  "ai": {
+    "temeria": ["assizes", "free_markets", "patronage", "professional_army"],
+    "redania": ["free_markets", "gallows", "patronage", "missions"],
+    "kaedwen": ["seasonal_levies", "gallows", "forced_marches", "monopolies"],
+    "aedirn": ["fortify", "guild_charters", "assizes", "tolerance"],
+    "nilfgaard": ["martial_law", "professional_army", "monopolies", "missions"]
+  },
+  "faiths": {
+    "patrons": { "temeria": "melitele", "redania": "eternal_fire", "kaedwen": "kreve", "aedirn": "melitele", "nilfgaard": "great_sun" },
+    "spread": { "patron": 0.6, "perFaith": 0.25, "neighbour": 0.15 },
+    "missions": { "cost": 40, "share": 12, "reach": 2 },
+    "unrest": 0.25, "unrestCap": 4,
+    "victory": { "share": 0.6 }
+  }
+}

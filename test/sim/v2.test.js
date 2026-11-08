@@ -640,6 +640,7 @@ test('endings: domination and faith at once; the lore at the end of 1272', () =>
   for (const r of Object.values(board.regions).filter((x) => x.capital && ['great', 'middle'].includes(table.tiers[x.realm]))) s.cities[r.id].holder = 'redania';
   assert.equal(suddenEnding(s, table).kind, 'domination');
   const f = fresh();
+  for (const id of Object.keys(f.faiths)) f.faiths[id] = { melitele: 100 };
   f.realms.temeria.devotion = 2000;
   const e = suddenEnding(f, table);
   assert.equal(e.kind, 'faith');
@@ -738,4 +739,90 @@ test('the AI gives its commanders its largest armies', () => {
   const s = fresh();
   endTurn(s, table);
   assert.ok(s.commanders.henselt.army, 'Henselt leads an army');
+});
+
+// ---- M47: the Book of Laws and the faiths ----
+import { lawBar, enact, repeal, enacted, lawBonus, rulingFaith, patronOf, sendMission, faithShares, faithUnrest } from '../../v2/src/engine/laws.js';
+
+test('laws: enacted for crowns, rival paths closed, slots by chapter, repeal with a cooldown', () => {
+  const s = fresh();
+  const t = s.realms.temeria;
+  t.treasury = 5000;
+  t.love = 80;
+  const before = realmYields(s, table, 'temeria').crowns;
+  assert.ok(enact(s, table, 'temeria', 'free_markets', 0).ok);
+  assert.ok(realmYields(s, table, 'temeria').crowns > before, 'free markets bring crowns');
+  assert.match(lawBar(s, table, 'temeria', 'monopolies', 0), /Closed/);
+  assert.ok(enact(s, table, 'temeria', 'assizes', 0).ok);
+  assert.match(lawBar(s, table, 'temeria', 'patronage', 0), /No room/);
+  assert.equal(lawBar(s, table, 'temeria', 'patronage', 1), null, 'a later chapter holds more');
+  assert.ok(repeal(s, table, 'temeria', 'free_markets').ok);
+  assert.ok(t.love < 80);
+  assert.match(lawBar(s, table, 'temeria', 'free_markets', 0), /Repealed lately/);
+  assert.equal(lawBar(s, table, 'temeria', 'monopolies', 0), null, 'the rival path opens again');
+  // Multipliers multiply.
+  s.laws.temeria.enacted = ['professional_army', 'fortify'];
+  const b = lawBonus(s, table, 'temeria');
+  assert.equal(b.upkeep, 0.85);
+  assert.equal(b.defend, 1.15);
+  t.authority = 0;
+  t.love = 5; t.fear = 5;
+  assert.match(lawBar(s, table, 'temeria', 'assizes', 3), /Authority/);
+});
+
+test('the AI enacts laws by its own book', () => {
+  const s = fresh();
+  for (const p of ['redania', 'kaedwen']) s.realms[p].treasury = 3000;
+  endTurn(s, table);
+  assert.ok(enacted(s, 'redania').length >= 1);
+  assert.ok(enacted(s, 'kaedwen').length >= 1);
+});
+
+test('faiths: every city keeps a mix; patrons spread; missionaries; restless cities of another faith', () => {
+  const s = fresh();
+  for (const [id, mix] of Object.entries(s.faiths)) {
+    const total = Object.values(mix).reduce((a, b) => a + b, 0);
+    assert.ok(Math.abs(total - 100) < 1, `${id} sums to ${total}`);
+  }
+  assert.equal(rulingFaith(s, 'vizima'), 'melitele');
+  assert.equal(rulingFaith(s, 'city_of_golden_towers') ?? rulingFaith(s, Object.keys(s.cities).find((id) => s.cities[id].owner === 'nilfgaard')), 'great_sun');
+  // Missionaries: within reach of our land, paid in Devotion.
+  const near = table.board.adj.vizima.map((l) => (l.a === 'vizima' ? l.b : l.a)).find((id) => s.cities[id].owner !== 'temeria') ?? 'maribor';
+  s.realms.temeria.devotion = 100;
+  const had = s.faiths[near].melitele ?? 0;
+  if ((had) < 99) {
+    assert.ok(sendMission(s, table, 'temeria', near).ok);
+    assert.ok(s.faiths[near].melitele > had);
+    assert.equal(s.realms.temeria.devotion, 60);
+    assert.ok(sendMission(s, table, 'temeria', near).error, 'once a month');
+  }
+  const far = Object.keys(s.cities).find((id) => s.cities[id].owner === 'nilfgaard');
+  assert.match(sendMission(s, table, 'temeria', far).error, /far/);
+  // A city of another faith is restless.
+  const id = Object.keys(s.cities).find((x) => s.cities[x].owner === 'temeria');
+  s.faiths[id] = { great_sun: 90, melitele: 10 };
+  assert.ok(faithUnrest(s, table, 'temeria') > 0);
+  assert.equal(patronOf(table, 'temeria'), 'melitele');
+});
+
+test('faith victory: a patron faith ruling most of the North wins for its most devout power', () => {
+  const s = fresh();
+  assert.equal(suddenEnding(s, table), null, 'no faith wins at the start');
+  assert.ok((faithShares(s).melitele ?? 0) < table.data.laws.faiths.victory.share);
+  for (const id of Object.keys(s.faiths)) s.faiths[id] = { eternal_fire: 100 };
+  s.realms.redania.devotion = 500;
+  const e = suddenEnding(s, table);
+  assert.equal(e?.kind, 'faith');
+  assert.equal(e.winner, 'redania');
+});
+
+test('a version 6 save gains the Book of Laws and the faiths', () => {
+  const s = fresh();
+  delete s.laws;
+  delete s.faiths;
+  const old = JSON.stringify({ format: 'northern-wars-v2', version: 6, state: { ...s, version: 6 } });
+  const back = deserialize(old, table);
+  assert.equal(back.version, 7);
+  assert.ok(back.laws.temeria);
+  assert.ok(back.faiths.vizima);
 });

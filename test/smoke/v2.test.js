@@ -286,6 +286,36 @@ test('fleets and commanders: build at a vassal\'s port, sail, and give an army i
   await context.close();
 });
 
+test('the Book of Laws in the Realm sheet; a city\'s faiths and missionaries', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  await page.evaluate(() => localStorage.removeItem('northern-wars.v2.save'));
+  await page.reload();
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  await page.evaluate(() => { const r = window.northernWarsV2.state.realms.temeria; r.treasury = 2000; r.love = 70; r.devotion = 100; });
+  await page.click('[data-open="realm"]');
+  assert.match(await page.textContent('#sheet'), /The Book of Laws \(0 of 2\)[\s\S]*Free markets[\s\S]*Our faith is Melitele/);
+  await page.click('[data-enact="free_markets"]');
+  assert.deepEqual(await page.evaluate(() => window.northernWarsV2.state.laws.temeria.enacted), ['free_markets']);
+  assert.ok(await page.isDisabled('[data-enact="monopolies"]'), 'the rival path is closed');
+  await page.screenshot({ path: join(OUT, 'v2-portrait-laws.png') });
+  await page.click('#sheet-close');
+  // A neighbour's card: its faiths, and missionaries sent.
+  const near = await page.evaluate(() => {
+    const { app } = window.northernWarsV2;
+    const s = app.state;
+    const id = Object.keys(s.cities).find((x) => s.cities[x].owner !== 'temeria' && (s.faiths[x].melitele ?? 0) < 90
+      && app.table.board.adj[x].some((l) => s.cities[l.a === x ? l.b : l.a].owner === 'temeria'));
+    app.select({ region: id });
+    return id;
+  });
+  assert.match(await page.textContent('#sheet'), /Faiths \(in every hundred\)/);
+  const before = await page.evaluate((id) => window.northernWarsV2.state.faiths[id].melitele ?? 0, near);
+  await page.click('[data-mission]');
+  assert.ok(await page.evaluate((id) => window.northernWarsV2.state.faiths[id].melitele, near) > before);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');

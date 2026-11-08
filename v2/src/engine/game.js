@@ -24,11 +24,12 @@ import { newSpies, monthlySpies, aiSpies } from './spies.js';
 import { newStory, storyChapter, monthlyStory, answerStory } from './story.js';
 import { suddenEnding, loreEnding } from './endings.js';
 import { buildSea, newFleets, fleetPoints, seaReach, seaBattle, fleetsAt, newCommanders, monthlyCommanders, woundCommanders, armyBonus } from './forces.js';
+import { newLaws, lawBonus, mergeBonus, aiLaws, newFaiths, monthlyFaiths, faithUnrest, aiMissions } from './laws.js';
 
 export { nameOf, atWar, controller, authority };
 
 export const SAVE_FORMAT = 'northern-wars-v2';
-export const VERSION = 6;
+export const VERSION = 7;
 
 // ---- The world as the game sees it ----
 
@@ -85,6 +86,8 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   state.story = newStory();
   state.fleets = data_has_forces(table) ? newFleets(state, table) : [];
   state.commanders = data_has_forces(table) ? newCommanders(table) : {};
+  state.laws = newLaws(state);
+  state.faiths = table.data.laws ? newFaiths(table) : {};
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
     const plan = g.start_armies[table.tiers[rid] ?? 'petty'] ?? [];
@@ -124,7 +127,7 @@ export function realmBonus(state, table, rid) {
   const b = goalBonus(state, table, rid);
   for (const [k, v] of Object.entries(suzerainBonus(state, table, rid))) b[k] = (b[k] ?? 0) + v;
   b.crowns += tradeCrowns(state, table, rid);
-  return b;
+  return mergeBonus(b, lawBonus(state, table, rid));
 }
 
 export function cityYields(state, table, id) {
@@ -165,9 +168,12 @@ export function realmYields(state, table, rid) {
     if (!c.holder) out.eat += (c.pop / 1000) * table.data.game.eat;
   }
   const bonus = realmBonus(state, table, rid);
+  // Laws take or give a share of the realm's own yields.
+  for (const k of ['crowns', 'production', 'faith']) out[k] *= 1 + (bonus[`${k}Pct`] ?? 0);
   for (const k of ['production', 'crowns', 'faith', 'renown']) out[k] += bonus[k] ?? 0;
   for (const a of state.armies) if (a.owner === rid) for (const co of a.companies) out.upkeep += companyDef(table, co.type).upkeep;
   out.upkeep += (state.fleets ?? []).filter((f) => f.owner === rid).length * (table.data.forces?.fleet.upkeep ?? 0);
+  out.upkeep *= bonus.upkeep ?? 1;
   for (const k of Object.keys(out)) out[k] = Math.round(out[k]);
   return out;
 }
@@ -565,6 +571,10 @@ function aiSiege(state, table, rid, region) {
 export function stewardTurn(state, table) {
   for (const a of state.armies) if (a.owner === state.player) a.points = armyPoints(state, table, a);
   aiTurn(state, table, state.player);
+  if (table.data.laws) {
+    aiLaws(state, table, state.player, chapterNow(state, table).index);
+    aiMissions(state, table, state.player, realmBonus(state, table, state.player));
+  }
 }
 
 function aiTurn(state, table, rid) {
@@ -703,10 +713,12 @@ function month(state, table) {
     const tax = g.tax[realm.tax] ?? g.tax.fair;
     const bonus = realmBonus(state, table, rid);
     realm.love += (m.loveRest - realm.love) * m.pull + tax.love - (hungry ? m.hungerLove : 0) + (bonus.love ?? 0);
-    realm.fear -= realm.fear * m.fearDecay;
-    realm.unrest += (m.unrestRest - realm.unrest) * m.unrestPull + tax.unrest + (hungry ? m.hungerUnrest : 0) + (realm.treasury < 0 ? 1 : 0) + unsettledUnrest(state, table, rid);
+    realm.fear += -realm.fear * m.fearDecay + (bonus.fear ?? 0);
+    realm.unrest += (m.unrestRest - realm.unrest) * m.unrestPull + tax.unrest + (hungry ? m.hungerUnrest : 0) + (realm.treasury < 0 ? 1 : 0) + unsettledUnrest(state, table, rid)
+      + (bonus.unrest ?? 0) + faithUnrest(state, table, rid, bonus.faithUnrest ?? 1);
     for (const k of ['love', 'fear', 'unrest']) realm[k] = clamp(Math.round(realm[k] * 10) / 10, 0, 100);
   }
+  if (table.data.laws) monthlyFaiths(state, table, (id) => cityYields(state, table, id).faith);
 }
 
 // The month's dilemma for the player, from the real-time game's own book of
@@ -771,6 +783,14 @@ export function endTurn(state, table) {
     // The smaller crowns hold, but their fleets may raid (Skellige).
     aiFleets(state, table, rid);
     finishSide(state, table, rid);
+  }
+  if (table.data.laws) {
+    const ci = chapterNow(state, table).index;
+    for (const rid of table.data.game.powers) {
+      if (rid === state.player || !state.realms[rid]) continue;
+      aiLaws(state, table, rid, ci);
+      aiMissions(state, table, rid, realmBonus(state, table, rid));
+    }
   }
   month(state, table);
   checkGoals(state, table, chapterNow(state, table), goalCtx(state));
@@ -859,6 +879,12 @@ export function deserialize(text, table = null) {
     s.fleets ??= newFleets(s, table);
     s.commanders ??= newCommanders(table);
     s.version = 6;
+  }
+  // Version 6 gains the Book of Laws and the cities' faiths.
+  if ((data.version ?? 1) < 7 && table) {
+    s.laws ??= newLaws(s);
+    s.faiths ??= table.data.laws ? newFaiths(table) : {};
+    s.version = 7;
   }
   return s;
 }
