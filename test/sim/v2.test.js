@@ -479,3 +479,84 @@ test('sieges: a walled city eats its stores and is starved out, or stormed, or y
     assert.equal(controller(s3, 'drakenborg'), 'temeria');
   }
 });
+
+// ---- Step 7: diplomacy, spies and the AI's board play ----
+
+import { opinionOf, opinionParts, treatyAnswer, propose, hasTreaty, peaceAnswer, makePeaceTreaty, answerOffer, aiDiplomacy, monthlyDiplomacy } from '../../v2/src/engine/diplomacy.js';
+import { setTarget, monthlySpies, spyOp, netOf } from '../../v2/src/engine/spies.js';
+
+test('each ruler\'s opinion moves with its agenda: Temeria resents a rival holding the southern crowns', () => {
+  const s = fresh();
+  const before = opinionOf(s, 'temeria', 'nilfgaard');
+  s.minors.sodden.suzerain = 'nilfgaard';
+  s.minors.brugge.suzerain = 'nilfgaard';
+  for (let i = 0; i < 6; i++) monthlyDiplomacy(s, table);
+  assert.ok(opinionOf(s, 'temeria', 'nilfgaard') < before - 10);
+  assert.ok(opinionParts(s, table, 'temeria', 'nilfgaard').some((p) => /southern crowns/.test(p.why)));
+});
+
+test('treaties: agreed when the other side thinks well enough of us; an alliance brings the ally to war', () => {
+  const s = fresh();
+  assert.ok(treatyAnswer(s, table, 'temeria', 'redania', 'trade').yes);
+  assert.ok(!treatyAnswer(s, table, 'temeria', 'redania', 'alliance').yes, 'an alliance needs more');
+  assert.ok(propose(s, table, 'temeria', 'redania', 'trade').ok);
+  assert.ok(hasTreaty(s, 'trade', 'temeria', 'redania'));
+  assert.ok(realmBonus(s, table, 'temeria').crowns >= table.data.diplomacy.treaties.trade.crowns);
+  s.diplomacy.opinion.redania.temeria = 60;
+  assert.ok(propose(s, table, 'temeria', 'redania', 'alliance').ok);
+  declareWar(s, table, 'nilfgaard', 'temeria');
+  assert.ok(atWar(s, 'redania', 'nilfgaard'), 'the ally comes in');
+  // An ally's land is open to our armies.
+  const a = armyOf(s, 'temeria', 'vizima');
+  a.region = 'white_bridge';
+  a.points = 3;
+  assert.ok(Object.keys(reachable(s, table, a)).some((id) => s.cities[id].owner === 'redania'));
+});
+
+test('peace: taken when the war goes badly; occupied places are handed back, kept ones stay', () => {
+  const s = fresh();
+  declareWar(s, table, 'temeria', 'redania');
+  assert.ok(!peaceAnswer(s, table, 'temeria', 'redania').yes);
+  s.diplomacy.score['redania|temeria'] = { temeria: 8 };
+  assert.ok(peaceAnswer(s, table, 'temeria', 'redania').yes);
+  s.cities.rinde.holder = 'temeria';
+  s.cities.oxenfurt.holder = 'temeria';
+  annex(s, table, 'temeria', 'oxenfurt');
+  makePeaceTreaty(s, table, 'temeria', 'redania');
+  assert.ok(!atWar(s, 'temeria', 'redania'));
+  assert.equal(s.cities.rinde.holder, null);
+  assert.equal(s.cities.oxenfurt.owner, 'temeria');
+});
+
+test('spies: a network grows where it is pointed, pays for operations, and can be caught', () => {
+  const s = fresh();
+  setTarget(s, table, 'temeria', 'nilfgaard');
+  for (let i = 0; i < 8; i++) monthlySpies(s, table, (a, b) => opinionOf(s, a, b));
+  assert.ok(netOf(s, 'temeria', 'nilfgaard') >= 30);
+  assert.equal(netOf(s, 'temeria', 'redania'), 0);
+  s.realms.nilfgaard.treasury = 1000;
+  const before = s.realms.temeria.treasury;
+  const out = spyOp(s, table, 'temeria', 'nilfgaard', 'steal');
+  assert.ok(out.ok);
+  assert.ok(s.realms.temeria.treasury > before);
+  assert.ok(spyOp(s, table, 'temeria', 'redania', 'incite').error, 'no network there');
+});
+
+test('the AI: offers the player a treaty, declares war on a hated and weaker power, merges its armies', () => {
+  const s = fresh();
+  s.diplomacy.opinion.redania.temeria = 50;
+  let offers = 0;
+  for (let i = 0; i < 30 && !offers; i++) { aiDiplomacy(s, table, 'redania'); offers = s.diplomacy.offers.length; }
+  assert.ok(offers > 0, 'an offer comes');
+  assert.ok(answerOffer(s, table, 0, true).ok);
+  // Hatred and strength: Nilfgaard turns on Aedirn.
+  s.turn = 12;
+  s.diplomacy.opinion.nilfgaard.aedirn = -90;
+  for (let i = 0; i < 20; i++) s.armies.push({ id: 900 + i, owner: 'nilfgaard', region: 'nazair_city', companies: [{ type: 'foot', str: 100 }], points: 0 });
+  let war = null;
+  for (let i = 0; i < 200 && !war; i++) war = aiDiplomacy(s, table, 'nilfgaard').war ?? null;
+  assert.ok(war, 'it chooses war at last');
+  endTurn(s, table);
+  const at = s.armies.filter((a) => a.owner === 'nilfgaard' && a.region === 'nazair_city');
+  assert.ok(at.length <= 3, `merged into few armies (${at.length})`);
+});

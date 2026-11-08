@@ -23,8 +23,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .when { display: flex; flex-direction: column; min-width: 92px; }
 .when b { color: var(--gold); font-size: 17px; }
 .when span { font-size: 12px; opacity: .75; }
-.stats { flex: 1; display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px; }
-.stat { background: #1a120a; border: 1px solid var(--line); border-radius: 8px; padding: 2px 7px; white-space: nowrap; }
+.stats { flex: 1; display: flex; gap: 4px; flex-wrap: wrap; font-size: 12px; }
+.stat { background: #1a120a; border: 1px solid var(--line); border-radius: 8px; padding: 1px 5px; white-space: nowrap; }
 .stat i { font-style: normal; opacity: .7; margin-right: 3px; }
 .stat.low { color: #f0a08a; }
 .end {

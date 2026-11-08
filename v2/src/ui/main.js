@@ -8,6 +8,8 @@ import {
   termsOpen, offerTerms, storm, stormOdds,
 } from '../engine/game.js';
 import { placeCompany, oddsNow } from '../engine/battle.js';
+import { opinionOf, opinionParts, treatiesOf, treatyAnswer, propose, answerOffer, warScore } from '../engine/diplomacy.js';
+import { netOf, setTarget, spyOp } from '../engine/spies.js';
 import { repair, repairCost, setFocus, annex, worksOf, condOf } from '../engine/cities.js';
 import { goalsOf, goalStatus, unlockName, companyTypes, companyDef, buildable, raise } from '../engine/goals.js';
 import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge, vassalsOf } from '../engine/minors.js';
@@ -270,14 +272,49 @@ function showRealm() {
 
 function showWar() {
   const s = app.state;
-  const rows = Object.keys(s.realms).filter((rid) => rid !== s.player).map((rid) => {
-    const war = atWar(s, s.player, rid);
-    return `<div class="row"><span>${esc(nameOf(table, rid))}${war ? ' <b style="color:#f0a08a">at war</b>' : ''}</span>${war ? '' : `<button type="button" class="act war" data-war="${rid}">Declare war</button>`}</div>`;
+  const d = table.data.diplomacy;
+  const me = s.player;
+  const powers = table.data.game.powers.filter((p) => p !== me && s.realms[p]);
+  const offers = s.diplomacy.offers.map((o, i) => `<div class="row"><span>${esc(nameOf(table, o.from))} offers ${o.kind === 'peace' ? 'peace' : esc({ alliance: 'an alliance', openBorders: 'open borders', trade: 'a trade deal' }[o.kind])}.</span><span class="seg"><button type="button" class="act" data-offer="${i}:yes">Accept</button><button type="button" class="act" data-offer="${i}:no">Decline</button></span></div>`).join('');
+  const great = powers.map((p) => {
+    const op = opinionOf(s, p, me);
+    const parts = opinionParts(s, table, p, me).filter((x) => x.n).map((x) => `${x.n > 0 ? '+' : ''}${x.n} ${x.why}`).join(', ');
+    const war = atWar(s, me, p);
+    const signed = treatiesOf(s, me).filter((t) => t.a === p || t.b === p);
+    const score = war ? warScore(s, me, p) : null;
+    const buttons = war
+      ? (() => { const a = treatyAnswer(s, table, me, p, 'peace'); return `<button type="button" class="act" data-propose="${p}:peace">Propose peace${a.yes ? '' : ' (they refuse)'}</button>`; })()
+      : Object.entries(d.treaties).filter(([k]) => !signed.some((t) => t.kind === k)).map(([k, t]) => {
+        const a = treatyAnswer(s, table, me, p, k);
+        return `<button type="button" class="act" data-propose="${p}:${k}" title="${esc(t.text)}">${esc(t.name)}${a.yes ? '' : ' (no)'}</button>`;
+      }).join('') + `<button type="button" class="act war" data-war="${p}">Declare war</button>`;
+    return `<div class="court"><div class="row"><span><b>${esc(nameOf(table, p))}</b>, ${esc(table.data.game.rulers[p] ?? '')}. Opinion of us: <b>${op}</b>${war ? ' <b style="color:#f0a08a">at war</b>' : ''}<br>
+      <small class="sub">${esc(d.agendas[p]?.text ?? '')}</small><small class="sub">${esc(parts)}</small>
+      ${signed.length ? `<small class="sub">Treaties: ${signed.map((t) => esc(d.treaties[t.kind].name.toLowerCase())).join(', ')}.</small>` : ''}
+      ${score ? `<small class="sub">War score: us ${score.mine}, them ${score.theirs}.</small>` : ''}</span></div>
+      <div class="seg wrap">${buttons}</div></div>`;
   }).join('');
-  openSheet('War and peace', `<p class="sub">Your armies may only march into the lands of a realm you are at war with. Treaties and peace come with diplomacy (step 7).</p>${rows}`);
-  for (const b of document.querySelectorAll('[data-war]')) {
-    b.addEventListener('click', () => { declareWar(s, table, s.player, b.dataset.war); save(); refresh(); showWar(); });
-  }
+  const minors = Object.keys(s.realms).filter((r) => r !== me && !table.data.game.powers.includes(r)).map((rid) => {
+    const war = atWar(s, me, rid);
+    return `<div class="row"><span>${esc(nameOf(table, rid))}${war ? ' <b style="color:#f0a08a">at war</b>' : ''}</span>${war ? `<button type="button" class="act" data-propose="${rid}:peace">Propose peace</button>` : `<button type="button" class="act war" data-war="${rid}">Declare war</button>`}</div>`;
+  }).join('');
+  const sp = s.spies[me];
+  const ops = table.data.diplomacy.spies.ops;
+  const spies = powers.map((p) => {
+    const net = netOf(s, me, p);
+    return `<div class="row"><span>${esc(nameOf(table, p))}: network ${net}${sp.target === p ? ' (growing)' : ''}</span><span class="seg wrap">${sp.target === p ? '' : `<button type="button" class="act" data-spy="${p}">Build</button>`}${Object.entries(ops).map(([k, o]) => `<button type="button" class="act" data-op="${p}:${k}" ${net < o.cost ? 'disabled' : ''} title="${esc(o.text)}">${esc(o.name)} (${o.cost})</button>`).join('')}</span></div>`;
+  }).join('');
+  openSheet('Diplomacy', `
+    ${offers ? `<h3>Offers to us</h3>${offers}` : ''}
+    <h3>The great powers</h3>${great}
+    <h3>Spies</h3><p class="sub">Our network grows in one court at a time; a deep one pays for sabotage, theft and incitement, but spies get caught.</p>${spies}
+    <h3>The smaller crowns</h3><p class="sub">Our armies may only march into the lands of a realm we are at war with, an ally, one that opens its borders to us, or a smaller crown that welcomes our envoys.</p>${minors}`);
+  const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b.dataset); if (out?.error) toast(out.error); save(); refresh(); showWar(); }); };
+  act('[data-offer]', (x) => { const [i, yes] = x.offer.split(':'); return answerOffer(s, table, Number(i), yes === 'yes'); });
+  act('[data-propose]', (x) => { const [p, k] = x.propose.split(':'); return propose(s, table, me, p, k); });
+  act('[data-war]', (x) => { declareWar(s, table, me, x.war); });
+  act('[data-spy]', (x) => setTarget(s, table, me, x.spy));
+  act('[data-op]', (x) => { const [p, k] = x.op.split(':'); const out = spyOp(s, table, me, p, k); if (out.caught) toast('Our spies were caught.'); return out; });
 }
 
 function showLog() {
@@ -291,7 +328,7 @@ function showLog() {
 
 function showMenu() {
   openSheet('Menu', `
-    <p class="sub">This is the turn-based Northern Wars, being built in steps. The board, turns, cities, goals, the smaller crowns and battles are in; diplomacy, the wars' story and the endings come next.</p>
+    <p class="sub">This is the turn-based Northern Wars, being built in steps. The board, turns, cities, goals, the smaller crowns, battles and diplomacy are in; the wars' story and the endings come next.</p>
     <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act" id="new-game">New game</button></div>
     <div class="row"><span>The real-time game</span><a class="act" style="display:inline-grid;place-items:center;text-decoration:none" href="../">Open</a></div>`);
   $('new-game').addEventListener('click', () => {

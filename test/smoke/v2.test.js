@@ -69,8 +69,10 @@ test('the war table: drag a piece to march, tap a place, end the turn (portrait)
   if (await page.isVisible('#sheet')) await page.click('#sheet-close');
   assert.ok(await page.evaluate(() => localStorage.getItem('northern-wars.v2.save').includes('"turn":1')));
   await page.click('[data-open="war"]');
-  assert.match(await page.textContent('#sheet'), /Declare war/);
-  await page.screenshot({ path: join(OUT, 'v2-portrait-war.png') });
+  assert.match(await page.textContent('#sheet'), /The great powers[\s\S]*Redania[\s\S]*Opinion of us[\s\S]*Trade deal[\s\S]*Spies[\s\S]*Declare war/);
+  await page.click('[data-propose="redania:trade"]');
+  assert.ok(await page.evaluate(() => window.northernWarsV2.state.diplomacy.treaties.some((t) => t.kind === 'trade')));
+  await page.screenshot({ path: join(OUT, 'v2-portrait-diplomacy.png') });
   assert.deepEqual(errors, []);
   await context.close();
 });

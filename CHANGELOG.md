@@ -1,5 +1,11 @@
 # Changelog
 
+## M42 Northern Wars v2: diplomacy, spies and a sharper AI
+- The Diplomacy sheet: each great power's opinion of you and why, shaped by its ruler's agenda (Foltest's southern crowns, Vizimir's envoys, Henselt's respect for strength, Demavend's valley, Emhyr's long plan). Sign alliances, open borders and trade deals, make peace, or declare war.
+- Allies come to each other's aid; peace hands back occupied places but keeps the cities you kept.
+- Spies: build a network in one court, then sabotage, steal or stir unrest, and hope not to be caught.
+- The other powers now offer you treaties and peace, make their own, go to war when they hate a weaker neighbour, and fight better: they defend what is threatened, pull hurt armies home and gather their armies together.
+
 ## M41 Northern Wars v2: battles and sieges
 - Battles now have their own screen: three lanes and a reserve. Place your companies, fight round by round, commit the reserve, or sound the retreat. Ground and weather matter (horse in the open, bows on the hills, nothing much in the snow), an empty flank gets turned, and morale breaks.
 - Not in the mood? Fight it out at once, with the odds shown first.

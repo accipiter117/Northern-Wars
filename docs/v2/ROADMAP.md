@@ -10,8 +10,8 @@ Built at `/v2/` alongside the real-time game until it is playable end to end. De
 | 4 | M39 Goals | Two goal trees per power and chapter; unique units (with abilities), buildings and wonders; the AI meets goals and raises uniques too | Done |
 | 5 | M40 City-states | Types and suzerain bonuses, envoys, the three routes, favours, rivals courting vassals away, rebellion and judgements | Done |
 | 6 | M41 Battles | The lanes battle screen, auto-resolve with odds, sieges across turns (storm, starve, terms, lift) | Done |
-| 7 | M42 Diplomacy and AI | Great-power diplomacy and agendas, an AI that uses the board, spies | Next |
-| 8 | M43 Chapters and lore events | The Dawn, the three wars, requirement-driven events | |
+| 7 | M42 Diplomacy and AI | Opinions moved by each ruler's lore agenda, grievances and treaties (alliance, open borders, trade, peace); war scores; spies and their operations; an AI that defends, heals, merges, makes war and peace and offers treaties | Done |
+| 8 | M43 Chapters and lore events | The Dawn, the three wars, requirement-driven events | Next |
 | 9 | M44 Endings | The lore endings, domination and faith; balance across full games | |
 | 10 | M45 Polish and the swap | One screen per purpose, art for pieces and cards; v2 becomes the game | |
 
@@ -36,3 +36,9 @@ Built at `/v2/` alongside the real-time game until it is playable end to end. De
 - Up to three rounds; terrain and weather change what each kind is worth (horse strong in the open, weak in woods and marsh; bows better on hills, worse in rain and snow); an empty flank is turned; morale falls with losses and breaks; the retreat can be sounded.
 - "Fight it out" shows the odds of winning as placed; the AI's battles, and any left unfought at the end of the turn, are fought out by the book.
 - A walled place under siege eats its stores and falls when they run out; it can be stormed (its garrison fights behind walls, engineers and raiders at half again their strength) or offered terms (besiegers three times the garrison, or stores nearly gone); marching away lifts the siege. The AI storms when twice the garrison, and takes terms when it may.
+
+## M42 acceptance criteria
+- Each great power holds an opinion of each other, shown with its reasons: old feeling, its lore agenda (Foltest's southern crowns, Vizimir's envoys, Henselt's respect for strength, Demavend's valley, Emhyr's hatred of northern unity), treaties, grievances and war.
+- Treaties (alliance, open borders, trade) are signed when the other side's opinion is high enough; an alliance opens lands and supply and brings the ally into a defensive war; trade pays crowns a month. Peace is taken when a war goes badly or drags on; occupied places are handed back, kept ones stay.
+- The AI offers the player treaties and peace (answered on the Diplomacy sheet), signs with other powers, declares war on a hated and much weaker power, makes peace when it suits both sides, and on the board defends threatened regions, pulls hurt armies home and merges its armies.
+- Spies: a network grows in one court at a time (agents in their land add to it), pays for sabotage, theft and incitement, and is sometimes caught (a grievance).

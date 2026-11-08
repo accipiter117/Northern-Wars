@@ -7,6 +7,7 @@
 //   Step 4 (goals.js): goals, unique units, buildings and wonders.
 //   Step 5 (minors.js): the smaller crowns as city-states.
 //   Step 6 (battle.js): the lanes battle, its odds, and sieges across turns.
+//   Step 7 (diplomacy.js, spies.js): opinions, treaties, peace, spies; the AI's board play.
 import { makeRng } from '../../../src/sim/rng.js';
 import { startingWorks } from '../../../src/sim/works.js';
 import { buildBoard, other, TEMERIA } from './board.js';
@@ -15,11 +16,13 @@ import { worksOf, condOf, damage, settled, monthlyCities, unsettledUnrest, aiAnn
 import { chapterOf, checkGoals, companyTypes, companyDef, uniqueYields, goalBonus, aiRaise } from './goals.js';
 import { newMinors, vassalsOf, envoysPlaced, suzerainBonus, passage, vassalsFollow, monthlyMinors, aiMinors, judge } from './minors.js';
 import { setupBattle, runToEnd, battleOdds, applyBattle, fightRound, soundRetreat, autoPlace } from './battle.js';
+import { newDiplomacy, onWar, addScore, mayCross, allied, tradeCrowns, monthlyDiplomacy, aiDiplomacy, opinionOf } from './diplomacy.js';
+import { newSpies, monthlySpies, aiSpies } from './spies.js';
 
 export { nameOf, atWar, controller, authority };
 
 export const SAVE_FORMAT = 'northern-wars-v2';
-export const VERSION = 3;
+export const VERSION = 4;
 
 // ---- The world as the game sees it ----
 
@@ -68,6 +71,8 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
     realms, cities, armies: [], nextArmy: 1, wars: [], dilemma: null, log: [], over: null,
     minors: newMinors(table, realms), built: {}, judgement: null, battle: null,
   };
+  state.diplomacy = newDiplomacy(state, table);
+  state.spies = newSpies(table);
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
     const plan = g.start_armies[table.tiers[rid] ?? 'petty'] ?? [];
@@ -93,6 +98,7 @@ function addArmy(state, owner, region, types) {
 export function declareWar(state, table, a, b) {
   if (!makeWar(state, a, b)) return false;
   say(state, `${nameOf(table, a)} declares war on ${nameOf(table, b)}.`);
+  onWar(state, table, a, b);
   // Each side's vassals take up its quarrel.
   vassalsFollow(state, a, b);
   vassalsFollow(state, b, a);
@@ -105,6 +111,7 @@ export function declareWar(state, table, a, b) {
 export function realmBonus(state, table, rid) {
   const b = goalBonus(state, table, rid);
   for (const [k, v] of Object.entries(suzerainBonus(state, table, rid))) b[k] = (b[k] ?? 0) + v;
+  b.crowns += tradeCrowns(state, table, rid);
   return b;
 }
 
@@ -185,7 +192,7 @@ function mayEnter(state, table, army, region) {
   const c = state.cities[region];
   const ctl = controller(state, region);
   return ctl === rid || c.owner === rid || atWar(state, rid, ctl) || atWar(state, rid, c.owner)
-    || (ctl === c.owner && passage(state, rid, c.owner)) || allSpies(table, army);
+    || (ctl === c.owner && passage(state, rid, c.owner)) || (ctl === c.owner && mayCross(state, rid, ctl)) || allSpies(table, army);
 }
 
 export function linkCost(table, link) {
@@ -286,6 +293,7 @@ export function marchOdds(state, table, armyId, dest) {
 export function finishBattle(state, table, b) {
   const won = applyBattle(state, table, b);
   damage(state, table, b.region, table.data.game.cities.damage.battle, 1);
+  addScore(state, table, b.sides[won ? 0 : 1].owner, b.sides[won ? 1 : 0].owner, 'battle');
   const att = b.sides[0];
   if (b.storm) {
     if (won) take(state, table, att.owner, b.region, 'storm');
@@ -337,13 +345,15 @@ const garrisonOf = (table, region) => table.data.battle.garrison[table.board.reg
 
 function take(state, table, rid, region, how) {
   const c = state.cities[region];
+  addScore(state, table, rid, controller(state, region), 'city');
   const dmg = table.data.game.cities.damage;
   c.holder = c.owner === rid ? null : rid;
   c.siege = null;
   c.heldFor = 0;
   damage(state, table, region, how === 'terms' ? dmg.capture / 2 : dmg.capture);
-  const verb = { storm: 'storms and takes', starve: 'starves out', terms: 'takes on terms', march: 'takes' }[how] ?? 'takes';
-  say(state, `${nameOf(table, rid)} ${verb} ${table.board.regions[region].name}.`);
+  const place = table.board.regions[region].name;
+  const text = { storm: `storms and takes ${place}`, starve: `starves out ${place}`, terms: `takes ${place} on terms` }[how] ?? `takes ${place}`;
+  say(state, `${nameOf(table, rid)} ${text}.`);
 }
 
 const besiegers = (state, rid, region) => state.armies.filter((a) => a.owner === rid && a.region === region);
@@ -431,7 +441,7 @@ function finishSide(state, table, rid) {
   for (const a of state.armies.filter((x) => x.owner === rid)) {
     const ctl = controller(state, a.region);
     const owner = state.cities[a.region].owner;
-    const supplied = ctl === rid || (owner === rid && !atWar(state, rid, ctl)) || state.minors[owner]?.suzerain === rid;
+    const supplied = ctl === rid || (owner === rid && !atWar(state, rid, ctl)) || state.minors[owner]?.suzerain === rid || allied(state, rid, ctl);
     for (const c of a.companies) c.str = clamp(c.str + (supplied ? s.heal : -s.attrition), 0, 100);
     a.companies = a.companies.filter((c) => c.str >= 10);
     if (!supplied && a.companies.length) a.hungry = true; else delete a.hungry;
@@ -495,12 +505,29 @@ function aiTurn(state, table, rid) {
   if (cap && realm.production >= companyCost(state, table, rid, best) && state.armies.filter((a) => a.owner === rid).reduce((n, a) => n + a.companies.length, 0) < g.maxCompanies * 3) {
     recruit(state, table, rid, cap.id, best);
   }
+  aiSpies(state, table, rid);
+  const plan = aiDiplomacy(state, table, rid);
+  if (plan.war) declareWar(state, table, rid, plan.war);
+  mergeArmies(state, table, rid);
   const foes = Object.keys(state.realms).filter((o) => atWar(state, rid, o));
   if (!foes.length) return;
+  const own = (id) => controller(state, id) === rid;
+  const threatened = (id) => own(id) && (enemyArmyAt(state, id, rid) || table.board.adj[id].some((l) => enemyArmyAt(state, other(l, id), rid)));
   for (const a of state.armies.filter((x) => x.owner === rid)) {
+    if (!state.armies.includes(a) || a.points <= 0) continue;
     const reach = reachable(state, table, a);
-    // The nearest region in enemy hands that this army would not be
-    // foolish to march on.
+    const avg = a.companies.reduce((n, c) => n + c.str, 0) / a.companies.length;
+    // Badly hurt and far from home: fall back to heal.
+    if (avg < 45 && !own(a.region)) {
+      const back = nearestWhere(state, table, a, own);
+      if (back && reach[back]) { moveArmy(state, table, a.id, back); continue; }
+    }
+    // A threatened region of ours with no army of ours in it.
+    const guard = Object.entries(reach).filter(([id]) => threatened(id) && !state.armies.some((x) => x.owner === rid && x.region === id))
+      .filter(([id]) => { const f = enemyArmyAt(state, id, rid); return !f || strength(table, f) < strength(table, a) * 1.2; })
+      .sort((x, y) => x[1].cost - y[1].cost)[0];
+    if (guard && !threatened(a.region)) { moveArmy(state, table, a.id, guard[0]); continue; }
+    // The nearest region in enemy hands it would not be foolish to march on.
     const targets = Object.entries(reach).filter(([id]) => foes.includes(controller(state, id)))
       .filter(([id]) => {
         const foe = enemyArmyAt(state, id, rid);
@@ -509,19 +536,39 @@ function aiTurn(state, table, rid) {
       .sort((x, y) => x[1].cost - y[1].cost);
     if (targets.length) moveArmy(state, table, a.id, targets[0][0]);
     else {
-      const toward = nearestFoe(state, table, a, foes);
+      const toward = nearestWhere(state, table, a, (id) => foes.includes(controller(state, id)));
       if (toward && reach[toward]) moveArmy(state, table, a.id, toward);
     }
   }
 }
 
-function nearestFoe(state, table, army, foes) {
+// Armies of one realm sharing a region march as one, up to the most an
+// army can hold.
+function mergeArmies(state, table, rid) {
+  const max = table.data.game.maxCompanies;
+  const by = {};
+  for (const a of state.armies.filter((x) => x.owner === rid)) (by[a.region] ??= []).push(a);
+  for (const list of Object.values(by)) {
+    // Fill each army in turn from the ones behind it.
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length && list[i].companies.length < max; j++) {
+        if (!list[j].companies.length) continue;
+        while (list[j].companies.length && list[i].companies.length < max) list[i].companies.push(list[j].companies.shift());
+        list[i].points = Math.min(list[i].points, list[j].points);
+      }
+    }
+  }
+  state.armies = state.armies.filter((a) => a.companies.length);
+}
+
+// The first step towards the nearest region that satisfies `want`.
+function nearestWhere(state, table, army, want) {
   const { adj } = table.board;
   const seen = { [army.region]: null };
   const queue = [army.region];
   while (queue.length) {
     const at = queue.shift();
-    if (at !== army.region && foes.includes(controller(state, at))) {
+    if (at !== army.region && want(at)) {
       let step = at;
       while (seen[step] && seen[step] !== army.region) step = seen[step];
       return step;
@@ -631,6 +678,8 @@ export function endTurn(state, table) {
   month(state, table);
   checkGoals(state, table, chapterNow(state, table), goalCtx(state));
   monthlyMinors(state, table);
+  monthlyDiplomacy(state, table);
+  monthlySpies(state, table, (a, b) => opinionOf(state, a, b));
   state.turn += 1;
   const d = dateOf(table, state.turn);
   if (d.year >= table.data.game.start.endYear && d.month >= 12) state.over = { reason: 'time' };
@@ -665,6 +714,12 @@ export function deserialize(text, table = null) {
   if ((data.version ?? 1) < 3) {
     s.battle ??= null;
     s.version = 3;
+  }
+  // Version 3 gains diplomacy and spies.
+  if ((data.version ?? 1) < 4 && table) {
+    s.diplomacy ??= newDiplomacy(s, table);
+    s.spies ??= newSpies(table);
+    s.version = 4;
   }
   return s;
 }
