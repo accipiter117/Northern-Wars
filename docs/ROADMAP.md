@@ -27,6 +27,7 @@
 | M23 A busier map, armies on the move | A: the game's own dialog, Undo for what can be taken back; B: labour made easy; C: armies and figures on the move, merge and split; D: a fuller map everywhere | Done |
 | M24 A rich, grim crown | A: a compact top bar of symbols; B: Love, Fear, Authority and Unrest; C: a rich crown at peace and a Steward's report; D: money from fighting; E: many armies and levies that join them | Done (A to E, and a follow-up on beasts, witchers and the camera) |
 | M33 Dawn of the Reign | A: the city quests; B: the five paths; C: the Road to War and the trigger; D: balance and the opening | Done |
+| M45 Northern Wars v2: balance and polish (part one) | Balance from whole reigns, crowns that matter, How to play, painted pieces; the swap waits on the owner | In progress |
 | M43 and M44 Northern Wars v2: the story and the endings | Story chapters and requirement-driven lore events through the three Northern Wars; domination, faith and lore endings (see docs/v2/ROADMAP.md) | Done |
 | M42 Northern Wars v2: diplomacy, spies and a sharper AI | Opinions and agendas, treaties, peace and war scores, spies, and an AI that defends, heals, merges and makes war and peace (see docs/v2/ROADMAP.md) | Done |
 | M41 Northern Wars v2: battles and sieges | The lanes battle screen with terrain, weather, morale and retreat; auto-resolve with odds; sieges across months (storm, starve, terms, lift) | Done |

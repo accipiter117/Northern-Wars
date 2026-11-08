@@ -1,7 +1,7 @@
 // Goals instead of technology (v2 step 4): each great power's two trees a
 // chapter, checked at the end of every month, and what they unlock: unique
 // units, a building, a wonder, and yields a month.
-import { say, nameOf, controller, authority, isPower, regionsOf } from './core.js';
+import { say, nameOf, controller, authority, isPower, regionsOf, payCost } from './core.js';
 
 const G = (table) => table.data.goals;
 const U = (table) => table.data.uniques;
@@ -111,13 +111,13 @@ export function buildable(state, table, rid) {
   return out;
 }
 
-export function raise(state, table, rid, id) {
+export function raise(state, table, rid, id, { crowns = false } = {}) {
   const item = buildable(state, table, rid).find((b) => b.id === id);
   if (!item) return { error: 'Not unlocked, or already raised.' };
   const c = state.cities[item.def.at];
   if (!c || c.owner !== rid || c.holder) return { error: `Only at ${table.board.regions[item.def.at].name}, in our hands.` };
-  if (state.realms[rid].production < item.def.cost) return { error: `Needs ${item.def.cost} production.` };
-  state.realms[rid].production -= item.def.cost;
+  const paid = payCost(state, table, rid, item.def.cost, crowns);
+  if (paid.error) return paid;
   state.built[id] = { by: rid, region: item.def.at, turn: state.turn };
   say(state, `${nameOf(table, rid)} raises ${item.def.name} at ${table.board.regions[item.def.at].name}.`);
   return { ok: true };

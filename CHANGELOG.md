@@ -1,5 +1,11 @@
 # Changelog
 
+## M45 (part one) Northern Wars v2: balance and polish, and updates that arrive
+- The other powers now raise armies as large as their crowns can pay for, so wars are decided rather than stalled; armies cost twice the upkeep, and crowns can buy companies, repairs and wonders (3 crowns for each point of production), so the treasury matters.
+- How to play: a short guide on your first visit, and in the Menu.
+- New versions of the game now arrive by themselves: the game looks for one whenever you come back to it, and switches over at the next opening instead of waiting for a restart you might never see.
+- The pieces on the war table are painted wood now, with a strength bar beneath, a horse's head for an army of riders and a red ring when they are out of supply. More places are named as you zoom in.
+
 ## M43 and M44 Northern Wars v2: the story and the endings
 - The Northern Wars now unfold: the Road to War and the invasion of Cintra, the Call of the North, the fall of Cintra, Sodden Hill, Thanedd, the Peace of Cintra, the Kingslayers, Radovid's rise and the Third War. Each happens only when the power behind it has earned it, so no two reigns run quite alike.
 - Some can be stopped: deep spies in the Empire uncover the plot on Thanedd, and a watchful spymaster can save the king from the Kingslayers.

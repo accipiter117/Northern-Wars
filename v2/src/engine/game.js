@@ -13,7 +13,7 @@
 import { makeRng } from '../../../src/sim/rng.js';
 import { startingWorks } from '../../../src/sim/works.js';
 import { buildBoard, other, TEMERIA } from './board.js';
-import { nameOf, say, atWar, makeWar, controller, clamp, authority, isPower } from './core.js';
+import { nameOf, say, atWar, makeWar, controller, clamp, authority, isPower, payCost } from './core.js';
 import { worksOf, condOf, damage, settled, monthlyCities, unsettledUnrest, aiAnnex, repair, repairCost } from './cities.js';
 import { chapterOf, checkGoals, companyTypes, companyDef, uniqueYields, goalBonus, aiRaise } from './goals.js';
 import { newMinors, vassalsOf, envoysPlaced, suzerainBonus, passage, vassalsFollow, monthlyMinors, aiMinors, judge } from './minors.js';
@@ -420,16 +420,17 @@ export function companyCost(state, table, rid, type) {
   return Math.round(companyDef(table, type).cost * (realmBonus(state, table, rid).companyCost ?? 1));
 }
 
-export function recruit(state, table, rid, region, type) {
+export const pay = payCost;
+
+export function recruit(state, table, rid, region, type, { crowns = false } = {}) {
   const g = table.data.game;
   const c = state.cities[region];
-  const realm = state.realms[rid];
   if (!c || c.owner !== rid || c.holder) return { error: 'Not one of our cities.' };
   if (!companyTypes(state, table, rid).includes(type)) return { error: 'Not ours to raise.' };
   const cost = companyCost(state, table, rid, type);
-  if (realm.production < cost) return { error: `Needs ${cost} production (${Math.floor(realm.production)} in hand).` };
+  const paid = pay(state, table, rid, cost, crowns);
+  if (paid.error) return paid;
   let army = state.armies.find((a) => a.owner === rid && a.region === region && a.companies.length < g.maxCompanies);
-  realm.production -= cost;
   if (army) army.companies.push({ type, str: 100 });
   else {
     army = addArmy(state, rid, region, [type]);
@@ -492,6 +493,13 @@ function aiSiege(state, table, rid, region) {
 
 // ---- The AI's moves (a placeholder until step 7) ----
 
+// The steward: the AI plays the player's own realm for a month (for the
+// balance tool, and anyone who wants to watch).
+export function stewardTurn(state, table) {
+  for (const a of state.armies) if (a.owner === state.player) a.points = armyPoints(state, table, a);
+  aiTurn(state, table, state.player);
+}
+
 function aiTurn(state, table, rid) {
   const g = table.data.game;
   const realm = state.realms[rid];
@@ -503,12 +511,23 @@ function aiTurn(state, table, rid) {
     const cost = state.cities[id].owner === rid ? repairCost(state, table, id) : 0;
     if (cost && realm.production > cost + 60) repair(state, table, rid, id);
   }
-  const cap = Object.values(table.board.regions).find((r) => r.realm === rid && r.capital && !state.cities[r.id].holder && state.cities[r.id].owner === rid);
-  const types = companyTypes(state, table, rid);
-  const best = types.filter((t) => !companyDef(table, t).spy).sort((a, b) => companyDef(table, b).power - companyDef(table, a).power)
-    .find((t) => realm.production >= companyCost(state, table, rid, t) * 1.5) ?? 'foot';
-  if (cap && realm.production >= companyCost(state, table, rid, best) && state.armies.filter((a) => a.owner === rid).reduce((n, a) => n + a.companies.length, 0) < g.maxCompanies * 3) {
-    recruit(state, table, rid, cap.id, best);
+  // Raise companies while the crowns can carry their upkeep (step 10): at
+  // the capital, or the largest city it holds.
+  const homes = Object.keys(state.cities).filter((id) => state.cities[id].owner === rid && !state.cities[id].holder)
+    .sort((x, y) => (table.board.regions[y].capital - table.board.regions[x].capital) || (state.cities[y].pop - state.cities[x].pop));
+  const types = companyTypes(state, table, rid).filter((t) => !companyDef(table, t).spy);
+  const ai = g.ai;
+  for (let n = 0; n < 4 && homes.length; n++) {
+    const y = realmYields(state, table, rid);
+    const count = state.armies.filter((a) => a.owner === rid).reduce((k, a) => k + a.companies.length, 0);
+    const best = types.sort((a, b) => companyDef(table, b).power - companyDef(table, a).power)
+      .find((t) => realm.production >= companyCost(state, table, rid, t) * 1.5) ?? 'foot';
+    const def = companyDef(table, best);
+    if (count >= ai.maxCompanies || y.upkeep + def.upkeep > y.crowns * ai.upkeepShare) break;
+    const cost = companyCost(state, table, rid, best);
+    const crowns = realm.production < cost && realm.treasury > cost * g.crownsPerProduction + y.upkeep * ai.buyReserve;
+    if (realm.production < cost && !crowns) break;
+    recruit(state, table, rid, homes[0], best, { crowns });
   }
   aiSpies(state, table, rid);
   const plan = aiDiplomacy(state, table, rid);

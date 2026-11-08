@@ -1,7 +1,7 @@
 // Cities in depth (v2 step 3): a focus each month, works worn by war and
 // mended with production, and conquered cities kept and settled.
 import { makeRng } from '../../../src/sim/rng.js';
-import { say, nameOf, clamp } from './core.js';
+import { say, nameOf, clamp, payCost } from './core.js';
 
 const C = (table) => table.data.game.cities;
 
@@ -28,13 +28,13 @@ export function repairCost(state, table, id) {
   return Math.ceil(missing * C(table).repair);
 }
 
-export function repair(state, table, rid, id) {
+export function repair(state, table, rid, id, { crowns = false } = {}) {
   const c = state.cities[id];
   if (!c || c.owner !== rid || c.holder) return { error: 'Not one of our cities.' };
   const cost = repairCost(state, table, id);
   if (!cost) return { error: 'Nothing here needs mending.' };
-  if (state.realms[rid].production < cost) return { error: `Needs ${cost} production.` };
-  state.realms[rid].production -= cost;
+  const paid = payCost(state, table, rid, cost, crowns);
+  if (paid.error) return paid;
   delete c.cond;
   return { ok: true, cost };
 }

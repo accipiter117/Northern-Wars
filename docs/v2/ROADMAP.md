@@ -13,7 +13,7 @@ Built at `/v2/` alongside the real-time game until it is playable end to end. De
 | 7 | M42 Diplomacy and AI | Opinions moved by each ruler's lore agenda, grievances and treaties (alliance, open borders, trade, peace); war scores; spies and their operations; an AI that defends, heals, merges, makes war and peace and offers treaties | Done |
 | 8 | M43 Chapters and lore events | Chapters moved by the story; the Road to War, the fall of Cintra, Sodden Hill, Thanedd, the Peace of Cintra, the Kingslayers, Radovid and the Third War, each when its driver earns it; player choices; plots seen coming and foiled | Done |
 | 9 | M44 Endings | Domination and faith at once; the Empire triumphant, one king rules the North or the North holds at the end of 1272; the player's own fate | Done |
-| 10 | M45 Polish and the swap | One screen per purpose, art for pieces and cards, balance across many full games; v2 becomes the game | Next |
+| 10 | M45 Polish and the swap | Balance from whole reigns (`tools/v2play.mjs`), crowns that matter, How to play, painted pieces with strength bars, more names on the table; the swap waits on the owner's word | In progress |
 
 ## M36 and M37 acceptance criteria
 - `/v2/` loads at 390x844 portrait and 844x390 landscape with no console errors, over Temeria in March 1262.
@@ -48,3 +48,9 @@ Built at `/v2/` alongside the real-time game until it is playable end to end. De
 - Lore events fire only when their requirements hold (Cintra falls when the Empire holds it; Sodden Hill when the North's war score against the Empire is six ahead; Thanedd needs the Empire's network in Aedirn, and is foiled by a deep Temerian network in the Empire; the Kingslayers need a deep imperial network in Temeria and a moment of weakness, and a spymaster who sees it coming can guard the king). Each fires once; twin events (a late Road to War, a late Second War) never both happen.
 - The player answers the Call of the North and Aedirn's plea, and the plot warning, on story cards; told events show as cards; Goals shows the chapter and the story so far.
 - Domination (60% of the North's capitals) and faith (Devotion 1,500 and twice everyone else's) end the game at once; otherwise the end of 1272 brings the lore's ending and the player's fate. A whole reign runs from the Dawn to an ending.
+
+## M45 so far
+- `node tools/v2play.mjs [seeds] [idle]` plays whole reigns, with the AI as Temeria's steward or with Temeria idle, and prints each ending.
+- Before: every AI capped at 24 companies, crowns piling to about 80,000 by 1272, every stewarded reign ending "The North holds" in a stalemate. After: the AI raises companies while its crowns can carry their upkeep (at most 70% of its crowns, 60 companies in all), upkeep is doubled, crowns a thousand people are halved (0.8), and crowns can pay for companies, repairs and wonders at 3 for each point of production. Stewarded reigns end with about 20,000 crowns; idle ones fall to the Empire in most seeds (the Empire triumphant or ruling the North in 6 of 8).
+- How to play shows on a first visit and from the Menu. Pieces are painted wood lit from the upper right, with a band in the realm's second colour, a horse's head for an army of riders, a strength bar beneath and a red ring when out of supply. Towns and cities are named once the table is zoomed in a little.
+- Still to come: the swap (v2 to the main address, the real-time game kept at its own), when the owner says so.
