@@ -11,7 +11,7 @@ import { ROOT } from '../helpers.js';
 
 const OUT = join(ROOT, 'test-results');
 const server = await startServer(0);
-const base = `http://127.0.0.1:${server.address().port}/v2/`;
+const base = `http://127.0.0.1:${server.address().port}/v2/?noguide`;
 const browser = await chromium.launch();
 await mkdir(OUT, { recursive: true });
 
@@ -174,6 +174,27 @@ test('the story: the Call of the North at court, the story so far, and an ending
   await page.screenshot({ path: join(OUT, 'v2-portrait-ending.png') });
   await page.click('#ending-new');
   assert.equal(await page.evaluate(() => window.northernWarsV2.state.turn), 0);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('a first visit opens How to play; paying with crowns raises a company', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(base.replace('?noguide', ''));
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  assert.match(await page.textContent('#sheet'), /How to play[\s\S]*March\.[\s\S]*Fight\.[\s\S]*Win\./);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-guide.png') });
+  await page.click('#guide-go');
+  await page.evaluate(() => window.northernWarsV2.app.select({ region: 'vizima' }));
+  await page.click('[data-pay="crowns"]');
+  const before = await page.evaluate(() => window.northernWarsV2.state.armies.filter((a) => a.owner === 'temeria').reduce((n, a) => n + a.companies.length, 0));
+  await page.click('[data-recruit="foot"]');
+  const after = await page.evaluate(() => window.northernWarsV2.state.armies.filter((a) => a.owner === 'temeria').reduce((n, a) => n + a.companies.length, 0));
+  assert.equal(after, before + 1);
+  assert.ok(await page.evaluate(() => window.northernWarsV2.state.realms.temeria.treasury < 300));
   assert.deepEqual(errors, []);
   await context.close();
 });

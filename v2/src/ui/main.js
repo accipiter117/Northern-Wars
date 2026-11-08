@@ -141,15 +141,21 @@ function showRegion(id) {
   const g = table.data.game;
   let acts = '';
   if (ours) {
+    const realm = s.realms[s.player];
+    const rate = g.crownsPerProduction;
+    const crowns = !!app.payCrowns;
+    const price = (n) => (crowns ? `${n * rate} crowns` : `${n} production`);
+    const can = (n) => (crowns ? realm.treasury >= n * rate : realm.production >= n);
     acts += `<h3>This month's focus</h3><div class="seg wrap">${g.cities.focus.kinds.map((k) => `<button type="button" class="act" data-focus="${k}" aria-pressed="${(c.focus ?? 'balanced') === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>`;
+    acts += `<h3>Pay with</h3><div class="seg"><button type="button" class="act" data-pay="production" aria-pressed="${!crowns}">Production (${Math.floor(realm.production)})</button><button type="button" class="act" data-pay="crowns" aria-pressed="${crowns}">Crowns (${Math.floor(realm.treasury)})</button></div>${crowns ? `<p class="sub">Crowns buy at ${rate} for each point of production.</p>` : ''}`;
     const cost = repairCost(s, table, id);
-    if (cost) acts += `<div class="row"><span>War has worn its works. Mend them all for ${cost} production.</span><button type="button" class="act" data-repair ${s.realms[s.player].production < cost ? 'disabled' : ''}>Repair</button></div>`;
+    if (cost) acts += `<div class="row"><span>War has worn its works. Mend them all for ${price(cost)}.</span><button type="button" class="act" data-repair ${can(cost) ? '' : 'disabled'}>Repair</button></div>`;
     for (const b of buildable(s, table, s.player).filter((x) => x.def.at === id)) {
-      acts += `<div class="row"><span>${b.wonder ? 'Wonder' : 'Raise'}: <b>${esc(b.def.name)}</b>, ${b.def.cost} production. ${esc(b.def.blurb)}</span><button type="button" class="act" data-raise="${b.id}" ${s.realms[s.player].production < b.def.cost ? 'disabled' : ''}>Raise</button></div>`;
+      acts += `<div class="row"><span>${b.wonder ? 'Wonder' : 'Raise'}: <b>${esc(b.def.name)}</b>, ${price(b.def.cost)}. ${esc(b.def.blurb)}</span><button type="button" class="act" data-raise="${b.id}" ${can(b.def.cost) ? '' : 'disabled'}>Raise</button></div>`;
     }
     acts += `<h3>Raise a company</h3><div class="seg wrap">${companyTypes(s, table, s.player).map((k) => {
       const cost2 = companyCost(s, table, s.player, k);
-      return `<button type="button" class="act" data-recruit="${k}" ${s.realms[s.player].production < cost2 ? 'disabled' : ''}>${esc(companyDef(table, k).name)} (${cost2})</button>`;
+      return `<button type="button" class="act" data-recruit="${k}" ${can(cost2) ? '' : 'disabled'}>${esc(companyDef(table, k).name)} (${crowns ? cost2 * rate : cost2})</button>`;
     }).join('')}</div>`;
   }
   if (c.holder === s.player) acts += `<div class="row"><span>We hold it. Keep it, and it becomes ours, sullen at first.</span><button type="button" class="act" data-annex>Keep it</button></div>`;
@@ -166,10 +172,11 @@ function showRegion(id) {
     ${crossings.length ? `<p class="sub">Crossing: ${esc(crossings.join(', '))}.</p>` : ''}
     ${acts}`);
   const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b); if (out?.error) toast(out.error); save(); refresh(); showRegion(id); }); };
-  act('[data-recruit]', (b) => recruit(s, table, s.player, id, b.dataset.recruit));
+  act('[data-recruit]', (b) => recruit(s, table, s.player, id, b.dataset.recruit, { crowns: !!app.payCrowns }));
+  act('[data-pay]', (b) => { app.payCrowns = b.dataset.pay === 'crowns'; });
   act('[data-focus]', (b) => setFocus(s, table, s.player, id, b.dataset.focus));
-  act('[data-repair]', () => repair(s, table, s.player, id));
-  act('[data-raise]', (b) => raise(s, table, s.player, b.dataset.raise));
+  act('[data-repair]', () => repair(s, table, s.player, id, { crowns: !!app.payCrowns }));
+  act('[data-raise]', (b) => raise(s, table, s.player, b.dataset.raise, { crowns: !!app.payCrowns }));
   act('[data-annex]', () => annex(s, table, s.player, id));
   act('[data-terms]', () => offerTerms(s, table, s.player, id));
   for (const el of document.querySelectorAll('[data-storm]')) el.addEventListener('click', () => {
@@ -333,8 +340,10 @@ function showLog() {
 function showMenu() {
   openSheet('Menu', `
     <p class="sub">This is the turn-based Northern Wars, being built in steps. Everything from the design is in, from the Dawn of the Reign to the endings; art and polish come next.</p>
+    <div class="row"><span>How to play</span><button type="button" class="act" id="menu-guide">Read</button></div>
     <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act" id="new-game">New game</button></div>
     <div class="row"><span>The real-time game</span><a class="act" style="display:inline-grid;place-items:center;text-decoration:none" href="../">Open</a></div>`);
+  $('menu-guide').addEventListener('click', () => showGuide());
   $('new-game').addEventListener('click', () => {
     app.state = createGame(table, { seed: (Date.now() & 0xffff) || 1 });
     save();
@@ -449,6 +458,21 @@ function nextCard() {
   return null;
 }
 
+// ---- How to play (step 10): shown once on a first visit, and from the Menu ----
+const GUIDE_KEY = 'northern-wars.v2.guided';
+function showGuide() {
+  openSheet('How to play', `<div class="guide">
+    <p>You are Foltest, King of Temeria, from March 1262. One turn is one month; the Northern Wars come when the Empire is ready.</p>
+    <p><b>March.</b> Drag one of your blue pieces: every place it can reach this month lights up. Roads are quick, winter is slow, and the Pontar and the Yaruga can only be crossed at bridges. You may only march into a realm you are at war with (or one that lets you through).</p>
+    <p><b>Fight.</b> Marching into an enemy army opens the battle: place your companies in the lanes, or fight it out with the odds shown. Walled cities are besieged: starve them, storm them or offer terms.</p>
+    <p><b>Rule.</b> Tap a city to set its focus, mend its works, raise companies and wonders (with production, or crowns). Realm sets taxes.</p>
+    <p><b>Grow.</b> Goals take the place of learning: meet them to unlock the Temerian crossbowmen, the royal knights, the Temple of Melitele and more. Courts: send envoys to the smaller crowns and make them your vassals. Diplomacy: treaties, war, peace and spies.</p>
+    <p><b>Win.</b> Hold most of the North's capitals, make your faith the North's, or simply see Temeria through to the end of 1272.</p>
+    <button type="button" class="act" id="guide-go">To the war table</button></div>`);
+  $('guide-go').addEventListener('click', () => closeSheet());
+  try { localStorage.setItem(GUIDE_KEY, '1'); } catch { /* storage blocked: the guide shows again next time */ }
+}
+
 function showDilemma() {
   const d = dilemmaView(app.state, table);
   if (!d) return;
@@ -485,4 +509,6 @@ $('end').addEventListener('click', () => {
 
 refresh();
 $('loading').hidden = true;
-nextCard();
+let guided = false;
+try { guided = !!localStorage.getItem(GUIDE_KEY) || new URLSearchParams(location.search).has('noguide'); } catch { guided = true; }
+if (nextCard() === null && !guided) showGuide();

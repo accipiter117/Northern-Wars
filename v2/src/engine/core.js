@@ -33,3 +33,17 @@ export const authority = (realm) => Math.max(realm.love, realm.fear);
 export const isPower = (table, rid) => table.data.game.powers.includes(rid);
 
 export const regionsOf = (state, rid) => Object.keys(state.cities).filter((id) => controller(state, id) === rid);
+
+// Pay a cost in production, or in crowns at the going rate (step 10).
+export function payCost(state, table, rid, cost, crowns = false) {
+  const realm = state.realms[rid];
+  if (crowns) {
+    const c = cost * table.data.game.crownsPerProduction;
+    if (realm.treasury < c) return { error: `Needs ${c} crowns (${Math.floor(realm.treasury)} in hand).` };
+    realm.treasury -= c;
+    return { ok: true };
+  }
+  if (realm.production < cost) return { error: `Needs ${cost} production (${Math.floor(realm.production)} in hand).` };
+  realm.production -= cost;
+  return { ok: true };
+}

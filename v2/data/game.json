@@ -11,7 +11,7 @@
   "rulers": { "temeria": "Foltest", "redania": "Vizimir II", "kaedwen": "Henselt", "aedirn": "Demavend III", "nilfgaard": "Emhyr var Emreis" },
   "colours": { "temeria": ["#1f3f7a", "#e8dcb4"] },
   "people": { "village": 400, "town": 2500, "city": 9000, "castle": 300, "temple": 150 },
-  "perThousand": { "food": 1, "production": 0.4, "crowns": 1.6 },
+  "perThousand": { "food": 1, "production": 0.4, "crowns": 0.8 },
   "works": {
     "fields": { "food": 3 }, "mill": { "food": 1, "production": 1 }, "granary": { "food": 1 }, "fishery": { "food": 2 },
     "pasture": { "food": 1, "crowns": 1 }, "stud": { "production": 1, "crowns": 1 }, "lumber": { "production": 2 },
@@ -34,9 +34,9 @@
   },
   "mood": { "loveRest": 55, "pull": 0.05, "fearDecay": 0.04, "unrestPull": 0.05, "unrestRest": 20, "riotAuthority": 30, "riotUnrest": 60, "riotProduction": 0.5, "hungerUnrest": 6, "hungerLove": 3 },
   "companies": {
-    "foot": { "name": "Foot", "cost": 30, "upkeep": 2, "power": 1 },
-    "bow": { "name": "Crossbows", "cost": 35, "upkeep": 2, "power": 1.1 },
-    "horse": { "name": "Horse", "cost": 55, "upkeep": 4, "power": 1.6 }
+    "foot": { "name": "Foot", "cost": 30, "upkeep": 4, "power": 1 },
+    "bow": { "name": "Crossbows", "cost": 35, "upkeep": 4, "power": 1.1 },
+    "horse": { "name": "Horse", "cost": 55, "upkeep": 8, "power": 1.6 }
   },
   "start_armies": {
     "great": [["foot", "foot", "bow", "horse"], ["foot", "foot", "bow"]],
@@ -51,6 +51,8 @@
     "integration": { "start": 25, "month": 4, "garrison": 3, "floor": 0.25, "unrestBelow": 50, "unrest": 0.4, "fear": 3 },
     "aiAnnexAfter": 2
   },
+  "crownsPerProduction": 3,
+  "ai": { "note": "Step 10: the AI raises companies while its crowns can carry the upkeep: upkeep at most `upkeepShare` of its crowns a month, and at most `maxCompanies` in all; short of production, it buys with crowns when it holds `buyReserve` months of upkeep.", "upkeepShare": 0.7, "maxCompanies": 60, "buyReserve": 6 },
   "maxCompanies": 8,
   "dilemmaChance": 0.25,
   "battle": { "note": "A stand-in until step 6's battle screen: the stronger side usually wins; the loser loses more and falls back.", "swing": 0.35, "loserLoss": 0.45, "winnerLoss": 0.15 }

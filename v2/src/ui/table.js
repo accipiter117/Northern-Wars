@@ -208,7 +208,8 @@ export function createTable(canvas, app) {
   }
 
   function drawRegions() {
-    const big = view.z > 0.55;
+    // Names: capitals always, cities and towns once zoomed in a little, castles closer still.
+    const label = (r) => r.capital || (r.type !== 'castle' && view.z > 0.45) || view.z > 0.8;
     for (const r of Object.values(table.board.regions)) {
       const [sx, sy] = toScreen(r.x, r.y);
       if (sx < -60 || sy < -60 || sx > canvas.clientWidth + 60 || sy > canvas.clientHeight + 60) continue;
@@ -237,7 +238,7 @@ export function createTable(canvas, app) {
         ctx.stroke();
         ctx.setLineDash([]);
       }
-      if (big || r.capital) {
+      if (label(r)) {
         ctx.font = `${r.capital ? 'bold ' : ''}${r.capital ? 13 : 11}px Georgia, serif`;
         ctx.textAlign = 'center';
         ctx.lineWidth = 3;
@@ -324,13 +325,19 @@ export function createTable(canvas, app) {
   }
 
   function piece(x, y, a, lit) {
-    const colour = colourOf(a.owner);
-    // A carved and painted wooden piece: a base, a rounded body, a head.
+    const [main, trim] = table.colours[a.owner] ?? ['#777777', '#efe6cf'];
+    const horse = a.companies.filter((c) => /horse|knights|cavalry/.test(c.type)).length * 2 > a.companies.length;
+    // Its shadow on the table.
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath();
     ctx.ellipse(x + 2, y + 15, 12, 4, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = colour;
+    // Carved wood, painted in the realm's colour and lit from the upper right.
+    const g = ctx.createLinearGradient(x + 10, y - 14, x - 10, y + 14);
+    g.addColorStop(0, shade(main, 1.35));
+    g.addColorStop(0.55, main);
+    g.addColorStop(1, shade(main, 0.65));
+    ctx.fillStyle = g;
     ctx.strokeStyle = lit ? '#fff4c8' : '#1a120a';
     ctx.lineWidth = lit ? 2.5 : 1.4;
     ctx.beginPath();
@@ -341,20 +348,46 @@ export function createTable(canvas, app) {
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+    // The head: a knight's horse for an army of riders, else a round head.
     ctx.beginPath();
-    ctx.arc(x, y - 9, 6, 0, Math.PI * 2);
+    if (horse) {
+      ctx.moveTo(x - 4, y - 3);
+      ctx.lineTo(x - 5, y - 11);
+      ctx.quadraticCurveTo(x - 2, y - 18, x + 5, y - 15);
+      ctx.lineTo(x + 8, y - 10);
+      ctx.lineTo(x + 3, y - 9);
+      ctx.lineTo(x + 4, y - 3);
+      ctx.closePath();
+    } else ctx.arc(x, y - 9, 6, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    ctx.fillRect(x - 7, y - 2, 3, 14);
-    ctx.fillStyle = table.colours[a.owner]?.[1] ?? '#efe6cf';
-    ctx.font = 'bold 11px Georgia, serif';
+    // A painted band in the second colour, and the company count on it.
+    ctx.fillStyle = trim;
+    ctx.fillRect(x - 10, y + 2, 20, 9);
+    ctx.fillStyle = main;
+    ctx.font = 'bold 9px Georgia, serif';
     ctx.textAlign = 'center';
     ctx.fillText(String(a.companies.length), x, y + 10);
+    // Strength: a bar under the base.
+    const str = a.companies.reduce((n, c) => n + c.str, 0) / Math.max(1, a.companies.length) / 100;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(x - 10, y + 17, 20, 3);
+    ctx.fillStyle = str > 0.6 ? '#9bd27a' : str > 0.35 ? '#e2c46a' : '#e0705a';
+    ctx.fillRect(x - 10, y + 17, 20 * str, 3);
+    if (a.hungry) {
+      ctx.strokeStyle = '#e0705a';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.arc(x, y + 2, 15, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // Spent for the month: the head is dimmed.
     if (a.owner === app.state.player && a.points <= 0) {
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
       ctx.beginPath();
-      ctx.arc(x, y - 9, 6, 0, Math.PI * 2);
+      ctx.arc(x, y - 9, 7, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -500,4 +533,11 @@ function OffscreenCanvasOr(w, h) {
 function hex(c) {
   const n = parseInt(c.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+// A colour lightened or darkened, for the light on the pieces.
+function shade(c, k) {
+  const [r, g, b] = hex(c);
+  const f = (v) => Math.max(0, Math.min(255, Math.round(k > 1 ? v + (255 - v) * (k - 1) : v * k)));
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
 }
