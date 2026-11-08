@@ -13,7 +13,8 @@ import { transferTown } from '../../../src/sim/lands.js';
 // A day of road life passes in this many milliseconds.
 const DAY_MS = 700;
 
-export function createBackdrop(canvas, world, cam, layoutCfg) {
+export function createBackdrop(canvas, world, cam, layoutCfg, start = null) {
+  let home = start;
   const renderer = createRenderer(canvas, world, cam, layoutCfg, { noFog: true, noBoard: true });
   let shadow = createState(world, 7, { dawn: false });
   const rng = makeRng(shadow.rng.ambient);
@@ -47,12 +48,18 @@ export function createBackdrop(canvas, world, cam, layoutCfg) {
       // Not so far out that the painted map turns to its roughest sketch.
       cam.minScale = Math.max(cam.minScale, cam.cover * 0.45);
       if (first) {
-        // Where the real-time game opens: over Vizima, filling the screen.
-        cam.x = 500;
-        cam.y = 420;
+        // Over the player's capital (Vizima, where the real-time game opens,
+        // by default), filling the screen.
+        cam.x = home?.x ?? 500;
+        cam.y = home?.y ?? 420;
         cam.scale = cam.cover;
       }
       renderer.resize(w, h);
+    },
+    // Look over another crown's capital (a new game as another power).
+    home(at) {
+      home = at;
+      if (at) { cam.x = at.x; cam.y = at.y; }
     },
     // The month on the table sets the season the map is painted in.
     setDay(day) {

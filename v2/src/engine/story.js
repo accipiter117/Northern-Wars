@@ -123,8 +123,18 @@ export function monthlyStory(state, table, date, hooks) {
     say(state, `${ev.title}. ${ev.text}`);
     applyEffects(state, table, ev.effects, hooks);
     // The player's answer, if the event asks one; or the card, if it is told.
-    if (ev.choice && state.realms[state.player]) state.story.choice = { id: ev.id };
-    else if (ev.tell) state.story.told = { id: ev.id, turn: state.turn };
+    // A choice belongs to one crown (Temeria's, unless the book says
+    // otherwise): the player answers it as that crown, the AI otherwise.
+    const owner = ev.choice?.for ?? 'temeria';
+    if (ev.choice && owner === state.player && state.realms[state.player]) state.story.choice = { id: ev.id };
+    else {
+      if (ev.choice && state.realms[owner]) {
+        const opt = ev.choice.options[ev.choice.ai ?? 0];
+        say(state, `${nameOf(table, owner)}: ${opt.label}.`);
+        applyEffects(state, table, opt.effects, hooks);
+      }
+      if (ev.tell || ev.choice) state.story.told = { id: ev.id, turn: state.turn };
+    }
   }
   state.rng = rng.seed;
   const now = chapterIndex(table, state.story.chapter);

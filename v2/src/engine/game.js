@@ -19,7 +19,7 @@ import { worksOf, condOf, damage, settled, monthlyCities, unsettledUnrest, aiAnn
 import { chapterOf, checkGoals, companyTypes, companyDef, uniqueYields, goalBonus, aiRaise } from './goals.js';
 import { newMinors, vassalsOf, envoysPlaced, suzerainBonus, passage, vassalsFollow, monthlyMinors, aiMinors, judge } from './minors.js';
 import { setupBattle, runToEnd, battleOdds, applyBattle, fightRound, soundRetreat, autoPlace } from './battle.js';
-import { newDiplomacy, onWar, addScore, mayCross, allied, tradeCrowns, monthlyDiplomacy, aiDiplomacy, opinionOf, makePeaceTreaty } from './diplomacy.js';
+import { newDiplomacy, onWar, addScore, mayCross, allied, tradeCrowns, monthlyDiplomacy, aiDiplomacy, opinionOf, makePeaceTreaty, answerOffer, treatyAnswer } from './diplomacy.js';
 import { newSpies, monthlySpies, aiSpies } from './spies.js';
 import { newStory, storyChapter, monthlyStory, answerStory } from './story.js';
 import { suddenEnding, loreEnding } from './endings.js';
@@ -571,6 +571,13 @@ function aiSiege(state, table, rid, region) {
 export function stewardTurn(state, table) {
   for (const a of state.armies) if (a.owner === state.player) a.points = armyPoints(state, table, a);
   aiTurn(state, table, state.player);
+  // Offers to the crown are answered as the AI would answer them.
+  for (let i = state.diplomacy.offers.length - 1; i >= 0; i--) {
+    const o = state.diplomacy.offers[i];
+    answerOffer(state, table, i, treatyAnswer(state, table, o.from, state.player, o.kind).yes);
+  }
+  // Its sieges too, which are otherwise the player's to decide.
+  for (const [id, c] of Object.entries(state.cities)) if (c.siege?.by === state.player) aiSiege(state, table, state.player, id);
   if (table.data.laws) {
     aiLaws(state, table, state.player, chapterNow(state, table).index);
     aiMissions(state, table, state.player, realmBonus(state, table, state.player));

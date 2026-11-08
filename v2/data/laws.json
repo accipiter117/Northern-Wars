@@ -68,6 +68,6 @@
     "spread": { "patron": 0.6, "perFaith": 0.25, "neighbour": 0.15 },
     "missions": { "cost": 40, "share": 12, "reach": 2 },
     "unrest": 0.25, "unrestCap": 4,
-    "victory": { "share": 0.6 }
+    "victory": { "share": 0.7 }
   }
 }

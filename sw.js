@@ -3,7 +3,7 @@
 // first, so the game starts at once and plays offline; a new version
 // takes over as soon as it has installed, and the page switches to it at
 // the next opening (or at once if it has only just opened).
-const VERSION = '81e931db03d9';
+const VERSION = 'aa6505019f7b';
 const CACHE = `northern-wars-${VERSION}`;
 const FILES = [
   "./",

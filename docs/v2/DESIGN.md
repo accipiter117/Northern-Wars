@@ -181,6 +181,12 @@ Each step should be playable on its own before the next starts.
 - Numbers in `v2/data/laws.json`; engine in `v2/src/engine/laws.js`. Laws sit in the Realm sheet rather than a seventh button, which would not fit a phone held upright.
 - Slots are a count of laws held, set by the story's chapter (2, 3, 4, 5), not per legal chapter. A law's cost is in crowns only; Authority is a bar, not a cost.
 - Effects ending in Pct scale the realm's own yields before goal and vassal bonuses are added; companyCost, upkeep, defend, missionCost and faithUnrest multiply; the rest add.
-- Patron faiths: Temeria and Aedirn Melitele, Redania the Eternal Fire, Kaedwen Kreve, Nilfgaard the Great Sun; lesser crowns take the strongest faith of their lean. Melitele starts ruling about half the North's cities, so the faith victory needs 60 in every hundred, and Temeria shares the race with Aedirn (the more devout of the two wins it).
+- Patron faiths: Temeria and Aedirn Melitele, Redania the Eternal Fire, Kaedwen Kreve, Nilfgaard the Great Sun; lesser crowns take the strongest faith of their lean. Melitele starts ruling about half the North's cities, so the faith victory needs 70 in every hundred (60 at first, raised in M48 when Melitele, left to the AI, drifted up to 60 on its own), and Temeria shares the race with Aedirn (the more devout of the two wins it).
 - The AI enacts the next law on its list when it has 150 crowns to spare, and sends missionaries when it holds three times their cost in Devotion, to the reachable city where its faith is closest to ruling. The steward does the same for the player.
 - Saves: version 7 adds `laws` and `faiths`.
+
+## Any great crown as built (M48)
+- `createGame(table, { player })` already took any power; M48 adds the Menu's picker, the opening camera over the player's capital and How to play from the game's own rulers.
+- A story `choice` names its crown (`for`, Temeria when unset) and the option the AI takes (`ai`). Temeria's AI stands aside for Cintra (the lore), marches to Aedirn's aid, and shrugs off the plot.
+- The steward (and `tools/v2play.mjs [seeds] [idle|steward] [power]`) now also answers offers and runs its own sieges as the AI would.
+- Known balance gap, left for step 10: the AI's Temeria is strong, and a stewarded Empire is overrun by it in the mid 1260s. A human Emperor plays differently, but the Empire's AI is the stronger hand for now.

@@ -826,3 +826,30 @@ test('a version 6 save gains the Book of Laws and the faiths', () => {
   assert.ok(back.laws.temeria);
   assert.ok(back.faiths.vizima);
 });
+
+// ---- M48: any great crown can be played ----
+test('a game as Redania: the AI rules Temeria and answers its story choices', () => {
+  const s = createGame(table, { seed: 3, player: 'redania' });
+  assert.equal(s.player, 'redania');
+  s.story.chapter = 'dawn';
+  while (!s.story.fired.includes('road_to_war') && !s.story.fired.includes('road_to_war_late') && s.turn < 24) {
+    endTurn(s, table);
+    if (s.dilemma) answerDilemma(s, table, 0);
+    assert.equal(s.story.choice, null, 'Temeria\'s choices are not Redania\'s to make');
+  }
+  assert.ok(s.log.some((l) => /^Temeria: /.test(l.text)), 'Temeria answers the Call of the North');
+  assert.ok(s.armies.some((a) => a.owner === 'temeria'), 'Temeria still keeps its armies');
+  for (const r of Object.values(s.realms)) for (const k of ['love', 'fear', 'unrest']) assert.ok(Number.isFinite(r[k]));
+});
+
+test('every great crown can be played for a year without breaking', () => {
+  for (const player of table.data.game.powers) {
+    const s = createGame(table, { seed: 5, player });
+    for (let i = 0; i < 12 && !s.over; i++) {
+      endTurn(s, table);
+      if (s.dilemma) answerDilemma(s, table, 0);
+      if (s.story.choice) answerStoryCard(s, table, 0);
+    }
+    assert.ok(Number.isFinite(s.realms[player].treasury), player);
+  }
+});

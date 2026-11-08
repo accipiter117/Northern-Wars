@@ -1,5 +1,5 @@
 {
-  "note": "The story (v2 step 8). Events are checked at the end of every month, in order; each fires once, when every one of its `requires` holds (all of them), and never if a `flag` it sets is already set. A key may carry a number on its end (net2) to ask the same thing twice. Requires: date [year, month] or later; before [year, month]; chapter (the story's chapter now); flag / noFlag; goal [realm, goal]; controls [realm, region]; net [spy, target, n] (a spy network at least n); netBelow [spy, target, n]; authorityBelow [realm, n]; companies [realm, n]; atWar [a, b]; scoreAgainst [realm, n] (the northern powers' war score against it, less its own, at least n); chance p a month. Effects: chapter id; flag name; war [a, b] (unless b is a's vassal); peace [a, 'all'] or [a, b]; join [[realms], foe, opinion] (each AI power whose opinion of the foe is below that joins the war); annex [winner, loser] (every region of the loser the winner holds becomes its own); mood [realm, {love, fear, unrest}]; ruler [realm, name]; net [spy, target, change]; spyTarget [spy, target]; damage [region, points]; treasury [realm, change]; aggressive realm (its AI makes war more readily); grievance [[realms], target, n] (those realms hold it against the target); choice (the player answers: each option has a label and its own effects). Text is told in Reports; `tell` shows it to the player as a card. Chapters move on by date (`until` in goals.json) if the story has not moved them first.",
+  "note": "The story (v2 step 8). Events are checked at the end of every month, in order; each fires once, when every one of its `requires` holds (all of them), and never if a `flag` it sets is already set. A key may carry a number on its end (net2) to ask the same thing twice. Requires: date [year, month] or later; before [year, month]; chapter (the story's chapter now); flag / noFlag; goal [realm, goal]; controls [realm, region]; net [spy, target, n] (a spy network at least n); netBelow [spy, target, n]; authorityBelow [realm, n]; companies [realm, n]; atWar [a, b]; scoreAgainst [realm, n] (the northern powers' war score against it, less its own, at least n); chance p a month. Effects: chapter id; flag name; war [a, b] (unless b is a's vassal); peace [a, 'all'] or [a, b]; join [[realms], foe, opinion] (each AI power whose opinion of the foe is below that joins the war); annex [winner, loser] (every region of the loser the winner holds becomes its own); mood [realm, {love, fear, unrest}]; ruler [realm, name]; net [spy, target, change]; spyTarget [spy, target]; damage [region, points]; treasury [realm, change]; aggressive realm (its AI makes war more readily); grievance [[realms], target, n] (those realms hold it against the target); choice (the player answers: each option has a label and its own effects). Text is told in Reports; `tell` shows it to the player as a card. Chapters move on by date (`until` in goals.json) if the story has not moved them first. A `choice` is answered by the crown named in `for` (Temeria when unset): by the player when they play that crown, else the AI takes option `ai`.",
   "events": [
     {
       "id": "road_to_war", "chapter": "dawn", "title": "The First Northern War",
@@ -10,7 +10,7 @@
         { "war": ["nilfgaard", "cintra"] }, { "war": ["nilfgaard", "skellige"] },
         { "join": [["redania", "kaedwen", "aedirn"], "nilfgaard", -40] }
       ],
-      "choice": {
+      "choice": { "for": "temeria", "ai": 1,
         "title": "The Call of the North",
         "text": "Calanthe's envoys kneel in Vizima's hall. Cintra begs the North to march.",
         "options": [
@@ -29,7 +29,7 @@
         { "war": ["nilfgaard", "cintra"] }, { "war": ["nilfgaard", "skellige"] },
         { "join": [["redania", "kaedwen", "aedirn"], "nilfgaard", -40] }
       ],
-      "choice": {
+      "choice": { "for": "temeria", "ai": 1,
         "title": "The Call of the North",
         "text": "Calanthe's envoys kneel in Vizima's hall. Cintra begs the North to march.",
         "options": [
@@ -96,7 +96,7 @@
       "text": "With Aedirn burning, the northern courts must choose.",
       "requires": { "flag": "second_war", "noFlag": "second_war_join" },
       "effects": [{ "flag": "second_war_join" }, { "join": [["redania", "kaedwen"], "nilfgaard", -50] }],
-      "choice": {
+      "choice": { "for": "temeria", "ai": 0,
         "title": "Aedirn burns",
         "text": "Demavend's heralds beg for Temerian swords. The Empire is at the gates of Vengerberg.",
         "options": [
@@ -123,7 +123,7 @@
       "text": "Our spymaster brings word: the Empire's agents in Vizima are many, and a witcher has been seen at court with no contract anyone will admit to.",
       "requires": { "net": ["nilfgaard", "temeria", 40], "net2": ["temeria", "nilfgaard", 20] },
       "effects": [{ "flag": "kingslayer_warned" }],
-      "choice": {
+      "choice": { "for": "temeria", "ai": 2,
         "title": "Whispers of a plot",
         "text": "Our spymaster says a knife is being sharpened for the king. What is to be done?",
         "options": [
