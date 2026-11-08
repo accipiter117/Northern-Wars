@@ -665,3 +665,77 @@ test('a whole reign runs from the Dawn through the three wars to an ending', () 
   assert.ok(told.some((t) => /Second Northern War|Thanedd/.test(t)));
   assert.ok(told.includes('The Third Northern War'));
 });
+
+// ---- Fleets and commanders ----
+
+import { seaReach, buildFleet, mayBuildFleet, assignCommander, commanderOf, newCommanders } from '../../v2/src/engine/forces.js';
+import { sail } from '../../v2/src/engine/game.js';
+
+test('the sea: lanes join the coasts, Skellige included; fleets start with the seafaring crowns', () => {
+  assert.ok(table.sea.coastal.has('kaer_trolde') && table.sea.coastal.has('cidaris_city'));
+  assert.ok(table.sea.lanes.kaer_trolde.length > 0, 'Skellige can be reached by sea');
+  const s = fresh();
+  assert.equal(s.fleets.filter((f) => f.owner === 'skellige').length, 3);
+  assert.ok(!s.fleets.some((f) => f.owner === 'temeria'), 'Temeria has no coast of its own');
+});
+
+test('a fleet is built at our port or a vassal\'s, and carries an army to land it', () => {
+  const s = fresh();
+  assert.ok(!mayBuildFleet(s, table, 'temeria', 'vizima'), 'Vizima is no port');
+  s.minors.cidaris.suzerain = 'temeria';
+  assert.ok(mayBuildFleet(s, table, 'temeria', 'cidaris_city'));
+  s.realms.temeria.production = 200;
+  const out = buildFleet(s, table, 'temeria', 'cidaris_city');
+  assert.ok(out.ok);
+  const fleet = s.fleets.find((f) => f.id === out.fleet);
+  fleet.points = 3;
+  const army = armyOf(s, 'temeria', 'vizima');
+  army.region = 'cidaris_city';
+  army.points = 3;
+  declareWar(s, table, 'temeria', 'skellige');
+  // The Skellige fleets are elsewhere, and its armies away, for this test.
+  s.fleets = s.fleets.filter((f) => f.owner !== 'skellige');
+  s.armies = s.armies.filter((a) => a.owner !== 'skellige');
+  const reach = seaReach(table, fleet);
+  const dest = Object.keys(reach).find((id) => s.cities[id].owner === 'skellige');
+  assert.ok(dest, 'Skellige within reach');
+  const r = sail(s, table, fleet.id, army.id, dest);
+  assert.ok(r.landed);
+  assert.equal(army.region, dest);
+  assert.equal(fleet.region, dest);
+  endTurn(s, table);
+  assert.ok(['temeria', 'skellige'].includes(controller(s, dest)));
+});
+
+test('fleets fight at sea; Skellige raids an enemy coast at war', () => {
+  const s = fresh(5);
+  declareWar(s, table, 'skellige', 'cidaris');
+  for (let i = 0; i < 6; i++) endTurn(s, table);
+  assert.ok(s.log.some((l) => /Skellige lands an army|ships sink/.test(l.text)), 'Skellige takes to the sea');
+});
+
+test('commanders lead armies: a share more strength; beaten, they are wounded', () => {
+  const s = fresh();
+  const a = armyOf(s, 'temeria', 'vizima');
+  assert.ok(assignCommander(s, table, 'natalis', a.id).ok);
+  assert.equal(commanderOf(s, a.id), 'natalis');
+  const foe = { id: 990, owner: 'redania', region: 'vizima', companies: [{ type: 'foot', str: 100 }], points: 0 };
+  s.armies.push(foe);
+  const plain = setupBattle(fresh(), table, { attackers: [armyOf(fresh(), 'temeria', 'vizima')], defenders: [foe], region: 'vizima', month: 6 });
+  const led = setupBattle(s, table, { attackers: [a], defenders: [foe], region: 'vizima', month: 6 });
+  assert.ok(lanePower(table, led, 0, 'left') + lanePower(table, led, 0, 'centre') > lanePower(table, plain, 0, 'left') + lanePower(table, plain, 0, 'centre'));
+  // Beaten: wounded and out of the field.
+  led.over = { winner: 1, reason: 'rout' };
+  finishBattle(s, table, led);
+  assert.equal(s.commanders.natalis.army, null);
+  assert.ok(s.commanders.natalis.wounded > s.turn);
+  assert.ok(assignCommander(s, table, 'natalis', a.id).error);
+  // New commanders come with the chapters.
+  assert.ok(!newCommanders(table).coehoorn);
+});
+
+test('the AI gives its commanders its largest armies', () => {
+  const s = fresh();
+  endTurn(s, table);
+  assert.ok(s.commanders.henselt.army, 'Henselt leads an army');
+});

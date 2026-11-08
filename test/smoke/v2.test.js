@@ -244,6 +244,48 @@ test('saves to a file and back; the painted map follows a capture; plays offline
   await o.context.close();
 });
 
+test('fleets and commanders: build at a vassal\'s port, sail, and give an army its commander', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  await page.evaluate(() => localStorage.removeItem('northern-wars.v2.save'));
+  await page.reload();
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  // Natalis takes the army at Vizima, from its card.
+  const id = await page.evaluate(() => {
+    const { app } = window.northernWarsV2;
+    const a = app.state.armies.find((x) => x.owner === 'temeria' && x.region === 'vizima');
+    app.select({ army: a.id });
+    return a.id;
+  });
+  await page.click('[data-command="natalis"]');
+  assert.equal(await page.evaluate((i) => Object.entries(window.northernWarsV2.state.commanders).find(([, c]) => c.army === i)?.[0], id), 'natalis');
+  assert.match(await page.textContent('#sheet'), /Commander[\s\S]*Constable Jan Natalis/);
+  await page.click('#sheet-close');
+  // Cidaris as our vassal: a fleet built at its port, then sailed.
+  await page.evaluate(() => {
+    const { app } = window.northernWarsV2;
+    app.state.minors.cidaris.suzerain = 'temeria';
+    app.state.realms.temeria.production = 200;
+    window.northernWarsV2.view.centreOn('cidaris_city');
+    app.select({ region: 'cidaris_city' });
+  });
+  await page.click('[data-fleet]');
+  const fleet = await page.evaluate(() => window.northernWarsV2.state.fleets.find((f) => f.owner === 'temeria'));
+  assert.ok(fleet);
+  await page.click('#sheet-close');
+  await page.evaluate((fid) => { const { app } = window.northernWarsV2; app.state.fleets.find((f) => f.id === fid).points = 3; app.select({ fleet: fid }); }, fleet.id);
+  assert.match(await page.textContent('#sheet'), /Our fleet at Cidaris[\s\S]*Tap a lit port/);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-fleet.png') });
+  const dest = await page.evaluate(() => Object.keys(window.northernWarsV2.app.selected.reach).find((r) => window.northernWarsV2.state.cities[r].owner === 'cidaris'));
+  if (dest) {
+    const p = await page.evaluate((r) => window.northernWarsV2.view.screenOf(r), dest);
+    await page.mouse.click(p.x, p.y);
+    assert.equal(await page.evaluate((fid) => window.northernWarsV2.state.fleets.find((f) => f.id === fid).region, fleet.id), dest);
+  }
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');

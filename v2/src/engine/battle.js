@@ -5,6 +5,7 @@
 import { makeRng } from '../../../src/sim/rng.js';
 import { say, nameOf, controller } from './core.js';
 import { companyDef, goalBonus } from './goals.js';
+import { armyBonus } from './forces.js';
 
 const B = (table) => table.data.battle;
 export const LANES = ['left', 'centre', 'right'];
@@ -18,7 +19,7 @@ function weatherOf(table, month) {
 
 // Set up a battle: the attackers (armies) against the defenders (armies,
 // or a city's garrison behind its walls when `storm` is set).
-export function setupBattle(state, table, { attackers, defenders, region, month, storm = false }) {
+export function setupBattle(state, table, { attackers, defenders, region, month, storm = false, landing = false }) {
   const r = table.board.regions[region];
   const walled = ['city', 'castle'].includes(r.type);
   const side = (owner, armies, garrison = null) => {
@@ -34,7 +35,15 @@ export function setupBattle(state, table, { attackers, defenders, region, month,
     // Defending a walled place: its realm's walls, more when stormed.
     fort: walled ? (storm ? B(table).walls : 1.2) * (goalBonus(state, table, defOwner).defend ?? 1) : 1,
     log: [],
+    landing,
   };
+  // Commanders: a share more strength, a head start in morale, a better storm.
+  b.sides.forEach((side) => {
+    const bonus = {};
+    for (const id of side.armies) for (const [k, v] of Object.entries(armyBonus(state, table, id))) bonus[k] = Math.max(bonus[k] ?? 0, v);
+    side.bonus = bonus;
+    side.morale += bonus.morale ?? 0;
+  });
   // Both sides start in a sensible line; the player may rearrange before the first round.
   autoPlace(table, b, 0);
   autoPlace(table, b, 1);
@@ -79,6 +88,10 @@ function compPower(table, b, s, c) {
   if (s === 1) p *= b.fort * (b.fort > 1 ? (d.defend ?? 1) : 1);
   // Engineers and raiders storm walls at half again their strength.
   if (s === 0 && b.storm && d.siege) p *= 1.5;
+  const bonus = b.sides[s].bonus ?? {};
+  p *= 1 + (bonus.power ?? 0) + (s === 0 && b.storm ? bonus.siege ?? 0 : 0);
+  // Fighting up out of the boats.
+  if (s === 0 && b.landing) p *= 0.8;
   return p;
 }
 
