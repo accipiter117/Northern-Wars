@@ -1,5 +1,9 @@
 # Changelog
 
+## M48 fix: messages you can read
+- Pop-up messages in the turn-based game now sit above every panel (the battle screen included) and, in landscape, over the map beside the side panel rather than half under it.
+- They stay up long enough to read (longer for longer news, up to twelve seconds), and a tap clears them.
+
 ## M48 Northern Wars v2: play any great crown
 - Menu, A new game: start as Temeria, Redania, Kaedwen, Aedirn or the Nilfgaardian Empire. The map opens over your capital, and How to play speaks to your own king.
 - The story's choices belong to Temeria; when someone else plays, Temeria's AI makes them (and the North stands aside for Cintra, as it did).
