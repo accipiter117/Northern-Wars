@@ -85,14 +85,24 @@ export function registerWorker({ onUpdate }) {
   const asked = new URLSearchParams(location.search).has('sw');
   if (navigator.webdriver && !asked) return;
   let reloading = false;
+  const opened = Date.now();
+  // Only an update replaces a controller; the first install just starts one.
+  const hadWorker = !!navigator.serviceWorker.controller;
+  const reload = () => {
+    if (reloading) return;
+    reloading = true;
+    location.reload();
+  };
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (reloading || !navigator.serviceWorker.controller) return;
-    if (window.__nwRestart) {
-      reloading = true;
-      location.reload();
-    }
+    if (reloading || !navigator.serviceWorker.controller || !hadWorker) return;
+    // A new version has taken over: switch at once if the game has only just
+    // opened, otherwise offer the restart.
+    if (window.__nwRestart || Date.now() - opened < 15000) reload();
+    else onUpdate(reload);
   });
   navigator.serviceWorker.register('sw.js').then((reg) => {
+    // Look for a new version whenever the game comes back to the front.
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
     const waiting = (w) => {
       if (!w || !navigator.serviceWorker.controller) return;
       onUpdate(() => {
