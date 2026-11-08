@@ -15,6 +15,8 @@ import { repair, repairCost, setFocus, annex, worksOf, condOf } from '../engine/
 import { goalsOf, goalStatus, unlockName, companyTypes, companyDef, buildable, raise } from '../engine/goals.js';
 import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge, vassalsOf } from '../engine/minors.js';
 import { createTable } from './table.js';
+import { createBackdrop } from './backdrop.js';
+import { createCamera } from '../../../src/render/camera.js';
 
 const SAVE_KEY = 'northern-wars.v2.save';
 const $ = (id) => document.getElementById(id);
@@ -67,8 +69,21 @@ const app = {
   },
 };
 
-const view = createTable($('table'), app);
-window.northernWarsV2 = { app, view, get state() { return app.state; } };
+// The real-time game's painted map and its road life under the table; the
+// plain wooden table if it cannot be drawn (or with ?plain).
+let backdrop = null;
+const cam = createCamera(table.world);
+if (!new URLSearchParams(location.search).has('plain')) {
+  try {
+    const layoutCfg = await (await fetch('../data/layout.json')).json();
+    backdrop = createBackdrop($('map'), table.world, cam, layoutCfg);
+  } catch (e) {
+    console.warn('The painted map could not be drawn; using the plain table.', e);
+    backdrop = null;
+  }
+}
+const view = createTable($('table'), app, backdrop ? { cam, backdrop } : {});
+window.northernWarsV2 = { app, view, get backdrop() { return backdrop; }, get state() { return app.state; } };
 
 function save() {
   try { localStorage.setItem(SAVE_KEY, serialize(app.state)); } catch { /* storage full or blocked: play on */ }
@@ -506,6 +521,21 @@ $('end').addEventListener('click', () => {
   const news = app.state.log.filter((l) => l.turn === turn).slice(-Math.max(0, app.state.log.length - before));
   if (nextCard() === null && news.length) toast(news.slice(-2).map((l) => l.text).join(' '));
 });
+
+// The map's life moves on its own, a frame at a time (about 30 a second),
+// and rests while the game is out of sight.
+const monthDay = () => app.state.turn * 30;
+let lastFrame = 0;
+function loop(now) {
+  if (backdrop && !document.hidden && now - lastFrame >= 33) {
+    lastFrame = now;
+    backdrop.setDay(monthDay());
+    backdrop.frame(now);
+    view.draw();
+  }
+  requestAnimationFrame(loop);
+}
+if (backdrop) requestAnimationFrame(loop);
 
 refresh();
 $('loading').hidden = true;

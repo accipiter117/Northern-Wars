@@ -51,7 +51,12 @@ const ARMY_SIZE = 26;
 const SOLDIERS_PER_FIGURE = 200;
 const MAX_FIGURES = 5;
 
-export function createRenderer(canvas, world, cam, layoutCfg) {
+// `opts.noFog` leaves the fog of war off, and `opts.noBoard` the board of the North, (the turn-based game, v2, uses this
+// renderer as its map and shows the whole North).
+export function createRenderer(canvas, world, cam, layoutCfg, opts = {}) {
+  // The board of the North fades in as the camera pulls back, unless
+  // `opts.noBoard` (v2 has its own war table).
+  const bness = () => (opts.noBoard ? 0 : boardness(cam));
   const prep = prepareMap(world);
   // The countryside (M23 D), placed once; how it looks follows the season,
   // sacks and hunger, and Battery saver.
@@ -231,7 +236,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   let vision = null;
   let maskKey = '';
   function updateVision(state) {
-    if (!world.grid || !state.realms) return;
+    if (!world.grid || !state.realms || opts.noFog) return;
     vision = visionOf(state, world, travellerPositions(state, world));
     // Watchers move a little each day; the fog follows them a few times a
     // second at most, which the eye cannot tell from every day.
@@ -871,7 +876,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     }
     // On the board the settlements' layer is hidden, so it waits to be
     // redrawn until the camera comes back in; only the land and fog follow.
-    const onBoard = boardness(cam) >= 0.99;
+    const onBoard = bness() >= 0.99;
     withLayerCam(() => {
       if (onBoard) {
         if (baseDirty) drawBase();
@@ -897,7 +902,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
 
     // One map, two levels (M20 D): the settlements, their life and the
     // things that move fade out as the board of the North fades in.
-    const b = boardness(cam);
+    const b = bness();
     // Fully opaque, the opacity is cleared rather than set, so the layer is
     // composited exactly as it was before the board existed.
     const fade = b > 0 ? String(Math.round((1 - b) * 100) / 100) : '';
@@ -1332,7 +1337,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
   // crowd the roads into towns, and a tap on a town means the town.
   function pick(sx, sy, state, frac) {
     // On the board a tap picks a realm (M20 D).
-    if (boardness(cam) >= 0.5) {
+    if (bness() >= 0.5) {
       const rid = board.pick(cam, sx, sy);
       return rid ? { realm: rid } : null;
     }
@@ -1435,7 +1440,7 @@ export function createRenderer(canvas, world, cam, layoutCfg) {
     // For browser tests: what is left to draw and what moves on screen.
     get flags() { return { dirty, baseDirty, fogDirty, fogPending, live, lifeDrawn }; },
     unitScreen, armyScreen, stats, artStats: art.stats, planOf: art.planOf,
-    get boardness() { return boardness(cam); },
+    get boardness() { return bness(); },
     get tileStats() { return { size: tiles.size, drawn: tiles.stats.drawn, pending: baseDirty }; },
     invalidate: () => { dirty = true; baseDirty = true; fogDirty = true; },
     // The camera jumped (centred on a place): draw the cached layers round
