@@ -1,0 +1,166 @@
+{
+  "note": "The story (v2 step 8). Events are checked at the end of every month, in order; each fires once, when every one of its `requires` holds (all of them), and never if a `flag` it sets is already set. A key may carry a number on its end (net2) to ask the same thing twice. Requires: date [year, month] or later; before [year, month]; chapter (the story's chapter now); flag / noFlag; goal [realm, goal]; controls [realm, region]; net [spy, target, n] (a spy network at least n); netBelow [spy, target, n]; authorityBelow [realm, n]; companies [realm, n]; atWar [a, b]; scoreAgainst [realm, n] (the northern powers' war score against it, less its own, at least n); chance p a month. Effects: chapter id; flag name; war [a, b] (unless b is a's vassal); peace [a, 'all'] or [a, b]; join [[realms], foe, opinion] (each AI power whose opinion of the foe is below that joins the war); annex [winner, loser] (every region of the loser the winner holds becomes its own); mood [realm, {love, fear, unrest}]; ruler [realm, name]; net [spy, target, change]; spyTarget [spy, target]; damage [region, points]; treasury [realm, change]; aggressive realm (its AI makes war more readily); grievance [[realms], target, n] (those realms hold it against the target); choice (the player answers: each option has a label and its own effects). Text is told in Reports; `tell` shows it to the player as a card. Chapters move on by date (`until` in goals.json) if the story has not moved them first.",
+  "events": [
+    {
+      "id": "road_to_war", "chapter": "dawn", "title": "The First Northern War",
+      "text": "Black-cloaked regiments cross the Yaruga and fall on Cintra. Skellige's longships put out to stand with Queen Calanthe. The Dawn of the Reign is over.",
+      "requires": { "goal": ["nilfgaard", "n_legions"], "date": [1263, 3], "chance": 0.35 },
+      "effects": [
+        { "chapter": "first" }, { "flag": "first_war" },
+        { "war": ["nilfgaard", "cintra"] }, { "war": ["nilfgaard", "skellige"] },
+        { "join": [["redania", "kaedwen", "aedirn"], "nilfgaard", -40] }
+      ],
+      "choice": {
+        "title": "The Call of the North",
+        "text": "Calanthe's envoys kneel in Vizima's hall. Cintra begs the North to march.",
+        "options": [
+          { "label": "Answer the call: Temeria marches south", "effects": [{ "war": ["temeria", "nilfgaard"] }, { "mood": ["temeria", { "love": 4 }] }] },
+          { "label": "Stand aside: this is not our war", "effects": [{ "mood": ["temeria", { "love": -3 }] }, { "grievance": [["redania", "aedirn"], "temeria", 15] }] }
+        ]
+      },
+      "tell": true
+    },
+    {
+      "id": "road_to_war_late", "chapter": "dawn", "title": "The First Northern War",
+      "text": "With or without a pretext, the Emperor's patience ends: his regiments cross the Yaruga and fall on Cintra.",
+      "requires": { "date": [1263, 9], "noFlag": "first_war" },
+      "effects": [
+        { "chapter": "first" }, { "flag": "first_war" },
+        { "war": ["nilfgaard", "cintra"] }, { "war": ["nilfgaard", "skellige"] },
+        { "join": [["redania", "kaedwen", "aedirn"], "nilfgaard", -40] }
+      ],
+      "choice": {
+        "title": "The Call of the North",
+        "text": "Calanthe's envoys kneel in Vizima's hall. Cintra begs the North to march.",
+        "options": [
+          { "label": "Answer the call: Temeria marches south", "effects": [{ "war": ["temeria", "nilfgaard"] }, { "mood": ["temeria", { "love": 4 }] }] },
+          { "label": "Stand aside: this is not our war", "effects": [{ "mood": ["temeria", { "love": -3 }] }, { "grievance": [["redania", "aedirn"], "temeria", 15] }] }
+        ]
+      },
+      "tell": true
+    },
+    {
+      "id": "fall_of_cintra", "chapter": "first", "title": "The fall of Cintra",
+      "text": "Cintra burns. Queen Calanthe throws herself from the tower rather than kneel; her granddaughter is lost in the smoke. The Empire's banners fly over the city, and its eyes turn to Sodden and Brugge.",
+      "requires": { "flag": "first_war", "controls": ["nilfgaard", "cintra_city"] },
+      "effects": [{ "flag": "cintra_fallen" }, { "annex": ["nilfgaard", "cintra"] }, { "war": ["nilfgaard", "sodden"] }, { "war": ["nilfgaard", "brugge"] }],
+      "tell": true
+    },
+    {
+      "id": "sodden_hill", "chapter": "first", "title": "The Battle of Sodden Hill",
+      "text": "On the hill above the Yaruga the North's armies, and its mages, break the Empire's advance. The black regiments fall back across the river.",
+      "requires": { "flag": "first_war", "scoreAgainst": ["nilfgaard", 6] },
+      "effects": [{ "flag": "first_war_over" }, { "flag": "sodden_hill" }, { "peace": ["nilfgaard", "all"] }, { "mood": ["temeria", { "love": 5 }] }],
+      "tell": true
+    },
+    {
+      "id": "first_war_ends", "chapter": "first", "title": "An armed truce on the Yaruga",
+      "text": "The First War dies away without a decisive battle. The Empire keeps what it has taken; both banks of the Yaruga bristle with camps.",
+      "requires": { "flag": "first_war", "noFlag": "first_war_over", "date": [1265, 6] },
+      "effects": [{ "flag": "first_war_over" }, { "peace": ["nilfgaard", "all"] }],
+      "tell": true
+    },
+    {
+      "id": "second_war_brews", "chapter": "first", "title": "The Emperor's long plan",
+      "text": "Imperial agents are seen in Vengerberg and on Thanedd. The North's courts whisper of a coup among the mages.",
+      "requires": { "flag": "first_war_over", "date": [1266, 9] },
+      "effects": [{ "chapter": "second" }, { "spyTarget": ["nilfgaard", "aedirn"] }, { "net": ["nilfgaard", "aedirn", 20] }]
+    },
+    {
+      "id": "thanedd_foiled", "chapter": "second", "title": "The plot on Thanedd uncovered",
+      "text": "Our spies in the Empire learn of the plot on Thanedd before it springs. The mages are warned, the traitors seized; the Emperor's invasion begins without its knife in the North's back.",
+      "requires": { "date": [1267, 3], "net": ["temeria", "nilfgaard", 50] },
+      "effects": [{ "flag": "thanedd_foiled" }, { "flag": "second_war" }, { "war": ["nilfgaard", "aedirn"] }, { "war": ["nilfgaard", "lyria_rivia"] }, { "mood": ["temeria", { "love": 4 }] }],
+      "tell": true
+    },
+    {
+      "id": "thanedd", "chapter": "second", "title": "The coup on Thanedd",
+      "text": "On the isle of Thanedd the mages turn on each other, and the Empire strikes in the confusion: its armies pour into Lyria and Aedirn while Scoia'tael commandos burn the valley. In Ard Carraigh, Henselt eyes the Lower Marches.",
+      "requires": { "date": [1267, 6], "noFlag": "thanedd_foiled", "net": ["nilfgaard", "aedirn", 30] },
+      "effects": [
+        { "flag": "second_war" }, { "war": ["nilfgaard", "aedirn"] }, { "war": ["nilfgaard", "lyria_rivia"] },
+        { "mood": ["aedirn", { "unrest": 20 }] }, { "damage": ["vengerberg", 25] }, { "damage": ["vergen", 25] },
+        { "war": ["kaedwen", "aedirn"] }
+      ],
+      "tell": true
+    },
+    {
+      "id": "second_war_late", "chapter": "second", "title": "The Second Northern War",
+      "text": "The Empire crosses the Yaruga again, into Lyria and Aedirn.",
+      "requires": { "date": [1268, 1], "noFlag": "second_war" },
+      "effects": [{ "flag": "second_war" }, { "war": ["nilfgaard", "aedirn"] }, { "war": ["nilfgaard", "lyria_rivia"] }],
+      "tell": true
+    },
+    {
+      "id": "second_war_join", "chapter": "second", "title": "The North takes sides",
+      "text": "With Aedirn burning, the northern courts must choose.",
+      "requires": { "flag": "second_war", "noFlag": "second_war_join" },
+      "effects": [{ "flag": "second_war_join" }, { "join": [["redania", "kaedwen"], "nilfgaard", -50] }],
+      "choice": {
+        "title": "Aedirn burns",
+        "text": "Demavend's heralds beg for Temerian swords. The Empire is at the gates of Vengerberg.",
+        "options": [
+          { "label": "March to Aedirn's aid", "effects": [{ "war": ["temeria", "nilfgaard"] }] },
+          { "label": "Hold the line at home", "effects": [{ "mood": ["temeria", { "love": -2 }] }] }
+        ]
+      }
+    },
+    {
+      "id": "peace_of_cintra", "chapter": "second", "title": "The Peace of Cintra",
+      "text": "Envoys meet at Cintra and sign a peace no one believes in. The Empire keeps what it holds.",
+      "requires": { "flag": "second_war", "date": [1269, 6] },
+      "effects": [{ "flag": "second_war_over" }, { "peace": ["nilfgaard", "all"] }],
+      "tell": true
+    },
+    {
+      "id": "third_war_brews", "chapter": "second", "title": "Kingslayers",
+      "text": "Rumours run through the North of witchers for hire and a plan to cut the crowns down one by one.",
+      "requires": { "flag": "second_war_over", "date": [1270, 1] },
+      "effects": [{ "chapter": "third" }, { "spyTarget": ["nilfgaard", "temeria"] }, { "net": ["nilfgaard", "temeria", 15] }]
+    },
+    {
+      "id": "kingslayer_warning", "chapter": "third", "title": "Whispers of a plot",
+      "text": "Our spymaster brings word: the Empire's agents in Vizima are many, and a witcher has been seen at court with no contract anyone will admit to.",
+      "requires": { "net": ["nilfgaard", "temeria", 40], "net2": ["temeria", "nilfgaard", 20] },
+      "effects": [{ "flag": "kingslayer_warned" }],
+      "choice": {
+        "title": "Whispers of a plot",
+        "text": "Our spymaster says a knife is being sharpened for the king. What is to be done?",
+        "options": [
+          { "label": "Double the guard (200 crowns)", "effects": [{ "treasury": ["temeria", -200] }, { "flag": "king_guarded" }] },
+          { "label": "Hunt the Empire's agents", "effects": [{ "net": ["nilfgaard", "temeria", -45] }, { "grievance": [["nilfgaard"], "temeria", 10] }] },
+          { "label": "Court gossip. Ignore it", "effects": [] }
+        ]
+      },
+      "tell": true
+    },
+    {
+      "id": "kingslayer_foltest", "chapter": "third", "title": "The king is dead",
+      "text": "Foltest is cut down in his own castle by a witcher's blade. Temeria is left to a council of regents, and the Empire's agents smile.",
+      "requires": { "net": ["nilfgaard", "temeria", 60], "noFlag": "king_guarded", "authorityBelow": ["temeria", 60], "chance": 0.3 },
+      "effects": [{ "flag": "foltest_dead" }, { "ruler": ["temeria", "the regency council"] }, { "mood": ["temeria", { "love": -15, "fear": -10, "unrest": 20 }] }],
+      "tell": true
+    },
+    {
+      "id": "kingslayer_demavend", "chapter": "third", "title": "Demavend murdered",
+      "text": "King Demavend of Aedirn is murdered on his own barge. Aedirn falls into quarrels over the crown.",
+      "requires": { "net": ["nilfgaard", "aedirn", 40], "chance": 0.15 },
+      "effects": [{ "flag": "demavend_dead" }, { "ruler": ["aedirn", "Queen Saskia's council"] }, { "mood": ["aedirn", { "unrest": 25, "love": -10 }] }],
+      "tell": true
+    },
+    {
+      "id": "radovid", "chapter": "third", "title": "Radovid rises",
+      "text": "Vizimir II is murdered and his young son Radovid takes the throne of Redania. The boy king proves sharper and colder than anyone guessed, and the Eternal Fire burns brighter for it.",
+      "requires": { "date": [1271, 1], "chance": 0.25 },
+      "effects": [{ "flag": "radovid" }, { "ruler": ["redania", "Radovid V"] }, { "aggressive": "redania" }, { "mood": ["redania", { "fear": 20 }] }],
+      "tell": true
+    },
+    {
+      "id": "third_invasion", "chapter": "third", "title": "The Third Northern War",
+      "text": "The Empire crosses the Yaruga a third time, and this time it marches on Temeria and Redania.",
+      "requires": { "date": [1271, 4] },
+      "effects": [{ "flag": "third_war" }, { "war": ["nilfgaard", "temeria"] }, { "war": ["nilfgaard", "redania"] }, { "join": [["kaedwen", "aedirn"], "nilfgaard", -30] }],
+      "tell": true
+    }
+  ]
+}

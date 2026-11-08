@@ -1,0 +1,22 @@
+{
+  "note": "Endings and victories (v2 step 9). Checked at the end of every month: domination (a power holds `domination.share` of the North's capitals, its own included) and faith (a power's Devotion at least `faith.devotion` and `faith.lead` times every other's) end the game at once. Otherwise, at the end of December 1272 the lore decides: the Empire triumphant (it holds `empire.capitals` or more of the four northern great capitals), one king rules the North (one northern power holds `oneKing.capitals` or more of them), or the North holds. The player's own fate is told beside it.",
+  "domination": { "share": 0.6 },
+  "faith": { "devotion": 1500, "lead": 2 },
+  "northCapitals": ["vizima", "tretogor", "ard_carraigh", "vengerberg"],
+  "empire": { "capitals": 2 },
+  "oneKing": { "capitals": 3 },
+  "faiths": { "temeria": "Melitele's North", "redania": "the Eternal Fire's North", "kaedwen": "the Eternal Fire's North", "aedirn": "the old gods' North", "nilfgaard": "the Great Sun over the North" },
+  "texts": {
+    "domination": { "title": "{name} rules the North", "text": "{name} holds the capitals of the North. Every crown that still stands, stands by its leave." },
+    "faith": { "title": "{faith}", "text": "{name}'s faith has won what its armies could not: temples rise in every city, and kings kneel to its priests." },
+    "empire": { "title": "The Empire triumphant", "text": "The black banners fly over the North's capitals. The northern kingdoms are provinces now, governed from Nilfgaard." },
+    "oneKing": { "title": "One king rules the North", "text": "{name} has united the North by the sword and thrown the Empire back across the Yaruga." },
+    "holds": { "title": "The North holds", "text": "The Empire is held at the Yaruga. The northern crowns endure, quarrelling, bloodied and free." }
+  },
+  "fate": {
+    "won": "Temeria stands at the head of the North.",
+    "free": "Temeria endures, its own master.",
+    "vassal": "Temeria survives, at best, as an imperial province.",
+    "fallen": "Vizima is in foreign hands, and the lion's banner is folded away."
+  }
+}

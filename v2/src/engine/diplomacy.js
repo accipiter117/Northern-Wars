@@ -218,8 +218,10 @@ export function aiDiplomacy(state, table, rid) {
     }
     // War on a hated and weaker neighbour.
     const w = d.aiWar;
-    if (state.turn >= w.after && opinionOf(state, rid, other) < w.hate && companies(state, rid) >= companies(state, other) * w.ratio
-      && !allied(state, rid, other) && rng.chance(w.chance)) {
+    // A ruler the story has made aggressive (Radovid) hates more readily and strikes sooner.
+    const fierce = state.story?.aggressive?.includes(rid);
+    if (state.turn >= w.after && opinionOf(state, rid, other) < w.hate + (fierce ? 25 : 0) && companies(state, rid) >= companies(state, other) * (fierce ? 1.2 : w.ratio)
+      && !allied(state, rid, other) && rng.chance(w.chance * (fierce ? 2 : 1))) {
       state.rng = rng.seed;
       return { war: other };
     }

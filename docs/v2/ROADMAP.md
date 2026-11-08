@@ -11,9 +11,9 @@ Built at `/v2/` alongside the real-time game until it is playable end to end. De
 | 5 | M40 City-states | Types and suzerain bonuses, envoys, the three routes, favours, rivals courting vassals away, rebellion and judgements | Done |
 | 6 | M41 Battles | The lanes battle screen, auto-resolve with odds, sieges across turns (storm, starve, terms, lift) | Done |
 | 7 | M42 Diplomacy and AI | Opinions moved by each ruler's lore agenda, grievances and treaties (alliance, open borders, trade, peace); war scores; spies and their operations; an AI that defends, heals, merges, makes war and peace and offers treaties | Done |
-| 8 | M43 Chapters and lore events | The Dawn, the three wars, requirement-driven events | Next |
-| 9 | M44 Endings | The lore endings, domination and faith; balance across full games | |
-| 10 | M45 Polish and the swap | One screen per purpose, art for pieces and cards; v2 becomes the game | |
+| 8 | M43 Chapters and lore events | Chapters moved by the story; the Road to War, the fall of Cintra, Sodden Hill, Thanedd, the Peace of Cintra, the Kingslayers, Radovid and the Third War, each when its driver earns it; player choices; plots seen coming and foiled | Done |
+| 9 | M44 Endings | Domination and faith at once; the Empire triumphant, one king rules the North or the North holds at the end of 1272; the player's own fate | Done |
+| 10 | M45 Polish and the swap | One screen per purpose, art for pieces and cards, balance across many full games; v2 becomes the game | Next |
 
 ## M36 and M37 acceptance criteria
 - `/v2/` loads at 390x844 portrait and 844x390 landscape with no console errors, over Temeria in March 1262.
@@ -42,3 +42,9 @@ Built at `/v2/` alongside the real-time game until it is playable end to end. De
 - Treaties (alliance, open borders, trade) are signed when the other side's opinion is high enough; an alliance opens lands and supply and brings the ally into a defensive war; trade pays crowns a month. Peace is taken when a war goes badly or drags on; occupied places are handed back, kept ones stay.
 - The AI offers the player treaties and peace (answered on the Diplomacy sheet), signs with other powers, declares war on a hated and much weaker power, makes peace when it suits both sides, and on the board defends threatened regions, pulls hurt armies home and merges its armies.
 - Spies: a network grows in one court at a time (agents in their land add to it), pays for sabotage, theft and incitement, and is sometimes caught (a grievance).
+
+## M43 and M44 acceptance criteria
+- The chapter is the story's: the Dawn gives way to the First War when the Emperor's legions are mustered and 1263 has come (or by September 1263 regardless), and so on; a chapter that lags moves on by date.
+- Lore events fire only when their requirements hold (Cintra falls when the Empire holds it; Sodden Hill when the North's war score against the Empire is six ahead; Thanedd needs the Empire's network in Aedirn, and is foiled by a deep Temerian network in the Empire; the Kingslayers need a deep imperial network in Temeria and a moment of weakness, and a spymaster who sees it coming can guard the king). Each fires once; twin events (a late Road to War, a late Second War) never both happen.
+- The player answers the Call of the North and Aedirn's plea, and the plot warning, on story cards; told events show as cards; Goals shows the chapter and the story so far.
+- Domination (60% of the North's capitals) and faith (Devotion 1,500 and twice everyone else's) end the game at once; otherwise the end of 1272 brings the lore's ending and the player's fate. A whole reign runs from the Dawn to an ending.

@@ -8,6 +8,8 @@
 //   Step 5 (minors.js): the smaller crowns as city-states.
 //   Step 6 (battle.js): the lanes battle, its odds, and sieges across turns.
 //   Step 7 (diplomacy.js, spies.js): opinions, treaties, peace, spies; the AI's board play.
+//   Step 8 (story.js): chapters and requirement-driven lore events.
+//   Step 9 (endings.js): domination, faith and the lore's endings.
 import { makeRng } from '../../../src/sim/rng.js';
 import { startingWorks } from '../../../src/sim/works.js';
 import { buildBoard, other, TEMERIA } from './board.js';
@@ -16,13 +18,15 @@ import { worksOf, condOf, damage, settled, monthlyCities, unsettledUnrest, aiAnn
 import { chapterOf, checkGoals, companyTypes, companyDef, uniqueYields, goalBonus, aiRaise } from './goals.js';
 import { newMinors, vassalsOf, envoysPlaced, suzerainBonus, passage, vassalsFollow, monthlyMinors, aiMinors, judge } from './minors.js';
 import { setupBattle, runToEnd, battleOdds, applyBattle, fightRound, soundRetreat, autoPlace } from './battle.js';
-import { newDiplomacy, onWar, addScore, mayCross, allied, tradeCrowns, monthlyDiplomacy, aiDiplomacy, opinionOf } from './diplomacy.js';
+import { newDiplomacy, onWar, addScore, mayCross, allied, tradeCrowns, monthlyDiplomacy, aiDiplomacy, opinionOf, makePeaceTreaty } from './diplomacy.js';
 import { newSpies, monthlySpies, aiSpies } from './spies.js';
+import { newStory, storyChapter, monthlyStory, answerStory } from './story.js';
+import { suddenEnding, loreEnding } from './endings.js';
 
 export { nameOf, atWar, controller, authority };
 
 export const SAVE_FORMAT = 'northern-wars-v2';
-export const VERSION = 4;
+export const VERSION = 5;
 
 // ---- The world as the game sees it ----
 
@@ -52,7 +56,7 @@ export function dateOf(table, turn) {
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 export const monthName = (m) => MONTHS[m - 1];
 
-export const chapterNow = (state, table) => chapterOf(table, dateOf(table, state.turn));
+export const chapterNow = (state, table) => (state.story ? storyChapter(state, table) : chapterOf(table, dateOf(table, state.turn)));
 
 // ---- A new game ----
 
@@ -73,6 +77,7 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   };
   state.diplomacy = newDiplomacy(state, table);
   state.spies = newSpies(table);
+  state.story = newStory();
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
     const plan = g.start_armies[table.tiers[rid] ?? 'petty'] ?? [];
@@ -680,15 +685,44 @@ export function endTurn(state, table) {
   monthlyMinors(state, table);
   monthlyDiplomacy(state, table);
   monthlySpies(state, table, (a, b) => opinionOf(state, a, b));
+  monthlyStory(state, table, dateOf(table, state.turn), storyHooks(state, table));
   state.turn += 1;
   const d = dateOf(table, state.turn);
-  if (d.year >= table.data.game.start.endYear && d.month >= 12) state.over = { reason: 'time' };
+  const sudden = suddenEnding(state, table);
+  if (sudden) state.over = { reason: sudden.kind, ending: sudden };
+  else if (d.year >= table.data.game.start.endYear && d.month >= 12) state.over = { reason: 'time', ending: loreEnding(state, table) };
   maybeDilemma(state, table);
   resetPoints(state, table);
   return state;
 }
 
 export const goalContext = goalCtx;
+
+// What the story may do to the world.
+export function storyHooks(state, table) {
+  return {
+    declareWar: (a, b) => declareWar(state, table, a, b),
+    peace: (a, b) => makePeaceTreaty(state, table, a, b),
+    damage: (region, points) => damage(state, table, region, points, 3),
+    annexRealm: (winner, loser) => {
+      for (const c of Object.values(state.cities)) {
+        if (c.owner !== loser || c.holder !== winner) continue;
+        c.owner = winner;
+        c.holder = null;
+        c.siege = null;
+        c.integration = table.data.game.cities.integration.start;
+      }
+      // A realm with no city left is gone, and so are its armies and its court.
+      if (!Object.values(state.cities).some((c) => c.owner === loser)) {
+        state.armies = state.armies.filter((a) => a.owner !== loser);
+        delete state.minors[loser];
+        for (const w of state.wars.filter((x) => x.split('|').includes(loser))) state.wars.splice(state.wars.indexOf(w), 1);
+      }
+    },
+  };
+}
+
+export const answerStoryCard = (state, table, i) => answerStory(state, table, i, storyHooks(state, table));
 
 // ---- Saves ----
 
@@ -720,6 +754,12 @@ export function deserialize(text, table = null) {
     s.diplomacy ??= newDiplomacy(s, table);
     s.spies ??= newSpies(table);
     s.version = 4;
+  }
+  // Version 4 gains the story, in the chapter its date has reached.
+  if ((data.version ?? 1) < 5 && table) {
+    s.story ??= newStory();
+    s.story.chapter = chapterOf(table, dateOf(table, s.turn)).id;
+    s.version = 5;
   }
   return s;
 }

@@ -5,11 +5,12 @@ import {
   createGame, endTurn, moveArmy, recruit, declareWar, atWar, reachable, controller, cityYields, realmYields,
   authority, riots, dateOf, monthName, nameOf, strength, dilemmaView, answerDilemma, serialize, deserialize, movePoints,
   companyCost, chapterNow, goalContext, realmBonus, finishBattle, battleRound, battleAuto, battleRetreat,
-  termsOpen, offerTerms, storm, stormOdds,
+  termsOpen, offerTerms, storm, stormOdds, answerStoryCard,
 } from '../engine/game.js';
 import { placeCompany, oddsNow } from '../engine/battle.js';
 import { opinionOf, opinionParts, treatiesOf, treatyAnswer, propose, answerOffer, warScore } from '../engine/diplomacy.js';
 import { netOf, setTarget, spyOp } from '../engine/spies.js';
+import { storyCard, storySoFar, rulerOf } from '../engine/story.js';
 import { repair, repairCost, setFocus, annex, worksOf, condOf } from '../engine/cities.js';
 import { goalsOf, goalStatus, unlockName, companyTypes, companyDef, buildable, raise } from '../engine/goals.js';
 import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge, vassalsOf } from '../engine/minors.js';
@@ -91,7 +92,8 @@ function refresh() {
     stat('⚔', Math.round(r.fear), false, 'Fear'),
     stat('🔥', Math.round(r.unrest), r.unrest > 60, 'Unrest'),
   ].join('');
-  $('end').disabled = !!s.over;
+  // Once the game is over the button shows the ending again.
+  $('end').disabled = false;
   $('end').textContent = s.over ? 'The end' : 'End turn';
   view.draw();
 }
@@ -213,7 +215,9 @@ function showGoals() {
   }).join('');
   const b = realmBonus(s, table, s.player);
   const extras = ['crowns', 'production', 'faith', 'renown'].filter((k) => b[k]).map((k) => `+${b[k]} ${k}`).join(', ');
-  openSheet('Goals', `<p class="sub">Goals take the place of learning: meet them to unlock units, buildings, wonders and yields. Earlier chapters' goals stay open.${extras ? ` Goals, wonders and vassals give us ${esc(extras)} a month.` : ''}</p>${html}`);
+  const story = storySoFar(s, table).reverse().map((e) => { const d = dateOf(table, e.turn); return `<p><span class="t">${monthName(d.month).slice(0, 3)} ${d.year}</span><b>${esc(e.title)}</b>. ${esc(e.text)}</p>`; }).join('');
+  openSheet('Goals and the story', `<p class="sub">Now: <b>${esc(ch.name)}</b>. Goals take the place of learning: meet them to unlock units, buildings, wonders and yields. Earlier chapters' goals stay open.${extras ? ` Goals, wonders and vassals give us ${esc(extras)} a month.` : ''}</p>${html}
+    <h3>The story so far</h3><div class="log">${story || '<p class="sub">The Dawn of the Reign: the North is at peace, for now. The Emperor is massing his legions.</p>'}</div>`);
 }
 
 function showCourts() {
@@ -259,7 +263,7 @@ function showRealm() {
   const y = realmYields(s, table, s.player);
   const g = table.data.game;
   openSheet(nameOf(table, s.player), `
-    <p class="sub">${esc(g.rulers[s.player] ?? '')}. Authority ${Math.round(authority(r))}${riots(s, table, s.player) ? ': the towns riot, and production is halved' : ''}.</p>
+    <p class="sub">${esc(rulerOf(s, table, s.player))}. Authority ${Math.round(authority(r))}${riots(s, table, s.player) ? ': the towns riot, and production is halved' : ''}.</p>
     ${yieldsHtml(y)}
     <p class="sub">Armies cost ${y.upkeep} crowns a month. The people eat ${y.eat} food.</p>
     <h3>Taxes</h3>
@@ -288,13 +292,13 @@ function showWar() {
         const a = treatyAnswer(s, table, me, p, k);
         return `<button type="button" class="act" data-propose="${p}:${k}" title="${esc(t.text)}">${esc(t.name)}${a.yes ? '' : ' (no)'}</button>`;
       }).join('') + `<button type="button" class="act war" data-war="${p}">Declare war</button>`;
-    return `<div class="court"><div class="row"><span><b>${esc(nameOf(table, p))}</b>, ${esc(table.data.game.rulers[p] ?? '')}. Opinion of us: <b>${op}</b>${war ? ' <b style="color:#f0a08a">at war</b>' : ''}<br>
+    return `<div class="court"><div class="row"><span><b>${esc(nameOf(table, p))}</b>, ${esc(rulerOf(s, table, p))}. Opinion of us: <b>${op}</b>${war ? ' <b style="color:#f0a08a">at war</b>' : ''}<br>
       <small class="sub">${esc(d.agendas[p]?.text ?? '')}</small><small class="sub">${esc(parts)}</small>
       ${signed.length ? `<small class="sub">Treaties: ${signed.map((t) => esc(d.treaties[t.kind].name.toLowerCase())).join(', ')}.</small>` : ''}
       ${score ? `<small class="sub">War score: us ${score.mine}, them ${score.theirs}.</small>` : ''}</span></div>
       <div class="seg wrap">${buttons}</div></div>`;
   }).join('');
-  const minors = Object.keys(s.realms).filter((r) => r !== me && !table.data.game.powers.includes(r)).map((rid) => {
+  const minors = Object.keys(s.realms).filter((r) => r !== me && !table.data.game.powers.includes(r) && Object.values(s.cities).some((c) => c.owner === r)).map((rid) => {
     const war = atWar(s, me, rid);
     return `<div class="row"><span>${esc(nameOf(table, rid))}${war ? ' <b style="color:#f0a08a">at war</b>' : ''}</span>${war ? `<button type="button" class="act" data-propose="${rid}:peace">Propose peace</button>` : `<button type="button" class="act war" data-war="${rid}">Declare war</button>`}</div>`;
   }).join('');
@@ -328,7 +332,7 @@ function showLog() {
 
 function showMenu() {
   openSheet('Menu', `
-    <p class="sub">This is the turn-based Northern Wars, being built in steps. The board, turns, cities, goals, the smaller crowns, battles and diplomacy are in; the wars' story and the endings come next.</p>
+    <p class="sub">This is the turn-based Northern Wars, being built in steps. Everything from the design is in, from the Dawn of the Reign to the endings; art and polish come next.</p>
     <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act" id="new-game">New game</button></div>
     <div class="row"><span>The real-time game</span><a class="act" style="display:inline-grid;place-items:center;text-decoration:none" href="../">Open</a></div>`);
   $('new-game').addEventListener('click', () => {
@@ -410,6 +414,41 @@ function showBattle() {
   }
 }
 
+// ---- The story (step 8) and the endings (step 9) ----
+function showStory() {
+  const card = storyCard(app.state, table);
+  if (!card) return;
+  openSheet(card.title, `<div class="dilemma story"><p>${esc(card.text)}</p>${card.choice
+    ? card.options.map((o, i) => `<button type="button" class="act" data-story="${i}">${esc(o)}</button>`).join('')
+    : '<button type="button" class="act" data-story="0">Read on</button>'}</div>`);
+  for (const b of document.querySelectorAll('[data-story]')) {
+    b.addEventListener('click', () => { answerStoryCard(app.state, table, Number(b.dataset.story)); app.state.story.told = null; save(); closeSheet(); refresh(); nextCard(); });
+  }
+}
+
+function showEnding() {
+  const e = app.state.over?.ending;
+  if (!e) return;
+  const d = dateOf(table, app.state.turn);
+  openSheet(e.title, `<div class="dilemma ending"><p>${esc(e.text)}</p><p><b>${esc(e.fate.text)}</b></p>
+    <p class="sub">${monthName(d.month)} ${d.year}. ${app.state.realms[app.state.player]?.goals?.length ?? 0} goals met.</p>
+    <button type="button" class="act" id="ending-new">Begin a new reign</button>
+    <button type="button" class="act" id="ending-look">Look at the North as it stands</button></div>`);
+  $('ending-new').addEventListener('click', () => { app.state = createGame(table, { seed: (Date.now() & 0xffff) || 1 }); save(); app.select(null); refresh(); });
+  $('ending-look').addEventListener('click', () => closeSheet());
+}
+
+// Whatever waits on the player, most pressing first.
+function nextCard() {
+  const s = app.state;
+  if (s.battle) return showBattle();
+  if (s.over?.ending) return showEnding();
+  if (s.story?.choice || s.story?.told) return showStory();
+  if (s.judgement) return showJudgement();
+  if (s.dilemma) return showDilemma();
+  return null;
+}
+
 function showDilemma() {
   const d = dilemmaView(app.state, table);
   if (!d) return;
@@ -433,6 +472,7 @@ function toast(text) {
 }
 
 $('end').addEventListener('click', () => {
+  if (app.state.over) return showEnding();
   const before = app.state.log.length;
   const turn = app.state.turn;
   endTurn(app.state, table);
@@ -440,13 +480,9 @@ $('end').addEventListener('click', () => {
   app.select(null);
   refresh();
   const news = app.state.log.filter((l) => l.turn === turn).slice(-Math.max(0, app.state.log.length - before));
-  if (app.state.judgement) showJudgement();
-  else if (app.state.dilemma) showDilemma();
-  else if (news.length) toast(news.slice(-2).map((l) => l.text).join(' '));
+  if (nextCard() === null && news.length) toast(news.slice(-2).map((l) => l.text).join(' '));
 });
 
 refresh();
 $('loading').hidden = true;
-if (app.state.battle) showBattle();
-else if (app.state.judgement) showJudgement();
-else if (app.state.dilemma) showDilemma();
+nextCard();

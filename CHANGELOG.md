@@ -1,5 +1,11 @@
 # Changelog
 
+## M43 and M44 Northern Wars v2: the story and the endings
+- The Northern Wars now unfold: the Road to War and the invasion of Cintra, the Call of the North, the fall of Cintra, Sodden Hill, Thanedd, the Peace of Cintra, the Kingslayers, Radovid's rise and the Third War. Each happens only when the power behind it has earned it, so no two reigns run quite alike.
+- Some can be stopped: deep spies in the Empire uncover the plot on Thanedd, and a watchful spymaster can save the king from the Kingslayers.
+- You answer the Call of the North and Aedirn's plea for help; Goals now shows the chapter and the story so far.
+- The game ends: rule most of the North's capitals, or make your faith the North's, and you win outright; otherwise, at the end of 1272, the Empire triumphs, one king rules the North, or the North holds, and you learn Temeria's fate.
+
 ## M42 Northern Wars v2: diplomacy, spies and a sharper AI
 - The Diplomacy sheet: each great power's opinion of you and why, shaped by its ruler's agenda (Foltest's southern crowns, Vizimir's envoys, Henselt's respect for strength, Demavend's valley, Emhyr's long plan). Sign alliances, open borders and trade deals, make peace, or declare war.
 - Allies come to each other's aid; peace hands back occupied places but keeps the cities you kept.
