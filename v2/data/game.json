@@ -1,0 +1,57 @@
+{
+  "note": "The v2 turn engine (step 1). One turn is one month. Each city yields food, production, crowns, faith and renown from its works (the spaces of the real-time game), its people and the realm's tax. Food beyond what the people eat is stored and grows the city; production buys companies; crowns fill the treasury; faith raises the realm's Devotion; renown is kept for envoys and statecraft (step 5). Love, Fear, Authority (the greater of the two) and Unrest are the realm's mood: low Authority with high Unrest brings riots, which halve production.",
+  "start": { "year": 1262, "month": 3, "endYear": 1272 },
+  "powers": ["temeria", "redania", "kaedwen", "aedirn", "nilfgaard"],
+  "names": {
+    "temeria": "Temeria", "redania": "Redania", "kaedwen": "Kaedwen", "aedirn": "Aedirn", "nilfgaard": "the Nilfgaardian Empire",
+    "mahakam": "Mahakam", "brokilon": "Brokilon", "cidaris": "Cidaris", "kerack": "Kerack", "verden": "Verden", "brugge": "Brugge",
+    "sodden": "Sodden", "cintra": "Cintra", "kovir": "Kovir and Poviss", "hengfors": "the Hengfors League", "lyria_rivia": "Lyria and Rivia",
+    "angren": "Angren", "toussaint": "Toussaint", "skellige": "Skellige"
+  },
+  "rulers": { "temeria": "Foltest", "redania": "Vizimir II", "kaedwen": "Henselt", "aedirn": "Demavend III", "nilfgaard": "Emhyr var Emreis" },
+  "colours": { "temeria": ["#1f3f7a", "#e8dcb4"] },
+  "people": { "village": 400, "town": 2500, "city": 9000, "castle": 300, "temple": 150 },
+  "perThousand": { "food": 1, "production": 0.4, "crowns": 1.6 },
+  "works": {
+    "fields": { "food": 3 }, "mill": { "food": 1, "production": 1 }, "granary": { "food": 1 }, "fishery": { "food": 2 },
+    "pasture": { "food": 1, "crowns": 1 }, "stud": { "production": 1, "crowns": 1 }, "lumber": { "production": 2 },
+    "quarry": { "production": 2 }, "mine": { "production": 2, "crowns": 1 }, "silvermine": { "crowns": 4 }, "goldmine": { "crowns": 5 },
+    "charcoal": { "production": 1 }, "peat": { "production": 1 }, "herbalists": { "faith": 1, "crowns": 1 }, "lodge": { "food": 1, "renown": 1 },
+    "market": { "crowns": 3 }, "workshop": { "production": 2 }, "smithy": { "production": 2 }, "weaponsmith": { "production": 2 },
+    "armoury": { "production": 1 }, "weavers": { "crowns": 2 }, "distillery": { "crowns": 2 }, "tannery": { "crowns": 1 },
+    "brewery": { "crowns": 1 }, "inn": { "crowns": 1, "renown": 1 }, "bathhouse": { "renown": 1 }, "guildhall": { "crowns": 2, "renown": 1 },
+    "bank": { "crowns": 4 }, "mint": { "crowns": 3 }, "quarter": { "crowns": 2 }, "warehouse": { "crowns": 1 }, "paving": { "renown": 1 },
+    "sewers": { "food": 1 }, "harbour": { "crowns": 2, "food": 1 }, "shipyard": { "production": 2 }, "saltpans": { "crowns": 2 },
+    "tollbridge": { "crowns": 2 }, "shrine": { "faith": 2 }, "hospice": { "faith": 1, "renown": 1 }, "hostel": { "faith": 2 },
+    "cathedral": { "faith": 4, "renown": 1 }, "alchemist": { "crowns": 1, "renown": 1 }, "walls": {}, "watchtower": {}, "barracks": { "production": 1 }
+  },
+  "eat": 0.8,
+  "growth": { "per": 25, "storeCap": 30 },
+  "tax": {
+    "light": { "crowns": 0.75, "love": 0.6, "unrest": -0.4 },
+    "fair": { "crowns": 1, "love": 0, "unrest": 0 },
+    "heavy": { "crowns": 1.35, "love": -0.8, "unrest": 0.8 }
+  },
+  "mood": { "loveRest": 55, "pull": 0.05, "fearDecay": 0.04, "unrestPull": 0.05, "unrestRest": 20, "riotAuthority": 30, "riotUnrest": 60, "riotProduction": 0.5, "hungerUnrest": 6, "hungerLove": 3 },
+  "companies": {
+    "foot": { "name": "Foot", "cost": 30, "upkeep": 2, "power": 1 },
+    "bow": { "name": "Crossbows", "cost": 35, "upkeep": 2, "power": 1.1 },
+    "horse": { "name": "Horse", "cost": 55, "upkeep": 4, "power": 1.6 }
+  },
+  "start_armies": {
+    "great": [["foot", "foot", "bow", "horse"], ["foot", "foot", "bow"]],
+    "middle": [["foot", "foot", "bow"]],
+    "petty": [["foot", "bow"]]
+  },
+  "cities": {
+    "note": "Step 3. A city's focus each month sets where its hands go: the chosen yield rises by `focus.up`, the others fall by `focus.down`. War wears its works: a month under siege takes `damage.siege` from two works, a fall takes `damage.capture` from every works, a battle at its gates `damage.battle` from one; a works yields by its condition. Repairs cost `repair` production for each point mended, all at once. A city taken in war may be kept (annexed): it joins at `integration.start`, yields `integration.floor` of its takings at first rising to all of them at 100, settling `integration.month` a month (more with an army in it), and while below `integration.unrestBelow` it adds to Unrest.",
+    "focus": { "up": 1.4, "down": 0.85, "kinds": ["balanced", "food", "production", "crowns", "faith"] },
+    "damage": { "siege": 15, "capture": 10, "battle": 10 },
+    "repair": 0.4,
+    "integration": { "start": 25, "month": 4, "garrison": 3, "floor": 0.25, "unrestBelow": 50, "unrest": 0.4, "fear": 3 },
+    "aiAnnexAfter": 2
+  },
+  "maxCompanies": 8,
+  "dilemmaChance": 0.25,
+  "battle": { "note": "A stand-in until step 6's battle screen: the stronger side usually wins; the loser loses more and falls back.", "swing": 0.35, "loserLoss": 0.45, "winnerLoss": 0.15 }
+}

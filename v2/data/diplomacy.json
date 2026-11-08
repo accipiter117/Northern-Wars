@@ -1,0 +1,37 @@
+{
+  "note": "Diplomacy and spies between the great powers (v2 step 7). Each ruler holds an opinion of each other power (-100 to 100) that moves `pull` of the way each month towards a target: its `start` view, plus its lore `agenda`, plus treaties, less grievances, less `atWar` while at war. Grievances: a declaration of war is `grievance.war` to the victim and `grievance.warmonger` to every other power; a city taken from a power is `grievance.city` to it; grievances fade `grievance.fade` a month. Treaties: peace ends a war (each side's occupied cities are handed back, kept ones stay); an alliance (opinion `alliance.min` or more) lets armies cross and be supplied and brings the ally into a defensive war; open borders (`openBorders.min`) lets armies cross; a trade deal (`trade.min`) gives each side `trade.crowns` a month. A power answers yes when its opinion is high enough; it takes peace when its war is going badly (war score behind by `peace.behind`) or the war has dragged on `peace.weary` months and its opinion is above `peace.hate`. The AI declares war on a power it hates (opinion below `aiWar.hate`) when it is `aiWar.ratio` times stronger, at `aiWar.chance` a month, once `aiWar.after` months have passed. Spies: each power builds a network in one realm at a time (`spies.grow` a month; others fade `spies.fade`); an army of spies in a realm's land adds `spies.agents`. Operations spend network: sabotage wears works in one city, theft takes treasury, incitement raises unrest; each risks being caught (`catchBase` less a quarter of the network), which costs `caught` opinion.",
+  "start": {
+    "temeria": { "redania": 10, "kaedwen": 0, "aedirn": 10, "nilfgaard": -30 },
+    "redania": { "temeria": 10, "kaedwen": 0, "aedirn": 5, "nilfgaard": -30 },
+    "kaedwen": { "temeria": 0, "redania": 0, "aedirn": -20, "nilfgaard": -30 },
+    "aedirn": { "temeria": 10, "redania": 5, "kaedwen": -20, "nilfgaard": -30 },
+    "nilfgaard": { "temeria": -20, "redania": -20, "kaedwen": -10, "aedirn": -20 }
+  },
+  "agendas": {
+    "temeria": { "kind": "southCrowns", "minors": ["sodden", "brugge", "verden", "cintra"], "text": "Holds the lesser crowns of the south: resents any other power that makes them its vassals." },
+    "redania": { "kind": "envoys", "text": "Knows first, strikes second: resents a rival with more envoys at the smaller courts." },
+    "kaedwen": { "kind": "strength", "text": "Trusts the sword: respects a strong army and scorns a weak one." },
+    "aedirn": { "kind": "valley", "text": "Guards the valley and the mines: hates foreign armies on its borders." },
+    "nilfgaard": { "kind": "disunity", "text": "The White Flame's long plan: hates the northern crowns standing together." }
+  },
+  "pull": 0.2,
+  "atWar": 50,
+  "grievance": { "war": 40, "warmonger": 10, "city": 6, "fade": 1 },
+  "treaties": {
+    "alliance": { "name": "Alliance", "min": 40, "opinion": 20, "text": "Our armies may cross each other's lands and be fed there, and each comes to the other's aid when attacked." },
+    "openBorders": { "name": "Open borders", "min": 10, "opinion": 5, "text": "Our armies may cross each other's lands." },
+    "trade": { "name": "Trade deal", "min": 0, "opinion": 10, "crowns": 6, "text": "Each side gains crowns a month." }
+  },
+  "peace": { "behind": 4, "weary": 18, "hate": -70 },
+  "score": { "battle": 2, "city": 3 },
+  "aiWar": { "hate": -50, "ratio": 1.5, "chance": 0.04, "after": 6 },
+  "spies": {
+    "grow": 5, "fade": 1, "agents": 3, "catchBase": 0.3, "caught": 20,
+    "ops": {
+      "sabotage": { "name": "Sabotage", "cost": 30, "text": "Wear the works of one of their cities." },
+      "steal": { "name": "Steal", "cost": 25, "share": 0.15, "max": 200, "text": "Lift crowns from their treasury." },
+      "incite": { "name": "Incite", "cost": 30, "unrest": 8, "text": "Stir their people to unrest." }
+    },
+    "aiOps": 0.15
+  }
+}

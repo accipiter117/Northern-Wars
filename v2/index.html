@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2a1d12">
+  <title>Northern Wars: the war table</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header id="bar">
+    <div class="when"><b id="date">March 1262</b><span id="turn">Turn 1</span></div>
+    <div class="stats" id="stats"></div>
+    <button type="button" id="end" class="end">End turn</button>
+  </header>
+  <main id="table-wrap">
+    <canvas id="table" aria-label="The war table"></canvas>
+    <div id="hint" class="hint">Drag a blue piece to march. Tap a place to see it.</div>
+    <div id="toast" class="toast" hidden></div>
+  </main>
+  <nav id="tools">
+    <button type="button" data-open="realm">Realm</button>
+    <button type="button" data-open="goals">Goals</button>
+    <button type="button" data-open="courts">Courts</button>
+    <button type="button" data-open="war">Diplomacy</button>
+    <button type="button" data-open="log">Reports</button>
+    <button type="button" data-open="menu">Menu</button>
+  </nav>
+  <section id="sheet" class="sheet" hidden>
+    <div class="sheet-head"><h2 id="sheet-title"></h2><button type="button" id="sheet-close" class="x" aria-label="Close">×</button></div>
+    <div id="sheet-body"></div>
+  </section>
+  <div id="loading" class="loading">Laying out the war table…</div>
+  <script type="module" src="src/ui/main.js"></script>
+</body>
+</html>

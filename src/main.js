@@ -510,6 +510,8 @@ async function boot() {
       <button type="button" data-more="export">Export save</button>
       <button type="button" data-more="import">Import save</button>
       <hr>
+      <button type="button" data-more="v2">Try the turn-based game (in progress)</button>
+      <hr>
       <button type="button" class="danger" data-more="new">Start a new reign</button>`;
   }
 
@@ -546,6 +548,11 @@ async function boot() {
 
   function menuAction(action) {
     if (!action) return;
+    // The turn-based game, being built beside this one (docs/v2).
+    if (action === 'v2') {
+      window.location.href = 'v2/';
+      return;
+    }
     if (action === 'saver-on' || action === 'saver-off') {
       prefs.batterySaver = action === 'saver-on';
       savePrefs(prefs);

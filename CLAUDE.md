@@ -3,6 +3,11 @@
 ## What this is
 A mobile-first browser kingdom simulator set in the Witcher world. Player is the crown of Temeria, governing through policy, appointments and crisis decisions, not micromanagement. Real-time with pause, Frostpunk style. Ambient units (caravans, patrols, pilgrims, refugees) move on their own and show the state of the realm. Full design: docs/DESIGN.md. Milestones: docs/ROADMAP.md.
 
+## v2 (turn-based, being built)
+- The turn-based game is built at `/v2/` beside the real-time game until it is playable end to end: design docs/v2/DESIGN.md, steps docs/v2/ROADMAP.md.
+- `v2/src/engine/` is pure (no DOM); `v2/src/ui/` draws the war table and panels; `v2/data/` holds v2's numbers. It reads the real-time game's world through `src/sim`'s loader and must not change it.
+- Tests: `test/sim/v2.test.js` (engine) and `test/smoke/v2.test.js` (browser).
+
 ## Tech
 - Vanilla JavaScript (ES modules), HTML and CSS. No framework, no bundler, no build step.
 - Served as static files by GitHub Pages from the repository root. index.html lives at the root.

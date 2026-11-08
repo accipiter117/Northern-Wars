@@ -1,0 +1,82 @@
+{
+  "note": "Goals instead of technology (v2 step 4). Each great power has two trees, arms (arms and statecraft) and faith (faith and the people), in each chapter. A goal is met when every one of its `need`s holds at the end of a month; it can be met in its own chapter or any later one. Needs: companies (total), unit {type, n}, treasury, devotion, renown, love, authority, control (every region listed), garrison (an army of ours in every region listed), regions (how many we control), pop {region, n}, vassals (how many smaller crowns we hold), envoys (placed in all), built (a unique building or wonder), capitals (other realms' capitals we hold). `unlock` gives a unit, building or wonder (uniques.json), or a `bonus` of yields a month.",
+  "chapters": [
+    { "id": "dawn", "name": "The Dawn of the Reign", "until": [1263, 5] },
+    { "id": "first", "name": "The First Northern War", "until": [1266, 12] },
+    { "id": "second", "name": "The Second Northern War", "until": [1270, 12] },
+    { "id": "third", "name": "The Third Northern War", "until": [1272, 12] }
+  ],
+  "trees": { "arms": "Arms and statecraft", "faith": "Faith and the people" },
+  "powers": {
+    "temeria": [
+      { "id": "t_host", "chapter": "dawn", "tree": "arms", "name": "Muster the crown's host", "text": "Ten companies under the lion's banner.", "need": { "companies": 10 }, "unlock": { "unit": "temerian_crossbows" } },
+      { "id": "t_pontar", "chapter": "dawn", "tree": "arms", "name": "Hold the Pontar crossings", "text": "Armies at Gors Velen, La Valette and White Bridge, where the roads cross into Redania.", "need": { "garrison": ["gors_velen", "la_valette", "white_bridge"] }, "unlock": { "building": "royal_court" } },
+      { "id": "t_granaries", "chapter": "dawn", "tree": "faith", "name": "A full treasury and a loyal people", "text": "Six hundred crowns in the treasury and Love at 60.", "need": { "treasury": 600, "love": 60 }, "unlock": { "bonus": { "crowns": 6 } } },
+      { "id": "t_melitele", "chapter": "dawn", "tree": "faith", "name": "Honour the Mother", "text": "Devotion of 60 across the realm.", "need": { "devotion": 60 }, "unlock": { "wonder": "temple_of_melitele" } },
+      { "id": "t_sodden", "chapter": "first", "tree": "arms", "name": "Prince of Sodden, Protector of Brugge", "text": "Two smaller crowns in our keeping.", "need": { "vassals": 2 }, "unlock": { "unit": "royal_knights" } },
+      { "id": "t_south", "chapter": "first", "tree": "arms", "name": "The southern march", "text": "Armies at Sodden's keep and on our own southern border at Red Fort.", "need": { "garrison": ["sodden_keep", "red_fort"] }, "unlock": { "bonus": { "production": 6 } } },
+      { "id": "t_renown", "chapter": "first", "tree": "faith", "name": "The lion's court", "text": "Renown of 250.", "need": { "renown": 250 }, "unlock": { "bonus": { "renown": 4 } } },
+      { "id": "t_vizima", "chapter": "first", "tree": "faith", "name": "Vizima the great", "text": "Vizima grows to 12,000 people.", "need": { "pop": { "region": "vizima", "n": 12000 } }, "unlock": { "bonus": { "crowns": 8 } } },
+      { "id": "t_stripes", "chapter": "second", "tree": "arms", "name": "Raise the Blue Stripes", "text": "Sixteen companies and renown of 450.", "need": { "companies": 16, "renown": 450 }, "unlock": { "unit": "blue_stripes" } },
+      { "id": "t_faithful", "chapter": "second", "tree": "faith", "name": "A realm at peace with its gods", "text": "Devotion of 300 and Authority of 50.", "need": { "devotion": 300, "authority": 50 }, "unlock": { "bonus": { "faith": 6 } } },
+      { "id": "t_crown", "chapter": "third", "tree": "arms", "name": "The lion's lands", "text": "Twenty regions under Temeria.", "need": { "regions": 20 }, "unlock": { "bonus": { "production": 10 } } },
+      { "id": "t_endure", "chapter": "third", "tree": "faith", "name": "The king lives", "text": "Vizima in our hands and Authority of 55.", "need": { "control": ["vizima"], "authority": 55 }, "unlock": { "bonus": { "renown": 8 } } }
+    ],
+    "redania": [
+      { "id": "r_host", "chapter": "dawn", "tree": "arms", "name": "Tretogor's garrison", "text": "Ten companies.", "need": { "companies": 10 }, "unlock": { "unit": "dijkstras_agents" } },
+      { "id": "r_envoys", "chapter": "dawn", "tree": "arms", "name": "Eyes in every court", "text": "Four envoys placed among the smaller crowns.", "need": { "envoys": 4 }, "unlock": { "building": "novigrad_banks" } },
+      { "id": "r_fire", "chapter": "dawn", "tree": "faith", "name": "The Eternal Fire burns", "text": "Devotion of 60.", "need": { "devotion": 60 }, "unlock": { "bonus": { "faith": 4 } } },
+      { "id": "r_learning", "chapter": "dawn", "tree": "faith", "name": "The scholars of Oxenfurt", "text": "Renown of 120.", "need": { "renown": 120 }, "unlock": { "wonder": "oxenfurt_academy" } },
+      { "id": "r_knights", "chapter": "first", "tree": "arms", "name": "The Redanian chivalry", "text": "Fourteen companies.", "need": { "companies": 14 }, "unlock": { "unit": "redanian_knights" } },
+      { "id": "r_vassal", "chapter": "first", "tree": "arms", "name": "Friends on the coast", "text": "A smaller crown in our keeping.", "need": { "vassals": 1 }, "unlock": { "bonus": { "crowns": 8 } } },
+      { "id": "r_gold", "chapter": "first", "tree": "faith", "name": "Novigrad's gold", "text": "A thousand crowns in the treasury.", "need": { "treasury": 1000 }, "unlock": { "bonus": { "renown": 4 } } },
+      { "id": "r_novigrad", "chapter": "first", "tree": "faith", "name": "The free city grows", "text": "Novigrad grows to 32,000 people.", "need": { "pop": { "region": "novigrad", "n": 32000 } }, "unlock": { "bonus": { "crowns": 6 } } },
+      { "id": "r_reach", "chapter": "second", "tree": "arms", "name": "The long arm of Tretogor", "text": "Fourteen regions.", "need": { "regions": 14 }, "unlock": { "bonus": { "production": 8 } } },
+      { "id": "r_zeal", "chapter": "second", "tree": "faith", "name": "Zeal", "text": "Devotion of 300.", "need": { "devotion": 300 }, "unlock": { "bonus": { "faith": 6 } } },
+      { "id": "r_north", "chapter": "third", "tree": "arms", "name": "A North under one crown", "text": "Two other realms' capitals in our hands.", "need": { "capitals": 2 }, "unlock": { "bonus": { "production": 12 } } },
+      { "id": "r_flame", "chapter": "third", "tree": "faith", "name": "The Fire's North", "text": "Devotion of 600.", "need": { "devotion": 600 }, "unlock": { "bonus": { "renown": 10 } } }
+    ],
+    "kaedwen": [
+      { "id": "k_host", "chapter": "dawn", "tree": "arms", "name": "Henselt's army", "text": "Twelve companies.", "need": { "companies": 12 }, "unlock": { "building": "drill_yards" } },
+      { "id": "k_horse", "chapter": "dawn", "tree": "arms", "name": "The cavalry of the north", "text": "Three companies of horse.", "need": { "unit": { "type": "horse", "n": 3 } }, "unlock": { "unit": "kaedweni_cavalry" } },
+      { "id": "k_hardy", "chapter": "dawn", "tree": "faith", "name": "A hard people", "text": "Authority of 55.", "need": { "authority": 55 }, "unlock": { "bonus": { "production": 4 } } },
+      { "id": "k_ban_ard", "chapter": "dawn", "tree": "faith", "name": "The mages of Ban Ard", "text": "Renown of 100.", "need": { "renown": 100 }, "unlock": { "wonder": "ban_ard_school" } },
+      { "id": "k_engineers", "chapter": "first", "tree": "arms", "name": "Siege trains", "text": "Sixteen companies.", "need": { "companies": 16 }, "unlock": { "unit": "siege_engineers" } },
+      { "id": "k_hengfors", "chapter": "first", "tree": "arms", "name": "The Hengfors League", "text": "A smaller crown in our keeping.", "need": { "vassals": 1 }, "unlock": { "bonus": { "production": 6 } } },
+      { "id": "k_coin", "chapter": "first", "tree": "faith", "name": "Pay the army", "text": "Eight hundred crowns in the treasury.", "need": { "treasury": 800 }, "unlock": { "bonus": { "crowns": 6 } } },
+      { "id": "k_fire", "chapter": "first", "tree": "faith", "name": "Kaedwen's faith", "text": "Devotion of 120.", "need": { "devotion": 120 }, "unlock": { "bonus": { "faith": 4 } } },
+      { "id": "k_marches", "chapter": "second", "tree": "arms", "name": "The Lower Marches", "text": "Vergen in our hands.", "need": { "control": ["vergen"] }, "unlock": { "bonus": { "production": 10 } } },
+      { "id": "k_order", "chapter": "second", "tree": "faith", "name": "Iron order", "text": "Authority of 60.", "need": { "authority": 60 }, "unlock": { "bonus": { "renown": 6 } } },
+      { "id": "k_north", "chapter": "third", "tree": "arms", "name": "The sword of the North", "text": "Twelve regions.", "need": { "regions": 12 }, "unlock": { "bonus": { "production": 12 } } },
+      { "id": "k_ard", "chapter": "third", "tree": "faith", "name": "Ard Carraigh endures", "text": "Ard Carraigh grows to 11,000 people.", "need": { "pop": { "region": "ard_carraigh", "n": 11000 } }, "unlock": { "bonus": { "crowns": 10 } } }
+    ],
+    "aedirn": [
+      { "id": "a_host", "chapter": "dawn", "tree": "arms", "name": "Guard the valley", "text": "Ten companies.", "need": { "companies": 10 }, "unlock": { "unit": "vengerberg_guard" } },
+      { "id": "a_mines", "chapter": "dawn", "tree": "arms", "name": "The mines of Upper Aedirn", "text": "Six hundred crowns in the treasury.", "need": { "treasury": 600 }, "unlock": { "building": "upper_mines" } },
+      { "id": "a_valley", "chapter": "dawn", "tree": "faith", "name": "Peace in the valley", "text": "Love of 60.", "need": { "love": 60 }, "unlock": { "bonus": { "crowns": 4 } } },
+      { "id": "a_walls", "chapter": "dawn", "tree": "faith", "name": "Vengerberg's renown", "text": "Renown of 100.", "need": { "renown": 100 }, "unlock": { "wonder": "vengerberg_walls" } },
+      { "id": "a_maulers", "chapter": "first", "tree": "arms", "name": "The maulers", "text": "Fourteen companies.", "need": { "companies": 14 }, "unlock": { "unit": "aedirnian_maulers" } },
+      { "id": "a_vergen", "chapter": "first", "tree": "arms", "name": "Hold Vergen", "text": "An army at Vergen, under the dwarves' mountains.", "need": { "garrison": ["vergen"] }, "unlock": { "bonus": { "production": 6 } } },
+      { "id": "a_dwarves", "chapter": "first", "tree": "faith", "name": "Friends under the mountain", "text": "Mahakam in our keeping.", "need": { "vassals": 1 }, "unlock": { "bonus": { "production": 6 } } },
+      { "id": "a_devotion", "chapter": "first", "tree": "faith", "name": "The old gods and the new", "text": "Devotion of 120.", "need": { "devotion": 120 }, "unlock": { "bonus": { "faith": 4 } } },
+      { "id": "a_hold", "chapter": "second", "tree": "arms", "name": "No step back", "text": "Every region of our own still ours.", "need": { "control": ["vengerberg", "vergen", "hagge", "eysenlaan", "aldersberg"] }, "unlock": { "bonus": { "production": 8 } } },
+      { "id": "a_rich", "chapter": "second", "tree": "faith", "name": "Silver from the hills", "text": "Fifteen hundred crowns in the treasury.", "need": { "treasury": 1500 }, "unlock": { "bonus": { "crowns": 8 } } },
+      { "id": "a_lyria", "chapter": "third", "tree": "arms", "name": "Avenge Lyria", "text": "Nine regions.", "need": { "regions": 9 }, "unlock": { "bonus": { "production": 10 } } },
+      { "id": "a_remember", "chapter": "third", "tree": "faith", "name": "Remembered", "text": "Renown of 500.", "need": { "renown": 500 }, "unlock": { "bonus": { "renown": 8 } } }
+    ],
+    "nilfgaard": [
+      { "id": "n_legions", "chapter": "dawn", "tree": "arms", "name": "The legions mass", "text": "Twelve companies.", "need": { "companies": 12 }, "unlock": { "unit": "nauzicaa_cavalry" } },
+      { "id": "n_roads", "chapter": "dawn", "tree": "arms", "name": "Roads to the Yaruga", "text": "Eight hundred crowns in the treasury.", "need": { "treasury": 800 }, "unlock": { "building": "imperial_roads" } },
+      { "id": "n_sun", "chapter": "dawn", "tree": "faith", "name": "The Great Sun", "text": "Devotion of 80.", "need": { "devotion": 80 }, "unlock": { "bonus": { "faith": 4 } } },
+      { "id": "n_governors", "chapter": "dawn", "tree": "faith", "name": "The Emperor's governors", "text": "Renown of 120.", "need": { "renown": 120 }, "unlock": { "wonder": "governors_palaces" } },
+      { "id": "n_cintra", "chapter": "first", "tree": "arms", "name": "Cintra falls", "text": "Cintra in our hands.", "need": { "control": ["cintra_city"] }, "unlock": { "unit": "impera_brigade" } },
+      { "id": "n_provinces", "chapter": "first", "tree": "arms", "name": "New provinces", "text": "Twelve regions.", "need": { "regions": 12 }, "unlock": { "bonus": { "production": 8 } } },
+      { "id": "n_vassals", "chapter": "first", "tree": "faith", "name": "Client kings", "text": "Two smaller crowns in our keeping.", "need": { "vassals": 2 }, "unlock": { "bonus": { "renown": 6 } } },
+      { "id": "n_order", "chapter": "first", "tree": "faith", "name": "Imperial order", "text": "Authority of 60.", "need": { "authority": 60 }, "unlock": { "bonus": { "crowns": 8 } } },
+      { "id": "n_alba", "chapter": "second", "tree": "arms", "name": "The Alba Division", "text": "Twenty companies.", "need": { "companies": 20 }, "unlock": { "unit": "alba_division" } },
+      { "id": "n_faith", "chapter": "second", "tree": "faith", "name": "The Sun rises north", "text": "Devotion of 350.", "need": { "devotion": 350 }, "unlock": { "bonus": { "faith": 6 } } },
+      { "id": "n_north", "chapter": "third", "tree": "arms", "name": "The North is the Empire's", "text": "Two northern capitals in our hands.", "need": { "capitals": 2 }, "unlock": { "bonus": { "production": 12 } } },
+      { "id": "n_flame", "chapter": "third", "tree": "faith", "name": "The White Flame's plan", "text": "Renown of 600.", "need": { "renown": 600 }, "unlock": { "bonus": { "renown": 10 } } }
+    ]
+  }
+}

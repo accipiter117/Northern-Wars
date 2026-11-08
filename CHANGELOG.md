@@ -1,5 +1,28 @@
 # Changelog
 
+## M42 Northern Wars v2: diplomacy, spies and a sharper AI
+- The Diplomacy sheet: each great power's opinion of you and why, shaped by its ruler's agenda (Foltest's southern crowns, Vizimir's envoys, Henselt's respect for strength, Demavend's valley, Emhyr's long plan). Sign alliances, open borders and trade deals, make peace, or declare war.
+- Allies come to each other's aid; peace hands back occupied places but keeps the cities you kept.
+- Spies: build a network in one court, then sabotage, steal or stir unrest, and hope not to be caught.
+- The other powers now offer you treaties and peace, make their own, go to war when they hate a weaker neighbour, and fight better: they defend what is threatened, pull hurt armies home and gather their armies together.
+
+## M41 Northern Wars v2: battles and sieges
+- Battles now have their own screen: three lanes and a reserve. Place your companies, fight round by round, commit the reserve, or sound the retreat. Ground and weather matter (horse in the open, bows on the hills, nothing much in the snow), an empty flank gets turned, and morale breaks.
+- Not in the mood? Fight it out at once, with the odds shown first.
+- Walled places are now besieged across months: starve them out as their stores run down, storm the walls, or offer terms once they are outmatched. March away to lift a siege.
+
+## M38 to M40 Northern Wars v2: cities, goals and the smaller crowns
+- Cities: give each city a focus each month (food, production, crowns or faith), mend works worn by war with production, and keep the cities you take: they yield little at first and more as they settle.
+- Goals take the place of learning: two trees a chapter for each of the five great powers. Meet them to unlock unique units (Temerian crossbowmen, the royal knights of Vizima, the Blue Stripes and their rivals' own), the Royal Court and the Temple of Melitele, and yields a month. The other powers chase their own goals too.
+- The smaller crowns: send envoys with renown, do them favours, and seal them as vassals by protection, pressure or peace terms. Vassals pay their way, open their roads and follow you to war; rivals can court them away, and a vassal that rebels faces your judgement.
+
+## M36 and M37 Northern Wars v2: the turn engine and the war table
+- A first playable piece of the turn-based Northern Wars, at /v2/ beside the real-time game: one turn a month from March 1262, on a war table of 78 provinces drawn from the traced map.
+- Drag one of your carved pieces to march: every place it can reach this month lights up. Roads are quick, open country slower, winter halves the march, and the Pontar and the Yaruga can be crossed only at their bridges.
+- Borders are closed in peace; declare war to march in. An enemy army stops you and must be fought; armies deep in enemy land waste; towns fall at once and walled places after a siege.
+- Tap a place for its food, production, crowns, faith and renown, its works and its crossings, and raise companies there. Set taxes in Realm; read the months' news in Reports; answer dilemmas at court.
+- Battles and the AI are simple stand-ins for now: the battle screen, goals, the smaller kingdoms, diplomacy and the wars' story come in the next steps.
+
 ## M35 Goods across the North
 - Sheep, looms, studs and stills are spread across the North: one open-ground village in three keeps sheep, some castles breed horses, and more towns and cities weave, distil or forge arms. Temeria now makes more cloth than it uses, and luxuries to spare to sell.
 - Towns abroad have the same, so taking a town now brings its pastures, looms and studs into your goods, not just its taxes.
