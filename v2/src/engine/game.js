@@ -6,6 +6,7 @@
 //   Step 3 (cities.js): focus, war damage and repairs, annexing and settling.
 //   Step 4 (goals.js): goals, unique units, buildings and wonders.
 //   Step 5 (minors.js): the smaller crowns as city-states.
+//   Step 6 (battle.js): the lanes battle, its odds, and sieges across turns.
 import { makeRng } from '../../../src/sim/rng.js';
 import { startingWorks } from '../../../src/sim/works.js';
 import { buildBoard, other, TEMERIA } from './board.js';
@@ -13,11 +14,12 @@ import { nameOf, say, atWar, makeWar, controller, clamp, authority, isPower } fr
 import { worksOf, condOf, damage, settled, monthlyCities, unsettledUnrest, aiAnnex, repair, repairCost } from './cities.js';
 import { chapterOf, checkGoals, companyTypes, companyDef, uniqueYields, goalBonus, aiRaise } from './goals.js';
 import { newMinors, vassalsOf, envoysPlaced, suzerainBonus, passage, vassalsFollow, monthlyMinors, aiMinors, judge } from './minors.js';
+import { setupBattle, runToEnd, battleOdds, applyBattle, fightRound, soundRetreat, autoPlace } from './battle.js';
 
 export { nameOf, atWar, controller, authority };
 
 export const SAVE_FORMAT = 'northern-wars-v2';
-export const VERSION = 2;
+export const VERSION = 3;
 
 // ---- The world as the game sees it ----
 
@@ -64,7 +66,7 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   const state = {
     version: VERSION, seed, rng: seed >>> 0, turn: 0, player,
     realms, cities, armies: [], nextArmy: 1, wars: [], dilemma: null, log: [], over: null,
-    minors: newMinors(table, realms), built: {}, judgement: null,
+    minors: newMinors(table, realms), built: {}, judgement: null, battle: null,
   };
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
@@ -236,48 +238,158 @@ export function strength(table, army, state = null, defending = null) {
   return s;
 }
 
-// Move an army; a march into an enemy army is a battle.
-export function moveArmy(state, table, armyId, dest) {
+// Move an army; a march into an enemy army is a battle. The player's
+// battles wait in state.battle to be fought on the battle screen
+// (`interactive`); everyone else's are fought out at once.
+export function moveArmy(state, table, armyId, dest, { interactive = false } = {}) {
   const army = state.armies.find((a) => a.id === armyId);
   if (!army) return { error: 'No such army.' };
   if (state.over) return { error: 'The war is over.' };
+  if (state.battle) return { error: 'A battle is still to be fought.' };
   const reach = reachable(state, table, army);
   if (!reach[dest]) return { error: 'It cannot reach there this turn.' };
   const from = army.region;
-  const foe = enemyArmyAt(state, dest, army.owner);
   army.points -= reach[dest].cost;
-  if (foe) {
+  if (enemyArmyAt(state, dest, army.owner)) {
     // The army halts at the step before and fights for the region.
     const path = pathTo(reach, from, dest);
     army.region = path.length > 1 ? path[path.length - 2] : from;
-    const won = battle(state, table, army, foe, dest);
-    if (won && state.armies.includes(army) && !enemyArmyAt(state, dest, army.owner)) army.region = dest;
     army.points = 0;
-    return { battle: true, won };
+    const b = setupBattle(state, table, battleSides(state, table, army, dest));
+    if (interactive) {
+      state.battle = b;
+      return { battle: 'pending' };
+    }
+    const rng = makeRng(state.rng);
+    runToEnd(table, b, rng);
+    state.rng = rng.seed;
+    return { battle: true, won: finishBattle(state, table, b) };
   }
   army.region = dest;
   return { moved: true };
 }
 
-// The stand-in battle (until step 6): odds by strength, losses, and the
-// loser falls back to a friendly region next door, or is broken.
-export function battle(state, table, att, def, region) {
-  const b = table.data.game.battle;
-  const rng = makeRng(state.rng);
-  const sa = strength(table, att);
-  const sd = strength(table, def, state, region);
-  const p = Math.min(0.95, Math.max(0.05, 0.5 + b.swing * ((sa - sd) / Math.max(sa, sd, 0.1))));
-  const won = rng.next() < p;
-  state.rng = rng.seed;
-  const [w, l] = won ? [att, def] : [def, att];
-  for (const c of w.companies) c.str = Math.max(1, Math.round(c.str * (1 - b.winnerLoss)));
-  for (const c of l.companies) c.str = Math.round(c.str * (1 - b.loserLoss));
-  l.companies = l.companies.filter((c) => c.str >= 10);
-  damage(state, table, region, table.data.game.cities.damage.battle, 1);
-  say(state, `Battle at ${table.board.regions[region].name}: ${nameOf(table, w.owner)} beats ${nameOf(table, l.owner)}.`);
-  if (l === def) retreat(state, table, def);
-  if (!l.companies.length) state.armies = state.armies.filter((a) => a !== l);
+function battleSides(state, table, army, region) {
+  const defenders = state.armies.filter((a) => a.region === region && atWar(state, a.owner, army.owner));
+  return { attackers: [army], defenders, region, month: dateOf(table, state.turn).month };
+}
+
+// The odds of a march into an enemy army, for the player to weigh.
+export function marchOdds(state, table, armyId, dest) {
+  const army = state.armies.find((a) => a.id === armyId);
+  if (!army || !enemyArmyAt(state, dest, army.owner)) return null;
+  return battleOdds(state, table, battleSides(state, table, army, dest));
+}
+
+// A finished battle: losses written back, the beaten defenders fall back,
+// victorious attackers take the field, and a stormed city falls.
+export function finishBattle(state, table, b) {
+  const won = applyBattle(state, table, b);
+  damage(state, table, b.region, table.data.game.cities.damage.battle, 1);
+  const att = b.sides[0];
+  if (b.storm) {
+    if (won) take(state, table, att.owner, b.region, 'storm');
+  } else if (won) {
+    for (const id of b.sides[1].armies) {
+      const d = state.armies.find((a) => a.id === id);
+      if (d) retreat(state, table, d);
+    }
+    state.armies = state.armies.filter((a) => a.companies.length);
+    if (!enemyArmyAt(state, b.region, att.owner)) for (const id of att.armies) { const a = state.armies.find((x) => x.id === id); if (a) a.region = b.region; }
+  }
+  if (state.battle === b) state.battle = null;
   return won;
+}
+
+// The player's battle, round by round.
+export function battleRound(state, table) {
+  if (!state.battle) return null;
+  const rng = makeRng(state.rng);
+  fightRound(table, state.battle, rng);
+  state.rng = rng.seed;
+  return state.battle;
+}
+export function battleAuto(state, table) {
+  if (!state.battle) return null;
+  const rng = makeRng(state.rng);
+  while (!state.battle.over) fightRound(table, state.battle, rng);
+  state.rng = rng.seed;
+  return state.battle;
+}
+export function battleRetreat(state, table) {
+  if (state.battle) soundRetreat(table, state.battle, state.battle.sides[0].owner === state.player ? 0 : 1);
+  return state.battle;
+}
+
+// The stand-in battle of steps 1 and 2, kept for anything that still asks
+// for one: now the lanes battle, fought out.
+export function battle(state, table, att, def, region) {
+  const b = setupBattle(state, table, { attackers: [att], defenders: [def], region, month: dateOf(table, state.turn).month });
+  const rng = makeRng(state.rng);
+  runToEnd(table, b, rng);
+  state.rng = rng.seed;
+  return finishBattle(state, table, b);
+}
+
+// ---- Sieges ----
+
+const garrisonOf = (table, region) => table.data.battle.garrison[table.board.regions[region].type] ?? ['foot'];
+
+function take(state, table, rid, region, how) {
+  const c = state.cities[region];
+  const dmg = table.data.game.cities.damage;
+  c.holder = c.owner === rid ? null : rid;
+  c.siege = null;
+  c.heldFor = 0;
+  damage(state, table, region, how === 'terms' ? dmg.capture / 2 : dmg.capture);
+  const verb = { storm: 'storms and takes', starve: 'starves out', terms: 'takes on terms', march: 'takes' }[how] ?? 'takes';
+  say(state, `${nameOf(table, rid)} ${verb} ${table.board.regions[region].name}.`);
+}
+
+const besiegers = (state, rid, region) => state.armies.filter((a) => a.owner === rid && a.region === region);
+
+// May a besieger offer terms: it outnumbers the garrison, or the stores are
+// nearly gone.
+export function termsOpen(state, table, rid, region) {
+  const c = state.cities[region];
+  if (c.siege?.by !== rid) return false;
+  const ours = besiegers(state, rid, region).reduce((n, a) => n + strength(table, a), 0);
+  const theirs = garrisonOf(table, region).length * table.data.battle.walls;
+  return ours >= theirs * table.data.battle.termsRatio || c.store <= table.data.battle.termsStores;
+}
+
+export function offerTerms(state, table, rid, region) {
+  if (!termsOpen(state, table, rid, region)) return { error: 'They will not yield yet.' };
+  take(state, table, rid, region, 'terms');
+  return { ok: true };
+}
+
+// Storm the walls: a battle against the garrison behind them.
+export function storm(state, table, rid, region, { interactive = false } = {}) {
+  const c = state.cities[region];
+  const ours = besiegers(state, rid, region);
+  if (c.siege?.by !== rid || !ours.length) return { error: 'We are not besieging it.' };
+  if (state.battle) return { error: 'A battle is still to be fought.' };
+  const b = setupBattle(state, table, { attackers: ours, defenders: [], region, month: dateOf(table, state.turn).month, storm: true });
+  b.sides[0].armies = ours.map((a) => a.id);
+  b.sides[0].comps = ours.flatMap((a) => a.companies.map((k, i) => ({ key: `${a.id}-${i}`, army: a.id, idx: i, type: k.type, str: k.str })));
+  b.sides[0].start = b.sides[0].comps.reduce((n, k) => n + k.str, 0);
+  autoPlace(table, b, 0);
+  for (const a of ours) a.points = 0;
+  if (interactive) {
+    state.battle = b;
+    return { battle: 'pending' };
+  }
+  const rng = makeRng(state.rng);
+  runToEnd(table, b, rng);
+  state.rng = rng.seed;
+  return { battle: true, won: finishBattle(state, table, b) };
+}
+
+export function stormOdds(state, table, rid, region) {
+  const ours = besiegers(state, rid, region);
+  if (!ours.length) return null;
+  return battleOdds(state, table, { attackers: ours, defenders: [], region, month: dateOf(table, state.turn).month, storm: true });
 }
 
 function retreat(state, table, army) {
@@ -335,17 +447,32 @@ function finishSide(state, table, rid) {
       continue;
     }
     if (!atWar(state, rid, controller(state, a.region)) || c.holder === rid) continue;
-    const engines = state.armies.some((x) => x.owner === rid && x.region === a.region && x.companies.some((k) => companyDef(table, k.type).siege));
-    const need = table.data.board.siege.walledTurns - (engines ? 1 : 0);
-    c.siege = c.siege?.by === rid ? { by: rid, turns: c.siege.turns + 1 } : { by: rid, turns: 1 };
-    if (!walled(table, a.region) || c.siege.turns >= need) {
-      c.holder = c.owner === rid ? null : rid;
-      c.siege = null;
-      c.heldFor = 0;
-      damage(state, table, a.region, dmg.capture);
-      say(state, `${nameOf(table, rid)} takes ${table.board.regions[a.region].name}.`);
-    } else damage(state, table, a.region, dmg.siege, 2);
+    if (c.siege?.by === rid && c.siege.turn === state.turn) continue; // one army's siege a month is enough
+    // An open town falls at once.
+    if (!walled(table, a.region)) {
+      take(state, table, rid, a.region, 'march');
+      continue;
+    }
+    // A walled place is besieged: it eats its stores and its works are worn.
+    c.siege = c.siege?.by === rid ? { by: rid, turns: c.siege.turns + 1, turn: state.turn } : { by: rid, turns: 1, turn: state.turn };
+    c.store -= (c.pop / 1000) * table.data.game.eat;
+    damage(state, table, a.region, dmg.siege, 2);
+    if (c.store <= 0) {
+      c.store = 0;
+      take(state, table, rid, a.region, 'starve');
+    } else if (rid !== state.player) aiSiege(state, table, rid, a.region);
   }
+  // A siege with no besieger left is lifted.
+  for (const c of Object.values(state.cities)) if (c.siege?.by === rid && !state.armies.some((x) => x.owner === rid && state.cities[x.region] === c)) c.siege = null;
+}
+
+// The AI storms when it is strong enough, offers terms when it may, and
+// otherwise starves the place out.
+function aiSiege(state, table, rid, region) {
+  const ours = besiegers(state, rid, region).reduce((n, a) => n + strength(table, a), 0);
+  const theirs = garrisonOf(table, region).length * table.data.battle.walls;
+  if (termsOpen(state, table, rid, region)) offerTerms(state, table, rid, region);
+  else if (ours >= theirs * table.data.battle.aiStorm) storm(state, table, rid, region);
 }
 
 // ---- The AI's moves (a placeholder until step 7) ----
@@ -423,7 +550,7 @@ function month(state, table) {
     realm.renown += y.renown;
     let hungry = 0;
     for (const [id, c] of Object.entries(state.cities)) {
-      if (c.owner !== rid || c.holder) continue;
+      if (c.owner !== rid || c.holder || c.siege) continue; // a besieged city eats from its stores (see finishSide)
       c.store += cityYields(state, table, id).food - (c.pop / 1000) * g.eat;
       if (c.store < 0) {
         hungry += 1;
@@ -491,6 +618,7 @@ export function endTurn(state, table) {
   // An unanswered dilemma takes its default; an unjudged rebel is deposed.
   if (state.dilemma) answerDilemma(state, table, table.world.dilemmas.dilemmas[state.dilemma.id]?.default ?? 0);
   if (state.judgement) judge(state, table, state.judgement.by, state.judgement.minor, 'depose');
+  if (state.battle) { battleAuto(state, table); finishBattle(state, table, state.battle); }
   finishSide(state, table, state.player);
   // The other great powers, in order, then the lesser crowns hold.
   for (const rid of table.data.game.powers) {
@@ -532,6 +660,11 @@ export function deserialize(text, table = null) {
     s.judgement ??= null;
     if (table) s.minors ??= newMinors(table, s.realms);
     s.version = 2;
+  }
+  // Version 2 gains the battle in hand (none) and siege stores as they are.
+  if ((data.version ?? 1) < 3) {
+    s.battle ??= null;
+    s.version = 3;
   }
   return s;
 }

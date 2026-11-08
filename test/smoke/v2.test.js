@@ -101,6 +101,44 @@ test('goals, the smaller crowns and a city\'s focus (portrait)', async () => {
   await context.close();
 });
 
+test('the battle screen: place companies in lanes, fight a round, fight it out', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  await page.evaluate(() => localStorage.removeItem('northern-wars.v2.save'));
+  await page.reload();
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  // War with Redania, and a Redanian army just over the Pontar in our reach.
+  const target = await page.evaluate(() => {
+    const { app } = window.northernWarsV2;
+    const s = app.state;
+    s.wars.push('redania|temeria');
+    const a = s.armies.find((x) => x.owner === 'temeria' && x.region === 'vizima');
+    app.select({ army: a.id });
+    const t = Object.keys(app.selected.reach).find((id) => s.cities[id].owner === 'redania');
+    s.armies.push({ id: 999, owner: 'redania', region: t, companies: [{ type: 'foot', str: 100 }, { type: 'bow', str: 100 }], points: 0 });
+    app.select(null);
+    app.march(a.id, t);
+    return t;
+  });
+  assert.ok(target);
+  await page.waitForSelector('.lanes');
+  assert.match(await page.textContent('#sheet'), /Battle at[\s\S]*Left[\s\S]*Centre[\s\S]*Right[\s\S]*Reserve[\s\S]*to win/);
+  // Move a company to the right lane.
+  const chip = await page.$('[data-chip]');
+  await chip.click();
+  await page.click('[data-lane="right"]');
+  await page.screenshot({ path: join(OUT, 'v2-portrait-battle.png') });
+  await page.click('[data-b="round"]');
+  assert.match(await page.textContent('#sheet'), /Round 1:/);
+  await page.click('[data-b="auto"]');
+  await page.waitForSelector('[data-b="done"]');
+  assert.match(await page.textContent('#sheet'), /Victory|Defeat/);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-battle-over.png') });
+  await page.click('[data-b="done"]');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.battle), null);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');

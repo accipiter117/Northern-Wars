@@ -1,0 +1,28 @@
+{
+  "note": "Battles (v2 step 6). A field of three lanes and a reserve. Each side places its companies; over up to `rounds` rounds each lane fights: a side's lane power is the sum of its companies' strength times power, times the terrain and weather for their kind. Each company loses `loss` x the enemy lane's power / its own lane's power (at most `maxLoss`) a round; a lane left empty lets the enemy turn the flank, adding `flank` of that lane's power to the centre. Morale falls with losses (`morale` per point of strength lost, as a share of the side's whole) and breaks below `rout`. Between rounds the reserve can be committed to a lane; a side can sound the retreat (losing `retreatLoss` more). The side with more power and morale left wins. Sieges: walled places have a garrison by kind; a besieged city eats its stores and falls when they run out; it can be stormed (its garrison fights behind walls, `walls` stronger), or offered terms when the besiegers are `termsRatio` times its garrison or its stores are nearly gone.",
+  "rounds": 3,
+  "loss": 14,
+  "maxLoss": 45,
+  "flank": 0.5,
+  "morale": 1.1,
+  "rout": 25,
+  "retreatLoss": 10,
+  "kinds": { "foot": "foot", "bow": "bow", "horse": "horse", "temerian_crossbows": "bow", "royal_knights": "horse", "blue_stripes": "foot", "redanian_knights": "horse", "dijkstras_agents": "foot", "kaedweni_cavalry": "horse", "siege_engineers": "foot", "aedirnian_maulers": "foot", "vengerberg_guard": "foot", "impera_brigade": "foot", "nauzicaa_cavalry": "horse", "alba_division": "foot" },
+  "terrain": {
+    "open": { "horse": 1.25 },
+    "forest": { "horse": 0.6, "bow": 0.8 },
+    "hills": { "bow": 1.2, "horse": 0.85 },
+    "marsh": { "horse": 0.5, "foot": 0.85 },
+    "mountains": { "horse": 0.5, "bow": 1.15 }
+  },
+  "weather": {
+    "winter": { "months": [12, 1, 2], "name": "snow", "bow": 0.8, "horse": 0.8 },
+    "rain": { "months": [4, 10, 11], "name": "rain", "bow": 0.85 }
+  },
+  "garrison": { "city": ["foot", "foot", "bow"], "castle": ["foot", "bow", "bow"], "town": ["foot"] },
+  "walls": 1.5,
+  "termsRatio": 3,
+  "termsStores": 5,
+  "aiStorm": 2,
+  "oddsSamples": 24
+}

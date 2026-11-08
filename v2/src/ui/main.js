@@ -4,8 +4,10 @@ import { loadTable } from '../engine/load.js';
 import {
   createGame, endTurn, moveArmy, recruit, declareWar, atWar, reachable, controller, cityYields, realmYields,
   authority, riots, dateOf, monthName, nameOf, strength, dilemmaView, answerDilemma, serialize, deserialize, movePoints,
-  companyCost, chapterNow, goalContext, realmBonus,
+  companyCost, chapterNow, goalContext, realmBonus, finishBattle, battleRound, battleAuto, battleRetreat,
+  termsOpen, offerTerms, storm, stormOdds,
 } from '../engine/game.js';
+import { placeCompany, oddsNow } from '../engine/battle.js';
 import { repair, repairCost, setFocus, annex, worksOf, condOf } from '../engine/cities.js';
 import { goalsOf, goalStatus, unlockName, companyTypes, companyDef, buildable, raise } from '../engine/goals.js';
 import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge, vassalsOf } from '../engine/minors.js';
@@ -48,9 +50,13 @@ const app = {
     view.draw();
   },
   march(armyId, region) {
-    const r = moveArmy(app.state, table, armyId, region);
+    const r = moveArmy(app.state, table, armyId, region, { interactive: true });
     if (r.error) toast(r.error);
-    else if (r.battle) toast(app.state.log.at(-1)?.text ?? 'Battle.');
+    if (r.battle === 'pending') {
+      save();
+      refresh();
+      return showBattle();
+    }
     save();
     app.select({ army: armyId });
     if (!app.state.armies.some((a) => a.id === armyId)) app.select(null);
@@ -91,13 +97,20 @@ const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
 
 // ---- Sheets ----
 function openSheet(title, html) {
+  $('sheet').classList.remove('battle');
   $('sheet-title').textContent = title;
   $('sheet-body').innerHTML = html;
   $('sheet').hidden = false;
   $('hint').hidden = true;
 }
 function closeSheet() { $('sheet').hidden = true; }
-$('sheet-close').addEventListener('click', () => { app.selected = null; closeSheet(); view.draw(); });
+$('sheet-close').addEventListener('click', () => {
+  // A battle cannot be walked away from: it is fought out.
+  if (app.state.battle) { battleAuto(app.state, table); return showBattle(); }
+  app.selected = null;
+  closeSheet();
+  view.draw();
+});
 
 function yieldsHtml(y) {
   const cell = (label, v) => `<div>${label}<b>${Math.round(v)}</b></div>`;
@@ -136,6 +149,11 @@ function showRegion(id) {
     }).join('')}</div>`;
   }
   if (c.holder === s.player) acts += `<div class="row"><span>We hold it. Keep it, and it becomes ours, sullen at first.</span><button type="button" class="act" data-annex>Keep it</button></div>`;
+  if (c.siege?.by === s.player) {
+    const odds = Math.round((stormOdds(s, table, s.player, id) ?? 0) * 100);
+    acts += `<h3>The siege</h3><p class="sub">Its stores last about ${Math.max(0, Math.floor(c.store / Math.max(0.1, (c.pop / 1000) * g.eat)))} more months. Starve it out, storm the walls, or offer terms; march away to lift the siege.</p>
+      <div class="seg wrap"><button type="button" class="act war" data-storm>Storm the walls (${odds}% to win)</button>${termsOpen(s, table, s.player, id) ? '<button type="button" class="act" data-terms>Offer terms</button>' : ''}</div>`;
+  }
   openSheet(r.name, `
     <p class="sub">${esc(kind[0].toUpperCase() + kind.slice(1))}.${esc(owner)} ${Math.round(c.pop).toLocaleString('en-GB')} people.${ctl !== s.player && atWar(s, s.player, ctl) ? ' At war with us.' : ''}</p>
     ${held}${siege}${settling}
@@ -149,6 +167,14 @@ function showRegion(id) {
   act('[data-repair]', () => repair(s, table, s.player, id));
   act('[data-raise]', (b) => raise(s, table, s.player, b.dataset.raise));
   act('[data-annex]', () => annex(s, table, s.player, id));
+  act('[data-terms]', () => offerTerms(s, table, s.player, id));
+  for (const el of document.querySelectorAll('[data-storm]')) el.addEventListener('click', () => {
+    const out = storm(s, table, s.player, id, { interactive: true });
+    if (out.error) return toast(out.error);
+    save();
+    refresh();
+    showBattle();
+  });
 }
 
 function showArmy(a) {
@@ -265,7 +291,7 @@ function showLog() {
 
 function showMenu() {
   openSheet('Menu', `
-    <p class="sub">This is the turn-based Northern Wars, being built in steps. The board, turns, cities, goals and the smaller crowns are in; the battle screen, diplomacy and the wars' story come next.</p>
+    <p class="sub">This is the turn-based Northern Wars, being built in steps. The board, turns, cities, goals, the smaller crowns and battles are in; diplomacy, the wars' story and the endings come next.</p>
     <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act" id="new-game">New game</button></div>
     <div class="row"><span>The real-time game</span><a class="act" style="display:inline-grid;place-items:center;text-decoration:none" href="../">Open</a></div>`);
   $('new-game').addEventListener('click', () => {
@@ -275,6 +301,76 @@ function showMenu() {
     refresh();
     toast('A new reign begins in March 1262.');
   });
+}
+
+// ---- The battle screen (step 6) ----
+let picked = null;
+function showBattle() {
+  const s = app.state;
+  const b = s.battle;
+  if (!b) return;
+  const me = b.sides[0].owner === s.player ? 0 : 1;
+  const them = 1 - me;
+  const r = table.board.regions[b.region];
+  const bcfg = table.data.battle;
+  const chip = (side, key) => {
+    const c = b.sides[side].comps.find((x) => x.key === key);
+    const d = companyDef(table, c.type);
+    const mine = side === me;
+    return `<button type="button" class="chip${mine ? ' mine' : ''}${picked === key ? ' picked' : ''}" ${mine && !b.over ? `data-chip="${key}"` : 'disabled'} style="--c:${table.colours[b.sides[side].owner]?.[0] ?? '#777'}">${esc(d.name)}<small>${c.str}%</small></button>`;
+  };
+  const lane = (l) => `<div class="lane" data-lane="${l}"><div class="lane-name">${l[0].toUpperCase() + l.slice(1)}</div>
+    <div class="foe">${b.sides[them].lanes[l].map((k) => chip(them, k)).join('') || '<small class="sub">empty</small>'}</div>
+    <div class="ours">${b.sides[me].lanes[l].map((k) => chip(me, k)).join('') || '<small class="sub">empty</small>'}</div></div>`;
+  const odds = b.over ? null : Math.round(oddsNow(table, b, s.rng) * 100);
+  const ourOdds = odds === null ? null : (me === 0 ? odds : 100 - odds);
+  const weather = b.weather ? `, in ${bcfg.weather[b.weather].name}` : '';
+  const title = b.storm ? `Storming ${r.name}` : `Battle at ${r.name}`;
+  const result = b.over ? `<p class="result">${b.over.winner === me ? 'Victory' : 'Defeat'}${b.over.reason === 'rout' ? ': the enemy broke' : b.over.reason === 'retreat' ? ': a retreat' : ''}.</p>` : '';
+  openSheet(title, `
+    <p class="sub">${esc(nameOf(table, b.sides[0].owner))} against ${esc(nameOf(table, b.sides[1].owner))}, on ${esc(b.terrain)} ground${esc(weather)}${b.fort > 1 ? ', behind walls' : ''}. Round ${b.round} of ${bcfg.rounds}.</p>
+    <div class="morale"><span>Our morale ${b.sides[me].morale}</span><span>Theirs ${b.sides[them].morale}</span></div>
+    <p class="sub">${b.round === 0 ? 'Tap one of our companies, then a lane, to place it. Horse is strong on open ground and poor in woods and marsh; an empty flank lets the enemy turn it.' : 'Tap a company in reserve, then a lane, to commit it.'}</p>
+    <div class="lanes">${['left', 'centre', 'right'].map(lane).join('')}</div>
+    <div class="lane reserve" data-lane="reserve"><div class="lane-name">Reserve</div><div class="ours">${b.sides[me].lanes.reserve.map((k) => chip(me, k)).join('') || '<small class="sub">none</small>'}</div></div>
+    ${b.log.length ? `<div class="log">${b.log.map((l) => `<p>${esc(l)}</p>`).join('')}</div>` : ''}
+    ${result}
+    <div class="seg wrap">${b.over ? '<button type="button" class="act" data-b="done">Done</button>' : `
+      <button type="button" class="act" data-b="round">Fight a round</button>
+      <button type="button" class="act" data-b="auto">Fight it out (${ourOdds}% to win)</button>
+      <button type="button" class="act war" data-b="retreat">Sound the retreat</button>`}</div>`);
+  $('sheet').classList.add('battle');
+  for (const el of document.querySelectorAll('[data-chip]')) {
+    el.addEventListener('click', (e) => { e.stopPropagation(); picked = picked === el.dataset.chip ? null : el.dataset.chip; showBattle(); });
+  }
+  for (const el of document.querySelectorAll('[data-lane]')) {
+    el.addEventListener('click', () => {
+      if (!picked) return;
+      placeCompany(b, me, picked, el.dataset.lane);
+      picked = null;
+      save();
+      showBattle();
+    });
+  }
+  for (const el of document.querySelectorAll('[data-b]')) {
+    el.addEventListener('click', () => {
+      const k = el.dataset.b;
+      picked = null;
+      if (k === 'round') battleRound(s, table);
+      if (k === 'auto') battleAuto(s, table);
+      if (k === 'retreat') battleRetreat(s, table);
+      if (k === 'done') {
+        finishBattle(s, table, b);
+        $('sheet').classList.remove('battle');
+        save();
+        app.select(null);
+        refresh();
+        return;
+      }
+      save();
+      showBattle();
+    });
+  }
 }
 
 function showDilemma() {
@@ -314,5 +410,6 @@ $('end').addEventListener('click', () => {
 
 refresh();
 $('loading').hidden = true;
-if (app.state.judgement) showJudgement();
+if (app.state.battle) showBattle();
+else if (app.state.judgement) showJudgement();
 else if (app.state.dilemma) showDilemma();

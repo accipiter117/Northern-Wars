@@ -7,6 +7,5 @@
     "ferries": []
   },
   "moves": { "points": 3, "road": 1, "open": 2, "stream": 1, "winterMonths": [12, 1, 2] },
-  "supply": { "heal": 5, "attrition": 8 },
-  "siege": { "walledTurns": 2 }
+  "supply": { "heal": 5, "attrition": 8 }
 }

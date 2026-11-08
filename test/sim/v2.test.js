@@ -365,3 +365,117 @@ test('a version 1 save gains the new parts', () => {
   assert.ok(up.minors.sodden && up.built && up.cities.vizima.focus === 'balanced');
   endTurn(up, table);
 });
+
+// ---- Step 6: battles and sieges ----
+
+import { setupBattle, autoPlace, placeCompany, fightRound, soundRetreat, lanePower, oddsNow } from '../../v2/src/engine/battle.js';
+import { finishBattle, battleAuto, marchOdds, storm, termsOpen, offerTerms, stormOdds } from '../../v2/src/engine/game.js';
+import { makeRng } from '../../src/sim/rng.js';
+
+const armyAt = (s, owner, region, types) => {
+  const a = { id: s.nextArmy++, owner, region, companies: types.map((type) => ({ type, str: 100 })), points: 3 };
+  s.armies.push(a);
+  return a;
+};
+
+test('the lanes: horse is strong in the open and poor in the woods; an empty flank is turned', () => {
+  const s = fresh();
+  const att = armyAt(s, 'temeria', 'vizima', ['horse', 'horse']);
+  const def = armyAt(s, 'redania', 'vizima', ['foot', 'foot']);
+  const open = setupBattle(s, table, { attackers: [att], defenders: [def], region: 'vizima', month: 6 });
+  const woods = { ...open, terrain: 'forest' };
+  autoPlace(table, open, 0);
+  assert.ok(lanePower(table, open, 0, 'left') > lanePower(table, woods, 0, 'left'));
+  // All of our horse in the centre: both enemy flanks... and ours left empty.
+  const b = setupBattle(s, table, { attackers: [att], defenders: [def], region: 'vizima', month: 6 });
+  for (const c of b.sides[0].comps) placeCompany(b, 0, c.key, 'centre');
+  const before = b.sides[0].lanes.centre.length;
+  fightRound(table, b, makeRng(1));
+  assert.equal(b.round, 1);
+  assert.ok(b.sides[0].lanes.centre.length <= before);
+  assert.ok(b.log[0].startsWith('Round 1'));
+  // After the first round only the reserve may move.
+  assert.equal(placeCompany(b, 0, b.sides[0].lanes.centre[0], 'left'), false);
+});
+
+test('a battle ends in a rout, at the last round, or a retreat; odds are a share', () => {
+  const s = fresh();
+  const att = armyAt(s, 'temeria', 'vizima', ['foot', 'foot', 'bow', 'horse']);
+  const def = armyAt(s, 'redania', 'vizima', ['foot']);
+  const b = setupBattle(s, table, { attackers: [att], defenders: [def], region: 'vizima', month: 6 });
+  autoPlace(table, b, 0);
+  const odds = oddsNow(table, b, 5);
+  assert.ok(odds > 0.5 && odds <= 1, `strong side odds ${odds}`);
+  const rng = makeRng(3);
+  while (!b.over) fightRound(table, b, rng);
+  assert.ok(['rout', 'field'].includes(b.over.reason));
+  const r = setupBattle(s, table, { attackers: [att], defenders: [def], region: 'vizima', month: 6 });
+  soundRetreat(table, r, 0);
+  assert.deepEqual(r.over, { winner: 1, reason: 'retreat' });
+});
+
+test('the player\'s march into an enemy army waits on the battle screen, then is written back', () => {
+  const s = fresh();
+  declareWar(s, table, 'temeria', 'redania');
+  const a = armyOf(s, 'temeria', 'vizima');
+  const reach = reachable(s, table, a);
+  const target = Object.keys(reach).find((id) => s.cities[id].owner === 'redania');
+  const foe = armyAt(s, 'redania', target, ['foot']);
+  const odds = marchOdds(s, table, a.id, target);
+  assert.ok(odds >= 0 && odds <= 1);
+  const out = moveArmy(s, table, a.id, target, { interactive: true });
+  assert.equal(out.battle, 'pending');
+  assert.ok(s.battle && s.battle.region === target);
+  assert.ok(moveArmy(s, table, a.id, target).error, 'one battle at a time');
+  battleAuto(s, table);
+  const won = finishBattle(s, table, s.battle);
+  assert.equal(s.battle, null);
+  if (won) assert.ok(!s.armies.includes(foe) || foe.region !== target);
+  // A battle left unfought is fought out at the end of the turn.
+  const s2 = fresh();
+  declareWar(s2, table, 'temeria', 'redania');
+  const a2 = armyOf(s2, 'temeria', 'vizima');
+  armyAt(s2, 'redania', target, ['foot']);
+  moveArmy(s2, table, a2.id, target, { interactive: true });
+  endTurn(s2, table);
+  assert.equal(s2.battle, null);
+});
+
+test('sieges: a walled city eats its stores and is starved out, or stormed, or yields on terms', () => {
+  const s = fresh();
+  declareWar(s, table, 'temeria', 'redania');
+  s.armies = s.armies.filter((a) => a.owner !== 'redania');
+  const city = 'tretogor';
+  const a = armyAt(s, 'temeria', city, ['foot']);
+  s.cities[city].store = 12;
+  endTurn(s, table);
+  assert.equal(s.cities[city].siege?.by, 'temeria');
+  assert.ok(s.cities[city].store < 12, 'it eats its stores');
+  assert.equal(controller(s, city), 'redania');
+  let n = 0;
+  while (controller(s, city) !== 'temeria' && n++ < 6) endTurn(s, table);
+  assert.equal(controller(s, city), 'temeria', 'starved out');
+  // Storming: odds, then the garrison fights behind its walls.
+  const s2 = fresh();
+  declareWar(s2, table, 'temeria', 'redania');
+  s2.armies = s2.armies.filter((x) => x.owner !== 'redania');
+  armyAt(s2, 'temeria', 'novigrad', ['foot', 'foot', 'foot', 'bow', 'horse', 'horse']);
+  endTurn(s2, table);
+  const odds = stormOdds(s2, table, 'temeria', 'novigrad');
+  assert.ok(odds > 0);
+  const out = storm(s2, table, 'temeria', 'novigrad');
+  assert.ok(out.battle);
+  if (out.won) assert.equal(controller(s2, 'novigrad'), 'temeria');
+  // Terms: when the besiegers outnumber the garrison three to one.
+  const s3 = fresh();
+  declareWar(s3, table, 'temeria', 'redania');
+  s3.armies = s3.armies.filter((x) => x.owner !== 'redania');
+  armyAt(s3, 'temeria', 'drakenborg', ['foot', 'foot', 'foot', 'foot', 'horse', 'horse', 'horse', 'horse']);
+  armyAt(s3, 'temeria', 'drakenborg', ['horse', 'horse', 'horse', 'horse', 'horse', 'horse']);
+  endTurn(s3, table);
+  if (controller(s3, 'drakenborg') !== 'temeria') {
+    assert.ok(termsOpen(s3, table, 'temeria', 'drakenborg'));
+    assert.ok(offerTerms(s3, table, 'temeria', 'drakenborg').ok);
+    assert.equal(controller(s3, 'drakenborg'), 'temeria');
+  }
+});

@@ -1,5 +1,10 @@
 # Changelog
 
+## M41 Northern Wars v2: battles and sieges
+- Battles now have their own screen: three lanes and a reserve. Place your companies, fight round by round, commit the reserve, or sound the retreat. Ground and weather matter (horse in the open, bows on the hills, nothing much in the snow), an empty flank gets turned, and morale breaks.
+- Not in the mood? Fight it out at once, with the odds shown first.
+- Walled places are now besieged across months: starve them out as their stores run down, storm the walls, or offer terms once they are outmatched. March away to lift a siege.
+
 ## M38 to M40 Northern Wars v2: cities, goals and the smaller crowns
 - Cities: give each city a focus each month (food, production, crowns or faith), mend works worn by war with production, and keep the cities you take: they yield little at first and more as they settle.
 - Goals take the place of learning: two trees a chapter for each of the five great powers. Meet them to unlock unique units (Temerian crossbowmen, the royal knights of Vizima, the Blue Stripes and their rivals' own), the Royal Court and the Temple of Melitele, and yields a month. The other powers chase their own goals too.
