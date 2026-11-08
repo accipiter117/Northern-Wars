@@ -5,15 +5,22 @@
 // finger on the table, pinch or wheel to zoom.
 import { realmShapes } from '../engine/board.js';
 import { controller, reachable } from '../engine/game.js';
+import { clampCamera } from '../../../src/render/camera.js';
 
 const RASTER = 4; // map units per pixel of the province layer
 
-export function createTable(canvas, app) {
+// With a `backdrop` (the real-time game's map, backdrop.js) the table draws
+// only its own layer over it, through the same camera; without one it is
+// the plain wooden table.
+export function createTable(canvas, app, { cam = null, backdrop = null } = {}) {
   const ctx = canvas.getContext('2d');
   const { table } = app;
   const geo = table.world.geography;
   const [bx0, by0, bx1, by1] = geo.bounds;
-  const view = { x: 0, y: 0, z: 1 };
+  const over = !!backdrop;
+  const view = cam
+    ? { get x() { return cam.x; }, set x(v) { cam.x = v; }, get y() { return cam.y; }, set y(v) { cam.y = v; }, get z() { return cam.scale; }, set z(v) { cam.scale = v; }, set: false }
+    : { x: 0, y: 0, z: 1 };
   let layer = null;
   let drag = null;
   let dpr = 1;
@@ -78,6 +85,19 @@ export function createTable(canvas, app) {
       const edge = right !== o || down !== o;
       const realmEdge = edge && ((right >= 0 && realmOf[right] !== realmOf[o]) || (down >= 0 && realmOf[down] !== realmOf[o]) || right < 0 || down < 0);
       const k = realmEdge ? 0.35 : edge ? 0.7 : 1;
+      if (over) {
+        // Over the painted map: province borders as faint ink, and a wash of
+        // the holder's colour only where a province is not its realm's own.
+        const taken = controller(app.state, index[o]) !== realmOf[o];
+        if (edge && !realmEdge) { img.data[i * 4 + 3] = 34; continue; }
+        if (taken) {
+          img.data[i * 4] = r;
+          img.data[i * 4 + 1] = g;
+          img.data[i * 4 + 2] = b;
+          img.data[i * 4 + 3] = edge ? 150 : 95;
+        }
+        continue;
+      }
       // Parchment, washed with the controller's colour.
       img.data[i * 4] = (239 * 0.62 + r * 0.38) * k;
       img.data[i * 4 + 1] = (226 * 0.62 + g * 0.38) * k;
@@ -94,6 +114,11 @@ export function createTable(canvas, app) {
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.round(canvas.clientWidth * dpr);
     canvas.height = Math.round(canvas.clientHeight * dpr);
+    if (backdrop) backdrop.resize(canvas.clientWidth, canvas.clientHeight, !view.set);
+    if (!view.set && backdrop) {
+      view.set = true;
+      clamp();
+    }
     if (!view.set) {
       // Start over the player's own realm.
       const own = Object.values(table.board.regions).filter((r) => r.realm === app.state.player);
@@ -103,9 +128,11 @@ export function createTable(canvas, app) {
       view.x = cx;
       view.y = cy;
       view.set = true;
+      clamp();
     }
     draw();
   }
+  const clamp = () => { if (cam) clampCamera(cam, table.world); };
   const toScreen = (x, y) => [((x - view.x) * view.z + canvas.clientWidth / 2), ((y - view.y) * view.z + canvas.clientHeight / 2)];
   const toMap = (sx, sy) => [(sx - canvas.clientWidth / 2) / view.z + view.x, (sy - canvas.clientHeight / 2) / view.z + view.y];
 
@@ -116,6 +143,19 @@ export function createTable(canvas, app) {
     const W = canvas.clientWidth;
     const H = canvas.clientHeight;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (over) {
+      // Only the table's own layer over the painted map.
+      ctx.clearRect(0, 0, W, H);
+      const [ox, oy] = toScreen(bx0, by0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(layer.canvas, ox, oy, layer.w * RASTER * view.z, layer.h * RASTER * view.z);
+      drawLinks();
+      if (drag?.reach) drawReach(drag.reach);
+      else if (app.selected?.army) drawReach(app.selected.reach);
+      drawRegions();
+      drawArmies();
+      return;
+    }
     // The table.
     const grd = ctx.createLinearGradient(0, 0, W, H);
     grd.addColorStop(0, '#3b2715');
@@ -162,12 +202,12 @@ export function createTable(canvas, app) {
 
   function drawLinks() {
     for (const l of Object.values(table.board.links)) {
-      if (l.closed) continue;
+      if (l.closed || (over && !l.crossing)) continue;
       const a = table.board.regions[l.a];
       const b = table.board.regions[l.b];
       const [ax, ay] = toScreen(a.x, a.y);
       const [bx, by] = toScreen(b.x, b.y);
-      ctx.strokeStyle = l.road ? 'rgba(92,60,30,0.85)' : 'rgba(92,60,30,0.35)';
+      ctx.strokeStyle = over ? 'rgba(0,0,0,0)' : l.road ? 'rgba(92,60,30,0.85)' : 'rgba(92,60,30,0.35)';
       ctx.lineWidth = l.road ? 2 : 1.2;
       ctx.setLineDash(l.road ? [] : [4, 5]);
       ctx.beginPath();
@@ -215,7 +255,8 @@ export function createTable(canvas, app) {
       if (sx < -60 || sy < -60 || sx > canvas.clientWidth + 60 || sy > canvas.clientHeight + 60) continue;
       const ctl = controller(app.state, r.id);
       const great = table.data.game.powers.includes(r.realm);
-      if (r.capital && great) tower(sx, sy, colourOf(r.realm));
+      if (over) { /* the painted map draws its own towns and names */ }
+      else if (r.capital && great) tower(sx, sy, colourOf(r.realm));
       else if (r.capital) pin(sx, sy, colourOf(r.realm));
       else {
         ctx.fillStyle = r.type === 'castle' ? '#4a3a2a' : '#6b5232';
@@ -238,7 +279,7 @@ export function createTable(canvas, app) {
         ctx.stroke();
         ctx.setLineDash([]);
       }
-      if (label(r)) {
+      if (!over && label(r)) {
         ctx.font = `${r.capital ? 'bold ' : ''}${r.capital ? 13 : 11}px Georgia, serif`;
         ctx.textAlign = 'center';
         ctx.lineWidth = 3;
@@ -446,6 +487,7 @@ export function createTable(canvas, app) {
     if (pinch && pointers.size === 2) {
       const [p1, p2] = [...pointers.values()];
       view.z = clampZ(pinch.z * (Math.hypot(p1[0] - p2[0], p1[1] - p2[1]) / pinch.d));
+      clamp();
       draw();
     } else if (drag) {
       drag.x = sx;
@@ -454,6 +496,7 @@ export function createTable(canvas, app) {
     } else if (pan) {
       view.x = pan.x - (sx - pan.sx) / view.z;
       view.y = pan.y - (sy - pan.sy) / view.z;
+      clamp();
       draw();
     }
   });
@@ -493,11 +536,12 @@ export function createTable(canvas, app) {
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     view.z = clampZ(view.z * (e.deltaY < 0 ? 1.12 : 0.9));
+    clamp();
     draw();
   }, { passive: false });
   window.addEventListener('resize', fit);
 
-  const clampZ = (z) => Math.max(0.2, Math.min(3, z));
+  const clampZ = (z) => (cam ? Math.max(cam.minScale, Math.min(cam.maxScale, z)) : Math.max(0.2, Math.min(3, z)));
 
   // For browser tests: where a region or a piece sits on screen.
   const screenOf = (id) => {
@@ -515,6 +559,7 @@ export function createTable(canvas, app) {
     const r = table.board.regions[id];
     view.x = r.x;
     view.y = r.y;
+    clamp();
     draw();
   };
 

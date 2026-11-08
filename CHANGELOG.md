@@ -1,5 +1,10 @@
 # Changelog
 
+## M45 (part two) Northern Wars v2: the old map, alive
+- The turn-based game now plays on the real-time game's painted map: its towns, forests, hills, roads and rivers, in the season of the month.
+- Life goes on along the roads whatever the month: caravans, goods carts, barges, pilgrims and patrols travel their routes while you plan your turn. They are only for show and never change the game.
+- The war table sits on top: faint province borders, a wash of colour over land held by another realm, the bridges, the places an army can reach, and the carved pieces.
+
 ## M45 (part one) Northern Wars v2: balance and polish, and updates that arrive
 - The other powers now raise armies as large as their crowns can pay for, so wars are decided rather than stalled; armies cost twice the upkeep, and crowns can buy companies, repairs and wonders (3 crowns for each point of production), so the treasury matters.
 - How to play: a short guide on your first visit, and in the Menu.
