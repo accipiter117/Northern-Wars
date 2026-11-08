@@ -560,3 +560,108 @@ test('the AI: offers the player a treaty, declares war on a hated and weaker pow
   const at = s.armies.filter((a) => a.owner === 'nilfgaard' && a.region === 'nazair_city');
   assert.ok(at.length <= 3, `merged into few armies (${at.length})`);
 });
+
+// ---- Steps 8 and 9: the story and the endings ----
+
+import { monthlyStory, storyChapter, storyCard, storySoFar, requirementsMet } from '../../v2/src/engine/story.js';
+import { suddenEnding, loreEnding } from '../../v2/src/engine/endings.js';
+import { storyHooks, answerStoryCard } from '../../v2/src/engine/game.js';
+
+const at = (s, y, m) => { s.turn = (y - 1262) * 12 + (m - 3); };
+
+test('the Road to War: Emhyr ready and 1263 come, Cintra is invaded and the Call of the North comes to court', () => {
+  const s = fresh();
+  assert.equal(storyChapter(s, table).id, 'dawn');
+  s.realms.nilfgaard.goals.push('n_legions');
+  at(s, 1263, 3);
+  let n = 0;
+  while (!s.story.flags.includes('first_war') && n++ < 40) monthlyStory(s, table, dateOf(table, s.turn), storyHooks(s, table));
+  assert.ok(s.story.flags.includes('first_war'));
+  assert.equal(storyChapter(s, table).id, 'first');
+  assert.ok(atWar(s, 'nilfgaard', 'cintra') && atWar(s, 'nilfgaard', 'skellige'));
+  assert.ok(storyCard(s, table).choice, 'the Call of the North');
+  answerStoryCard(s, table, 0);
+  assert.ok(atWar(s, 'temeria', 'nilfgaard'), 'Temeria answers');
+  // The late twin is moot now, and never fires.
+  at(s, 1263, 10);
+  monthlyStory(s, table, dateOf(table, s.turn), storyHooks(s, table));
+  assert.equal(storySoFar(s, table).filter((e) => e.title === 'The First Northern War').length, 1);
+});
+
+test('without Emhyr\'s legions the war still comes, late; chapters move on by date if the story lags', () => {
+  const s = fresh();
+  at(s, 1263, 9);
+  monthlyStory(s, table, dateOf(table, s.turn), storyHooks(s, table));
+  assert.ok(s.story.flags.includes('first_war'));
+  const t = fresh();
+  at(t, 1267, 2);
+  monthlyStory(t, table, dateOf(table, t.turn), storyHooks(t, table));
+  assert.ok(storyChapter(t, table).index >= 1);
+});
+
+test('the fall of Cintra makes its lands the Empire\'s and turns it on Sodden and Brugge', () => {
+  const s = fresh();
+  s.story.chapter = 'first';
+  s.story.flags.push('first_war');
+  declareWar(s, table, 'nilfgaard', 'cintra');
+  for (const r of Object.values(board.regions).filter((x) => x.realm === 'cintra')) s.cities[r.id].holder = 'nilfgaard';
+  monthlyStory(s, table, dateOf(table, s.turn), storyHooks(s, table));
+  assert.ok(s.story.flags.includes('cintra_fallen'));
+  assert.ok(Object.values(board.regions).filter((x) => x.realm === 'cintra').every((r) => s.cities[r.id].owner === 'nilfgaard'));
+  assert.ok(atWar(s, 'nilfgaard', 'sodden') && atWar(s, 'nilfgaard', 'brugge'));
+});
+
+test('the Kingslayers: seen coming by our spies, the king can be guarded; unguarded and weak, he falls', () => {
+  const s = fresh();
+  s.story.chapter = 'third';
+  s.spies.nilfgaard.nets.temeria = 45;
+  s.spies.temeria.nets.nilfgaard = 25;
+  monthlyStory(s, table, dateOf(table, s.turn), storyHooks(s, table));
+  assert.equal(storyCard(s, table).title, 'Whispers of a plot');
+  s.realms.temeria.treasury = 500;
+  answerStoryCard(s, table, 0);
+  assert.ok(s.story.flags.includes('king_guarded'));
+  s.spies.nilfgaard.nets.temeria = 90;
+  s.realms.temeria.love = 20;
+  s.realms.temeria.fear = 10;
+  const ev = table.data.story.events.find((e) => e.id === 'kingslayer_foltest');
+  assert.ok(!requirementsMet(s, table, ev, dateOf(table, s.turn), { chance: () => true }), 'a guarded king is safe');
+  const t = fresh();
+  t.story.chapter = 'third';
+  t.spies.nilfgaard.nets.temeria = 90;
+  t.realms.temeria.love = 20;
+  t.realms.temeria.fear = 10;
+  assert.ok(requirementsMet(t, table, ev, dateOf(table, t.turn), { chance: () => true }));
+});
+
+test('endings: domination and faith at once; the lore at the end of 1272', () => {
+  const s = fresh();
+  assert.equal(suddenEnding(s, table), null);
+  for (const r of Object.values(board.regions).filter((x) => x.capital && ['great', 'middle'].includes(table.tiers[x.realm]))) s.cities[r.id].holder = 'redania';
+  assert.equal(suddenEnding(s, table).kind, 'domination');
+  const f = fresh();
+  f.realms.temeria.devotion = 2000;
+  const e = suddenEnding(f, table);
+  assert.equal(e.kind, 'faith');
+  assert.equal(e.fate.key, 'won');
+  const l = fresh();
+  assert.equal(loreEnding(l, table).kind, 'holds');
+  l.cities.vizima.holder = 'nilfgaard';
+  l.cities.tretogor.holder = 'nilfgaard';
+  const empire = loreEnding(l, table);
+  assert.equal(empire.kind, 'empire');
+  assert.equal(empire.fate.key, 'fallen');
+});
+
+test('a whole reign runs from the Dawn through the three wars to an ending', () => {
+  const s = fresh(9);
+  while (!s.over) {
+    endTurn(s, table);
+    if (s.story.choice) answerStoryCard(s, table, 1);
+  }
+  assert.ok(s.over.ending && s.over.ending.title && s.over.ending.fate.text);
+  const told = storySoFar(s, table).map((e) => e.title);
+  assert.ok(told.includes('The First Northern War'));
+  assert.ok(told.some((t) => /Second Northern War|Thanedd/.test(t)));
+  assert.ok(told.includes('The Third Northern War'));
+});

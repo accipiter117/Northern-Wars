@@ -141,6 +141,43 @@ test('the battle screen: place companies in lanes, fight a round, fight it out',
   await context.close();
 });
 
+test('the story: the Call of the North at court, the story so far, and an ending', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  // A save on the eve of the war, with the Call of the North waiting.
+  await page.evaluate(() => {
+    const s = window.northernWarsV2.state;
+    s.story.chapter = 'first';
+    s.story.flags.push('first_war');
+    s.story.happened.push({ id: 'road_to_war', turn: 12 });
+    s.story.fired.push('road_to_war');
+    s.story.choice = { id: 'road_to_war' };
+    localStorage.setItem('northern-wars.v2.save', JSON.stringify({ format: 'northern-wars-v2', version: s.version, state: s }));
+  });
+  await page.reload();
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  assert.match(await page.textContent('#sheet'), /The Call of the North[\s\S]*Answer the call[\s\S]*Stand aside/);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-story.png') });
+  await page.click('[data-story="0"]');
+  assert.ok(await page.evaluate(() => window.northernWarsV2.state.wars.includes('nilfgaard|temeria')));
+  await page.click('[data-open="goals"]');
+  assert.match(await page.textContent('#sheet'), /Now: The First Northern War[\s\S]*The story so far[\s\S]*The First Northern War/);
+  await page.click('#sheet-close');
+  // The end.
+  await page.evaluate(() => {
+    const s = window.northernWarsV2.state;
+    s.over = { reason: 'time', ending: { kind: 'holds', winner: null, title: 'The North holds', text: 'The Empire is held at the Yaruga.', fate: { key: 'free', text: 'Temeria endures, its own master.' } } };
+    localStorage.setItem('northern-wars.v2.save', JSON.stringify({ format: 'northern-wars-v2', version: s.version, state: s }));
+  });
+  await page.reload();
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  assert.match(await page.textContent('#sheet'), /The North holds[\s\S]*Temeria endures[\s\S]*Begin a new reign/);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-ending.png') });
+  await page.click('#ending-new');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.turn), 0);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');
