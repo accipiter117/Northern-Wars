@@ -171,9 +171,13 @@ function openSheet(title, html) {
   $('sheet-title').textContent = title;
   $('sheet-body').innerHTML = html;
   $('sheet').hidden = false;
+  document.body.classList.add('sheet-open');
   $('hint').hidden = true;
 }
-function closeSheet() { $('sheet').hidden = true; }
+function closeSheet() {
+  $('sheet').hidden = true;
+  document.body.classList.remove('sheet-open');
+}
 $('sheet-close').addEventListener('click', () => {
   // A battle cannot be walked away from: it is fought out.
   if (app.state.battle) { battleAuto(app.state, table); return showBattle(); }
@@ -697,8 +701,12 @@ function toast(text) {
   t.textContent = text;
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+  // Long enough to read: about a second for every fifteen words, at least
+  // four seconds and at most twelve. A tap clears it sooner.
+  const words = String(text).split(/\s+/).length;
+  toastTimer = setTimeout(() => { t.hidden = true; }, Math.min(12000, Math.max(4000, words * 280)));
 }
+$('toast').addEventListener('click', () => { $('toast').hidden = true; });
 
 $('end').addEventListener('click', () => {
   if (app.state.over) return showEnding();
