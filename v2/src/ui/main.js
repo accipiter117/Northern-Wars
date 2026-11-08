@@ -17,6 +17,8 @@ import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge
 import { createTable } from './table.js';
 import { createBackdrop } from './backdrop.js';
 import { createCamera } from '../../../src/render/camera.js';
+import { createAudio } from '../../../src/ui/audio.js';
+import { loadPrefs, savePrefs } from '../../../src/ui/hints.js';
 
 const SAVE_KEY = 'northern-wars.v2.save';
 const $ = (id) => document.getElementById(id);
@@ -58,6 +60,7 @@ const app = {
     const r = moveArmy(app.state, table, armyId, region, { interactive: true });
     if (r.error) toast(r.error);
     if (r.battle === 'pending') {
+      sound('horn');
       save();
       refresh();
       return showBattle();
@@ -83,6 +86,27 @@ if (!new URLSearchParams(location.search).has('plain')) {
   }
 }
 const view = createTable($('table'), app, backdrop ? { cam, backdrop } : {});
+// Sound and music, as in the real-time game (and with its settings).
+const prefs = loadPrefs();
+const audio = createAudio(prefs, { save: savePrefs, base: '../' });
+const sound = (k) => { try { audio.play(k); } catch { /* sound is a nicety */ } };
+
+// Offline play and updates: the same service worker as the real-time game,
+// which keeps v2's files too. A new version takes over at once; a page that
+// has only just opened switches to it, one in use offers it on the Menu.
+if ('serviceWorker' in navigator && (!navigator.webdriver || new URLSearchParams(location.search).has('sw'))) {
+  const opened = Date.now();
+  const had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!had) return;
+    if (Date.now() - opened < 15000) location.reload();
+    else app.updateReady = true;
+  });
+  navigator.serviceWorker.register('../sw.js', { scope: '../' }).then((reg) => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => { /* offline play is a nicety */ });
+}
+
 window.northernWarsV2 = { app, view, get backdrop() { return backdrop; }, get state() { return app.state; } };
 
 function save() {
@@ -353,12 +377,48 @@ function showLog() {
 }
 
 function showMenu() {
+  const on = (k) => prefs[k] !== false;
   openSheet('Menu', `
-    <p class="sub">This is the turn-based Northern Wars, being built in steps. Everything from the design is in, from the Dawn of the Reign to the endings; art and polish come next.</p>
+    ${app.updateReady ? '<div class="row"><span>A new version is ready.</span><button type="button" class="act" id="menu-update">Restart</button></div>' : ''}
     <div class="row"><span>How to play</span><button type="button" class="act" id="menu-guide">Read</button></div>
-    <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act" id="new-game">New game</button></div>
-    <div class="row"><span>The real-time game</span><a class="act" style="display:inline-grid;place-items:center;text-decoration:none" href="../">Open</a></div>`);
+    <h3>Your reign</h3>
+    <div class="row"><span>Save it to a file, to keep or move to another device</span><button type="button" class="act" id="menu-export">Export</button></div>
+    <div class="row"><span>Carry on from a saved file</span><button type="button" class="act" id="menu-import">Import</button></div>
+    <input type="file" id="menu-file" accept=".json,application/json" hidden>
+    <div class="row"><span>Start a new game as Temeria</span><button type="button" class="act war" id="new-game">New game</button></div>
+    <h3>Sound</h3>
+    <div class="seg"><button type="button" class="act" id="menu-music" aria-pressed="${on('musicOn')}">Music ${on('musicOn') ? 'on' : 'off'}</button><button type="button" class="act" id="menu-sfx" aria-pressed="${on('sfxOn')}">Sounds ${on('sfxOn') ? 'on' : 'off'}</button></div>
+    <h3>The real-time game</h3>
+    <div class="row"><span>The North in real time, as it was</span><a class="act" style="display:inline-grid;place-items:center;text-decoration:none" href="../">Open</a></div>`);
+  if (app.updateReady) $('menu-update').addEventListener('click', () => location.reload());
   $('menu-guide').addEventListener('click', () => showGuide());
+  $('menu-music').addEventListener('click', () => { audio.set('musicOn', !on('musicOn')); showMenu(); });
+  $('menu-sfx').addEventListener('click', () => { audio.set('sfxOn', !on('sfxOn')); showMenu(); });
+  $('menu-export').addEventListener('click', () => {
+    const d = dateOf(table, app.state.turn);
+    const blob = new Blob([serialize(app.state)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `northern-wars-v2-${d.year}-${String(d.month).padStart(2, '0')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('Saved to a file.');
+  });
+  $('menu-import').addEventListener('click', () => $('menu-file').click());
+  $('menu-file').addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      app.state = deserialize(await f.text(), table);
+      save();
+      app.select(null);
+      refresh();
+      toast('The reign carries on from the file.');
+    } catch (err) {
+      toast(err.message || 'That file could not be read.');
+    }
+  });
   $('new-game').addEventListener('click', () => {
     app.state = createGame(table, { seed: (Date.now() & 0xffff) || 1 });
     save();
@@ -512,6 +572,7 @@ function toast(text) {
 
 $('end').addEventListener('click', () => {
   if (app.state.over) return showEnding();
+  sound('bell');
   const before = app.state.log.length;
   const turn = app.state.turn;
   endTurn(app.state, table);
@@ -530,6 +591,7 @@ function loop(now) {
   if (backdrop && !document.hidden && now - lastFrame >= 33) {
     lastFrame = now;
     backdrop.setDay(monthDay());
+    backdrop.follow(app.state, table);
     backdrop.frame(now);
     view.draw();
   }

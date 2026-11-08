@@ -8,6 +8,7 @@ import { stepAmbientDay } from '../../../src/sim/ambient.js';
 import { makeRng } from '../../../src/sim/rng.js';
 import { createRenderer } from '../../../src/render/renderer.js';
 import { resizeCamera } from '../../../src/render/camera.js';
+import { transferTown } from '../../../src/sim/lands.js';
 
 // A day of road life passes in this many milliseconds.
 const DAY_MS = 700;
@@ -20,6 +21,7 @@ export function createBackdrop(canvas, world, cam, layoutCfg) {
   let acc = 0;
   let baseDay = 0;
   let days = 0;
+  let followKey = '';
 
   // A few days' head start, so the roads are busy from the first frame;
   // then, once the map is up, two months of the realm's life so trade,
@@ -68,6 +70,23 @@ export function createBackdrop(canvas, world, cam, layoutCfg) {
         stepAmbientDay(shadow, world, rng);
       }
       renderer.draw(shadow, acc / DAY_MS, null, { tick: now / 1000 });
+    },
+    // The map follows the war: every town of a province is painted as the
+    // realm that holds the province now (borders, colours, banners).
+    follow(state, table) {
+      const key = Object.keys(state.cities).map((id) => state.cities[id].holder ?? state.cities[id].owner).join(',');
+      if (key === followKey) return;
+      followKey = key;
+      for (const r of Object.values(table.board.regions)) {
+        const to = state.cities[r.id].holder ?? state.cities[r.id].owner;
+        for (const id of r.members) {
+          const now = world.realmOf[id] ?? 'temeria';
+          if (now !== to) {
+            try { transferTown(shadow, world, id, to, { quiet: true }); } catch { /* a town the map cannot move stays as it was */ }
+          }
+        }
+      }
+      renderer.invalidate();
     },
     get shadow() { return shadow; },
     reset() { shadow = createState(world, 7, { dawn: false }); },

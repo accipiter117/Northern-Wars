@@ -20,13 +20,13 @@ test.after(async () => {
   server.close();
 });
 
-async function open(viewport) {
+async function open(viewport, query = null) {
   const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  await page.goto(base);
+  await page.goto(query ? base.replace('?noguide', query) : base);
   await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
   return { context, page, errors };
 }
@@ -197,6 +197,51 @@ test('a first visit opens How to play; paying with crowns raises a company', asy
   assert.ok(await page.evaluate(() => window.northernWarsV2.state.realms.temeria.treasury < 300));
   assert.deepEqual(errors, []);
   await context.close();
+});
+
+test('saves to a file and back; the painted map follows a capture; plays offline', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  // Export.
+  await page.click('[data-open="menu"]');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#menu-export')]);
+  const path = await download.path();
+  const text = await (await import('node:fs/promises')).readFile(path, 'utf8');
+  assert.match(text, /"format":"northern-wars-v2"/);
+  // Import, after the reign has moved on a month.
+  await page.click('#sheet-close');
+  await page.click('#end');
+  await page.waitForFunction(() => window.northernWarsV2.state.turn === 1);
+  if (await page.isVisible('#sheet')) await page.click('#sheet-close');
+  await page.click('[data-open="menu"]');
+  await page.setInputFiles('#menu-file', path);
+  await page.waitForFunction(() => window.northernWarsV2.state.turn === 0);
+  // The painted map follows the war: Rinde taken by Temeria is painted Temerian.
+  const ok = await page.evaluate(() => {
+    const { app, backdrop } = window.northernWarsV2;
+    if (!backdrop) return 'no backdrop';
+    app.state.cities.rinde.holder = 'temeria';
+    backdrop.follow(app.state, app.table);
+    return app.table.world.realmOf.rinde === undefined && !!backdrop.shadow.settlements.rinde;
+  });
+  assert.equal(ok, true);
+  await page.evaluate(() => { const { app, backdrop } = window.northernWarsV2; app.state.cities.rinde.holder = null; backdrop.follow(app.state, app.table); });
+  assert.deepEqual(errors, []);
+  await context.close();
+  // Offline: the service worker keeps v2 too.
+  const o = await open({ width: 390, height: 844 }, '?sw&noguide');
+  await o.page.evaluate(() => navigator.serviceWorker.ready);
+  await o.page.waitForFunction(() => !!navigator.serviceWorker.controller, null, { timeout: 20000 });
+  await o.page.waitForFunction(async () => {
+    const keys = await caches.keys();
+    const c = keys.find((k) => k.startsWith('northern-wars-'));
+    return c && !!(await (await caches.open(c)).match(new URL('../v2/src/engine/game.js', location.href).href));
+  }, null, { timeout: 30000 });
+  await o.context.setOffline(true);
+  await o.page.reload();
+  await o.page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden, null, { timeout: 20000 });
+  assert.match(await o.page.textContent('#date'), /1262/);
+  await o.context.setOffline(false);
+  await o.context.close();
 });
 
 test('the war table in landscape', async () => {

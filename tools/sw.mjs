@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const TOP = ['index.html', 'styles.css', 'manifest.webmanifest'];
-const DIRS = ['src', 'data', 'icons'];
+const DIRS = ['src', 'data', 'icons', 'v2'];
 
 async function walk(dir) {
   const out = [];
@@ -33,7 +33,7 @@ export async function swSource() {
 // the next opening (or at once if it has only just opened).
 const VERSION = '${version}';
 const CACHE = \`northern-wars-\${VERSION}\`;
-const FILES = ${JSON.stringify(['./', ...files], null, 2)};
+const FILES = ${JSON.stringify(['./', 'v2/', ...files], null, 2)};
 
 self.addEventListener('install', (e) => {
   // No waiting for every tab to close: on a phone, a game kept on the home

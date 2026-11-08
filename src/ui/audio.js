@@ -20,7 +20,8 @@ export function soundPrefs(prefs) {
   };
 }
 
-export function createAudio(prefs, { save = () => {} } = {}) {
+// `base` prefixes the music's path for pages below the root (v2 at /v2/).
+export function createAudio(prefs, { save = () => {}, base = '' } = {}) {
   const AC = window.AudioContext || window.webkitAudioContext;
   let ctx = null;
   let master = null;
@@ -68,7 +69,7 @@ export function createAudio(prefs, { save = () => {} } = {}) {
   function musicEl() {
     if (el) return el;
     el = new Audio();
-    el.src = MUSIC_SRC;
+    el.src = base + MUSIC_SRC;
     el.loop = true;
     el.preload = 'auto';
     el.crossOrigin = 'anonymous';
