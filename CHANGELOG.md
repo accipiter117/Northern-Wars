@@ -1,5 +1,11 @@
 # Changelog
 
+## M50 Northern Wars v2: the peoples
+- Dwarves, elves, halflings and gnomes live in the cities: Temeria's towns as counted in the real-time game, Mahakam mostly dwarven, Brokilon elven. Each city's card shows who lives there and how they stand with the crown.
+- The Realm sheet shows the crown's standing with each people and what moves it: Love, and the laws (tolerance wins them all; the gallows and foreign missions turn the elves against you; guild charters please dwarves and gnomes).
+- Content peoples bring their gifts: dwarves raise production, gnomes production and crowns, halflings food, elves faith and renown.
+- Bitter elves feed the Scoia'tael, who raid cities where elves live. In a restless realm, a hated people may suffer a pogrom wherever no army keeps the peace. A content people may send volunteers to your wars.
+
 ## M49 Northern Wars v2: the great houses
 - Temeria's five great houses (Dravnik, Wolbrecht, Ostrowicz, Gelbrand and Brodowin) now hold ten of its provinces for the crown. You'll find them at the top of Courts, and each city's card names the house that holds it.
 - Each house has a loyalty, moved by the realm's Love and Fear and by whether you give it what it asks for: honours (crowns), one of your armies garrisoned in its lands, or a law it favours (from its traits).

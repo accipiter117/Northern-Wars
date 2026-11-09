@@ -17,6 +17,7 @@ import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge
 import { createTable } from './table.js';
 import { mayBuildFleet, buildFleet, fleetsAt, commanderOf, commanderDef, assignCommander, recallCommander, isCoastal } from '../engine/forces.js';
 import { createBackdrop } from './backdrop.js';
+import { realmPeoples, peopleName, moodOf, PEOPLES } from '../engine/peoples.js';
 import { houseDef, houseOf, housesActive, wantText, grantHonours, judgeHouse, rebelOf } from '../engine/houses.js';
 import { lawDef, lawBar, enact, repeal, enacted, lawSlots, patronOf, rulingFaith, faithName, missionReach, missionCost, sendMission, faithShares } from '../engine/laws.js';
 import { createCamera } from '../../../src/render/camera.js';
@@ -192,6 +193,17 @@ function yieldsHtml(y) {
   return `<div class="yields">${cell('Food', y.food)}${cell('Production', y.production)}${cell('Crowns', y.crowns)}${cell('Faith', y.faith)}${cell('Renown', y.renown)}</div>`;
 }
 
+// A city's non-human peoples and how they stand with its crown.
+function peoplesLine(id) {
+  const s = app.state;
+  const sh = s.peoples?.shares?.[id];
+  if (!sh) return '';
+  const owner = s.cities[id].owner;
+  const word = (m) => (m >= 70 ? 'content' : m >= 45 ? 'at ease' : m >= 30 ? 'uneasy' : 'bitter');
+  const list = PEOPLES.filter((p) => (sh[p] ?? 0) >= 0.5).map((p) => `${peopleName(table, p).toLowerCase()} ${sh[p] >= 1 ? Math.round(sh[p]) : sh[p]} (${word(moodOf(s, table, owner, p))})`);
+  return list.length ? `<p class="sub">Among its people, in every hundred: ${esc(list.join(', '))}.</p>` : '';
+}
+
 // The lord who holds a province for the crown.
 function lordLine(id) {
   const s = app.state;
@@ -280,7 +292,7 @@ function showRegion(id) {
     ${yieldsHtml(cityYields(s, table, id))}
     <p class="sub">Works: ${esc(works || 'none')}.${built.length ? ` Raised here: ${esc(built.join(', '))}.` : ''}</p>
     ${crossings.length ? `<p class="sub">Crossing: ${esc(crossings.join(', '))}.</p>` : ''}
-    ${lordLine(id)}${faithLine(id)}
+    ${lordLine(id)}${peoplesLine(id)}${faithLine(id)}
     ${acts}`);
   const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b); if (out?.error) toast(out.error); save(); refresh(); showRegion(id); }); };
   act('[data-recruit]', (b) => recruit(s, table, s.player, id, b.dataset.recruit, { crowns: !!app.payCrowns }));
@@ -457,7 +469,8 @@ function showRealm() {
     <h3>Taxes</h3>
     <div class="seg">${Object.keys(g.tax).map((k) => `<button type="button" class="act" data-tax="${k}" aria-pressed="${r.tax === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
     <p class="sub">Heavy taxes fill the treasury and cost Love; light ones win it back.</p>
-    ${lawsHtml()}`);
+    ${lawsHtml()}
+    ${peoplesHtml()}`);
   for (const b of document.querySelectorAll('[data-tax]')) {
     b.addEventListener('click', () => { r.tax = b.dataset.tax; save(); refresh(); showRealm(); });
   }
@@ -495,6 +508,19 @@ function lawsHtml() {
     <p class="sub">Each chapter has two rival paths; a law on one closes the other until it is repealed. The book holds more laws as the story goes on. Repealing costs ${L.repeal.love} Love, and the law cannot return for ${L.repeal.cooldown} months.</p>${chapters}
     <h3>Faith</h3>
     <p class="sub">Our faith is ${esc(faithName(table, p))}. It rules ${keep} of our ${ours.length} cities and ${share} in every hundred cities of the North; at ${Math.round(L.faiths.victory.share * 100)} its most devout crown wins. Cities of another faith add unrest. Send missionaries from a city's card to any place within ${L.faiths.missions.reach} marches of our land.</p>`;
+}
+
+// The realm's peoples and its standing with each, for the Realm sheet.
+function peoplesHtml() {
+  const s = app.state;
+  const P = table.data.peoples;
+  if (!P || !s.peoples) return '';
+  const rows = realmPeoples(s, table, s.player).map((x) => {
+    const why = x.parts.filter((q) => q.why !== 'the realm' && q.n).map((q) => `${q.n > 0 ? '+' : ''}${q.n} ${q.why}`).join(', ');
+    const gift = Object.entries(P.peoples[x.p].gifts).map(([k, v]) => `${k} +${Math.round(v * 100)}%`).join(', ');
+    return `<div class="row"><span><b>${esc(x.name)}</b>: ${x.share} in every hundred of our people. Standing <b>${x.mood}</b>, heading for ${Math.round(x.target)}${why ? ` (${esc(why)})` : ''}.<br><small class="sub">Content, they bring their cities up to ${esc(gift)}.</small></span></div>`;
+  }).join('');
+  return `<h3>The peoples</h3><p class="sub">Dwarves, elves, halflings and gnomes live among us. Love and the laws move how they stand with the crown. Bitter elves (below ${P.scoiatael.below}) feed the Scoia'tael's raids; in a restless realm (Unrest over ${P.pogrom.unrest}) a hated people may suffer a pogrom wherever no army of ours keeps the peace. A people at ${P.volunteers.above} or more may send volunteers to our wars.</p>${rows}`;
 }
 
 function showWar() {

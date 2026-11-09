@@ -822,7 +822,7 @@ test('a version 6 save gains the Book of Laws and the faiths', () => {
   delete s.faiths;
   const old = JSON.stringify({ format: 'northern-wars-v2', version: 6, state: { ...s, version: 6 } });
   const back = deserialize(old, table);
-  assert.equal(back.version, 8);
+  assert.equal(back.version, 9);
   assert.ok(back.laws.temeria);
   assert.ok(back.faiths.vizima);
 });
@@ -915,6 +915,62 @@ test('a version 7 save gains the houses', () => {
   delete s.houses;
   delete s.lordJudgement;
   const back = deserialize(JSON.stringify({ format: 'northern-wars-v2', version: 7, state: { ...s, version: 7 } }), table);
-  assert.equal(back.version, 8);
+  assert.equal(back.version, 9);
   assert.ok(back.houses.dravnik);
+});
+
+// ---- M50: the peoples ----
+import { peopleGifts, monthlyPeoples, moodOf, moodTarget, weightIn } from '../../v2/src/engine/peoples.js';
+
+test('the peoples: shares by city, standing moved by laws, gifts when content', () => {
+  const s = fresh();
+  assert.ok(s.peoples.shares.vizima.dwarf > 0, 'Vizima has its dwarves');
+  assert.ok(s.peoples.shares.carbon?.dwarf > 50 || Object.entries(s.peoples.shares).some(([id, x]) => s.cities[id].owner === 'mahakam' && x.dwarf > 50));
+  const plain = moodTarget(s, table, 'temeria', 'elf').target;
+  s.laws.temeria.enacted = ['gallows'];
+  assert.ok(moodTarget(s, table, 'temeria', 'elf').target < plain - 10);
+  s.laws.temeria.enacted = ['tolerance'];
+  assert.ok(moodTarget(s, table, 'temeria', 'elf').target > plain);
+  // Content dwarves raise production; bitter ones give nothing.
+  moodOf(s, table, 'temeria', 'dwarf');
+  s.peoples.mood.temeria.dwarf = 80;
+  const glad = peopleGifts(s, table, 'vizima').production;
+  assert.ok(glad > 0);
+  s.peoples.mood.temeria.dwarf = 10;
+  assert.equal(weightIn(s, table, 'vizima', 'dwarf'), 0);
+  assert.ok((peopleGifts(s, table, 'vizima').production ?? 0) < glad);
+});
+
+test('bitter elves raid; a restless realm may turn on a hated people; content ones volunteer', () => {
+  const s = fresh();
+  s.armies = s.armies.filter((a) => a.owner !== 'temeria');
+  s.laws.temeria.enacted = ['gallows', 'missions'];
+  let raids = 0;
+  for (const p of ['elf', 'dwarf']) moodOf(s, table, 'temeria', p);
+  for (let i = 0; i < 40; i++) {
+    s.peoples.mood.temeria.elf = 10;
+    s.peoples.mood.temeria.dwarf = 10;
+    s.realms.temeria.unrest = 80;
+    monthlyPeoples(s, table);
+    s.turn += 1;
+  }
+  raids = s.log.filter((l) => /Scoia'tael commandos/.test(l.text)).length;
+  assert.ok(raids > 0, 'the Scoia\'tael strike');
+  assert.ok(s.log.some((l) => /A pogrom/.test(l.text)), 'a pogrom comes');
+  // Volunteers at war, from a content people.
+  const v = fresh();
+  declareWar(v, table, 'temeria', 'redania');
+  for (const p of ['dwarf', 'elf', 'halfling', 'gnome']) moodOf(v, table, 'temeria', p);
+  const before = v.armies.filter((a) => a.owner === 'temeria').reduce((n, a) => n + a.companies.length, 0);
+  for (let i = 0; i < 40; i++) { for (const p of ['dwarf', 'elf', 'halfling', 'gnome']) v.peoples.mood.temeria[p] = 90; monthlyPeoples(v, table); v.turn += 1; }
+  assert.ok(v.armies.filter((a) => a.owner === 'temeria').reduce((n, a) => n + a.companies.length, 0) > before, 'volunteers join');
+  assert.ok(moodOf(v, table, 'temeria', 'dwarf') > 50);
+});
+
+test('a version 8 save gains the peoples', () => {
+  const s = fresh();
+  delete s.peoples;
+  const back = deserialize(JSON.stringify({ format: 'northern-wars-v2', version: 8, state: { ...s, version: 8 } }), table);
+  assert.equal(back.version, 9);
+  assert.ok(back.peoples.shares.vizima);
 });
