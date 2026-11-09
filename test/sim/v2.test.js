@@ -822,7 +822,7 @@ test('a version 6 save gains the Book of Laws and the faiths', () => {
   delete s.faiths;
   const old = JSON.stringify({ format: 'northern-wars-v2', version: 6, state: { ...s, version: 6 } });
   const back = deserialize(old, table);
-  assert.equal(back.version, 7);
+  assert.equal(back.version, 8);
   assert.ok(back.laws.temeria);
   assert.ok(back.faiths.vizima);
 });
@@ -852,4 +852,69 @@ test('every great crown can be played for a year without breaking', () => {
     }
     assert.ok(Number.isFinite(s.realms[player].treasury), player);
   }
+});
+
+// ---- M49: the great houses ----
+import { houseBonus, monthlyHouses, judgeHouse, grantHonours, houseOf, rebelOf } from '../../v2/src/engine/houses.js';
+
+test('the houses: loyal ones send retinues, sullen ones stir unrest, wants are met', () => {
+  const s = fresh();
+  assert.equal(houseOf(s, table, 'mayena'), 'dravnik');
+  assert.equal(houseOf(s, table, 'vizima'), null);
+  for (const h of Object.values(s.houses)) h.loyalty = 80;
+  assert.equal(houseBonus(s, table, 'temeria').production, 5 * table.data.houses.retinue);
+  for (const h of Object.values(s.houses)) h.loyalty = 30;
+  assert.ok(houseBonus(s, table, 'temeria').unrest > 0);
+  // Honours granted for crowns; a garrison want met by an army in the house's lands.
+  s.houses.dravnik.want = { kind: 'honours', turn: 0 };
+  s.realms.temeria.treasury = 1000;
+  assert.ok(grantHonours(s, table, 'dravnik').ok);
+  assert.equal(s.houses.dravnik.want, null);
+  assert.ok(s.houses.dravnik.loyalty > 30);
+  s.houses.wolbrecht.want = { kind: 'garrison', turn: s.turn };
+  s.armies.find((a) => a.owner === 'temeria').region = 'houtborg';
+  monthlyHouses(s, table);
+  assert.equal(s.houses.wolbrecht.want, null);
+  // Only the player's own realm has its houses played.
+  const r = createGame(table, { seed: 1, player: 'redania' });
+  for (const h of Object.values(r.houses)) h.loyalty = 0;
+  monthlyHouses(r, table);
+  assert.ok(!Object.values(r.houses).some((h) => h.rebel));
+});
+
+test('a bitter house rises; its seat retaken, it is judged', () => {
+  const s = fresh();
+  s.realms.temeria.fear = 0;
+  for (const h of Object.values(s.houses)) h.loyalty = 50;
+  s.houses.gelbrand.loyalty = 0;
+  s.houses.gelbrand.favour = 0;
+  let n = 0;
+  while (!s.houses.gelbrand.rebel && n++ < 60) { s.houses.gelbrand.loyalty = 0; monthlyHouses(s, table); }
+  assert.ok(s.houses.gelbrand.rebel, 'Gelbrand rises');
+  const rid = rebelOf('gelbrand');
+  assert.equal(s.cities.red_fort.owner, rid);
+  assert.ok(atWar(s, 'temeria', rid));
+  assert.ok(s.armies.some((a) => a.owner === rid && a.region === 'red_fort'));
+  // Months of the rebels holding pass without error.
+  endTurn(s, table);
+  // The seat retaken: judgement.
+  s.cities.red_fort.holder = 'temeria';
+  monthlyHouses(s, table);
+  assert.deepEqual(s.lordJudgement, { house: 'gelbrand' });
+  assert.ok(judgeHouse(s, table, 'gelbrand', 'block').ok);
+  assert.equal(s.cities.red_fort.owner, 'temeria');
+  assert.equal(s.cities.armeria.owner, 'temeria');
+  assert.ok(s.houses.gelbrand.fallen);
+  assert.ok(!s.realms[rid]);
+  assert.ok(!atWar(s, 'temeria', rid));
+  assert.equal(houseOf(s, table, 'red_fort'), null);
+});
+
+test('a version 7 save gains the houses', () => {
+  const s = fresh();
+  delete s.houses;
+  delete s.lordJudgement;
+  const back = deserialize(JSON.stringify({ format: 'northern-wars-v2', version: 7, state: { ...s, version: 7 } }), table);
+  assert.equal(back.version, 8);
+  assert.ok(back.houses.dravnik);
 });

@@ -190,3 +190,10 @@ Each step should be playable on its own before the next starts.
 - A story `choice` names its crown (`for`, Temeria when unset) and the option the AI takes (`ai`). Temeria's AI stands aside for Cintra (the lore), marches to Aedirn's aid, and shrugs off the plot.
 - The steward (and `tools/v2play.mjs [seeds] [idle|steward] [power]`) now also answers offers and runs its own sieges as the AI would.
 - Known balance gap, left for step 10: the AI's Temeria is strong, and a stewarded Empire is overrun by it in the mid 1260s. A human Emperor plays differently, but the Empire's AI is the stronger hand for now.
+
+## The great houses as built (M49)
+- Numbers in `v2/data/houses.json`; engine in `v2/src/engine/houses.js`. Names, lords, traits and colours come from the real-time game's `data/houses.json`; the lands are v2's own, two provinces each, with no overlaps (the real-time holdings overlapped at Dorndal and Maribor). The crown keeps Vizima, Maribor, Gors Velen, Ellander, Pontaria and La Valette.
+- Houses are played only for their own realm (Temeria) and only when the player rules it: the AI's realms are not given lords.
+- A rising makes the house a realm of its own (`house_<id>`) at war with the crown, holding its lands with a host at its seat. It holds and does not march. Retaking the seat (with its host gone) brings the judgement card; left unanswered at the end of the month, the house is pardoned.
+- Settled in one two-year check: a tended realm keeps its houses loyal; a neglected one under heavy taxes leaves them sullen (unrest about 60) and on the edge of rising.
+- Save version 8 adds `houses` and `lordJudgement`.

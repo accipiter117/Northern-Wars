@@ -99,6 +99,8 @@ const Fa = (table) => L(table).faiths;
 export function patronOf(table, rid) {
   const p = Fa(table).patrons[rid];
   if (p) return p;
+  // A risen house keeps the faith of the realm it rose in.
+  if (rid?.startsWith('house_') && table.data.houses) return patronOf(table, table.data.houses.realm);
   const lean = table.world.devotion?.realms?.lean?.[rid];
   return lean ? Object.entries(lean).sort((a, b) => b[1] - a[1])[0][0] : null;
 }
