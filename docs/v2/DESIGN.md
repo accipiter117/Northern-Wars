@@ -204,3 +204,9 @@ Each step should be playable on its own before the next starts.
 - Gifts multiply the city's yields (before its focus), scaled by how many of the people live there (full at 10 in every hundred) and how content they are (nothing below 25).
 - Settled in one two-year check: a plain reign keeps every people at ease; the gallows with foreign missions turn the elves bitter and bring raids within two years; tolerance with the assizes brings volunteers at war.
 - Save version 9 adds `peoples`.
+
+## Balance: the Empire (M51)
+- `game.beyond` gives a realm a monthly income from beyond the map; `game.realmArmies` replaces a realm's opening armies. Both are set for Nilfgaard only.
+- Why: the map shows only the Empire's northern provinces, nine of them, while Temeria has sixteen. With Temeria on the AI, it stands aside for Cintra (the lore), rests, and then falls on a worn Empire; with Temeria stewarded, it held the North in every reign.
+- Settled in two runs of whole reigns (three seeds each). Tribute of 60 and 30: no change in outcome. Tribute of 100 and 50 with a third legion: a stewarded Temeria loses to the Empire in two reigns of three, with varied endings; an idle Temeria always falls.
+- Known: a stewarded Empire still collapses, hoarding crowns it never spends; that is the test steward's limit (it recruits only by the AI's upkeep rule), not the AI Empire's.

@@ -38,6 +38,8 @@
     "bow": { "name": "Crossbows", "cost": 35, "upkeep": 4, "power": 1.1 },
     "horse": { "name": "Horse", "cost": 55, "upkeep": 8, "power": 1.6 }
   },
+  "beyond": { "nilfgaard": { "crowns": 100, "production": 50 } },
+  "realmArmies": { "nilfgaard": [["foot", "foot", "bow", "horse"], ["foot", "foot", "bow", "horse"], ["foot", "foot", "bow"]] },
   "start_armies": {
     "great": [["foot", "foot", "bow", "horse"], ["foot", "foot", "bow"]],
     "middle": [["foot", "foot", "bow"]],
