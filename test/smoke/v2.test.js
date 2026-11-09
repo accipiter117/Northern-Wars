@@ -339,6 +339,54 @@ test('a new game as the Nilfgaardian Empire from the Menu', async () => {
   await context.close();
 });
 
+test('the great houses in Courts; a rising, and judgement when its seat is retaken', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  await page.evaluate(() => localStorage.removeItem('northern-wars.v2.save'));
+  await page.reload();
+  await page.waitForFunction(() => window.northernWarsV2 && document.getElementById('loading').hidden);
+  await page.evaluate(() => {
+    const s = window.northernWarsV2.state;
+    s.realms.temeria.treasury = 1000;
+    s.houses.dravnik.want = { kind: 'honours', turn: 0 };
+  });
+  await page.click('[data-open="courts"]');
+  assert.match(await page.textContent('#sheet'), /The great houses[\s\S]*House Dravnik[\s\S]*Holds Mayena/);
+  await page.click('[data-honours="dravnik"]');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.houses.dravnik.want), null);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-houses.png') });
+  await page.click('#sheet-close');
+  // Gelbrand rises; the table shows its host; its seat retaken brings the judgement.
+  await page.evaluate(() => {
+    const s = window.northernWarsV2.state;
+    s.realms.temeria.fear = 0;
+    for (const h of Object.values(s.houses)) h.loyalty = 60;
+    s.houses.gelbrand.loyalty = 0;
+  });
+  await page.evaluate(async () => {
+    const s = window.northernWarsV2.state;
+    for (let i = 0; i < 40 && !s.houses.gelbrand.rebel; i++) { s.houses.gelbrand.loyalty = 0; document.getElementById('end').click(); await new Promise((r) => setTimeout(r, 30)); document.getElementById('sheet-close').click(); }
+  });
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.cities.red_fort.owner), 'house_gelbrand');
+  await page.evaluate(() => window.northernWarsV2.app.select({ region: 'red_fort' }));
+  assert.match(await page.textContent('#sheet'), /House Gelbrand has risen/);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-rising.png') });
+  // The rebel host beaten and its seat taken.
+  await page.evaluate(() => {
+    const s = window.northernWarsV2.state;
+    s.armies = s.armies.filter((a) => a.owner !== 'house_gelbrand');
+    s.cities.red_fort.holder = 'temeria';
+    s.dilemma = null;
+    window.northernWarsV2.app.select(null);
+  });
+  await page.click('#end');
+  await page.waitForSelector('[data-lordjudge="pardon"]');
+  await page.click('[data-lordjudge="pardon"]');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.cities.red_fort.owner), 'temeria');
+  assert.equal(await page.evaluate(() => window.northernWarsV2.state.houses.gelbrand.rebel), false);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');

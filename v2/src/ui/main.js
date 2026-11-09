@@ -17,6 +17,7 @@ import { sealRoutes, seal, sendEnvoy, doFavour, questText, leader, typeOf, judge
 import { createTable } from './table.js';
 import { mayBuildFleet, buildFleet, fleetsAt, commanderOf, commanderDef, assignCommander, recallCommander, isCoastal } from '../engine/forces.js';
 import { createBackdrop } from './backdrop.js';
+import { houseDef, houseOf, housesActive, wantText, grantHonours, judgeHouse, rebelOf } from '../engine/houses.js';
 import { lawDef, lawBar, enact, repeal, enacted, lawSlots, patronOf, rulingFaith, faithName, missionReach, missionCost, sendMission, faithShares } from '../engine/laws.js';
 import { createCamera } from '../../../src/render/camera.js';
 import { createAudio } from '../../../src/ui/audio.js';
@@ -191,6 +192,19 @@ function yieldsHtml(y) {
   return `<div class="yields">${cell('Food', y.food)}${cell('Production', y.production)}${cell('Crowns', y.crowns)}${cell('Faith', y.faith)}${cell('Renown', y.renown)}</div>`;
 }
 
+// The lord who holds a province for the crown.
+function lordLine(id) {
+  const s = app.state;
+  if (!housesActive(s, table)) return '';
+  const h = houseOf(s, table, id);
+  if (!h) return '';
+  const d = houseDef(table, h);
+  const x = s.houses[h];
+  if (x.rebel) return `<p class="sub">${esc(d.name)} has risen against the crown.</p>`;
+  if (s.cities[id].owner !== s.player) return '';
+  return `<p class="sub">Held for the crown by ${esc(d.name)} (loyalty ${Math.round(x.loyalty)}). See Courts.</p>`;
+}
+
 // A city's faiths, strongest first, and whether its owner's patron rules.
 function faithLine(id) {
   const mix = app.state.faiths?.[id];
@@ -266,7 +280,7 @@ function showRegion(id) {
     ${yieldsHtml(cityYields(s, table, id))}
     <p class="sub">Works: ${esc(works || 'none')}.${built.length ? ` Raised here: ${esc(built.join(', '))}.` : ''}</p>
     ${crossings.length ? `<p class="sub">Crossing: ${esc(crossings.join(', '))}.</p>` : ''}
-    ${faithLine(id)}
+    ${lordLine(id)}${faithLine(id)}
     ${acts}`);
   const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b); if (out?.error) toast(out.error); save(); refresh(); showRegion(id); }); };
   act('[data-recruit]', (b) => recruit(s, table, s.player, id, b.dataset.recruit, { crowns: !!app.payCrowns }));
@@ -381,11 +395,43 @@ function showCourts() {
       ${routes.length ? `<div class="seg wrap">${routes.map((rt) => `<button type="button" class="act" data-seal="${m}:${rt}">Seal: ${{ protection: 'protection', pressure: `pressure (${cfg.pressure.gift} crowns)`, terms: 'peace terms' }[rt]}</button>`).join('')}</div>` : ''}
     </div>`;
   }).join('');
-  openSheet('The smaller crowns', `<p class="sub">Envoys cost renown. With ${cfg.sealMin} or more at a court, and more than any rival, we may seal it as a vassal: by protection when it is threatened, by pressure when our companies outnumber its own three to one (with a gift), or by peace terms when we hold its capital. Any envoy opens its roads to our armies. Vassals: ${esc(vassalsOf(s, s.player).map((v) => nameOf(table, v)).join(', ') || 'none yet')}.</p>${rows}`);
+  openSheet(housesActive(s, table) ? 'The courts: lords and lesser crowns' : 'The smaller crowns', `${housesHtml()}<h3>The smaller crowns</h3><p class="sub">Envoys cost renown. With ${cfg.sealMin} or more at a court, and more than any rival, we may seal it as a vassal: by protection when it is threatened, by pressure when our companies outnumber its own three to one (with a gift), or by peace terms when we hold its capital. Any envoy opens its roads to our armies. Vassals: ${esc(vassalsOf(s, s.player).map((v) => nameOf(table, v)).join(', ') || 'none yet')}.</p>${rows}`);
   const act = (sel, fn) => { for (const b of document.querySelectorAll(sel)) b.addEventListener('click', () => { const out = fn(b.dataset); if (out?.error) toast(out.error); save(); refresh(); showCourts(); }); };
   act('[data-envoy]', (d) => sendEnvoy(s, table, s.player, d.envoy));
+  act('[data-honours]', (d) => grantHonours(s, table, d.honours));
   act('[data-favour]', (d) => doFavour(s, table, s.player, d.favour));
   act('[data-seal]', (d) => { const [m, rt] = d.seal.split(':'); return seal(s, table, s.player, m, rt); });
+}
+
+// The great houses, for the Courts sheet.
+function housesHtml() {
+  const s = app.state;
+  if (!housesActive(s, table)) return '';
+  const H = table.data.houses;
+  const rows = Object.entries(s.houses).map(([id, h]) => {
+    const d = houseDef(table, id);
+    const lands = H.houses[id].lands.map((r) => table.board.regions[r].name).join(' and ');
+    const traits = (d.traits ?? []).map((t) => table.world.houses?.traits?.[t]?.name ?? t).join(', ');
+    if (h.fallen) return `<div class="row"><span><b>${esc(d.name)}</b><br><small class="sub">Fallen. Its lands are the crown's.</small></span></div>`;
+    const mood = h.rebel ? 'in open revolt' : h.loyalty >= H.loyal ? 'loyal' : h.loyalty < H.rising.below ? 'bitter' : h.loyalty < H.sullen ? 'sullen' : 'dutiful';
+    const what = h.rebel ? ` Retake ${esc(table.board.regions[d.seat]?.name ?? 'the seat')} to bring the house to judgement.`
+      : h.want ? ` Asks for ${esc(wantText(table, h.want))}${s.turn - h.want.turn >= H.wants.patience ? ', and grows impatient' : ''}.` : '';
+    const btn = h.want?.kind === 'honours' ? `<button type="button" class="act" data-honours="${id}" ${s.realms[s.player].treasury >= H.wants.honours.crowns ? '' : 'disabled'}>Honours (${H.wants.honours.crowns})</button>` : '';
+    return `<div class="row"><span><b>${esc(d.name)}</b>: ${esc(d.lord ?? '')}, ${esc(traits.toLowerCase())}. Holds ${esc(lands)}.<br><small class="sub">Loyalty ${Math.round(h.loyalty)}: ${mood}.${what}</small></span>${btn}</div>`;
+  }).join('');
+  return `<h3>The great houses</h3><p class="sub">The lords hold ten of our provinces for the crown. Loyal houses (${H.loyal} or more) send their retinues (+${H.retinue} production a month each); sullen ones (below ${H.sullen}) stir unrest; bitter ones (below ${H.rising.below}) may rise. Love and Fear move them, and so does giving them what they ask for: honours, a garrison in their lands, or a law.</p>${rows}`;
+}
+
+function showLordJudgement() {
+  const s = app.state;
+  const j = s.lordJudgement;
+  if (!j) return;
+  const d = houseDef(table, j.house);
+  const list = table.data.houses.judgement;
+  openSheet(`Judgement on ${d.name}`, `<div class="dilemma"><p>${esc(d.lord ?? d.name)} kneels before us, the seat of the house retaken. What shall be done with the house?</p>${Object.entries(list).map(([k, v]) => `<button type="button" class="act" data-lordjudge="${k}"><b>${esc(v.name)}</b>. ${esc(v.text)}</button>`).join('')}</div>`);
+  for (const b of document.querySelectorAll('[data-lordjudge]')) {
+    b.addEventListener('click', () => { judgeHouse(s, table, j.house, b.dataset.lordjudge); save(); closeSheet(); refresh(); });
+  }
 }
 
 function showJudgement() {
@@ -663,6 +709,7 @@ function nextCard() {
   if (s.over?.ending) return showEnding();
   if (s.story?.choice || s.story?.told) return showStory();
   if (s.judgement) return showJudgement();
+  if (s.lordJudgement) return showLordJudgement();
   if (s.dilemma) return showDilemma();
   return null;
 }

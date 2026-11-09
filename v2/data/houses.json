@@ -1,0 +1,34 @@
+{
+  "note": "The great houses (v2, M49). Each house of `realm` holds its `lands` (provinces) for the crown, and is only played while that realm is the player's. Loyalty (0 to 100) moves each month by `drift` of the gap toward its target: `base` + (Love - 50) x `love` + (Fear - 30) x `fear`, plus the house's favour (won by granting wants, fading by `favourFade` a month). Each house wants one thing at a time, by its traits: honours (crowns), a garrison (one of our armies in its lands), or a law. A want met gives `wants.favour`; unmet after `wants.patience` months it costs `wants.unmet` loyalty a month, and lapses after `wants.lapse`. A loyal house (`loyal` or more) sends `retinue` production a month; a sullen one (below `sullen`) adds `unrest` a month. Below `rising.below` a house may rise (`rising.chance` a month, less with Fear): its lands go over to it and a host takes the field at its seat. Retaking the seat brings it to judgement: pardon or the block.",
+  "realm": "temeria",
+  "houses": {
+    "dravnik": { "lands": ["mayena", "razwan"] },
+    "wolbrecht": { "lands": ["houtborg", "white_bridge"] },
+    "ostrowicz": { "lands": ["petrelsteyn", "rissberg"] },
+    "gelbrand": { "lands": ["red_fort", "armeria"] },
+    "brodowin": { "lands": ["dorndal", "carreras"] }
+  },
+  "loyalty": { "base": 45, "love": 0.4, "fear": 0.15, "drift": 0.15, "favourFade": 1 },
+  "wants": {
+    "chance": 0.25, "favour": 15, "patience": 3, "lapse": 9, "unmet": 3,
+    "honours": { "crowns": 150 },
+    "byTrait": {
+      "greedy": ["honours", "honours", "law:free_markets"],
+      "proud": ["honours", "law:charter"],
+      "pious": ["law:patronage", "honours"],
+      "devout": ["law:patronage", "garrison"],
+      "old_blood": ["law:assizes", "honours"],
+      "warlike": ["garrison", "law:seasonal_levies"],
+      "cautious": ["garrison", "law:fortify"],
+      "schemer": ["honours", "law:gallows"],
+      "loyalist": ["garrison", "honours"]
+    }
+  },
+  "loyal": 60, "retinue": 3,
+  "sullen": 35, "unrest": 0.6,
+  "rising": { "below": 25, "chance": 0.15, "fearCalm": 0.008, "host": ["foot", "foot", "bow", "horse"], "join": 20 },
+  "judgement": {
+    "pardon": { "name": "Pardon", "text": "The house swears again and keeps its lands. The other houses note the crown's mercy.", "loyalty": 45, "love": 4 },
+    "block": { "name": "The block", "text": "The head of the house goes to the block, and its lands to the crown. The other houses note the crown's justice.", "fear": 12, "others": -8 }
+  }
+}

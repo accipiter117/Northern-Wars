@@ -1,5 +1,11 @@
 # Changelog
 
+## M49 Northern Wars v2: the great houses
+- Temeria's five great houses (Dravnik, Wolbrecht, Ostrowicz, Gelbrand and Brodowin) now hold ten of its provinces for the crown. You'll find them at the top of Courts, and each city's card names the house that holds it.
+- Each house has a loyalty, moved by the realm's Love and Fear and by whether you give it what it asks for: honours (crowns), one of your armies garrisoned in its lands, or a law it favours (from its traits).
+- Loyal houses send their retinues (more production); sullen ones stir unrest; a bitter house may rise. A rising is a war: the house's provinces go over to it and its host takes the field. Beat the host and retake its seat, and the house comes to judgement: pardon, or the block.
+- The houses are Temeria's: they play their part when you play Temeria.
+
 ## M48 fix: messages you can read
 - Pop-up messages in the turn-based game now sit above every panel (the battle screen included) and, in landscape, over the map beside the side panel rather than half under it.
 - They stay up long enough to read (longer for longer news, up to twelve seconds), and a tap clears them.

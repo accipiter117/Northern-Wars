@@ -24,12 +24,13 @@ import { newSpies, monthlySpies, aiSpies } from './spies.js';
 import { newStory, storyChapter, monthlyStory, answerStory } from './story.js';
 import { suddenEnding, loreEnding } from './endings.js';
 import { buildSea, newFleets, fleetPoints, seaReach, seaBattle, fleetsAt, newCommanders, monthlyCommanders, woundCommanders, armyBonus } from './forces.js';
+import { newHouses, registerHouses, houseBonus, monthlyHouses, judgeHouse, grantHonours } from './houses.js';
 import { newLaws, lawBonus, mergeBonus, aiLaws, newFaiths, monthlyFaiths, faithUnrest, aiMissions } from './laws.js';
 
 export { nameOf, atWar, controller, authority };
 
 export const SAVE_FORMAT = 'northern-wars-v2';
-export const VERSION = 7;
+export const VERSION = 8;
 
 // ---- The world as the game sees it ----
 
@@ -46,7 +47,9 @@ export function makeTable(world, data) {
   for (const [rid, r] of Object.entries(world.realms?.realms ?? {})) tiers[rid] = r.tier ?? 'petty';
   const colours = { ...Object.fromEntries(Object.entries(world.realms?.realms ?? {}).map(([k, v]) => [k, v.colours])), ...data.game.colours };
   const sea = data.forces ? buildSea(world, board, data.forces) : { coastal: new Set(), lanes: {} };
-  return { world, data, board, works, tiers, colours, sea };
+  const table = { world, data, board, works, tiers, colours, sea };
+  registerHouses(table);
+  return table;
 }
 
 // ---- Dates ----
@@ -88,6 +91,8 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   state.commanders = data_has_forces(table) ? newCommanders(table) : {};
   state.laws = newLaws(state);
   state.faiths = table.data.laws ? newFaiths(table) : {};
+  state.houses = newHouses(table);
+  state.lordJudgement = null;
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
     const plan = g.start_armies[table.tiers[rid] ?? 'petty'] ?? [];
@@ -127,6 +132,7 @@ export function realmBonus(state, table, rid) {
   const b = goalBonus(state, table, rid);
   for (const [k, v] of Object.entries(suzerainBonus(state, table, rid))) b[k] = (b[k] ?? 0) + v;
   b.crowns += tradeCrowns(state, table, rid);
+  mergeBonus(b, houseBonus(state, table, rid));
   return mergeBonus(b, lawBonus(state, table, rid));
 }
 
@@ -571,6 +577,11 @@ function aiSiege(state, table, rid, region) {
 export function stewardTurn(state, table) {
   for (const a of state.armies) if (a.owner === state.player) a.points = armyPoints(state, table, a);
   aiTurn(state, table, state.player);
+  // The houses' honours, when the treasury can spare them; a rebel lord pardoned.
+  for (const [id, h] of Object.entries(state.houses ?? {})) {
+    if (h.want?.kind === 'honours' && state.realms[state.player].treasury > table.data.houses.wants.honours.crowns * 3) grantHonours(state, table, id);
+  }
+  if (state.lordJudgement) judgeHouse(state, table, state.lordJudgement.house, 'pardon');
   // Offers to the crown are answered as the AI would answer them.
   for (let i = state.diplomacy.offers.length - 1; i >= 0; i--) {
     const o = state.diplomacy.offers[i];
@@ -776,6 +787,7 @@ export function endTurn(state, table) {
   // An unanswered dilemma takes its default; an unjudged rebel is deposed.
   if (state.dilemma) answerDilemma(state, table, table.world.dilemmas.dilemmas[state.dilemma.id]?.default ?? 0);
   if (state.judgement) judge(state, table, state.judgement.by, state.judgement.minor, 'depose');
+  if (state.lordJudgement) judgeHouse(state, table, state.lordJudgement.house, 'pardon');
   if (state.battle) { battleAuto(state, table); finishBattle(state, table, state.battle); }
   finishSide(state, table, state.player);
   // The other great powers, in order, then the lesser crowns hold.
@@ -802,6 +814,7 @@ export function endTurn(state, table) {
   month(state, table);
   checkGoals(state, table, chapterNow(state, table), goalCtx(state));
   monthlyMinors(state, table);
+  monthlyHouses(state, table);
   monthlyDiplomacy(state, table);
   monthlySpies(state, table, (a, b) => opinionOf(state, a, b));
   monthlyStory(state, table, dateOf(table, state.turn), storyHooks(state, table));
@@ -892,6 +905,12 @@ export function deserialize(text, table = null) {
     s.laws ??= newLaws(s);
     s.faiths ??= table.data.laws ? newFaiths(table) : {};
     s.version = 7;
+  }
+  // Version 7 gains the great houses.
+  if ((data.version ?? 1) < 8 && table) {
+    s.houses ??= newHouses(table);
+    s.lordJudgement ??= null;
+    s.version = 8;
   }
   return s;
 }
