@@ -97,7 +97,7 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   state.lordJudgement = null;
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
-    const plan = g.start_armies[table.tiers[rid] ?? 'petty'] ?? [];
+    const plan = g.realmArmies?.[rid] ?? g.start_armies[table.tiers[rid] ?? 'petty'] ?? [];
     const homes = Object.values(board.regions).filter((r) => r.realm === rid)
       .sort((a, b) => (b.capital - a.capital) || (cities[b.id].pop - cities[a.id].pop));
     plan.forEach((types, i) => {
@@ -134,6 +134,8 @@ export function realmBonus(state, table, rid) {
   const b = goalBonus(state, table, rid);
   for (const [k, v] of Object.entries(suzerainBonus(state, table, rid))) b[k] = (b[k] ?? 0) + v;
   b.crowns += tradeCrowns(state, table, rid);
+  // What a realm draws from beyond the map (the Empire's southern provinces).
+  for (const [k, v] of Object.entries(table.data.game.beyond?.[rid] ?? {})) b[k] = (b[k] ?? 0) + v;
   mergeBonus(b, houseBonus(state, table, rid));
   return mergeBonus(b, lawBonus(state, table, rid));
 }

@@ -1,5 +1,8 @@
 # Changelog
 
+## M51 Northern Wars v2: an Empire to be feared
+- The Nilfgaardian Empire now draws on its southern provinces beyond the map (100 crowns and 50 production a month) and opens with three legions, not two. Before, any competent Temeria beat it; now an average reign loses ground to it, and the endings vary.
+
 ## M50 Northern Wars v2: the peoples
 - Dwarves, elves, halflings and gnomes live in the cities: Temeria's towns as counted in the real-time game, Mahakam mostly dwarven, Brokilon elven. Each city's card shows who lives there and how they stand with the crown.
 - The Realm sheet shows the crown's standing with each people and what moves it: Love, and the laws (tolerance wins them all; the gallows and foreign missions turn the elves against you; guild charters please dwarves and gnomes).
