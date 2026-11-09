@@ -387,6 +387,18 @@ test('the great houses in Courts; a rising, and judgement when its seat is retak
   await context.close();
 });
 
+test('the peoples on the Realm sheet and on a city card', async () => {
+  const { context, page, errors } = await open({ width: 390, height: 844 });
+  await page.click('[data-open="realm"]');
+  assert.match(await page.textContent('#sheet'), /The peoples[\s\S]*Dwarves: [\d.]+ in every hundred[\s\S]*Elves/);
+  await page.click('#sheet-close');
+  await page.evaluate(() => window.northernWarsV2.app.select({ region: 'vizima' }));
+  assert.match(await page.textContent('#sheet'), /Among its people, in every hundred: dwarves \d+ \(/);
+  await page.screenshot({ path: join(OUT, 'v2-portrait-peoples.png') });
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the war table in landscape', async () => {
   const { context, page, errors } = await open({ width: 844, height: 390 });
   await page.click('[data-open="realm"]');

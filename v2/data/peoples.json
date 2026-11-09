@@ -1,0 +1,39 @@
+{
+  "note": "The peoples (v2, M50). Each city keeps the share (in every hundred) of its non-human peoples: Temeria's towns from the real-time game's head-counts, foreign ones from `realmShares` (or `defaultShares`). Each realm's mood with each people (0 to 100) drifts by `drift` toward `base` + (Love - 50) x `love` + the laws in `laws` (people or `all`). A people gives a city its `gifts` (shares of that yield), scaled by its weight: min(1, share / `fullShare`) x clamp((mood - `moodFrom`) / `moodSpan`, 0, `moodMost`). Only in the player's realm: elves below `scoiatael.below` raid a city with elves at `scoiatael.chance` a month (works worn, unrest); a people below `pogrom.below` while Unrest is over `pogrom.unrest` may suffer a pogrom (`pogrom.chance`) in a city with no army of ours: its share is cut, works burn, its mood falls. At war, a people at `volunteers.above` or more may send a company once a year.",
+  "peoples": {
+    "dwarf": { "name": "Dwarves", "gifts": { "production": 0.2 } },
+    "gnome": { "name": "Gnomes", "gifts": { "production": 0.1, "crowns": 0.1 } },
+    "halfling": { "name": "Halflings", "gifts": { "food": 0.15, "crowns": 0.05 } },
+    "elf": { "name": "Elves", "gifts": { "faith": 0.15, "renown": 0.15 } }
+  },
+  "defaultShares": { "dwarf": 2, "elf": 1, "halfling": 2, "gnome": 0.5 },
+  "realmShares": {
+    "mahakam": { "dwarf": 75, "gnome": 15, "halfling": 2 },
+    "brokilon": { "elf": 60 },
+    "aedirn": { "dwarf": 5, "elf": 3, "halfling": 2, "gnome": 1 },
+    "kaedwen": { "dwarf": 3, "elf": 3, "halfling": 1, "gnome": 1 },
+    "redania": { "dwarf": 3, "elf": 1, "halfling": 3, "gnome": 1 },
+    "nilfgaard": { "dwarf": 1, "elf": 2, "halfling": 2, "gnome": 0.5 },
+    "lyria_rivia": { "dwarf": 4, "elf": 2, "halfling": 2, "gnome": 1 },
+    "kovir": { "dwarf": 4, "gnome": 2, "halfling": 2, "elf": 0.5 },
+    "skellige": { "dwarf": 1, "halfling": 0.5 }
+  },
+  "start": { "temeria": { "elf": 40, "dwarf": 55 }, "redania": { "elf": 30 }, "kaedwen": { "elf": 25, "dwarf": 45 }, "aedirn": { "dwarf": 65, "elf": 45 }, "nilfgaard": { "elf": 55 }, "mahakam": { "dwarf": 85, "gnome": 80 }, "brokilon": { "elf": 90 } },
+  "base": 45, "love": 0.3, "drift": 0.1,
+  "laws": {
+    "tolerance": { "all": 15 },
+    "gallows": { "elf": -12, "all": -3 },
+    "martial_law": { "all": -4 },
+    "assizes": { "all": 4 },
+    "charter": { "halfling": 6, "gnome": 4 },
+    "guild_charters": { "dwarf": 6, "gnome": 6 },
+    "free_markets": { "dwarf": 4, "halfling": 4 },
+    "monopolies": { "dwarf": -6, "gnome": -4 },
+    "missions": { "elf": -8 },
+    "secular": { "elf": 4, "dwarf": 4 }
+  },
+  "fullShare": 10, "moodFrom": 25, "moodSpan": 50, "moodMost": 1.2,
+  "scoiatael": { "below": 30, "chance": 0.12, "minShare": 1, "works": 2, "unrest": 3 },
+  "pogrom": { "below": 30, "unrest": 55, "chance": 0.15, "minShare": 1, "cut": 0.5, "mood": -12, "works": 3, "fear": 3 },
+  "volunteers": { "above": 70, "chance": 0.12, "every": 12, "company": { "dwarf": "foot", "elf": "bow", "halfling": "foot", "gnome": "bow" } }
+}

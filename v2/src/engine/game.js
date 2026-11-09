@@ -25,12 +25,13 @@ import { newStory, storyChapter, monthlyStory, answerStory } from './story.js';
 import { suddenEnding, loreEnding } from './endings.js';
 import { buildSea, newFleets, fleetPoints, seaReach, seaBattle, fleetsAt, newCommanders, monthlyCommanders, woundCommanders, armyBonus } from './forces.js';
 import { newHouses, registerHouses, houseBonus, monthlyHouses, judgeHouse, grantHonours } from './houses.js';
+import { newPeoples, peopleGifts, monthlyPeoples } from './peoples.js';
 import { newLaws, lawBonus, mergeBonus, aiLaws, newFaiths, monthlyFaiths, faithUnrest, aiMissions } from './laws.js';
 
 export { nameOf, atWar, controller, authority };
 
 export const SAVE_FORMAT = 'northern-wars-v2';
-export const VERSION = 8;
+export const VERSION = 9;
 
 // ---- The world as the game sees it ----
 
@@ -92,6 +93,7 @@ export function createGame(table, { seed = 1, player = TEMERIA } = {}) {
   state.laws = newLaws(state);
   state.faiths = table.data.laws ? newFaiths(table) : {};
   state.houses = newHouses(table);
+  state.peoples = newPeoples(table);
   state.lordJudgement = null;
   // Each realm's opening armies: at its capital, then its next largest places.
   for (const rid of Object.keys(realms)) {
@@ -148,6 +150,8 @@ export function cityYields(state, table, id) {
   }
   for (const [k, v] of Object.entries(g.perThousand)) out[k] += (c.pop / 1000) * v;
   for (const [k, v] of Object.entries(uniqueYields(state, table, id))) out[k] += v;
+  // What its dwarves, elves, halflings and gnomes bring, as content as they are.
+  for (const [k, v] of Object.entries(peopleGifts(state, table, id))) out[k] *= 1 + v;
   // Where the city's hands go this month.
   const f = g.cities.focus;
   if (c.focus && c.focus !== 'balanced') for (const k of Object.keys(out)) out[k] *= k === c.focus ? f.up : f.down;
@@ -815,6 +819,7 @@ export function endTurn(state, table) {
   checkGoals(state, table, chapterNow(state, table), goalCtx(state));
   monthlyMinors(state, table);
   monthlyHouses(state, table);
+  monthlyPeoples(state, table);
   monthlyDiplomacy(state, table);
   monthlySpies(state, table, (a, b) => opinionOf(state, a, b));
   monthlyStory(state, table, dateOf(table, state.turn), storyHooks(state, table));
@@ -911,6 +916,11 @@ export function deserialize(text, table = null) {
     s.houses ??= newHouses(table);
     s.lordJudgement ??= null;
     s.version = 8;
+  }
+  // Version 8 gains the peoples.
+  if ((data.version ?? 1) < 9 && table) {
+    s.peoples ??= newPeoples(table);
+    s.version = 9;
   }
   return s;
 }

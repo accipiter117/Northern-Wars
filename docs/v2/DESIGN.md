@@ -197,3 +197,10 @@ Each step should be playable on its own before the next starts.
 - A rising makes the house a realm of its own (`house_<id>`) at war with the crown, holding its lands with a host at its seat. It holds and does not march. Retaking the seat (with its host gone) brings the judgement card; left unanswered at the end of the month, the house is pardoned.
 - Settled in one two-year check: a tended realm keeps its houses loyal; a neglected one under heavy taxes leaves them sullen (unrest about 60) and on the edge of rising.
 - Save version 8 adds `houses` and `lordJudgement`.
+
+## The peoples as built (M50)
+- Numbers in `v2/data/peoples.json`; engine in `v2/src/engine/peoples.js`. Temeria's cities take their head-counts from the real-time game; other realms take a share by realm (no foreign head-counts exist).
+- Standing is kept per realm for every realm (so a conquered city's peoples answer to their new crown), but raids, pogroms and volunteers happen only in the player's realm, so the AI's realms stay steady.
+- Gifts multiply the city's yields (before its focus), scaled by how many of the people live there (full at 10 in every hundred) and how content they are (nothing below 25).
+- Settled in one two-year check: a plain reign keeps every people at ease; the gallows with foreign missions turn the elves bitter and bring raids within two years; tolerance with the assizes brings volunteers at war.
+- Save version 9 adds `peoples`.
